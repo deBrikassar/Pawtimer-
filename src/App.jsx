@@ -1,23 +1,3 @@
-:root {
-  --bg-color: #F7F2E7;
-  --primary-color: #A8D5BA;
-  --accent-color: #4B3C30;
-}
-
-body {
-  background-color: var(--bg-color) !important;
-  color: var(--accent-color) !important;
-}
-
-button, .btn {
-  background-color: var(--primary-color) !important;
-  color: white !important;
-  border: none !important;
-}
-
-h1, h2 {
-  color: var(--primary-color) !important;
-}
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
