@@ -225,7 +225,7 @@ const PATTERN_TYPES = [
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const styles = `
-  @import url('https://api.fontshare.com/v2/css?f[]=neue-montreal@300,400,500,600,700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -256,7 +256,7 @@ const styles = `
     height: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: 'Neue Montreal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
     font-weight: 400;
     line-height: 1.5;
     min-height: 100vh; min-height: 100dvh;
@@ -276,10 +276,10 @@ const styles = `
   .ds-hero { background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 60%); padding:60px 28px 32px; position:relative; overflow:hidden; text-align:center; }
   .ds-hero::before { content:''; position:absolute; top:-40px; right:-40px; width:200px; height:200px; background:radial-gradient(circle,rgba(168,213,186,0.35) 0%,transparent 70%); border-radius:50%; }
   .ds-logo { margin-bottom:14px; position:relative; z-index:1; display:flex; justify-content:center; }
-  .ds-title { font-size:34px; font-weight:600; color:var(--brown); position:relative; z-index:1; }
-  .ds-sub { font-size:14px; color:var(--text-muted); margin-top:6px; position:relative; z-index:1; line-height:1.5; }
+  .ds-title { font-size:28px; font-weight:700; color:var(--brown); line-height:1.2; letter-spacing:-0.02em; position:relative; z-index:1; }
+  .ds-sub { font-size:15px; font-weight:400; color:var(--text-muted); margin-top:8px; position:relative; z-index:1; line-height:1.6; }
   .ds-body { padding:28px; flex:1; overflow-x:hidden; }
-  .ds-section-label { font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); font-weight:600; margin-bottom:10px; }
+  .ds-section-label { font-size:13px; letter-spacing:normal; color:var(--text-muted); font-weight:500; line-height:1.4; margin-bottom:10px; }
   .ds-dog-card { display:flex; align-items:center; gap:14px; background:var(--surf); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer; border:2px solid transparent; transition:border-color 0.2s,transform 0.15s; }
   .ds-dog-card:hover { border-color:var(--green-dark); transform:translateY(-1px); }
   .ds-dog-name { font-size:18px; color:var(--brown); font-weight:600; }
@@ -288,7 +288,7 @@ const styles = `
   .ds-divider { display:flex; align-items:center; gap:12px; margin:20px 0; }
   .ds-divider-line { flex:1; height:1px; background:var(--border); }
   .ds-divider-text { font-size:12px; color:var(--text-muted); }
-  .ds-btn { width:100%; padding:17px; border:none; border-radius:var(--radius); font-size:16px; font-weight:500; cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:10px; }
+  .ds-btn { width:100%; padding:17px; border:none; border-radius:var(--radius); font-size:16px; font-weight:600; line-height:1.2; letter-spacing:0.01em; cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:10px; }
   .ds-btn-primary { background:var(--brown); color:white; box-shadow:0 4px 20px rgba(75,60,48,0.25); }
   .ds-btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 28px rgba(75,60,48,0.30); }
   .ds-note { font-size:13px; color:var(--green-dark); background:rgba(168,213,186,0.2); border-left:3px solid var(--green); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:8px 12px; margin-bottom:12px; line-height:1.5; }
@@ -296,7 +296,7 @@ const styles = `
   .ds-join-input { flex:1; padding:14px 16px; background:var(--surf); border:2px solid var(--border); border-radius:var(--radius-sm); font-size:16px; color:var(--brown); outline:none; transition:border-color 0.2s; font-weight:500; text-transform:uppercase; letter-spacing:0.06em; }
   .ds-join-input:focus { border-color:var(--green-dark); }
   .ds-join-input::placeholder { color:var(--brown-muted); text-transform:none; letter-spacing:0; font-weight:300; font-size:14px; }
-  .ds-join-btn { padding:14px 18px; background:var(--green); color:var(--brown); border:none; border-radius:var(--radius-sm); font-size:14px; font-weight:500; cursor:pointer; white-space:nowrap; transition:transform 0.15s; }
+  .ds-join-btn { padding:14px 18px; background:var(--green); color:var(--brown); border:none; border-radius:var(--radius-sm); font-size:16px; font-weight:600; line-height:1.2; letter-spacing:0.01em; cursor:pointer; white-space:nowrap; transition:transform 0.15s; }
   .ds-join-btn:hover { transform:translateY(-1px); }
   .ds-join-hint { font-size:13px; color:var(--text-muted); margin-top:8px; line-height:1.5; }
   .ds-join-error { font-size:13px; color:var(--red); margin-top:6px; }
@@ -306,14 +306,14 @@ const styles = `
   .ob-hero { background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 60%); padding:44px 24px 22px; position:relative; overflow:hidden; }
   .ob-hero::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(168,213,186,0.35) 0%,transparent 70%); border-radius:50%; }
   .ob-hero-icon { position:relative; z-index:1; margin-bottom:12px; }
-  .ob-title { font-size:32px; font-weight:600; color:var(--brown); line-height:1.15; position:relative; z-index:1; }
-  .ob-subtitle { font-size:15px; color:var(--text-muted); margin-top:8px; line-height:1.6; font-weight:400; position:relative; z-index:1; }
+  .ob-title { font-size:28px; font-weight:700; color:var(--brown); line-height:1.2; letter-spacing:-0.02em; position:relative; z-index:1; }
+  .ob-subtitle { font-size:15px; color:var(--text-muted); margin-top:10px; line-height:1.6; font-weight:400; position:relative; z-index:1; }
   .ob-step-indicator { display:flex; gap:6px; margin-top:20px; position:relative; z-index:1; }
   .ob-step-dot { width:24px; height:4px; border-radius:99px; background:var(--border); transition:background 0.3s; }
   .ob-step-dot.active { background:var(--brown); }
   .ob-step-dot.done   { background:var(--green-dark); }
   .ob-body { padding:28px; flex:1; }
-  .ob-question { font-size:22px; color:var(--brown); margin-bottom:6px; line-height:1.3; }
+  .ob-question { font-size:20px; font-weight:600; color:var(--brown); margin-bottom:10px; line-height:1.3; letter-spacing:-0.01em; }
   .ob-hint { font-size:15px; color:var(--text-muted); margin-bottom:16px; line-height:1.5; }
   .ob-note { font-size:11px; color:var(--green-dark); background:rgba(168,213,186,0.2); border-left:3px solid var(--green); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:8px 12px; margin-bottom:12px; line-height:1.5; }
   .ob-input { width:100%; padding:16px 18px; background:var(--surf); border:2px solid var(--border); border-radius:var(--radius-sm); font-size:20px; color:var(--brown); outline:none; transition:border-color 0.2s; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; }
@@ -333,7 +333,7 @@ const styles = `
   .ob-dur-val { font-size:22px; color:var(--brown); font-weight:600; }
   .ob-dur-lbl { font-size:12px; color:var(--text-muted); margin-top:2px; }
   .ob-footer { padding:0 28px; }
-  .ob-btn-next { width:100%; padding:18px; background:var(--brown); color:white; border:none; border-radius:var(--radius); font-size:16px; font-weight:500; cursor:pointer; transition:transform 0.15s,box-shadow 0.15s,opacity 0.2s; box-shadow:0 4px 20px rgba(75,60,48,0.25); }
+  .ob-btn-next { width:100%; padding:18px; background:var(--brown); color:white; border:none; border-radius:var(--radius); font-size:16px; font-weight:600; line-height:1.2; letter-spacing:0.01em; cursor:pointer; transition:transform 0.15s,box-shadow 0.15s,opacity 0.2s; box-shadow:0 4px 20px rgba(75,60,48,0.25); }
   .ob-btn-next:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 28px rgba(75,60,48,0.30); }
   .ob-btn-next:disabled { opacity:0.4; cursor:default; }
   .ob-back-btn { background:none; border:none; color:var(--text-muted); font-size:14px; cursor:pointer; margin-top:14px; display:block; width:100%; text-align:center; padding:8px; }
@@ -342,8 +342,8 @@ const styles = `
   .header { padding:28px 20px 10px; background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
   .header::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(168,213,186,0.35) 0%,transparent 70%); border-radius:50%; }
   .header-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; gap:16px; }
-  .app-title { font-size:30px; font-weight:700; color:var(--brown); line-height:1.05; letter-spacing:-0.01em; }
-  .app-subtitle { font-size:15px; color:var(--text-muted); margin-top:2px; font-weight:400; }
+  .app-title { font-size:28px; font-weight:700; color:var(--brown); line-height:1.2; letter-spacing:-0.02em; }
+  .app-subtitle { font-size:15px; color:var(--text-muted); margin-top:4px; font-weight:400; line-height:1.6; }
   .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
   .dog-id-badge { display:flex; align-items:center; gap:6px; background:var(--surf); border-radius:99px; padding:4px 10px 4px 8px; box-shadow:var(--shadow); cursor:pointer; border:1.5px solid var(--border); transition:border-color 0.2s; }
   .dog-id-badge:hover { border-color:var(--green-dark); }
@@ -389,23 +389,24 @@ const styles = `
   .sc-track { fill:none; stroke:rgba(96,142,111,0.2); stroke-width:10; }
   .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
   .sc-content { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:70%; padding:20px; }
-  .sc-idle { display:flex; align-items:center; justify-content:center; width:100%; height:100%; transition:opacity 260ms ease, transform 300ms ease; }
-  .sc-idle-label { font-size:17px; font-weight:600; letter-spacing:0.03em; color:rgba(255,255,255,0.97); line-height:1; text-align:center; transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-idle { display:flex; align-items:center; justify-content:center; gap:10px; transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-play { width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-idle-label { font-size:16px; font-weight:600; letter-spacing:0.01em; line-height:1.2; color:rgba(255,255,255,0.97); transition:opacity 260ms ease, transform 300ms ease; }
   .sc-time { position:absolute; opacity:0; transform:scale(0.95); transition:opacity 300ms ease-in-out, transform 300ms ease-in-out; }
-  .sc-time-value { font-size:42px; line-height:1; font-weight:700; color:var(--green-dark); letter-spacing:0.02em; }
-  .sc-time-sub { font-size:12px; margin-top:6px; letter-spacing:0.08em; text-transform:uppercase; color:var(--green-dark); opacity:0.82; }
+  .sc-time-value { font-size:48px; line-height:1; font-weight:700; color:var(--green-dark); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
+  .sc-time-sub { font-size:13px; margin-top:8px; font-weight:500; line-height:1.4; color:var(--green-dark); opacity:0.82; }
   .session-control.is-running .sc-idle { opacity:0; transform:translateY(-4px); }
   .session-control.is-running .sc-time,
   .session-control.is-complete .sc-time { opacity:1; transform:scale(1); }
   .session-actions { margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:center; }
-  .session-end-btn, .session-cancel-btn { width:min(100%, 260px); padding:11px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown); font-size:15px; font-weight:600; cursor:pointer; }
+  .session-end-btn, .session-cancel-btn { width:min(100%, 260px); padding:12px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown); font-size:16px; font-weight:600; line-height:1.2; letter-spacing:0.01em; cursor:pointer; }
   .session-cancel-btn { background:var(--surf-soft); }
   .session-end-btn:hover, .session-cancel-btn:hover { border-color:var(--green-dark); }
 
   .session-feedback { width:min(100%, 420px); margin:0; }
 
   /* ── Status message ── */
-  .status-msg { margin:16px auto 0; max-width:340px; font-size:15px; color:var(--text-muted); line-height:1.55; text-align:center; }
+  .status-msg { margin:18px auto 0; max-width:340px; font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; text-align:center; }
 
   /* ── Stats rings card ── */
   .stats-rings-card { margin:24px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; }
@@ -417,7 +418,7 @@ const styles = `
   .ring-fill-1 { fill:none; stroke:var(--green-dark); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.9s cubic-bezier(0.34,1.56,0.64,1); transform:rotate(-90deg); transform-origin:44px 44px; }
   .ring-fill-2 { fill:none; stroke:var(--green); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.9s cubic-bezier(0.34,1.56,0.64,1); transform:rotate(-90deg); transform-origin:44px 44px; }
   .ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
-  .ring-val { font-size:22px; font-weight:700; color:var(--brown); line-height:1.1; }
+  .ring-val { font-size:24px; font-weight:600; color:var(--brown); line-height:1.2; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
   .ring-sub { font-size:14px; color:var(--text-muted); font-weight:600; margin-top:5px; text-align:center; line-height:1.3; }
 
   /* ── Tool section title ── */
@@ -429,7 +430,7 @@ const styles = `
   .tool-row:last-child { border-bottom:none; }
   .tool-row:hover { background:var(--surf-soft); }
   .tool-row-left  { display:flex; align-items:center; gap:12px; }
-  .tool-row-label { font-size:16px; color:var(--brown); font-weight:400; display:flex; align-items:center; gap:6px; }
+  .tool-row-label { font-size:15px; color:var(--brown); font-weight:500; line-height:1.4; display:flex; align-items:center; gap:6px; }
   .tool-row-right { display:flex; align-items:center; gap:8px; }
   .tool-row-meta  { font-size:14px; color:var(--text-muted); }
   .tool-chevron   { color:var(--border); font-size:15px; font-weight:600; }
@@ -481,7 +482,7 @@ const styles = `
   .goal-card { margin:0 24px 16px; background:var(--surf); border-radius:var(--radius); padding:16px 20px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
   .goal-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--green-dark),var(--green)); opacity:0.8; }
   .goal-label { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
-  .goal-title { font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); font-weight:500; }
+  .goal-title { font-size:15px; color:var(--text-muted); font-weight:500; line-height:1.4; }
   .goal-pct   { font-size:22px; color:var(--green-dark); font-weight:600; }
   .progress-track { height:10px; background:var(--surf-soft); border-radius:99px; overflow:hidden; }
   .progress-fill  { height:100%; background:linear-gradient(90deg,var(--green-dark),var(--green)); border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
@@ -546,13 +547,13 @@ const styles = `
 
   /* ── Tabs ── */
   .tabs { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:rgba(247,242,231,0.97); backdrop-filter:blur(14px); border-top:1.5px solid var(--border); display:flex; z-index:100; padding-bottom:env(safe-area-inset-bottom,0px); }
-  .tab-btn { flex:1; padding:9px 4px 13px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--brown-muted); transition:color 0.18s; font-size:10px; font-weight:500; letter-spacing:0.05em; text-transform:uppercase; }
+  .tab-btn { flex:1; padding:9px 4px 13px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--brown-muted); transition:color 0.18s; font-size:13px; font-weight:500; line-height:1.4; }
   .tab-btn.active { color:var(--green-dark); font-weight:700; }
   .tab-btn svg { width:24px; height:24px; }
 
   /* ── Sections ── */
   .section { padding:10px 18px; overflow-x:hidden; }
-  .section-title { font-size:20px; font-weight:700; color:var(--brown); margin-bottom:12px; }
+  .section-title { font-size:20px; font-weight:600; color:var(--brown); line-height:1.3; letter-spacing:-0.01em; margin-bottom:14px; }
   .empty-state { text-align:center; padding:40px 24px; color:var(--text-muted); }
   .empty-state .big { font-size:48px; margin-bottom:12px; }
   .empty-state p { font-size:15px; line-height:1.6; }
@@ -568,7 +569,7 @@ const styles = `
   .proto-section { margin-bottom:12px; }
   .proto-section:last-child { margin-bottom:0; }
   .proto-title { font-size:12px; text-transform:uppercase; letter-spacing:0.07em; color:var(--green-dark); font-weight:700; margin-bottom:5px; }
-  .proto-row { font-size:15px; color:var(--text-muted); line-height:1.65; }
+  .proto-row { font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; }
 
   /* ── Sync status dot ── */
   .sync-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -600,8 +601,8 @@ const styles = `
   .dot-walk   { background:rgba(74,158,110,0.15); }
   .dot-pat    { background:rgba(75,60,48,0.09); }
   .h-info { flex:1; min-width:0; }
-  .h-main { font-weight:600; font-size:16px; color:var(--brown); }
-  .h-date { font-size:14px; color:var(--text-muted); margin-top:2px; }
+  .h-main { font-size:24px; font-weight:600; line-height:1.2; letter-spacing:-0.01em; color:var(--brown); font-variant-numeric:tabular-nums; }
+  .h-date { font-size:13px; font-weight:500; line-height:1.4; color:var(--text-muted); margin-top:6px; }
   .h-badge { font-size:13px; font-weight:600; padding:3px 9px; border-radius:99px; letter-spacing:0.03em; white-space:nowrap; flex-shrink:0; }
   .badge-none   { background:rgba(168,213,186,0.3);  color:var(--green-dark); }
   .badge-mild   { background:rgba(230,126,34,0.12); color:var(--orange); }
@@ -617,14 +618,14 @@ const styles = `
   .streak-lbl  { font-size:14px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.85; margin-top:6px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:4px; }
   .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
   .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
-  .stat-val    { font-size:24px; color:var(--brown); font-weight:700; }
-  .stat-lbl    { font-size:14px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-top:3px; font-weight:600; }
+  .stat-val    { font-size:24px; color:var(--brown); font-weight:600; line-height:1.2; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
+  .stat-lbl    { font-size:15px; color:var(--text-muted); margin-top:6px; font-weight:500; line-height:1.4; }
   .stat-wide   { background:var(--surf); border-radius:var(--radius-sm); padding:14px 18px; box-shadow:var(--shadow); grid-column:span 2; display:flex; align-items:center; justify-content:space-between; }
-  .stat-wide .stat-val { font-size:26px; color:var(--brown); font-weight:600; }
-  .stat-wide .stat-lbl { font-size:14px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; font-weight:500; }
+  .stat-wide .stat-val { font-size:24px; color:var(--brown); font-weight:600; }
+  .stat-wide .stat-lbl { font-size:15px; color:var(--text-muted); margin-top:6px; font-weight:500; line-height:1.4; }
   .stat-icon   { font-size:28px; opacity:1; display:flex; align-items:center; }
   .ratio-card  { background:var(--surf); border-radius:var(--radius-sm); padding:14px; box-shadow:var(--shadow); margin-bottom:10px; }
-  .ratio-title { font-size:15px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); font-weight:600; margin-bottom:10px; }
+  .ratio-title { font-size:20px; font-weight:600; line-height:1.3; letter-spacing:-0.01em; color:var(--brown); margin-bottom:12px; }
   .ratio-bar   { height:12px; border-radius:99px; overflow:hidden; display:flex; }
   .ratio-good  { background:var(--green);  transition:width 0.6s; }
   .ratio-mild  { background:var(--orange); transition:width 0.6s; }
@@ -635,15 +636,15 @@ const styles = `
 
   /* ── Settings tab ── */
   .share-card  { background:var(--surf); border-radius:var(--radius); padding:16px; margin-bottom:12px; box-shadow:var(--shadow); }
-  .share-title { font-size:17px; font-weight:600; color:var(--brown); margin-bottom:4px; }
-  .share-sub   { font-size:15px; color:var(--text-muted); margin-bottom:12px; line-height:1.5; }
+  .share-title { font-size:20px; font-weight:600; line-height:1.3; letter-spacing:-0.01em; color:var(--brown); margin-bottom:8px; }
+  .share-sub   { font-size:15px; font-weight:400; color:var(--text-muted); margin-bottom:12px; line-height:1.6; }
   .share-id-row { display:flex; align-items:center; gap:10px; background:var(--surf-soft); border-radius:var(--radius-sm); padding:12px 16px; margin-bottom:10px; }
   .share-id-val { font-family:monospace; font-size:22px; font-weight:700; color:var(--brown); letter-spacing:0.1em; flex:1; }
   .copy-btn { background:var(--brown); color:white; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:500; cursor:pointer; transition:opacity 0.15s; }
   .copy-btn:hover { opacity:0.85; }
   .share-steps { font-size:15px; color:var(--text-muted); line-height:1.8; padding-left:18px; }
   .share-steps li { margin-bottom:2px; }
-  .settings-btn { width:100%; padding:13px 16px; background:var(--surf); color:var(--brown); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:16px; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:10px; margin-bottom:10px; transition:border-color 0.2s,background 0.2s; box-shadow:0 2px 8px rgba(75,60,48,0.05); }
+  .settings-btn { width:100%; padding:13px 16px; background:var(--surf); color:var(--brown); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:16px; font-weight:600; line-height:1.2; letter-spacing:0.01em; cursor:pointer; display:flex; align-items:center; gap:10px; margin-bottom:10px; transition:border-color 0.2s,background 0.2s; box-shadow:0 2px 8px rgba(75,60,48,0.05); }
   .settings-btn:hover { border-color:var(--green-dark); background:var(--surf-soft); }
   .settings-btn.danger { color:var(--red); }
   .settings-btn.danger:hover { border-color:var(--red); }
@@ -693,19 +694,25 @@ const styles = `
   .session-control.is-complete { animation:ringPulse 0.9s ease-in-out 2; }
 
   /* ── Settings section headers ── */
-  .settings-section-label { font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); font-weight:600; margin:20px 0 8px; }
+  .settings-section-label { font-size:13px; color:var(--text-muted); font-weight:500; line-height:1.4; margin:20px 0 10px; }
   .settings-danger-sep { height:1px; background:var(--border); margin:8px 0 16px; opacity:0.5; }
 
   /* ── Notif toggle height fix (44px min) ── */
   .notif-toggle { min-height:44px; padding:0 18px; border-radius:99px; border:1.5px solid var(--border); background:var(--surf-soft); color:var(--text-muted); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; }
   .notif-toggle.on { background:var(--green-dark); color:white; border-color:var(--green-dark); }
 
-  /* ── Typography overrides ── */
-  .proto-row { font-size:15px; color:var(--text-muted); line-height:1.7; }
-  .p-desc { font-size:14px; color:var(--text-muted); margin-top:1px; font-weight:400; }
-  .h-date { font-size:14px; color:var(--text-muted); margin-top:2px; }
 
-  .clear-btn { background:none; border:none; color:var(--text-muted); font-size:13px; cursor:pointer; text-decoration:underline; padding:4px; }
+  .t-body { font-size:15px; font-weight:400; line-height:1.6; color:var(--text-muted); }
+  .t-helper { font-size:13px; font-weight:500; line-height:1.4; color:var(--text-muted); }
+  .t-btn { font-size:16px; font-weight:600; line-height:1.2; letter-spacing:0.01em; }
+  .num-stable { font-variant-numeric:tabular-nums; }
+
+  /* ── Typography overrides ── */
+  .proto-row { font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; }
+  .p-desc { font-size:13px; font-weight:500; line-height:1.4; color:var(--text-muted); margin-top:4px; }
+  .h-date { font-size:13px; font-weight:500; line-height:1.4; color:var(--text-muted); margin-top:6px; }
+
+  .clear-btn { background:none; border:none; color:var(--text-muted); font-size:13px; font-weight:500; line-height:1.4; cursor:pointer; text-decoration:underline; padding:4px; }
   .clear-btn:hover { color:var(--red); }
   ::-webkit-scrollbar { width:4px; }
   ::-webkit-scrollbar-thumb { background:var(--border); border-radius:99px; }
@@ -792,6 +799,11 @@ function SessionControl({
 
           <div className="sc-content">
             <div className="sc-idle" aria-hidden={isRunning}>
+              <div className="sc-play">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M8 6L20 12L8 18V6Z" fill="rgba(255,255,255,0.95)"/>
+                </svg>
+              </div>
               <div className="sc-idle-label">Start Session</div>
             </div>
 
@@ -964,7 +976,7 @@ function DogSelect({ dogs, onSelect, onCreateNew }) {
 
         <div className="ds-section-label" style={{ marginTop: 22 }}>Join with a dog ID</div>
         <div className="ds-note">Dog IDs are case-insensitive — matched automatically regardless of case.</div>
-        <div style={{ fontSize:13, color:"var(--text-muted)", marginBottom:10, lineHeight:1.5 }}>
+        <div className="t-helper" style={{ marginBottom:10 }}>
           Use the same ID from your partner's phone to track the same dog together.
         </div>
         <div className="ds-join-row">
@@ -1251,7 +1263,7 @@ export default function PawTimer() {
   const endWalk = () => {
     clearInterval(walkTimerRef.current);
     const duration = walkElapsed;
-    const entry = { id: Date.now(), date: new Date().toISOString(), duration };
+    const entry = { id: `walk-${Date.now()}`, date: new Date().toISOString(), duration };
     setWalks(prev => [...prev, entry]);
     syncPush(activeDogId, "walk", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
@@ -1432,8 +1444,8 @@ export default function PawTimer() {
                 <div className="prog-thumb" style={{ left:`${Math.max(Math.min(goalPct,98),2)}%` }}/>
               </div>
               <div className="prog-meta">
-                <span>Current threshold: <strong style={{color:"var(--brown)"}}>{fmt(target)}</strong></span>
-                <span>Goal: <strong style={{color:"var(--brown)"}}>{fmt(goalSec)}</strong></span>
+                <span>Current threshold: <strong className="num-stable" style={{color:"var(--brown)"}}>{fmt(target)}</strong></span>
+                <span>Goal: <strong className="num-stable" style={{color:"var(--brown)"}}>{fmt(goalSec)}</strong></span>
               </div>
             </div>
 
@@ -1518,7 +1530,7 @@ export default function PawTimer() {
                           strokeDashoffset={C * (1 - sessFrac)}/>
                       </svg>
                       <div className="ring-inner">
-                        <div className="ring-val">{countToday}<span style={{fontSize:14,fontWeight:400,color:"var(--text-muted)"}}>/{activeProto.sessionsPerDayMax}</span></div>
+                        <div className="ring-val">{countToday}<span className="t-helper num-stable">/{activeProto.sessionsPerDayMax}</span></div>
                       </div>
                     </div>
                     <div className="ring-sub">Sessions today</div>
@@ -1560,9 +1572,9 @@ export default function PawTimer() {
                     </div>
                     {totalLogged > 0 && (
                       <div className="alone-legend">
-                        {calmSec>0   && <span style={{fontSize:11,color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
-                        {mildSec>0   && <span style={{fontSize:11,color:"var(--orange)"}}>{fmt(mildSec)} mild</span>}
-                        {strongSec>0 && <span style={{fontSize:11,color:"var(--red)"}}>{fmt(strongSec)} distress</span>}
+                        {calmSec>0   && <span className="t-helper" style={{color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
+                        {mildSec>0   && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(mildSec)} mild</span>}
+                        {strongSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(strongSec)} distress</span>}
                       </div>
                     )}
                   </div>
@@ -1583,7 +1595,7 @@ export default function PawTimer() {
                 </div>
                 <div className="tool-row-right">
                   {walkPhase === "timing"
-                    ? <span style={{fontSize:13,color:"var(--green-dark)",fontWeight:600}}>{fmt(walkElapsed)} ●</span>
+                    ? <span className="t-helper num-stable" style={{color:"var(--green-dark)",fontWeight:600}}>{fmt(walkElapsed)} ●</span>
                     : <span className="tool-row-meta">Today: {todayWalks}</span>
                   }
                   <span className="tool-chevron">›</span>
@@ -1698,7 +1710,7 @@ export default function PawTimer() {
         {/* ═══ HISTORY ═══ */}
         {tab === "history" && (<div className="tab-content">
           <div className="section">
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:16 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:18 }}>
               <div className="section-title">Activity Log</div>
               {sessions.length > 0 && (
                 <button className="clear-btn" onClick={() => {
@@ -1730,7 +1742,7 @@ export default function PawTimer() {
                   <div className="h-item" key={`s-${s.id}`}>
                     <div className={`h-dot dot-${lv}`}><Img src={icon} size={22}/></div>
                     <div className="h-info">
-                      <div className="h-main">{fmt(s.actualDuration)} <span style={{ color:"var(--text-muted)", fontWeight:300, fontSize:12 }}>of {fmt(s.plannedDuration)}</span></div>
+                      <div className="h-main">{fmt(s.actualDuration)} <span className="t-helper">of {fmt(s.plannedDuration)}</span></div>
                       <div className="h-date">{fmtDate(s.date)}</div>
                     </div>
                     <span className={`h-badge badge-${lv}`}>{distressLabel(lv)}</span>
@@ -1799,7 +1811,7 @@ export default function PawTimer() {
                 <div className="stat-lbl">Calm sessions</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{Math.round((noneCount/totalCount)*100)}<span style={{fontSize:14,fontWeight:400}}>%</span></div>
+                <div className="stat-val">{Math.round((noneCount/totalCount)*100)}<span className="t-helper">%</span></div>
                 <div className="stat-lbl">Success rate</div>
               </div>
               <div className="stat-card">
@@ -1855,14 +1867,14 @@ export default function PawTimer() {
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
                     <CartesianGrid stroke="var(--surf-soft)" vertical={false}/>
-                    <XAxis dataKey="session" tick={{fontSize:10,fill:"var(--text-muted)"}} tickLine={false} axisLine={false}/>
-                    <YAxis tick={{fontSize:10,fill:"var(--text-muted)"}} tickLine={false} axisLine={false}/>
-                    <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:12}} labelStyle={{color:"var(--green-light)"}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
-                    <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:10,fill:"var(--green-dark)"}}/>
+                    <XAxis dataKey="session" tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:500}} tickLine={false} axisLine={false}/>
+                    <YAxis tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:500}} tickLine={false} axisLine={false}/>
+                    <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:13,fontWeight:500}} labelStyle={{color:"var(--green-light)",fontSize:13,fontWeight:500}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
+                    <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:13,fill:"var(--green-dark)",fontWeight:500}}/>
                     <Line type="monotone" dataKey="duration" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
                   </LineChart>
                 </ResponsiveContainer>
-                <div style={{display:"flex",gap:14,justifyContent:"center",marginTop:8,fontSize:11,color:"var(--text-muted)",flexWrap:"wrap"}}>
+                <div className="t-helper" style={{display:"flex",gap:14,justifyContent:"center",marginTop:10,flexWrap:"wrap"}}>
                   <span><span style={{color:"var(--green-dark)"}}>●</span> Calm</span>
                   <span><span style={{color:"var(--orange)"}}>●</span> Mild</span>
                   <span><span style={{color:"var(--red)"}}>●</span> Strong</span>
@@ -1935,7 +1947,7 @@ export default function PawTimer() {
             </div>
             <div className="share-card">
               <div className="share-title">Training Protocol</div>
-              <div style={{ fontSize:13, color:"var(--text-muted)", lineHeight:1.8, marginBottom:14 }}>
+              <div className="t-helper" style={{ lineHeight:1.6, marginBottom:14 }}>
                 <div><strong style={{ color:"var(--brown)" }}>Sessions:</strong> max {activeProto.sessionsPerDayMax}/day · max {activeProto.maxDailyAloneMinutes} min alone/day</div>
                 <div><strong style={{ color:"var(--brown)" }}>Step up:</strong> +{activeProto.incrementPercentDefault}% after each calm session, then +5 min fixed</div>
                 <div><strong style={{ color:"var(--brown)" }}>Pattern breaks:</strong> {activeProto.desensitizationBlocksPerDayRecommendedMin}–{activeProto.desensitizationBlocksPerDayRecommendedMax}/day recommended</div>
@@ -1948,13 +1960,14 @@ export default function PawTimer() {
                     These values are based on clinical separation anxiety protocols. Changing them may slow your dog's progress or cause regression. Only proceed if advised by a certified trainer.
                   </div>
                   <button onClick={() => setProtoWarnAck(true)}
-                    style={{ marginTop:10, padding:"8px 16px", minHeight:44, borderRadius:99, border:"1.5px solid var(--amber)", background:"transparent", color:"var(--amber)", fontSize:13, fontWeight:600, cursor:"pointer" }}>
+                    className="t-btn"
+                    style={{ marginTop:10, padding:"8px 16px", minHeight:44, borderRadius:99, border:"1.5px solid var(--amber)", background:"transparent", color:"var(--amber)", cursor:"pointer" }}>
                     I understand — let me edit
                   </button>
                 </div>
               ) : (
                 <div>
-                  <div style={{ fontSize:13, color:"var(--amber)", fontWeight:600, marginBottom:10, textTransform:"uppercase", letterSpacing:"0.08em" }}>⚠️ Advanced — edit with caution</div>
+                  <div className="t-helper" style={{ color:"var(--amber)", fontWeight:600, marginBottom:10 }}>⚠️ Advanced — edit with caution</div>
                   {[
                     { key:"sessionsPerDayMax", label:"Max sessions/day", unit:"" },
                     { key:"maxDailyAloneMinutes", label:"Max alone time/day", unit:"min" },
@@ -1972,12 +1985,13 @@ export default function PawTimer() {
                             const v = Number(e.target.value);
                             if (!isNaN(v) && v > 0) setProtoOverride(prev => ({ ...prev, [key]: v }));
                           }}/>
-                        {unit && <span style={{ fontSize:13, color:"var(--text-muted)" }}>{unit}</span>}
+                        {unit && <span className="t-helper">{unit}</span>}
                       </div>
                     </div>
                   ))}
                   <button onClick={() => { setProtoOverride({}); setProtoWarnAck(false); }}
-                    style={{ marginTop:12, fontSize:13, color:"var(--text-muted)", background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>
+                    className="t-helper"
+                    style={{ marginTop:12, background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>
                     Reset to defaults
                   </button>
                 </div>
