@@ -99,7 +99,7 @@ const syncPush = async (dogId, kind, data) => {
       }
     : kind === "walk"
       ? {
-          id: String(data.id),
+          id: data.id,
           dog_id: dogId,
           date: data.date,
           duration: data.duration,
