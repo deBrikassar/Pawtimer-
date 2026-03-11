@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { PROTOCOL, getNextDurationSeconds, suggestNext } from "./lib/protocol";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
@@ -57,30 +58,68 @@ const mergeById = (a = [], b = []) => {
 };
 
 const syncFetch = async (dogId) => {
-  const rows = await sbReq(`activities?dog_id=eq.${encodeURIComponent(dogId)}&select=kind,data`);
-  if (!Array.isArray(rows)) return null;
+  const [sessRows, walkRows, patRows] = await Promise.all([
+    sbReq(`sessions?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,planned_duration,actual_duration,distress_level,result&order=date.asc`),
+    sbReq(`walks?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,duration&order=date.asc`),
+    sbReq(`patterns?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,type&order=date.asc`),
+  ]);
+  if (!Array.isArray(sessRows) || !Array.isArray(walkRows) || !Array.isArray(patRows)) return null;
   return {
-    sessions: rows.filter(r => r.kind === "session").map(r => r.data),
-    walks:    rows.filter(r => r.kind === "walk").map(r => r.data),
-    patterns: rows.filter(r => r.kind === "pattern").map(r => r.data),
+    sessions: sessRows.map((r) => ({
+      id: r.id,
+      date: r.date,
+      plannedDuration: r.planned_duration,
+      actualDuration: r.actual_duration,
+      distressLevel: r.distress_level,
+      result: r.result,
+    })),
+    walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
+    patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
   };
 };
 
 const syncPush = async (dogId, kind, data) => {
-  const result = await sbReq("activities", {
+  const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : "patterns";
+  const row = kind === "session"
+    ? {
+        id: String(data.id),
+        dog_id: dogId,
+        date: data.date,
+        planned_duration: data.plannedDuration,
+        actual_duration: data.actualDuration,
+        distress_level: data.distressLevel,
+        result: data.result,
+      }
+    : kind === "walk"
+      ? {
+          id: String(data.id),
+          dog_id: dogId,
+          date: data.date,
+          duration: data.duration,
+        }
+      : {
+          id: String(data.id),
+          dog_id: dogId,
+          date: data.date,
+          type: data.type,
+        };
+
+  const result = await sbReq(table, {
     method: "POST",
-    body: JSON.stringify({ id: String(data.id), dog_id: dogId, kind, data }),
+    body: JSON.stringify(row),
     prefer: "resolution=merge-duplicates",
   });
-  if (result === null) {
-    console.error("syncPush FAILED — kind:", kind, "id:", data.id);
-    return false;
-  }
-  console.log("syncPush OK — kind:", kind, "id:", data.id);
+  if (result === null) return false;
   return true;
 };
 
-const syncDelete = (id) => sbReq(`activities?id=eq.${String(id)}`, { method: "DELETE" });
+const syncDelete = (kind, id) => {
+  const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : "patterns";
+  return sbReq(`${table}?id=eq.${String(id)}`, { method: "DELETE" });
+};
+
+const syncDeleteSessionsForDog = (dogId) =>
+  sbReq(`sessions?dog_id=eq.${encodeURIComponent(dogId)}`, { method: "DELETE" });
 
 // ─── Dog ID: up to 6-letter prefix + 4-digit number (e.g. LUNA-4829) ─────────
 const generateId = (name) => {
@@ -102,85 +141,6 @@ const fmtDate = (iso) => {
   return `${date} · ${time}`;
 };
 const isToday = (iso) => new Date(iso).toDateString() === new Date().toDateString();
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// PROTOCOL LOGIC — mirrors protocolConfig exactly
-// ═══════════════════════════════════════════════════════════════════════════════
-const PROTOCOL = {
-  sessionsPerDayDefault:                    1,
-  sessionsPerDayMax:                        5,
-  trainingDaysPerWeekDefault:               5,
-  restDaysPerWeekMin:                       1,
-  restDaysPerWeekRecommended:               2,
-  startDurationSeconds:                     30,
-  incrementPercentMin:                      10,
-  incrementPercentMax:                      20,
-  incrementPercentDefault:                  15,
-  microstepCeilingMinutes:                  40,
-  maxDailyAloneMinutes:                     30,
-  desensitizationBlocksPerDayRecommendedMin: 3,
-  desensitizationBlocksPerDayRecommendedMax: 5,
-  desensitizationBlocksPerDayMax:           12,
-  cuesPerBlockMin:                          2,
-  cuesPerBlockMax:                          5,
-  minPauseBetweenBlocksMinutes:             30,
-};
-
-/** Next duration after a SUCCESSFUL session. */
-function getNextDurationSeconds(lastSuccessfulDurationSec) {
-  if (!lastSuccessfulDurationSec || lastSuccessfulDurationSec <= 0)
-    return PROTOCOL.startDurationSeconds;
-  const lastMin = lastSuccessfulDurationSec / 60;
-  if (lastMin <= PROTOCOL.microstepCeilingMinutes) {
-    const next = Math.round(lastSuccessfulDurationSec * (1 + PROTOCOL.incrementPercentDefault / 100));
-    return next;
-  }
-  // Above 40-min ceiling → fixed +5-min steps
-  return Math.round((lastMin + 5) * 60);
-}
-
-/**
- * Given the full sessions array and the dog profile, return the next planned
- * duration in seconds.
- *
- * Rules (from protocol):
- *   • No history       → startDurationSeconds (or 80% of currentMaxCalm if set)
- *   • Last = "none"    → +incrementPercentDefault% (up to 40 min ceiling, then +5 min)
- *   • Last = "mild"    → hold (same plannedDuration)
- *   • Last = "strong"  → roll back to 1–2 successful sessions ago
- */
-function suggestNext(sessions, dog) {
-  const goalSec = dog?.goalSeconds ?? 7200;
-  if (!sessions.length) {
-    const start = dog?.currentMaxCalm
-      ? Math.round(dog.currentMaxCalm * 0.8)
-      : PROTOCOL.startDurationSeconds;
-    return Math.max(start, PROTOCOL.startDurationSeconds);
-  }
-
-  const last = sessions[sessions.length - 1];
-  const successful = sessions.filter(s => s.distressLevel === "none");
-
-  if (last.distressLevel === "none") {
-    // Only step up if the dog actually stayed for the full planned time
-    const completed = (last.actualDuration || 0) >= (last.plannedDuration || 0);
-    if (completed) {
-      const next = getNextDurationSeconds(last.plannedDuration);
-      return Math.min(next, goalSec);
-    }
-    // Ended early — hold at same duration
-    return last.plannedDuration;
-  }
-
-  if (last.distressLevel === "mild") {
-    return last.plannedDuration; // hold
-  }
-
-  // strong distress → rollback 1–2 successful steps
-  if (!successful.length) return PROTOCOL.startDurationSeconds;
-  const rollbackIdx = Math.max(successful.length - 2, 0);
-  return Math.max(successful[rollbackIdx].plannedDuration, PROTOCOL.startDurationSeconds);
-}
 
 /**
  * Returns daily session info. No hard limits — just advisory warnings.
@@ -1781,7 +1741,12 @@ export default function PawTimer() {
               {sessions.length > 0 && (
                 <button className="clear-btn" onClick={() => {
                   if (window.confirm("Clear all training sessions?")) {
-                    setSessions([]); setTarget(suggestNext([], dog)); showToast("Sessions cleared");
+                    setSessions([]);
+                    setTarget(suggestNext([], dog));
+                    syncDeleteSessionsForDog(activeDogId).then((ok) => {
+                      if (ok === null) showToast("⚠️ Sessions cleared locally — remote delete failed");
+                      else showToast("Sessions cleared");
+                    });
                   }
                 }}>Clear sessions</button>
               )}
@@ -1807,7 +1772,7 @@ export default function PawTimer() {
                       <div className="h-date">{fmtDate(s.date)}</div>
                     </div>
                     <span className={`h-badge badge-${lv}`}>{distressLabel(lv)}</span>
-                    <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete(s.id); }} title="Delete">✕</button>
+                    <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete("session", s.id); }} title="Delete">✕</button>
                   </div>
                 );
               }
@@ -1821,7 +1786,7 @@ export default function PawTimer() {
                       <div className="h-date">{fmtDate(w.date)}</div>
                     </div>
                     <span className="h-badge badge-walk">Walk</span>
-                    <button className="h-del" onClick={() => { setWalks(prev => prev.filter(x => x.id !== w.id)); syncDelete(w.id); }} title="Delete">✕</button>
+                    <button className="h-del" onClick={() => { setWalks(prev => prev.filter(x => x.id !== w.id)); syncDelete("walk", w.id); }} title="Delete">✕</button>
                   </div>
                 );
               }
@@ -1836,7 +1801,7 @@ export default function PawTimer() {
                       <div className="h-date">{fmtDate(p.date)}</div>
                     </div>
                     <span className="h-badge badge-pat">Pattern break</span>
-                    <button className="h-del" onClick={() => { setPatterns(prev => prev.filter(x => x.id !== p.id)); syncDelete(p.id); }} title="Delete">✕</button>
+                    <button className="h-del" onClick={() => { setPatterns(prev => prev.filter(x => x.id !== p.id)); syncDelete("pattern", p.id); }} title="Delete">✕</button>
                   </div>
                 );
               }

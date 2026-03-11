@@ -23,7 +23,8 @@ PawTimer guides you through a science-based separation anxiety training method:
 - 📈 **Smart progression engine** — increases time on success, holds on mild distress, reverts on strong distress
 - 📊 **Statistics** — total sessions, distress breakdown, best time, streak counter, progress chart
 - 💡 **Training tips** — evidence-based guidance personalised with your dog's name
-- 💾 **No backend needed** — all data saved in your browser's localStorage
+- 💾 **Works offline with localStorage**
+- ☁️ **Optional Supabase sync** — share one dog profile across devices using the same Dog ID
 
 ---
 
@@ -34,7 +35,7 @@ PawTimer guides you through a science-based separation anxiety training method:
 | Frontend | React (Vite) |
 | Charts | Recharts |
 | Styling | Plain CSS-in-JS |
-| Storage | localStorage |
+| Storage | localStorage + optional Supabase |
 | Deployment | Vercel / Netlify |
 
 ---
@@ -81,7 +82,35 @@ pawtimer/
 
 ---
 
-## Deploying for free
+## Deploying with GitHub + Vercel
+
+1. Create a GitHub repository and push this project.
+2. Import the repository into Vercel.
+3. Deploy once without environment variables (local-only mode works immediately).
+4. (Optional) Add Supabase environment variables in Vercel project settings:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+5. Redeploy.
+
+---
+
+## Supabase setup (optional cloud sync)
+
+1. Create a new Supabase project.
+2. Open **SQL Editor** → run `supabase_setup.sql` from this repository.
+3. In Supabase project settings, copy:
+   - Project URL
+   - Anon public key
+4. Add both values as Vercel environment variables:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+5. Redeploy your app.
+
+> The app still works without Supabase — cloud sync is optional.
+
+---
+
+## Deploying for free (alternative)
 
 ### Vercel (recommended)
 
@@ -129,8 +158,6 @@ This app is based on the gradual desensitisation method for separation anxiety:
 ## Future improvements
 
 - 🔔 Browser push notifications for daily reminders
-- 📱 PWA support (install on phone, works offline)
-- ☁️ Cloud sync across devices (via Supabase)
 - 📤 Export session history to CSV
 - 📷 Photo log per session
 - 🌙 Dark mode
