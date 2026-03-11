@@ -27,12 +27,23 @@ create table if not exists walks (
   id         text primary key,        -- e.g. "walk-LUNA-4829-1712345678000"
   dog_id     text not null references dogs(id) on delete cascade,
   date       timestamptz not null,
+  duration   integer not null default 0, -- seconds
+  created_at timestamptz default now()
+);
+
+-- 4. Pattern-break table — one row per desensitization cue log
+create table if not exists patterns (
+  id         text primary key,
+  dog_id     text not null references dogs(id) on delete cascade,
+  date       timestamptz not null,
+  type       text not null check (type in ('keys', 'shoes', 'jacket')),
   created_at timestamptz default now()
 );
 
 -- Indexes for fast lookups by dog
 create index if not exists sessions_dog_id_idx on sessions(dog_id);
 create index if not exists walks_dog_id_idx    on walks(dog_id);
+create index if not exists patterns_dog_id_idx on patterns(dog_id);
 
 -- ============================================================
 -- Row Level Security (RLS)
@@ -44,8 +55,10 @@ create index if not exists walks_dog_id_idx    on walks(dog_id);
 alter table dogs     enable row level security;
 alter table sessions enable row level security;
 alter table walks    enable row level security;
+alter table patterns enable row level security;
 
 -- Allow all operations via the anon key (public, ID-gated access)
 create policy "Public dog access"      on dogs     for all using (true) with check (true);
 create policy "Public session access"  on sessions for all using (true) with check (true);
 create policy "Public walk access"     on walks    for all using (true) with check (true);
+create policy "Public pattern access"  on patterns for all using (true) with check (true);
