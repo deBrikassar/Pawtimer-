@@ -372,73 +372,58 @@ const styles = `
   .dog-photo-overlay { position:absolute; bottom:2px; right:2px; background:var(--brown); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; pointer-events:none; border:2px solid var(--bg); }
 
   /* ── Progress section ── */
-  .prog-section { padding:4px 20px 0; }
+  .prog-section { padding:0 20px; margin-top:16px; }
+  .train-main { width:min(100%, 460px); margin:0 auto; }
   .prog-track { height:8px; background:var(--border); border-radius:99px; position:relative; overflow:visible; }
   .prog-fill  { height:100%; background:linear-gradient(90deg,var(--green-dark),var(--green)); border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
   .prog-thumb { position:absolute; top:50%; transform:translate(-50%,-50%); width:18px; height:18px; border-radius:50%; background:white; border:2.5px solid var(--green-dark); box-shadow:0 2px 8px rgba(61,140,96,0.35); transition:left 0.8s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; }
   .prog-meta  { display:flex; justify-content:space-between; margin-top:8px; font-size:14px; color:var(--text-muted); font-weight:500; }
 
-  /* ── Session zone — circle morphs to timer ── */
-  .session-zone-wrap { margin:8px 20px 0; display:flex; justify-content:center; }
-  .session-zone {
-    position:relative; background:var(--green-dark); overflow:hidden;
-    transition:
-      width  0.52s cubic-bezier(0.4,0,0.2,1),
-      height 0.52s cubic-bezier(0.4,0,0.2,1),
-      border-radius 0.52s cubic-bezier(0.4,0,0.2,1),
-      box-shadow 0.4s ease,
-      transform 0.12s ease;
+  /* ── Session control — single morphing button/timer ── */
+  .session-control-wrap { margin-top:24px; display:flex; justify-content:center; }
+  .session-control {
+    position:relative; width:clamp(180px, 55vw, 212px); aspect-ratio:1/1;
+    border:none; border-radius:50%; cursor:pointer;
+    background:radial-gradient(circle at 38% 30%, #8fd8ab 0%, #63b082 48%, #3f8f63 100%);
+    box-shadow:0 14px 34px rgba(61,140,96,0.34), inset 0 1px 0 rgba(255,255,255,0.34);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform 130ms ease, box-shadow 320ms ease, filter 320ms ease;
+    touch-action:manipulation;
   }
-  .session-zone.sz-idle {
-    width:168px; height:168px; border-radius:50%; cursor:pointer;
-    box-shadow:0 6px 28px rgba(61,140,96,0.42);
+  .session-control::before {
+    content:""; position:absolute; inset:-10px; border-radius:50%; pointer-events:none;
+    border:10px solid rgba(168,213,186,0.28);
   }
-  .session-zone.sz-idle:hover { transform:scale(1.04); box-shadow:0 10px 38px rgba(61,140,96,0.52); }
-  .session-zone.sz-idle:active { transform:scale(0.96); }
-  .session-zone.sz-running {
-    width:100%; height:420px; border-radius:22px; cursor:default;
-    box-shadow:0 8px 32px rgba(61,140,96,0.28);
+  .session-control.is-running {
+    box-shadow:0 16px 36px rgba(61,140,96,0.28), inset 0 1px 0 rgba(255,255,255,0.30);
+    filter:saturate(1.08);
   }
-
-  /* Idle layer */
-  .sz-idle-layer {
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:7px;
-    transition:opacity 0.18s ease;
-  }
-  .sz-idle .sz-idle-layer  { opacity:1; pointer-events:auto; }
-  .sz-running .sz-idle-layer { opacity:0; pointer-events:none; }
-  .sz-play-ring { width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.20); border:1.5px solid rgba(255,255,255,0.45); display:flex; align-items:center; justify-content:center; }
-  .sz-label { font-size:15px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase; color:rgba(255,255,255,0.96); }
-  .sz-sub-label { font-size:13px; color:rgba(255,255,255,0.68); letter-spacing:0.02em; }
-
-  /* Running layer */
-  .sz-running-layer {
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:0;
-    padding:24px 20px 20px;
-    transition:opacity 0.28s ease 0.32s;
-  }
-  .sz-idle .sz-running-layer    { opacity:0; pointer-events:none; }
-  .sz-running .sz-running-layer { opacity:1; pointer-events:auto; }
-  .sz-session-title { font-size:16px; font-weight:600; color:rgba(255,255,255,0.85); letter-spacing:0.02em; margin-bottom:14px; }
-  .sz-ring-wrap { position:relative; width:180px; height:180px; flex-shrink:0; }
-  .sz-ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
-  .sz-countdown { font-size:46px; font-weight:600; color:white; line-height:1; }
-  .sz-countdown-lbl { font-size:12px; text-transform:uppercase; letter-spacing:0.09em; color:rgba(255,255,255,0.65); font-weight:500; }
-  .sz-elapsed { font-size:14px; color:rgba(255,255,255,0.65); margin-top:10px; }
-  .sz-ready { font-size:14px; color:white; font-weight:600; background:rgba(255,255,255,0.18); border-radius:99px; padding:5px 16px; margin-top:8px; }
-  .sz-btns { display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:14px; width:100%; }
-  .sz-end-btn { width:100%; padding:13px; background:rgba(255,255,255,0.18); color:white; border:1.5px solid rgba(255,255,255,0.35); border-radius:var(--radius-sm); font-size:15px; font-weight:600; cursor:pointer; transition:background 0.15s; }
-  .sz-end-btn:hover { background:rgba(255,255,255,0.28); }
-  .sz-cancel-btn { background:none; border:none; color:rgba(255,255,255,0.52); font-size:13px; cursor:pointer; padding:4px 8px; }
-  .sz-cancel-btn:hover { color:rgba(255,255,255,0.80); }
+  .session-control.is-pressing { transform:scale(0.96); }
+  .session-control:focus-visible { outline:3px solid rgba(61,140,96,0.45); outline-offset:4px; }
+  .sc-ring-svg { position:absolute; inset:-10px; width:calc(100% + 20px); height:calc(100% + 20px); transform:rotate(-90deg); }
+  .sc-track { fill:none; stroke:rgba(96,142,111,0.2); stroke-width:10; }
+  .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
+  .sc-content { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:70%; padding:20px; }
+  .sc-play { width:50px; height:50px; border-radius:50%; background:rgba(255,255,255,0.24); border:1.5px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; margin-bottom:10px; transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-idle-label { font-size:14px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.97); transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-idle-duration { margin-top:4px; font-size:13px; color:rgba(255,255,255,0.78); transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-time { position:absolute; opacity:0; transform:scale(0.95); transition:opacity 300ms ease-in-out, transform 300ms ease-in-out; }
+  .sc-time-value { font-size:42px; line-height:1; font-weight:700; color:#fff; letter-spacing:0.02em; }
+  .sc-time-sub { font-size:12px; margin-top:6px; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.74); }
+  .session-control.is-running .sc-play,
+  .session-control.is-running .sc-idle-label,
+  .session-control.is-running .sc-idle-duration { opacity:0; transform:translateY(-4px); }
+  .session-control.is-running .sc-time,
+  .session-control.is-complete .sc-time { opacity:1; transform:scale(1); }
+  .session-actions { margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .session-end-btn { width:min(100%, 260px); padding:11px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown); font-size:15px; font-weight:600; cursor:pointer; }
+  .session-cancel-btn { background:none; border:none; color:var(--text-muted); font-size:13px; cursor:pointer; }
 
   /* ── Status message ── */
-  .status-msg { margin:4px 20px 0; font-size:16px; color:var(--text-muted); line-height:1.55; text-align:center; }
+  .status-msg { margin:16px auto 0; max-width:340px; font-size:15px; color:var(--text-muted); line-height:1.55; text-align:center; }
 
   /* ── Stats rings card ── */
-  .stats-rings-card { margin:6px 20px 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; }
+  .stats-rings-card { margin:24px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; }
   .ring-col { flex:1; display:flex; flex-direction:column; align-items:center; }
   .ring-col-sep { width:1px; background:var(--border); align-self:stretch; margin:8px 0; }
   .ring-wrap { position:relative; width:88px; height:88px; }
@@ -525,7 +510,6 @@ const styles = `
   .btn-walk:hover { border-color:var(--green-dark); background:var(--surf-soft); transform:translateY(-1px); }
   .btn-walk .walk-count { margin-left:auto; background:var(--surf-soft); padding:2px 10px; border-radius:99px; font-size:12px; color:var(--text-muted); font-weight:400; }
 
-  /* ── Focus screen CSS removed — now uses session-zone.sz-running ── */
   @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
   .btn-cancel { display:block; width:calc(100% - 48px); margin:10px 24px 0; padding:12px; background:transparent; color:var(--text-muted); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:14px; cursor:pointer; transition:background 0.15s; }
   .btn-cancel:hover { background:var(--surf-soft); }
@@ -721,7 +705,7 @@ const styles = `
 
   /* ── Focus ring pulse when target reached ── */
   @keyframes ringPulse { 0%,100%{filter:drop-shadow(0 0 0px rgba(255,255,255,0))} 50%{filter:drop-shadow(0 0 14px rgba(255,255,255,0.55))} }
-  .sz-ring-done { animation:ringPulse 2s ease-in-out infinite; }
+  .session-control.is-complete { animation:ringPulse 0.9s ease-in-out 2; }
 
   /* ── Settings section headers ── */
   .settings-section-label { font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); font-weight:600; margin:20px 0 8px; }
@@ -770,25 +754,80 @@ const SettingsIcon = () => (
   </svg>
 );
 
-// ─── Ring Timer ───────────────────────────────────────────────────────────────
-function RingTimer({ elapsed, target }) {
-  const r = 46, circ = 2 * Math.PI * r;
-  const pct  = Math.min(elapsed / Math.max(target, 1), 1);
-  const mins = Math.floor(elapsed / 60).toString().padStart(2, "0");
-  const secs = (elapsed % 60).toString().padStart(2, "0");
+
+function SessionControl({
+  phase,
+  elapsed,
+  target,
+  onStart,
+  onEnd,
+  onCancel,
+  completed,
+}) {
+  const [pressing, setPressing] = useState(false);
+  const remaining = Math.max(target - elapsed, 0);
+  const radius = 103;
+  const circumference = 2 * Math.PI * radius;
+  const frac = Math.min(elapsed / Math.max(target, 1), 1);
+  const isRunning = phase === "running";
+
+  const startWithFeedback = () => {
+    if (!onStart) return;
+    setPressing(true);
+    setTimeout(() => {
+      setPressing(false);
+      onStart();
+    }, 120);
+  };
+
   return (
-    <div className="ring-wrap">
-      <svg className="ring-svg" width="110" height="110" viewBox="0 0 110 110">
-        <circle className="ring-bg" cx="55" cy="55" r={r}/>
-        <circle className="ring-fill" cx="55" cy="55" r={r}
-          strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)}
-          style={{ stroke: pct >= 1 ? "var(--green-dark)" : "var(--brown)" }}/>
-      </svg>
-      <div className="ring-text">
-        <div className="ring-time">{mins}:{secs}</div>
-        <div className="ring-sub">elapsed</div>
+    <>
+      <div className="session-control-wrap">
+        <button
+          className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""}`}
+          onClick={!isRunning ? startWithFeedback : undefined}
+          aria-label={isRunning
+            ? `${fmt(remaining)} remaining in current session`
+            : `Start ${fmt(target)} session`}
+          aria-live={isRunning ? "polite" : undefined}
+        >
+          <svg className="sc-ring-svg" viewBox="0 0 226 226" aria-hidden="true">
+            <circle className="sc-track" cx="113" cy="113" r={radius} />
+            <circle
+              className="sc-progress"
+              cx="113"
+              cy="113"
+              r={radius}
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference * (1 - frac)}
+              style={{ opacity: isRunning || completed ? 1 : 0.18 }}
+            />
+          </svg>
+
+          <div className="sc-content">
+            <div className="sc-play" aria-hidden={isRunning}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 6L20 12L8 18V6Z" fill="rgba(255,255,255,0.95)"/>
+              </svg>
+            </div>
+            <div className="sc-idle-label">START SESSION</div>
+            <div className="sc-idle-duration">{fmt(target)}</div>
+
+            <div className="sc-time">
+              <div className="sc-time-value">{fmt(remaining)}</div>
+              <div className="sc-time-sub">Session in progress</div>
+            </div>
+          </div>
+        </button>
       </div>
-    </div>
+
+      {isRunning && (
+        <div className="session-actions">
+          <button className="session-end-btn" onClick={onEnd}>End Session</button>
+          <button className="session-cancel-btn" onClick={onCancel}>Cancel (don't save)</button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -973,6 +1012,7 @@ export default function PawTimer() {
   const [phase,        setPhase]        = useState("idle"); // idle | running | rating
   const [elapsed,      setElapsed]      = useState(0);
   const [finalElapsed, setFinalElapsed] = useState(0);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
   const [target,       setTarget]       = useState(PROTOCOL.startDurationSeconds);
   const [toast,        setToast]        = useState(null);
   const [howOpen,      setHowOpen]      = useState(false);  // collapsible how-it-works
@@ -1113,6 +1153,14 @@ export default function PawTimer() {
 
   // ── Timer ────────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (phase !== "running") {
+      setSessionCompleted(false);
+      return;
+    }
+    if (elapsed >= target) setSessionCompleted(true);
+  }, [phase, elapsed, target]);
+
+  useEffect(() => {
     if (phase === "running") {
       startRef.current = Date.now() - elapsed * 1000;
       timerRef.current = setInterval(() => {
@@ -1169,7 +1217,7 @@ export default function PawTimer() {
     setTarget(Math.max(Math.round(data.currentMaxCalm * 0.8), PROTOCOL.startDurationSeconds));
   };
 
-  const startSession = () => { setElapsed(0); setPhase("running"); };
+  const startSession = () => { setElapsed(0); setSessionCompleted(false); setPhase("running"); };
 
   const endSession = () => {
     // Freeze the elapsed time, move to rating
@@ -1192,7 +1240,7 @@ export default function PawTimer() {
     });
     const next = suggestNext(updated, dog);
     setTarget(next);
-    setPhase("idle"); setElapsed(0); setFinalElapsed(0);
+    setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false);
     const n = (dog?.dogName ?? "dog").toUpperCase();
     if (distressLevel === "none")       showToast(`✅ ${n} was calm! Next: ${fmt(next)}`);
     else if (distressLevel === "mild")  showToast(`⚠️ Mild signs — holding at ${fmt(next)}`);
@@ -1200,7 +1248,7 @@ export default function PawTimer() {
   };
 
   const cancelSession = () => {
-    setPhase("idle"); setElapsed(0); setFinalElapsed(0); clearInterval(timerRef.current);
+    setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false); clearInterval(timerRef.current);
   };
 
   // ── Walk timer ────────────────────────────────────────────────────────────
@@ -1394,113 +1442,47 @@ export default function PawTimer() {
             );
           })()}
 
-          {/* 1. Progress bar with thumb */}
-          <div className="prog-section">
-            <div className="prog-track">
-              <div className="prog-fill" style={{ width:`${goalPct}%` }}/>
-              <div className="prog-thumb" style={{ left:`${Math.max(Math.min(goalPct,98),2)}%` }}/>
-            </div>
-            <div className="prog-meta">
-              <span>Current threshold: <strong style={{color:"var(--brown)"}}>{fmt(target)}</strong></span>
-              <span>Goal: <strong style={{color:"var(--brown)"}}>{fmt(goalSec)}</strong></span>
-            </div>
-          </div>
-
-          {/* ── SESSION ZONE — circle in idle, morphs to timer when running ── */}
-          {phase !== "rating" && (() => {
-            const R = 76; const C = 2 * Math.PI * R;
-            const remaining = Math.max(target - elapsed, 0);
-            const frac = Math.min(elapsed / Math.max(target, 1), 1);
-            return (
-              <div className="session-zone-wrap">
-                <div
-                  className={`session-zone ${phase === "running" ? "sz-running" : "sz-idle"}`}
-                  onClick={phase === "idle" ? startSession : undefined}
-                  aria-label={phase === "idle" ? `Start ${fmt(target)} session` : undefined}
-                  role={phase === "idle" ? "button" : undefined}
-                >
-                  {/* ── Idle layer: play circle ── */}
-                  <div className="sz-idle-layer" aria-hidden={phase !== "idle"}>
-                    <div className="sz-play-ring">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M8 6L20 12L8 18V6Z" fill="rgba(255,255,255,0.95)"/>
-                      </svg>
-                    </div>
-                    <span className="sz-label">START SESSION</span>
-                    <span className="sz-sub-label">{fmt(target)}</span>
-                  </div>
-
-                  {/* ── Running layer: timer ── */}
-                  <div className="sz-running-layer" aria-hidden={phase !== "running"}>
-                    <div className="sz-session-title">{name} is training</div>
-                    <div className="sz-ring-wrap">
-                      <svg width={180} height={180} viewBox="0 0 180 180"
-                        className={elapsed >= target ? "sz-ring-done" : ""}
-                        aria-hidden="true">
-                        {/* Track */}
-                        <circle cx={90} cy={90} r={R} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth={9}/>
-                        {/* Progress */}
-                        <circle cx={90} cy={90} r={R} fill="none"
-                          stroke="rgba(255,255,255,0.90)" strokeWidth={9} strokeLinecap="round"
-                          strokeDasharray={C}
-                          strokeDashoffset={C * (1 - frac)}
-                          style={{
-                            transition: "stroke-dashoffset 1s linear",
-                            transform: "rotate(-90deg)",
-                            transformOrigin: "90px 90px"
-                          }}/>
-                      </svg>
-                      <div className="sz-ring-inner">
-                        <div className="sz-countdown"
-                          aria-live="polite"
-                          aria-label={`${fmt(remaining)} remaining`}>
-                          {fmt(remaining)}
-                        </div>
-                        <div className="sz-countdown-lbl">remaining</div>
-                      </div>
-                    </div>
-                    <div className="sz-elapsed">
-                      {elapsed > 0 ? `${fmt(elapsed)} elapsed` : "Leave the room calmly"}
-                    </div>
-                    {elapsed >= target && (
-                      <div className="sz-ready">✓ Target reached — come back</div>
-                    )}
-                    <div className="sz-btns">
-                      <button className="sz-end-btn"
-                        onClick={e => { e.stopPropagation(); endSession(); }}>
-                        End Session
-                      </button>
-                      <button className="sz-cancel-btn"
-                        onClick={e => { e.stopPropagation(); cancelSession(); }}>
-                        Cancel (don't save)
-                      </button>
-                    </div>
-                  </div>
-                </div>
+          <div className="train-main">
+            {/* 1. Progress bar with thumb */}
+            <div className="prog-section">
+              <div className="prog-track">
+                <div className="prog-fill" style={{ width:`${goalPct}%` }}/>
+                <div className="prog-thumb" style={{ left:`${Math.max(Math.min(goalPct,98),2)}%` }}/>
               </div>
-            );
-          })()}
+              <div className="prog-meta">
+                <span>Current threshold: <strong style={{color:"var(--brown)"}}>{fmt(target)}</strong></span>
+                <span>Goal: <strong style={{color:"var(--brown)"}}>{fmt(goalSec)}</strong></span>
+              </div>
+            </div>
 
-          {/* ── IDLE ── */}
-          {phase === "idle" && (<>
+            {phase !== "rating" && (
+              <SessionControl
+                phase={phase}
+                elapsed={elapsed}
+                target={target}
+                onStart={startSession}
+                onEnd={endSession}
+                onCancel={cancelSession}
+                completed={sessionCompleted}
+              />
+            )}
 
-
-
-            {/* 3. Status message — one concise line */}
             <p className="status-msg">
-              {!sessions.length
-                ? `First session — starting small and positive.`
-                : !lastSess || lastSess.distressLevel === "none"
-                  ? (lastSess && (lastSess.actualDuration||0) < (lastSess.plannedDuration||0))
-                    ? `Session ended early — holding until ${name} completes the full time.`
-                    : `${name} completed the last session — stepping up.`
-                  : lastSess.distressLevel === "mild"
-                    ? `Mild signs last time — holding until consistently calm.`
-                    : `Rolled back after strong distress — steady progress matters most.`}
+              {phase === "running"
+                ? (sessionCompleted ? "Target reached — return calmly and end the session." : "Session in progress. Keep transitions calm and predictable.")
+                : !sessions.length
+                  ? "First session — starting small and positive."
+                  : !lastSess || lastSess.distressLevel === "none"
+                    ? (lastSess && (lastSess.actualDuration||0) < (lastSess.plannedDuration||0))
+                      ? `Session ended early — holding until ${name} completes the full time.`
+                      : `${name} completed the last session — stepping up.`
+                    : lastSess.distressLevel === "mild"
+                      ? "Mild signs last time — holding until consistently calm."
+                      : "Rolled back after strong distress — steady progress matters most."}
             </p>
 
             {/* 4. Stats rings card */}
-            {(() => {
+            {phase === "idle" && (() => {
               const R = 36; const C = 2*Math.PI*R;
               const goalFrac = Math.min(goalPct/100, 1);
               const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(countToday/activeProto.sessionsPerDayMax, 1) : 0;
@@ -1703,7 +1685,7 @@ export default function PawTimer() {
               </div>
             </div>
 
-          </>)}
+          </div>
 
           {/* ── RATING ── */}
           {phase === "rating" && (
