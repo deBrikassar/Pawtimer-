@@ -379,6 +379,7 @@ const styles = `
     border:10px solid rgba(168,213,186,0.28);
   }
   .session-control.is-running {
+    background:var(--surf);
     box-shadow:0 16px 36px rgba(61,140,96,0.28), inset 0 1px 0 rgba(255,255,255,0.30);
     filter:saturate(1.08);
   }
@@ -388,20 +389,21 @@ const styles = `
   .sc-track { fill:none; stroke:rgba(96,142,111,0.2); stroke-width:10; }
   .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
   .sc-content { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:70%; padding:20px; }
-  .sc-play { width:50px; height:50px; border-radius:50%; background:rgba(255,255,255,0.24); border:1.5px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center; margin-bottom:10px; transition:opacity 260ms ease, transform 300ms ease; }
-  .sc-idle-label { font-size:14px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.97); transition:opacity 260ms ease, transform 300ms ease; }
-  .sc-idle-duration { margin-top:4px; font-size:13px; color:rgba(255,255,255,0.78); transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-idle { display:flex; align-items:center; justify-content:center; gap:10px; transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-play { width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-idle-label { font-size:16px; font-weight:700; letter-spacing:0.02em; color:rgba(255,255,255,0.97); transition:opacity 260ms ease, transform 300ms ease; }
   .sc-time { position:absolute; opacity:0; transform:scale(0.95); transition:opacity 300ms ease-in-out, transform 300ms ease-in-out; }
-  .sc-time-value { font-size:42px; line-height:1; font-weight:700; color:#fff; letter-spacing:0.02em; }
-  .sc-time-sub { font-size:12px; margin-top:6px; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.74); }
-  .session-control.is-running .sc-play,
-  .session-control.is-running .sc-idle-label,
-  .session-control.is-running .sc-idle-duration { opacity:0; transform:translateY(-4px); }
+  .sc-time-value { font-size:42px; line-height:1; font-weight:700; color:var(--green-dark); letter-spacing:0.02em; }
+  .sc-time-sub { font-size:12px; margin-top:6px; letter-spacing:0.08em; text-transform:uppercase; color:var(--green-dark); opacity:0.82; }
+  .session-control.is-running .sc-idle { opacity:0; transform:translateY(-4px); }
   .session-control.is-running .sc-time,
   .session-control.is-complete .sc-time { opacity:1; transform:scale(1); }
   .session-actions { margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:center; }
-  .session-end-btn { width:min(100%, 260px); padding:11px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown); font-size:15px; font-weight:600; cursor:pointer; }
-  .session-cancel-btn { background:none; border:none; color:var(--text-muted); font-size:13px; cursor:pointer; }
+  .session-end-btn, .session-cancel-btn { width:min(100%, 260px); padding:11px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown); font-size:15px; font-weight:600; cursor:pointer; }
+  .session-cancel-btn { background:var(--surf-soft); }
+  .session-end-btn:hover, .session-cancel-btn:hover { border-color:var(--green-dark); }
+
+  .session-feedback { width:min(100%, 420px); margin:0; }
 
   /* ── Status message ── */
   .status-msg { margin:16px auto 0; max-width:340px; font-size:15px; color:var(--text-muted); line-height:1.55; text-align:center; }
@@ -754,6 +756,7 @@ function SessionControl({
   const circumference = 2 * Math.PI * radius;
   const frac = Math.min(elapsed / Math.max(target, 1), 1);
   const isRunning = phase === "running";
+  const isIdle = phase === "idle";
 
   const startWithFeedback = () => {
     if (!onStart) return;
@@ -766,10 +769,10 @@ function SessionControl({
 
   return (
     <>
-      <div className="session-control-wrap">
+      {phase !== "rating" && (<div className="session-control-wrap">
         <button
           className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""}`}
-          onClick={!isRunning ? startWithFeedback : undefined}
+          onClick={isIdle ? startWithFeedback : undefined}
           aria-label={isRunning
             ? `${fmt(remaining)} remaining in current session`
             : `Start ${fmt(target)} session`}
@@ -789,13 +792,14 @@ function SessionControl({
           </svg>
 
           <div className="sc-content">
-            <div className="sc-play" aria-hidden={isRunning}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M8 6L20 12L8 18V6Z" fill="rgba(255,255,255,0.95)"/>
-              </svg>
+            <div className="sc-idle" aria-hidden={isRunning}>
+              <div className="sc-play">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M8 6L20 12L8 18V6Z" fill="rgba(255,255,255,0.95)"/>
+                </svg>
+              </div>
+              <div className="sc-idle-label">Start Session</div>
             </div>
-            <div className="sc-idle-label">START SESSION</div>
-            <div className="sc-idle-duration">{fmt(target)}</div>
 
             <div className="sc-time">
               <div className="sc-time-value">{fmt(remaining)}</div>
@@ -803,7 +807,7 @@ function SessionControl({
             </div>
           </div>
         </button>
-      </div>
+      </div>)}
 
       {isRunning && (
         <div className="session-actions">
@@ -1253,7 +1257,7 @@ export default function PawTimer() {
   const endWalk = () => {
     clearInterval(walkTimerRef.current);
     const duration = walkElapsed;
-    const entry = { id: Date.now(), date: new Date().toISOString(), duration };
+    const entry = { id: `walk-${Date.now()}`, date: new Date().toISOString(), duration };
     setWalks(prev => [...prev, entry]);
     syncPush(activeDogId, "walk", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
@@ -1439,16 +1443,40 @@ export default function PawTimer() {
               </div>
             </div>
 
-            {phase !== "rating" && (
-              <SessionControl
-                phase={phase}
-                elapsed={elapsed}
-                target={target}
-                onStart={startSession}
-                onEnd={endSession}
-                onCancel={cancelSession}
-                completed={sessionCompleted}
-              />
+            <SessionControl
+              phase={phase}
+              elapsed={elapsed}
+              target={target}
+              onStart={startSession}
+              onEnd={endSession}
+              onCancel={cancelSession}
+              completed={sessionCompleted}
+            />
+
+            {phase === "rating" && (
+              <div className="rating-screen session-feedback">
+                <div className="rating-title">Was there any stress?</div>
+                <div className="rating-sub">
+                  {fmt(finalElapsed)} session — how did {name} handle it?
+                </div>
+                <div className="result-grid">
+                  <button className="btn-result btn-none" onClick={() => recordResult("none")}>
+                    <Img src="result-calm.png" size={36} alt="No distress"/>
+                    <div><div>No Distress</div><div className="result-desc">{name} was completely calm</div></div>
+                  </button>
+                  <button className="btn-result btn-mild" onClick={() => recordResult("mild")}>
+                    <Img src="result-mild.png" size={36} alt="Mild distress"/>
+                    <div><div>Mild Distress</div><div className="result-desc">Slight whining or restlessness</div></div>
+                  </button>
+                  <button className="btn-result btn-strong" onClick={() => recordResult("strong")}>
+                    <Img src="result-strong.png" size={36} alt="Strong distress"/>
+                    <div><div>Strong Distress</div><div className="result-desc">Barking, pacing, or destructive</div></div>
+                  </button>
+                </div>
+                <button className="btn-cancel" onClick={() => { setPhase("idle"); setElapsed(0); setFinalElapsed(0); }}>
+                  Discard this session
+                </button>
+              </div>
             )}
 
             <p className="status-msg">
@@ -1671,32 +1699,6 @@ export default function PawTimer() {
 
           </div>
 
-          {/* ── RATING ── */}
-          {phase === "rating" && (
-            <div className="rating-screen">
-              <div className="rating-title">Was there any stress?</div>
-              <div className="rating-sub">
-                {fmt(finalElapsed)} session — how did {name} handle it?
-              </div>
-              <div className="result-grid">
-                <button className="btn-result btn-none" onClick={() => recordResult("none")}>
-                  <Img src="result-calm.png" size={36} alt="No distress"/>
-                  <div><div>No Distress</div><div className="result-desc">{name} was completely calm</div></div>
-                </button>
-                <button className="btn-result btn-mild" onClick={() => recordResult("mild")}>
-                  <Img src="result-mild.png" size={36} alt="Mild distress"/>
-                  <div><div>Mild Distress</div><div className="result-desc">Slight whining or restlessness</div></div>
-                </button>
-                <button className="btn-result btn-strong" onClick={() => recordResult("strong")}>
-                  <Img src="result-strong.png" size={36} alt="Strong distress"/>
-                  <div><div>Strong Distress</div><div className="result-desc">Barking, pacing, or destructive</div></div>
-                </button>
-              </div>
-              <button className="btn-cancel" onClick={() => { setPhase("idle"); setElapsed(0); setFinalElapsed(0); }}>
-                Discard this session
-              </button>
-            </div>
-          )}
         </div>)}
 
         {/* ═══ HISTORY ═══ */}
