@@ -79,6 +79,13 @@ const syncFetch = async (dogId) => {
 };
 
 const syncPush = async (dogId, kind, data) => {
+  const dogReady = await sbReq("dogs", {
+    method: "POST",
+    body: JSON.stringify({ id: dogId, settings: {} }),
+    prefer: "resolution=merge-duplicates",
+  });
+  if (dogReady === null) return false;
+
   const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : "patterns";
   const row = kind === "session"
     ? {
