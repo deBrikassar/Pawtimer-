@@ -1530,29 +1530,29 @@ export default function PawTimer() {
 
             {/* 5. Daily alone-time card */}
             {(() => {
-              const todaySess    = sessions.filter(s => isToday(s.date));
-              const totalPlanned = todaySess.reduce((sum,s) => sum+(s.plannedDuration||0),0);
-              const calmSec   = todaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.plannedDuration||0),0);
-              const mildSec   = todaySess.filter(s=>s.distressLevel==="mild").reduce((sum,s)=>sum+(s.plannedDuration||0),0);
-              const strongSec = todaySess.filter(s=>s.distressLevel==="strong").reduce((sum,s)=>sum+(s.plannedDuration||0),0);
-              const calmPct   = totalPlanned ? (calmSec/totalPlanned)*100 : 0;
-              const mildPct   = totalPlanned ? (mildSec/totalPlanned)*100 : 0;
-              const strongPct = totalPlanned ? (strongSec/totalPlanned)*100 : 0;
+              const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
+              const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
+              const calmSec   = loggedTodaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const mildSec   = loggedTodaySess.filter(s=>s.distressLevel==="mild").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const strongSec = loggedTodaySess.filter(s=>s.distressLevel==="strong").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const calmPct   = totalLogged ? (calmSec/totalLogged)*100 : 0;
+              const mildPct   = totalLogged ? (mildSec/totalLogged)*100 : 0;
+              const strongPct = totalLogged ? (strongSec/totalLogged)*100 : 0;
               return (
                 <div className="alone-card">
                   <div className="alone-left">
                     <div className="alone-label">Today's alone time</div>
-                    <div className="alone-total">{totalPlanned === 0 ? "0 mins" : fmt(totalPlanned)}</div>
+                    <div className="alone-total">{totalLogged === 0 ? "0 mins" : fmt(totalLogged)}</div>
                   </div>
                   <div className="alone-right">
                     <div className="alone-track">
-                      {totalPlanned > 0 ? (<>
+                      {totalLogged > 0 ? (<>
                         <div className="alone-fill ok"   style={{width:`${calmPct}%`}}/>
                         <div className="alone-fill near" style={{width:`${mildPct}%`}}/>
                         <div className="alone-fill full" style={{width:`${strongPct}%`}}/>
                       </>) : <div style={{width:"100%",height:"100%",background:"var(--border)",borderRadius:99}}/>}
                     </div>
-                    {totalPlanned > 0 && (
+                    {totalLogged > 0 && (
                       <div className="alone-legend">
                         {calmSec>0   && <span style={{fontSize:11,color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
                         {mildSec>0   && <span style={{fontSize:11,color:"var(--orange)"}}>{fmt(mildSec)} mild</span>}
