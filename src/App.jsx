@@ -313,7 +313,8 @@ const styles = `
     background: var(--bg);
     color: var(--text);
     font-family: 'Neue Montreal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-weight: 450;
+    font-weight: 400;
+    line-height: 1.5;
     min-height: 100vh; min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
@@ -406,8 +407,8 @@ const styles = `
 
   /* ── Dog photo ── */
   .dog-photo-btn { position:relative; display:inline-block; cursor:pointer; flex-shrink:0; }
-  .dog-photo-img { width:60px; height:60px; border-radius:50%; object-fit:cover; border:2.5px solid var(--green); display:block; box-shadow:0 3px 12px rgba(61,140,96,0.20); }
-  .dog-photo-placeholder { width:60px; height:60px; border-radius:50%; background:var(--surf-soft); border:2px dashed var(--border); display:flex; align-items:center; justify-content:center; }
+  .dog-photo-img { width:64px; height:64px; border-radius:50%; object-fit:cover; border:2.5px solid var(--green); display:block; box-shadow:0 3px 12px rgba(61,140,96,0.20); }
+  .dog-photo-placeholder { width:64px; height:64px; border-radius:50%; background:var(--surf-soft); border:2px dashed var(--border); display:flex; align-items:center; justify-content:center; }
   .dog-photo-overlay { position:absolute; bottom:2px; right:2px; background:var(--brown); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; pointer-events:none; border:2px solid var(--bg); }
 
   /* ── Progress section ── */
@@ -417,20 +418,67 @@ const styles = `
   .prog-thumb { position:absolute; top:50%; transform:translate(-50%,-50%); width:18px; height:18px; border-radius:50%; background:white; border:2.5px solid var(--green-dark); box-shadow:0 2px 8px rgba(61,140,96,0.35); transition:left 0.8s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; }
   .prog-meta  { display:flex; justify-content:space-between; margin-top:8px; font-size:14px; color:var(--text-muted); font-weight:500; }
 
-  /* ── Hero start button — large gradient card ── */
-  .btn-start-hero { display:flex; flex-direction:column; align-items:center; justify-content:center; width:calc(100% - 40px); margin:8px 20px 0; padding:0 20px; min-height:148px; background:linear-gradient(155deg,var(--green-dark) 0%,#5cb87c 50%,var(--green) 100%); color:white; border:none; border-radius:28px; cursor:pointer; box-shadow:0 8px 32px rgba(61,140,96,0.38); transition:transform 0.14s,box-shadow 0.14s; gap:10px; position:relative; overflow:hidden; }
-  .btn-start-hero::after { content:''; position:absolute; inset:0; background:rgba(255,255,255,0.06); border-radius:28px; pointer-events:none; }
-  .btn-start-hero:hover { transform:translateY(-2px); box-shadow:0 14px 44px rgba(61,140,96,0.45); }
-  .btn-start-hero:active { transform:scale(0.99); box-shadow:0 4px 16px rgba(61,140,96,0.30); }
-  .btn-start-play-ring { width:64px; height:64px; border-radius:50%; background:rgba(255,255,255,0.22); border:2px solid rgba(255,255,255,0.50); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 18px rgba(0,0,0,0.10); position:relative; z-index:1; }
-  .btn-start-label { font-size:18px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:rgba(255,255,255,0.97); position:relative; z-index:1; }
-  .btn-start-target { font-size:15px; color:rgba(255,255,255,0.80); position:relative; z-index:1; letter-spacing:0.02em; }
+  /* ── Session zone — circle morphs to timer ── */
+  .session-zone-wrap { margin:8px 20px 0; display:flex; justify-content:center; }
+  .session-zone {
+    position:relative; background:var(--green-dark); overflow:hidden;
+    transition:
+      width  0.52s cubic-bezier(0.4,0,0.2,1),
+      height 0.52s cubic-bezier(0.4,0,0.2,1),
+      border-radius 0.52s cubic-bezier(0.4,0,0.2,1),
+      box-shadow 0.4s ease,
+      transform 0.12s ease;
+  }
+  .session-zone.sz-idle {
+    width:168px; height:168px; border-radius:50%; cursor:pointer;
+    box-shadow:0 6px 28px rgba(61,140,96,0.42);
+  }
+  .session-zone.sz-idle:hover { transform:scale(1.04); box-shadow:0 10px 38px rgba(61,140,96,0.52); }
+  .session-zone.sz-idle:active { transform:scale(0.96); }
+  .session-zone.sz-running {
+    width:100%; height:420px; border-radius:22px; cursor:default;
+    box-shadow:0 8px 32px rgba(61,140,96,0.28);
+  }
+
+  /* Idle layer */
+  .sz-idle-layer {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:7px;
+    transition:opacity 0.18s ease;
+  }
+  .sz-idle .sz-idle-layer  { opacity:1; pointer-events:auto; }
+  .sz-running .sz-idle-layer { opacity:0; pointer-events:none; }
+  .sz-play-ring { width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.20); border:1.5px solid rgba(255,255,255,0.45); display:flex; align-items:center; justify-content:center; }
+  .sz-label { font-size:15px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase; color:rgba(255,255,255,0.96); }
+  .sz-sub-label { font-size:13px; color:rgba(255,255,255,0.68); letter-spacing:0.02em; }
+
+  /* Running layer */
+  .sz-running-layer {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:0;
+    padding:24px 20px 20px;
+    transition:opacity 0.28s ease 0.32s;
+  }
+  .sz-idle .sz-running-layer    { opacity:0; pointer-events:none; }
+  .sz-running .sz-running-layer { opacity:1; pointer-events:auto; }
+  .sz-session-title { font-size:16px; font-weight:600; color:rgba(255,255,255,0.85); letter-spacing:0.02em; margin-bottom:14px; }
+  .sz-ring-wrap { position:relative; width:180px; height:180px; flex-shrink:0; }
+  .sz-ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; }
+  .sz-countdown { font-size:46px; font-weight:600; color:white; line-height:1; }
+  .sz-countdown-lbl { font-size:12px; text-transform:uppercase; letter-spacing:0.09em; color:rgba(255,255,255,0.65); font-weight:500; }
+  .sz-elapsed { font-size:14px; color:rgba(255,255,255,0.65); margin-top:10px; }
+  .sz-ready { font-size:14px; color:white; font-weight:600; background:rgba(255,255,255,0.18); border-radius:99px; padding:5px 16px; margin-top:8px; }
+  .sz-btns { display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:14px; width:100%; }
+  .sz-end-btn { width:100%; padding:13px; background:rgba(255,255,255,0.18); color:white; border:1.5px solid rgba(255,255,255,0.35); border-radius:var(--radius-sm); font-size:15px; font-weight:600; cursor:pointer; transition:background 0.15s; }
+  .sz-end-btn:hover { background:rgba(255,255,255,0.28); }
+  .sz-cancel-btn { background:none; border:none; color:rgba(255,255,255,0.52); font-size:13px; cursor:pointer; padding:4px 8px; }
+  .sz-cancel-btn:hover { color:rgba(255,255,255,0.80); }
 
   /* ── Status message ── */
-  .status-msg { margin:4px 20px 0; font-size:15px; color:var(--text-muted); line-height:1.55; text-align:center; }
+  .status-msg { margin:4px 20px 0; font-size:16px; color:var(--text-muted); line-height:1.55; text-align:center; }
 
   /* ── Stats rings card ── */
-  .stats-rings-card { margin:6px 20px 0; background:var(--surf); border-radius:var(--radius); padding:10px 6px 10px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; }
+  .stats-rings-card { margin:6px 20px 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; }
   .ring-col { flex:1; display:flex; flex-direction:column; align-items:center; }
   .ring-col-sep { width:1px; background:var(--border); align-self:stretch; margin:8px 0; }
   .ring-wrap { position:relative; width:88px; height:88px; }
@@ -443,11 +491,11 @@ const styles = `
   .ring-sub { font-size:14px; color:var(--text-muted); font-weight:600; margin-top:5px; text-align:center; line-height:1.3; }
 
   /* ── Tool section title ── */
-  .tool-section-title { margin:10px 20px 4px; font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); font-weight:700; }
+  .tool-section-title { margin:8px 20px 4px; font-size:13px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); font-weight:700; }
 
   /* ── Grouped tool card ── */
   .tool-group-card { margin:0 20px; background:var(--surf); border-radius:var(--radius-sm); box-shadow:0 2px 12px rgba(75,60,48,0.07); overflow:hidden; }
-  .tool-row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; transition:background 0.15s; border-bottom:1px solid var(--border); }
+  .tool-row { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; cursor:pointer; transition:background 0.15s; border-bottom:1px solid var(--border); }
   .tool-row:last-child { border-bottom:none; }
   .tool-row:hover { background:var(--surf-soft); }
   .tool-row-left  { display:flex; align-items:center; gap:12px; }
@@ -460,7 +508,7 @@ const styles = `
 
   /* ── Walk timer banner ── */
   .walk-timer-banner { margin:0 20px; padding:10px 14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; display:flex; align-items:center; justify-content:space-between; }
-  .walk-timer-left .walk-timer-elapsed { font-size:22px; font-weight:700; color:var(--green-dark); line-height:1.1; }
+  .walk-timer-left .walk-timer-elapsed { font-size:26px; font-weight:700; color:var(--green-dark); line-height:1.1; }
   .walk-timer-left .walk-timer-lbl { font-size:14px; color:var(--text-muted); margin-top:1px; }
   .walk-timer-btns { display:flex; gap:8px; align-items:center; }
   .walk-end-btn { padding:10px 20px; background:var(--green-dark); color:white; border:none; border-radius:99px; font-size:14px; font-weight:600; cursor:pointer; transition:opacity 0.15s; }
@@ -469,10 +517,10 @@ const styles = `
   .walk-cancel-btn:hover { background:var(--surf); }
 
   /* ── Daily alone-time card ── */
-  .alone-card   { margin:6px 20px 0; background:var(--surf); border-radius:var(--radius-sm); padding:12px 14px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; align-items:center; gap:16px; }
+  .alone-card   { margin:6px 20px 0; background:var(--surf); border-radius:var(--radius-sm); padding:11px 14px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; align-items:center; gap:16px; }
   .alone-left   { flex:1; }
   .alone-label  { font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:600; margin-bottom:2px; }
-  .alone-total  { font-size:22px; color:var(--brown); font-weight:700; line-height:1.1; }
+  .alone-total  { font-size:24px; color:var(--brown); font-weight:700; line-height:1.1; }
   .alone-right  { flex:1; }
   .alone-track  { height:6px; background:var(--border); border-radius:99px; overflow:hidden; display:flex; }
   .alone-fill   { height:100%; transition:width 0.6s; flex-shrink:0; }
@@ -517,17 +565,8 @@ const styles = `
   .btn-walk:hover { border-color:var(--green-dark); background:var(--surf-soft); transform:translateY(-1px); }
   .btn-walk .walk-count { margin-left:auto; background:var(--surf-soft); padding:2px 10px; border-radius:99px; font-size:12px; color:var(--text-muted); font-weight:400; }
 
-  /* ── Focus screen (running phase) ── */
-  .focus-screen { display:flex; flex-direction:column; align-items:center; padding:28px 24px 0; animation:fadeIn 0.5s ease; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-  .focus-dog-name { font-size:20px; color:var(--brown); font-weight:600; margin-bottom:20px; letter-spacing:0.01em; }
-  .focus-ring-wrap { position:relative; width:220px; height:220px; margin-bottom:20px; }
-  .focus-ring-svg { position:absolute; top:0; left:0; }
-  .focus-ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
-  .focus-time { font-size:52px; font-weight:600; color:var(--brown); line-height:1; }
-  .focus-time-lbl { font-size:13px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); font-weight:500; }
-  .focus-elapsed { font-size:14px; color:var(--text-muted); margin-bottom:8px; }
-  .focus-ready { font-size:14px; color:var(--green-dark); font-weight:500; background:rgba(168,213,186,0.2); border-radius:99px; padding:6px 16px; margin-bottom:4px; }
+  /* ── Focus screen CSS removed — now uses session-zone.sz-running ── */
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
   .btn-cancel { display:block; width:calc(100% - 48px); margin:10px 24px 0; padding:12px; background:transparent; color:var(--text-muted); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:14px; cursor:pointer; transition:background 0.15s; }
   .btn-cancel:hover { background:var(--surf-soft); }
 
@@ -536,7 +575,7 @@ const styles = `
 
   /* ── Rating screen ── */
   .rating-screen { margin:0 24px; background:var(--surf); border-radius:var(--radius); padding:24px 22px; box-shadow:var(--shadow-lg); animation:slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-  .rating-title { font-size:20px; font-weight:600; color:var(--brown); text-align:center; margin-bottom:4px; }
+  .rating-title { font-size:21px; font-weight:600; color:var(--brown); text-align:center; margin-bottom:4px; }
   .rating-sub   { font-size:14px; color:var(--text-muted); text-align:center; margin-bottom:16px; line-height:1.5; }
   .result-grid { display:flex; flex-direction:column; gap:10px; margin-bottom:4px; }
   .btn-result { width:100%; padding:14px 16px; border:none; border-radius:var(--radius-sm); font-size:15px; font-weight:500; font-weight:500; cursor:pointer; transition:transform 0.15s; display:flex; align-items:center; gap:14px; text-align:left; }
@@ -572,7 +611,7 @@ const styles = `
   .btn-pat:active { transform:translateX(0); }
   .p-emoji { font-size:18px; flex-shrink:0; }
   .p-text  { flex:1; }
-  .p-label { font-size:14px; color:var(--brown); font-weight:500; }
+  .p-label { font-size:15px; color:var(--brown); font-weight:500; }
   .p-desc  { font-size:14px; color:var(--text-muted); margin-top:1px; font-weight:400; }
   .p-count { font-size:12px; color:var(--text-muted); background:var(--surf-soft); padding:2px 9px; border-radius:99px; flex-shrink:0; white-space:nowrap; }
 
@@ -583,11 +622,11 @@ const styles = `
   .tab-btn svg { width:24px; height:24px; }
 
   /* ── Sections ── */
-  .section { padding:12px 18px; overflow-x:hidden; }
-  .section-title { font-size:20px; font-weight:700; color:var(--brown); margin-bottom:14px; }
+  .section { padding:10px 18px; overflow-x:hidden; }
+  .section-title { font-size:20px; font-weight:700; color:var(--brown); margin-bottom:12px; }
   .empty-state { text-align:center; padding:40px 24px; color:var(--text-muted); }
   .empty-state .big { font-size:48px; margin-bottom:12px; }
-  .empty-state p { font-size:14px; line-height:1.6; }
+  .empty-state p { font-size:15px; line-height:1.6; }
 
 
 
@@ -632,9 +671,9 @@ const styles = `
   .dot-walk   { background:rgba(74,158,110,0.15); }
   .dot-pat    { background:rgba(75,60,48,0.09); }
   .h-info { flex:1; min-width:0; }
-  .h-main { font-weight:600; font-size:15px; color:var(--brown); }
-  .h-date { font-size:13px; color:var(--text-muted); margin-top:2px; }
-  .h-badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:99px; letter-spacing:0.03em; white-space:nowrap; flex-shrink:0; }
+  .h-main { font-weight:600; font-size:16px; color:var(--brown); }
+  .h-date { font-size:14px; color:var(--text-muted); margin-top:2px; }
+  .h-badge { font-size:13px; font-weight:600; padding:3px 9px; border-radius:99px; letter-spacing:0.03em; white-space:nowrap; flex-shrink:0; }
   .badge-none   { background:rgba(168,213,186,0.3);  color:var(--green-dark); }
   .badge-mild   { background:rgba(230,126,34,0.12); color:var(--orange); }
   .badge-strong { background:rgba(192,57,43,0.10);  color:var(--red); }
@@ -643,39 +682,39 @@ const styles = `
 
   /* ── Stats ── */
   .chart-wrap  { background:var(--surf); border-radius:var(--radius); padding:16px 8px 12px; box-shadow:var(--shadow); margin-bottom:12px; }
-  .chart-title { font-size:15px; color:var(--brown); margin-bottom:14px; padding-left:12px; }
-  .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:14px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:14px; }
+  .chart-title { font-size:16px; color:var(--brown); margin-bottom:14px; padding-left:12px; }
+  .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:12px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:12px; }
   .streak-num  { font-size:36px; font-weight:700; line-height:1; }
   .streak-lbl  { font-size:14px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.85; margin-top:6px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:4px; }
-  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
-  .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:14px; text-align:center; box-shadow:var(--shadow); }
+  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+  .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
   .stat-val    { font-size:24px; color:var(--brown); font-weight:700; }
-  .stat-lbl    { font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-top:3px; font-weight:600; }
+  .stat-lbl    { font-size:14px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-top:3px; font-weight:600; }
   .stat-wide   { background:var(--surf); border-radius:var(--radius-sm); padding:14px 18px; box-shadow:var(--shadow); grid-column:span 2; display:flex; align-items:center; justify-content:space-between; }
   .stat-wide .stat-val { font-size:26px; color:var(--brown); font-weight:600; }
-  .stat-wide .stat-lbl { font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; font-weight:500; }
+  .stat-wide .stat-lbl { font-size:14px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px; font-weight:500; }
   .stat-icon   { font-size:28px; opacity:1; display:flex; align-items:center; }
   .ratio-card  { background:var(--surf); border-radius:var(--radius-sm); padding:14px; box-shadow:var(--shadow); margin-bottom:10px; }
-  .ratio-title { font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); font-weight:600; margin-bottom:10px; }
+  .ratio-title { font-size:15px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); font-weight:600; margin-bottom:10px; }
   .ratio-bar   { height:12px; border-radius:99px; overflow:hidden; display:flex; }
   .ratio-good  { background:var(--green);  transition:width 0.6s; }
   .ratio-mild  { background:var(--orange); transition:width 0.6s; }
   .ratio-bad   { background:var(--red);    transition:width 0.6s; }
-  .ratio-legend { display:flex; gap:14px; margin-top:6px; font-size:13px; color:var(--text-muted); flex-wrap:wrap; }
+  .ratio-legend { display:flex; gap:14px; margin-top:6px; font-size:14px; color:var(--text-muted); flex-wrap:wrap; }
   .ratio-legend span { display:flex; align-items:center; gap:5px; }
   .dot12 { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 
   /* ── Settings tab ── */
   .share-card  { background:var(--surf); border-radius:var(--radius); padding:16px; margin-bottom:12px; box-shadow:var(--shadow); }
   .share-title { font-size:17px; font-weight:600; color:var(--brown); margin-bottom:4px; }
-  .share-sub   { font-size:14px; color:var(--text-muted); margin-bottom:12px; line-height:1.5; }
+  .share-sub   { font-size:15px; color:var(--text-muted); margin-bottom:12px; line-height:1.5; }
   .share-id-row { display:flex; align-items:center; gap:10px; background:var(--surf-soft); border-radius:var(--radius-sm); padding:12px 16px; margin-bottom:10px; }
   .share-id-val { font-family:monospace; font-size:22px; font-weight:700; color:var(--brown); letter-spacing:0.1em; flex:1; }
   .copy-btn { background:var(--brown); color:white; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:500; cursor:pointer; transition:opacity 0.15s; }
   .copy-btn:hover { opacity:0.85; }
-  .share-steps { font-size:14px; color:var(--text-muted); line-height:1.8; padding-left:18px; }
+  .share-steps { font-size:15px; color:var(--text-muted); line-height:1.8; padding-left:18px; }
   .share-steps li { margin-bottom:2px; }
-  .settings-btn { width:100%; padding:13px 16px; background:var(--surf); color:var(--brown); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:15px; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:10px; margin-bottom:10px; transition:border-color 0.2s,background 0.2s; box-shadow:0 2px 8px rgba(75,60,48,0.05); }
+  .settings-btn { width:100%; padding:13px 16px; background:var(--surf); color:var(--brown); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:16px; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:10px; margin-bottom:10px; transition:border-color 0.2s,background 0.2s; box-shadow:0 2px 8px rgba(75,60,48,0.05); }
   .settings-btn:hover { border-color:var(--green-dark); background:var(--surf-soft); }
   .settings-btn.danger { color:var(--red); }
   .settings-btn.danger:hover { border-color:var(--red); }
@@ -721,8 +760,8 @@ const styles = `
   .btn-pat:active { animation:patRipple 0.15s ease; }
 
   /* ── Focus ring pulse when target reached ── */
-  @keyframes ringPulse { 0%,100%{filter:drop-shadow(0 0 0px rgba(92,170,127,0))} 50%{filter:drop-shadow(0 0 12px rgba(92,170,127,0.7))} }
-  .focus-ring-done { animation:ringPulse 2s ease-in-out infinite; }
+  @keyframes ringPulse { 0%,100%{filter:drop-shadow(0 0 0px rgba(255,255,255,0))} 50%{filter:drop-shadow(0 0 14px rgba(255,255,255,0.55))} }
+  .sz-ring-done { animation:ringPulse 2s ease-in-out infinite; }
 
   /* ── Settings section headers ── */
   .settings-section-label { font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); font-weight:600; margin:20px 0 8px; }
@@ -732,10 +771,10 @@ const styles = `
   .notif-toggle { min-height:44px; padding:0 18px; border-radius:99px; border:1.5px solid var(--border); background:var(--surf-soft); color:var(--text-muted); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; }
   .notif-toggle.on { background:var(--green-dark); color:white; border-color:var(--green-dark); }
 
-  /* ── Proto row typography fix (13px min) ── */
-  .proto-row { font-size:13px; color:var(--text-muted); line-height:1.7; }
-  .p-desc { font-size:13px; color:var(--text-muted); margin-top:1px; font-weight:300; }
-  .h-date { font-size:13px; color:var(--text-muted); margin-top:2px; }
+  /* ── Typography overrides ── */
+  .proto-row { font-size:15px; color:var(--text-muted); line-height:1.7; }
+  .p-desc { font-size:14px; color:var(--text-muted); margin-top:1px; font-weight:400; }
+  .h-date { font-size:14px; color:var(--text-muted); margin-top:2px; }
 
   .clear-btn { background:none; border:none; color:var(--text-muted); font-size:13px; cursor:pointer; text-decoration:underline; padding:4px; }
   .clear-btn:hover { color:var(--red); }
@@ -1407,19 +1446,85 @@ export default function PawTimer() {
             </div>
           </div>
 
+          {/* ── SESSION ZONE — circle in idle, morphs to timer when running ── */}
+          {phase !== "rating" && (() => {
+            const R = 76; const C = 2 * Math.PI * R;
+            const remaining = Math.max(target - elapsed, 0);
+            const frac = Math.min(elapsed / Math.max(target, 1), 1);
+            return (
+              <div className="session-zone-wrap">
+                <div
+                  className={`session-zone ${phase === "running" ? "sz-running" : "sz-idle"}`}
+                  onClick={phase === "idle" ? startSession : undefined}
+                  aria-label={phase === "idle" ? `Start ${fmt(target)} session` : undefined}
+                  role={phase === "idle" ? "button" : undefined}
+                >
+                  {/* ── Idle layer: play circle ── */}
+                  <div className="sz-idle-layer" aria-hidden={phase !== "idle"}>
+                    <div className="sz-play-ring">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M8 6L20 12L8 18V6Z" fill="rgba(255,255,255,0.95)"/>
+                      </svg>
+                    </div>
+                    <span className="sz-label">START SESSION</span>
+                    <span className="sz-sub-label">{fmt(target)}</span>
+                  </div>
+
+                  {/* ── Running layer: timer ── */}
+                  <div className="sz-running-layer" aria-hidden={phase !== "running"}>
+                    <div className="sz-session-title">{name} is training</div>
+                    <div className="sz-ring-wrap">
+                      <svg width={180} height={180} viewBox="0 0 180 180"
+                        className={elapsed >= target ? "sz-ring-done" : ""}
+                        aria-hidden="true">
+                        {/* Track */}
+                        <circle cx={90} cy={90} r={R} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth={9}/>
+                        {/* Progress */}
+                        <circle cx={90} cy={90} r={R} fill="none"
+                          stroke="rgba(255,255,255,0.90)" strokeWidth={9} strokeLinecap="round"
+                          strokeDasharray={C}
+                          strokeDashoffset={C * (1 - frac)}
+                          style={{
+                            transition: "stroke-dashoffset 1s linear",
+                            transform: "rotate(-90deg)",
+                            transformOrigin: "90px 90px"
+                          }}/>
+                      </svg>
+                      <div className="sz-ring-inner">
+                        <div className="sz-countdown"
+                          aria-live="polite"
+                          aria-label={`${fmt(remaining)} remaining`}>
+                          {fmt(remaining)}
+                        </div>
+                        <div className="sz-countdown-lbl">remaining</div>
+                      </div>
+                    </div>
+                    <div className="sz-elapsed">
+                      {elapsed > 0 ? `${fmt(elapsed)} elapsed` : "Leave the room calmly"}
+                    </div>
+                    {elapsed >= target && (
+                      <div className="sz-ready">✓ Target reached — come back</div>
+                    )}
+                    <div className="sz-btns">
+                      <button className="sz-end-btn"
+                        onClick={e => { e.stopPropagation(); endSession(); }}>
+                        End Session
+                      </button>
+                      <button className="sz-cancel-btn"
+                        onClick={e => { e.stopPropagation(); cancelSession(); }}>
+                        Cancel (don't save)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* ── IDLE ── */}
           {phase === "idle" && (<>
 
-            {/* 2. START SESSION — large gradient card */}
-            <button className="btn-start-hero" onClick={startSession} aria-label={`Start ${fmt(target)} session`}>
-              <div className="btn-start-play-ring">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                  <path d="M10 8L26 16L10 24V8Z" fill="rgba(255,255,255,0.95)"/>
-                </svg>
-              </div>
-              <span className="btn-start-label">START SESSION</span>
-              <span className="btn-start-target">{fmt(target)} · tap to begin</span>
-            </button>
+
 
             {/* 3. Status message — one concise line */}
             <p className="status-msg">
@@ -1639,35 +1744,6 @@ export default function PawTimer() {
             </div>
 
           </>)}
-
-          {/* ── RUNNING — Focus Mode ── */}
-          {phase === "running" && (
-            <div className="focus-screen">
-              <div className="focus-dog-name">{name} is training</div>
-              <div className="focus-ring-wrap">
-                <svg className={`focus-ring-svg${elapsed >= target ? " focus-ring-done" : ""}`} width={220} height={220} viewBox="0 0 220 220" aria-hidden="true">
-                  <circle cx={110} cy={110} r={96} fill="none" stroke="rgba(168,213,186,0.18)" strokeWidth={10}/>
-                  <circle cx={110} cy={110} r={96} fill="none"
-                    stroke="var(--green)" strokeWidth={10} strokeLinecap="round"
-                    strokeDasharray={`${2*Math.PI*96}`}
-                    strokeDashoffset={`${2*Math.PI*96 * (1 - Math.min(elapsed/Math.max(target,1),1))}`}
-                    style={{transition:"stroke-dashoffset 1s linear", transform:"rotate(-90deg)", transformOrigin:"110px 110px"}}/>
-                </svg>
-                <div className="focus-ring-inner">
-                  <div className="focus-time" aria-live="polite" aria-label={`${fmt(Math.max(target - elapsed, 0))} remaining`}>{fmt(Math.max(target - elapsed, 0))}</div>
-                  <div className="focus-time-lbl">remaining</div>
-                </div>
-              </div>
-              <div className="focus-elapsed">
-                {elapsed > 0 ? `${fmt(elapsed)} elapsed` : "Leave the room calmly"}
-              </div>
-              {elapsed >= target && (
-                <div className="focus-ready">✓ Target reached — come back whenever ready</div>
-              )}
-              <button className="btn-end" onClick={endSession} style={{marginTop:24}}>End Session</button>
-              <button className="btn-cancel" onClick={cancelSession}>Cancel (don't save)</button>
-            </div>
-          )}
 
           {/* ── RATING ── */}
           {phase === "rating" && (
