@@ -251,29 +251,6 @@ const styles = `
     --radius-sm: 12px;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg:          #1c1916;
-      --surf:        #262220;
-      --surf-soft:   #1e2b22;
-      --border:      #3a3028;
-      --green:       #5a9e72;
-      --green-light: #3a6e50;
-      --green-dark:  #6bbf8a;
-      --brown:       #e8ddd0;
-      --brown-mid:   #c8b8a8;
-      --brown-muted: #9a8878;
-      --amber:       #e8984a;
-      --amber-light: #f0b865;
-      --red:         #e05a4a;
-      --orange:      #f08832;
-      --text:        #e8ddd0;
-      --text-muted:  #a89888;
-      --shadow:    0 4px 24px rgba(0,0,0,0.30);
-      --shadow-lg: 0 8px 40px rgba(0,0,0,0.40);
-    }
-  }
-
   html { overflow-x: hidden; width: 100%; max-width: 100vw; }
   html, body {
     height: 100%;

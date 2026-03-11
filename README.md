@@ -160,7 +160,6 @@ This app is based on the gradual desensitisation method for separation anxiety:
 - 🔔 Browser push notifications for daily reminders
 - 📤 Export session history to CSV
 - 📷 Photo log per session
-- 🌙 Dark mode
 
 ---
 
