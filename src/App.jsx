@@ -845,6 +845,7 @@ const styles = `
   .metric-help-card { width:min(100%, 420px); background:var(--surf); border-radius:var(--radius); padding:18px 16px; box-shadow:var(--shadow-lg); }
   .metric-help-title { font-size:20px; color:var(--brown); font-weight:700; margin-bottom:8px; }
   .metric-help-body { font-size:14px; color:var(--text-muted); line-height:1.6; font-weight:400; }
+  .metric-help-detail { margin-top:10px; font-size:12px; color:var(--text-muted); font-weight:500; }
   .metric-help-close { margin-top:14px; width:100%; border:none; border-radius:10px; background:var(--brown); color:var(--bg); padding:11px; font-size:14px; font-weight:600; cursor:pointer; }
 
   .train-coverage { text-align:center; }
@@ -1729,18 +1730,22 @@ export default function PawTimer() {
     stability: {
       title: "Stability",
       body: "How consistent calm-session durations are. Higher stability means your calm sessions are predictable; big swings suggest your dog may still need more repetition at easier levels.",
+      detail: `Median calm · SD ${durationVariability != null ? fmt(durationVariability) : "—"} · ${stabilityTone.label}`,
     },
     momentum: {
       title: "Momentum",
       body: "Your short-term trend. It compares calm-session rate over the last 7 days against the last 14 days to show whether progress is improving, holding, or slipping.",
+      detail: `7d calm · 14d ${calmRate14 != null ? `${calmRate14}%` : "—"} · ${momentumTone.label}`,
     },
     relapseRisk: {
       title: "Relapse risk",
       body: "A quick warning signal based on strong-distress sessions in your most recent attempts. More strong distress in the recent window means a higher chance of setbacks and a need to slow down.",
+      detail: `${recentStrongCount}/${relapseWindow} recent sessions strong distress · ${relapseTone.label}`,
     },
     adherence: {
       title: "Adherence",
       body: "How well daily pattern breaks keep pace with real departures (walks together). Better adherence means cues are practiced enough to support training progress.",
+      detail: `Pattern breaks vs walks by day · ${adherenceTone.label}`,
     },
   };
 
@@ -1777,6 +1782,9 @@ export default function PawTimer() {
           <div className="metric-help-card" onClick={(e) => e.stopPropagation()}>
             <div className="metric-help-title" id="metric-help-title">{metricExplainers[metricHelp]?.title}</div>
             <div className="metric-help-body">{metricExplainers[metricHelp]?.body}</div>
+            {metricExplainers[metricHelp]?.detail && (
+              <div className="metric-help-detail">{metricExplainers[metricHelp]?.detail}</div>
+            )}
             <button className="metric-help-close" onClick={() => setMetricHelp(null)} type="button">Got it</button>
           </div>
         </div>
@@ -2299,28 +2307,24 @@ export default function PawTimer() {
                   <div className="insight-value" style={{ color: stabilityTone.color }}>
                     {calmMedian != null ? fmt(calmMedian) : "—"}
                   </div>
-                  <div className="insight-sub">Median calm · SD {durationVariability != null ? fmt(durationVariability) : "—"} · {stabilityTone.label}</div>
                 </button>
                 <button className="insight-card insight-card-btn" style={{ borderLeftColor: momentumTone.color }} onClick={() => openMetricHelp("momentum")} type="button">
                   <div className="insight-title">Momentum</div>
                   <div className="insight-value" style={{ color: momentumTone.color }}>
                     {calmRate7 != null ? `${calmRate7}%` : "—"}
                   </div>
-                  <div className="insight-sub">7d calm · 14d {calmRate14 != null ? `${calmRate14}%` : "—"} · {momentumTone.label}</div>
                 </button>
                 <button className="insight-card insight-card-btn" style={{ borderLeftColor: relapseTone.color }} onClick={() => openMetricHelp("relapseRisk")} type="button">
                   <div className="insight-title">Relapse risk</div>
                   <div className="insight-value" style={{ color: relapseTone.color }}>
                     {relapseRisk ? "High" : "Low"}
                   </div>
-                  <div className="insight-sub">{recentStrongCount}/{relapseWindow} recent sessions strong distress · {relapseTone.label}</div>
                 </button>
                 <button className="insight-card insight-card-btn" style={{ borderLeftColor: adherenceTone.color }} onClick={() => openMetricHelp("adherence")} type="button">
                   <div className="insight-title">Adherence</div>
                   <div className="insight-value" style={{ color: adherenceTone.color }}>
                     {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
                   </div>
-                  <div className="insight-sub">Pattern breaks vs walks by day · {adherenceTone.label}</div>
                 </button>
               </div>
             )}
