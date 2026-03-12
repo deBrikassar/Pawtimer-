@@ -60,29 +60,40 @@ const mergeById = (a = [], b = []) => {
 };
 
 const asBool = (value) => value === true || value === 1;
+const hasValue = (value) => value !== null && value !== undefined;
+
+const normalizeSymptom = (value) => {
+  if (Number.isFinite(value)) return Math.max(0, Number(value));
+  return asBool(value) ? 1 : 0;
+};
 
 const normalizeSession = (row = {}) => {
+  const context = row.context ?? {};
+  const symptoms = row.symptoms ?? {};
+  const preSession = row.preSession ?? row.pre_session ?? {};
+  const environment = row.environment ?? {};
+
   const normalized = {
     ...row,
-    distressLevel: row.distressLevel ?? (row.result === "success" ? "none" : "strong"),
+    distressLevel: row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong"),
     context: {
-      timeOfDay: row.context?.timeOfDay ?? null,
-      departureType: row.context?.departureType ?? null,
-      cuesUsed: Array.isArray(row.context?.cuesUsed) ? row.context.cuesUsed : [],
+      timeOfDay: context.timeOfDay ?? context.time_of_day ?? null,
+      departureType: context.departureType ?? context.departure_type ?? null,
+      cuesUsed: Array.isArray(context.cuesUsed ?? context.cues_used) ? (context.cuesUsed ?? context.cues_used) : [],
     },
     symptoms: {
-      barking: Number.isFinite(row.symptoms?.barking) ? row.symptoms.barking : asBool(row.symptoms?.barking) ? 1 : 0,
-      pacing: Number.isFinite(row.symptoms?.pacing) ? row.symptoms.pacing : asBool(row.symptoms?.pacing) ? 1 : 0,
-      destructive: Number.isFinite(row.symptoms?.destructive) ? row.symptoms.destructive : asBool(row.symptoms?.destructive) ? 1 : 0,
-      salivation: Number.isFinite(row.symptoms?.salivation) ? row.symptoms.salivation : asBool(row.symptoms?.salivation) ? 1 : 0,
+      barking: normalizeSymptom(symptoms.barking),
+      pacing: normalizeSymptom(symptoms.pacing),
+      destructive: normalizeSymptom(symptoms.destructive),
+      salivation: normalizeSymptom(symptoms.salivation),
     },
-    recoverySeconds: Number.isFinite(row.recoverySeconds) ? row.recoverySeconds : null,
+    recoverySeconds: Number.isFinite(row.recoverySeconds) ? row.recoverySeconds : (Number.isFinite(row.recovery_seconds) ? row.recovery_seconds : null),
     preSession: {
-      walkDuration: Number.isFinite(row.preSession?.walkDuration) ? row.preSession.walkDuration : null,
-      enrichmentGiven: row.preSession?.enrichmentGiven ?? null,
+      walkDuration: Number.isFinite(preSession.walkDuration) ? preSession.walkDuration : (Number.isFinite(preSession.walk_duration) ? preSession.walk_duration : null),
+      enrichmentGiven: hasValue(preSession.enrichmentGiven) ? preSession.enrichmentGiven : (hasValue(preSession.enrichment_given) ? preSession.enrichment_given : null),
     },
     environment: {
-      noiseEvent: row.environment?.noiseEvent ?? asBool(row.environment?.noise_event),
+      noiseEvent: hasValue(environment.noiseEvent) ? !!environment.noiseEvent : asBool(environment.noise_event),
     },
   };
   return normalized;
@@ -1443,11 +1454,11 @@ export default function PawTimer() {
   const lastSess = sessions[sessions.length - 1];
 
   const recommendationCoverageCount = sessions.filter(s =>
-    (s.context?.timeOfDay || s.context?.departureType || (Array.isArray(s.context?.cuesUsed) && s.context.cuesUsed.length))
-    && ["barking","pacing","destructive","salivation"].some(k => s.symptoms && k in s.symptoms)
-    && Number.isFinite(s.recoverySeconds)
-    && (Number.isFinite(s.preSession?.walkDuration) || s.preSession?.enrichmentGiven != null)
-    && typeof s.environment?.noiseEvent === "boolean"
+    (hasValue(s.context?.timeOfDay) || hasValue(s.context?.departureType) || (Array.isArray(s.context?.cuesUsed) && s.context.cuesUsed.length > 0))
+    && ["barking","pacing","destructive","salivation"].some(k => hasValue(s.symptoms?.[k]))
+    && hasValue(s.recoverySeconds)
+    && (hasValue(s.preSession?.walkDuration) || hasValue(s.preSession?.enrichmentGiven))
+    && hasValue(s.environment?.noiseEvent)
   ).length;
   const recommendationCoveragePct = totalCount ? Math.round((recommendationCoverageCount / totalCount) * 100) : 0;
 
@@ -1837,15 +1848,16 @@ export default function PawTimer() {
                 const s = item.data;
                 const lv = s.distressLevel ?? (s.result === "success" ? "none" : "strong");
                 const icon = lv === "none" ? "result-calm.png" : lv === "mild" ? "result-mild.png" : "result-strong.png";
+                const detailBadges = sessionDetailBadges(s);
                 return (
                   <div className="h-item" key={`s-${s.id}`}>
                     <div className={`h-dot dot-${lv}`}><Img src={icon} size={22}/></div>
                     <div className="h-info">
                       <div className="h-main">{fmt(s.actualDuration)} <span className="t-helper">of {fmt(s.plannedDuration)}</span></div>
                       <div className="h-date">{fmtDate(s.date)}</div>
-                      {sessionDetailBadges(s).length > 0 && (
+                      {detailBadges.length > 0 && (
                         <div className="h-extra-badges">
-                          {sessionDetailBadges(s).slice(0, 4).map((badge, idx) => (
+                          {detailBadges.slice(0, 4).map((badge, idx) => (
                             <span key={`${s.id}-badge-${idx}`} className="h-badge-mini">{badge}</span>
                           ))}
                         </div>
