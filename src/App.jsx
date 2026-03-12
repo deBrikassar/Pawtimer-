@@ -500,17 +500,15 @@ const styles = `
 
   /* ── Status message ── */
   .status-msg { margin:18px auto 0; max-width:340px; font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; text-align:center; }
-  .recommendation-pop-wrap { margin:14px auto 0; max-width:360px; display:flex; justify-content:center; position:relative; }
-  .recommendation-pop-btn { width:30px; height:30px; padding:0; border-radius:999px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown-mid); font-size:13px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:0; cursor:pointer; }
-  .recommendation-pop-btn:hover, .recommendation-pop-btn:focus-visible { border-color:var(--green-dark); color:var(--green-dark); outline:none; }
-  .recommendation-pop-btn .icon { width:18px; height:18px; border-radius:999px; border:1.5px solid currentColor; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; line-height:1; }
+  .ring-sub-btn { margin-top:5px; background:transparent; border:none; padding:0; font-size:14px; color:var(--text-muted); font-weight:600; text-align:center; line-height:1.3; cursor:pointer; }
+  .ring-sub-btn:hover, .ring-sub-btn:focus-visible { color:var(--green-dark); outline:none; }
   .recommendation-pop { position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:min(360px, 88vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:12px 14px; font-size:13px; line-height:1.55; text-align:left; z-index:20; }
   .recommendation-pop p { margin:0; }
   .recommendation-pop p + p { margin-top:10px; }
   .recommendation-pop strong { color:var(--brown); }
 
   /* ── Stats rings card ── */
-  .stats-rings-card { margin:24px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; }
+  .stats-rings-card { margin:24px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; position:relative; }
   .ring-col { flex:1; display:flex; flex-direction:column; align-items:center; }
   .ring-col-sep { width:1px; background:var(--border); align-self:stretch; margin:8px 0; }
   .ring-wrap { position:relative; width:88px; height:88px; }
@@ -520,8 +518,7 @@ const styles = `
   .ring-fill-2 { fill:none; stroke:var(--green); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.9s cubic-bezier(0.34,1.56,0.64,1); transform:rotate(-90deg); transform-origin:44px 44px; }
   .ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
   .ring-val { font-size:24px; font-weight:600; color:var(--brown); line-height:1.2; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
-  .ring-sub { font-size:14px; color:var(--text-muted); font-weight:600; margin-top:5px; text-align:center; line-height:1.3; }
-
+  
   /* ── Tool section title ── */
   .tool-section-title { margin:8px 20px 4px; font-size:13px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); font-weight:700; }
 
@@ -1779,7 +1776,7 @@ export default function PawTimer() {
                         <div className="ring-val">{fmt(target)}</div>
                       </div>
                     </div>
-                    <div className="ring-sub">Next session</div>
+                    <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Next session</button>
                   </div>
                   <div className="ring-col-sep"/>
                   <div className="ring-col">
@@ -1794,31 +1791,22 @@ export default function PawTimer() {
                         <div className="ring-val">{countToday}<span className="t-helper num-stable">/{activeProto.sessionsPerDayMax}</span></div>
                       </div>
                     </div>
-                    <div className="ring-sub">Sessions today</div>
+                    <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Sessions today</button>
                   </div>
+                  {openTip === "recommendations" && (
+                    <div className="recommendation-pop" role="tooltip">
+                      <p>
+                        Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)}.
+                      </p>
+                      <p>
+                        Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
+                      </p>
+                    </div>
+                  )}
                 </div>
               );
             })()}
 
-            <div className="recommendation-pop-wrap">
-              <button
-                className="recommendation-pop-btn"
-                aria-label="Show recommendation details"
-                onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}
-              >
-                <span className="icon">i</span>
-              </button>
-              {openTip === "recommendations" && (
-                <div className="recommendation-pop" role="tooltip">
-                  <p>
-                    Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)}.
-                  </p>
-                  <p>
-                    Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
-                  </p>
-                </div>
-              )}
-            </div>
 
             {/* Advisory warnings */}
             {countToday >= Math.max(1, activeProto.sessionsPerDayMax - (normalizedLeaves >= 7 ? 1 : 0)) && (
