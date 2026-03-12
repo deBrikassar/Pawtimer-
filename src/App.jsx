@@ -1511,6 +1511,19 @@ export default function PawTimer() {
   const calmRate7 = calcWindowCalmRate(7);
   const calmRate14 = calcWindowCalmRate(14);
 
+  const doseMultiplier = leaveProfile.confidenceScale;
+  const adjustedTarget = Math.max(
+    activeProto.startDurationSeconds,
+    Math.round(target * doseMultiplier)
+  );
+  const recommendationConfidence = (() => {
+    if (!sessions.length) return "building";
+    const recent = sessions.slice(-6);
+    const calmRate = recent.filter((s) => s.distressLevel === "none").length / recent.length;
+    const threshold = normalizedLeaves >= 7 ? 0.85 : normalizedLeaves >= 5 ? 0.75 : 0.65;
+    return calmRate >= threshold ? "high" : calmRate >= threshold - 0.15 ? "medium" : "low";
+  })();
+
   const calmDurations = sessions
     .filter((s) => s.distressLevel === "none" && Number.isFinite(s.actualDuration))
     .map((s) => s.actualDuration)
