@@ -32,6 +32,8 @@ const ensureObject = (value) => (value && typeof value === "object" && !Array.is
 // Without them the app works fine with localStorage only.
 const SB_URL = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL)  ?? "";
 const SB_KEY = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY) ?? "";
+const SYNC_ENABLED = Boolean(SB_URL && SB_KEY);
+const canonicalDogId = (value) => String(value || "").trim().toUpperCase();
 
 const sbReq = async (path, opts = {}) => {
   if (!SB_URL || !SB_KEY) return null;
@@ -105,13 +107,22 @@ const normalizeSession = (row = {}) => {
 const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
 
 const syncFetch = async (dogId) => {
-  const [sessRows, walkRows, patRows] = await Promise.all([
-    sbReq(`sessions?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
-    sbReq(`walks?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,duration&order=date.asc`),
-    sbReq(`patterns?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,type&order=date.asc`),
+  const id = canonicalDogId(dogId);
+  const dogFilter = `dog_id=ilike.${encodeURIComponent(id)}`;
+  const [dogRows, sessRows, walkRows, patRows] = await Promise.all([
+    sbReq(`dogs?id=ilike.${encodeURIComponent(id)}&select=id,settings&limit=5`),
+    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result&order=date.asc`),
+    sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`),
+    sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
   ]);
   if (!Array.isArray(sessRows) || !Array.isArray(walkRows) || !Array.isArray(patRows)) return null;
+  const matchedDog = Array.isArray(dogRows)
+    ? dogRows.find((d) => canonicalDogId(d?.id) === id) ?? dogRows[0] ?? null
+    : null;
   return {
+    dog: matchedDog && matchedDog.settings && typeof matchedDog.settings === "object"
+      ? { ...matchedDog.settings, id: canonicalDogId(matchedDog.id) }
+      : null,
     sessions: normalizeSessions(sessRows.map((r) => ({
       id: r.id,
       date: r.date,
@@ -119,56 +130,50 @@ const syncFetch = async (dogId) => {
       actualDuration: r.actual_duration,
       distressLevel: r.distress_level,
       result: r.result,
-      context: r.context ?? {},
-      symptoms: {
-        barking: r.symptoms?.barking ?? false,
-        pacing: r.symptoms?.pacing ?? false,
-        destructive: r.symptoms?.destructive ?? false,
-        salivation: r.symptoms?.salivation ?? false,
-      },
-      recoverySeconds: r.recovery_seconds ?? null,
-      preSession: r.pre_session ?? {},
-      environment: { noiseEvent: r.environment?.noise_event ?? false },
     }))),
     walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
     patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
   };
 };
 
-const syncPush = async (dogId, kind, data) => {
-  const dogReady = await sbReq("dogs", {
+
+const syncUpsertDog = async (dog) => {
+  const id = canonicalDogId(dog?.id);
+  if (!id) return false;
+  const result = await sbReq("dogs", {
     method: "POST",
-    body: JSON.stringify({ id: dogId, settings: {} }),
+    body: JSON.stringify({ id, settings: { ...(dog || {}), id } }),
     prefer: "resolution=merge-duplicates",
   });
-  if (dogReady === null) return false;
+  return result !== null;
+};
+
+const syncPush = async (dogId, kind, data, dogSettings = null) => {
+  const id = canonicalDogId(dogId);
+  const dogReady = await syncUpsertDog(dogSettings && typeof dogSettings === "object" ? { ...dogSettings, id } : { id });
+  if (!dogReady) return false;
 
   const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : "patterns";
   const row = kind === "session"
     ? {
         id: String(data.id),
-        dog_id: dogId,
+        dog_id: id,
         date: data.date,
         planned_duration: data.plannedDuration,
         actual_duration: data.actualDuration,
         distress_level: data.distressLevel,
         result: data.result,
-        context: data.context ?? null,
-        symptoms: data.symptoms ?? null,
-        recovery_seconds: data.recoverySeconds ?? null,
-        pre_session: data.preSession ?? null,
-        environment: data.environment ? { noise_event: !!data.environment.noiseEvent } : null,
       }
     : kind === "walk"
       ? {
           id: data.id,
-          dog_id: dogId,
+          dog_id: id,
           date: data.date,
           duration: data.duration,
         }
       : {
           id: String(data.id),
-          dog_id: dogId,
+          dog_id: id,
           date: data.date,
           type: data.type,
         };
@@ -188,7 +193,7 @@ const syncDelete = (kind, id) => {
 };
 
 const syncDeleteSessionsForDog = (dogId) =>
-  sbReq(`sessions?dog_id=eq.${encodeURIComponent(dogId)}`, { method: "DELETE" });
+  sbReq(`sessions?dog_id=ilike.${encodeURIComponent(canonicalDogId(dogId))}`, { method: "DELETE" });
 
 // ─── Dog ID: up to 6-letter prefix + 4-digit number (e.g. LUNA-4829) ─────────
 const generateId = (name) => {
@@ -1100,7 +1105,7 @@ function DogSelect({ dogs, onSelect, onCreateNew }) {
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function PawTimer() {
   const [dogs,        setDogs]        = useState(() => ensureArray(load(DOGS_KEY, [])));
-  const [activeDogId, setActiveDogId] = useState(() => load(ACTIVE_DOG_KEY, null));
+  const [activeDogId, setActiveDogId] = useState(() => canonicalDogId(load(ACTIVE_DOG_KEY, null)));
   const [screen,      setScreen]      = useState("select");
   const [sessions,    setSessions]    = useState([]);
   const [walks,       setWalks]       = useState([]);
@@ -1135,7 +1140,7 @@ export default function PawTimer() {
 
   // ── Persistence ──────────────────────────────────────────────────────────
   useEffect(() => { save(DOGS_KEY, dogs); }, [dogs]);
-  useEffect(() => { save(ACTIVE_DOG_KEY, activeDogId); }, [activeDogId]);
+  useEffect(() => { save(ACTIVE_DOG_KEY, canonicalDogId(activeDogId)); }, [activeDogId]);
 
   useEffect(() => {
     if (!activeDogId) { setScreen("select"); return; }
@@ -1198,13 +1203,21 @@ export default function PawTimer() {
 
   // ── Cross-device sync: fetch remote on mount + poll every 15 s ────────────
   useEffect(() => {
-    if (!activeDogId || !SB_URL) return;
+    if (!activeDogId || !SYNC_ENABLED) { setSyncStatus("idle"); return; }
     let live = true;
     const sync = async () => {
       setSyncStatus("syncing");
-      const remote = await syncFetch(activeDogId);
+      const remote = await syncFetch(canonicalDogId(activeDogId));
       if (!live) return;
       if (!remote) { setSyncStatus("err"); return; }
+      if (remote.dog) {
+        setDogs((prev) => {
+          const mergedDog = { ...remote.dog, id: canonicalDogId(remote.dog.id || activeDogId) };
+          const next = [...prev.filter((d) => canonicalDogId(d.id) !== mergedDog.id), mergedDog];
+          save(DOGS_KEY, next);
+          return next;
+        });
+      }
       setSessions(prev => { const m = normalizeSessions(mergeById(prev, remote.sessions)); save(sessKey(activeDogId), m); return m; });
       setWalks   (prev => { const m = mergeById(prev, remote.walks);    save(walkKey(activeDogId), m); return m; });
       setPatterns(prev => { const m = mergeById(prev, remote.patterns); save(patKey(activeDogId),  m); return m; });
@@ -1227,9 +1240,18 @@ export default function PawTimer() {
   useEffect(() => {
     const savedId   = load(ACTIVE_DOG_KEY, null);
     const savedDogs = ensureArray(load(DOGS_KEY, []));
-    if (savedId && savedDogs.find(d => d.id === savedId)) setActiveDogId(savedId);
+    if (savedId && savedDogs.find(d => canonicalDogId(d.id) === canonicalDogId(savedId))) setActiveDogId(canonicalDogId(savedId));
     else setScreen("select");
   }, []);
+
+  useEffect(() => {
+    if (!SYNC_ENABLED || !activeDogId) return;
+    const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
+    if (!dog) return;
+    syncUpsertDog(dog).then((ok) => {
+      if (!ok) setSyncStatus("err");
+    });
+  }, [activeDogId, dogs]);
 
   // Coach mark: show on first ever app open (no sessions yet)
   useEffect(() => {
@@ -1285,13 +1307,14 @@ export default function PawTimer() {
     setPatLabels(ensureObject(load(patLblKey(dog.id), {})));
     setDogPhoto(load(photoKey(dog.id), null));
     setTarget(suggestNext(s, dog));
-    setActiveDogId(dog.id);
+    setActiveDogId(canonicalDogId(dog.id));
     setScreen("app");
   };
 
   const handleDogSelect = (id, isJoin = false) => {
-    const existing = dogs.find(d => d.id === id)
-                  ?? ensureArray(load(DOGS_KEY, [])).find(d => d.id === id);
+    const normalizedId = canonicalDogId(id);
+    const existing = dogs.find(d => canonicalDogId(d.id) === normalizedId)
+                  ?? ensureArray(load(DOGS_KEY, [])).find(d => canonicalDogId(d.id) === normalizedId);
     if (existing) {
       openDog(existing);
       return;
@@ -1300,14 +1323,14 @@ export default function PawTimer() {
       const prefix = id.split("-")[0] || "DOG";
       const suggestedLeaves = Math.min(8, Math.max(1, Math.round(prefix.length / 2) + 2));
       const confirmed = window.confirm(
-        `No synced profile found yet for ${id}. Join now with placeholder settings (${suggestedLeaves} leaves/day, 1 min calm baseline)? You can edit right away in Settings.`
+        `No synced profile found yet for ${normalizedId}. Join now with placeholder settings (${suggestedLeaves} leaves/day, 1 min calm baseline)? You can edit right away in Settings.`
       );
       if (!confirmed) {
         showToast("Join cancelled — waiting for full dog profile.");
         return;
       }
       const placeholder = {
-        id, dogName: prefix.toUpperCase(),
+        id: normalizedId, dogName: prefix.toUpperCase(),
         leavesPerDay: suggestedLeaves, currentMaxCalm: 60, goalSeconds: 2400,
         createdAt: new Date().toISOString(), isJoined: true,
       };
@@ -1317,12 +1340,12 @@ export default function PawTimer() {
       openDog(placeholder);
       showToast(`✅ Joined ${prefix.toUpperCase()} with placeholder settings.`);
     } else {
-      setActiveDogId(id); setScreen("onboard");
+      setActiveDogId(normalizedId); setScreen("onboard");
     }
   };
 
   const handleOnboardComplete = (data) => {
-    const id     = activeDogId || generateId(data.dogName);
+    const id     = canonicalDogId(activeDogId || generateId(data.dogName));
     const newDog = { ...data, id, dogName: data.dogName.toUpperCase(), createdAt: new Date().toISOString() };
     setDogs(prev => [...prev.filter(d => d.id !== id), newDog]);
     setActiveDogId(id);
@@ -1336,6 +1359,16 @@ export default function PawTimer() {
     clearInterval(timerRef.current);
     setFinalElapsed(elapsed);
     setPhase("rating");
+  };
+
+  const pushWithSyncStatus = async (kind, data) => {
+    if (!SYNC_ENABLED || !activeDogId) return false;
+    const currentDog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
+    const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
+    setSyncStatus("syncing");
+    const ok = await syncPush(canonicalDogId(activeDogId), kind, data, dogSettings);
+    setSyncStatus(ok ? "ok" : "err");
+    return ok;
   };
 
   const recordResult = (distressLevel) => {
@@ -1360,7 +1393,7 @@ export default function PawTimer() {
     });
     const updated = [...sessions, session];
     setSessions(updated);
-    syncPush(activeDogId, "session", session).then(ok => {
+    pushWithSyncStatus("session", session).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
     const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
@@ -1396,7 +1429,7 @@ export default function PawTimer() {
     const duration = walkElapsed;
     const entry = { id: `walk-${Date.now()}`, date: new Date().toISOString(), duration };
     setWalks(prev => [...prev, entry]);
-    syncPush(activeDogId, "walk", entry).then(ok => {
+    pushWithSyncStatus("walk", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
     const n = (dogs.find(d => d.id === activeDogId)?.dogName ?? "dog").toUpperCase();
@@ -1414,7 +1447,7 @@ export default function PawTimer() {
   const logPattern = (type) => {
     const entry = { id: Date.now(), date: new Date().toISOString(), type };
     setPatterns(prev => [...prev, entry]);
-    syncPush(activeDogId, "pattern", entry).then(ok => {
+    pushWithSyncStatus("pattern", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
     showToast(`✓ Pattern break logged!`);
@@ -1664,9 +1697,9 @@ export default function PawTimer() {
               <div className="app-title">{name}</div>
               <div className="app-subtitle">Separation anxiety training</div>
             </div>
-            {SB_URL && (
+            {SYNC_ENABLED && (
               <div className={`sync-dot sync-${syncStatus}`} title={
-                syncStatus==="ok" ? "Synced" : syncStatus==="syncing" ? "Syncing…" : syncStatus==="err" ? "Sync error" : ""
+                syncStatus==="ok" ? "Synced" : syncStatus==="syncing" ? "Syncing…" : "Not synced"
               }/>
             )}
           </div>
