@@ -106,7 +106,7 @@ const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession)
 
 const syncFetch = async (dogId) => {
   const [sessRows, walkRows, patRows] = await Promise.all([
-    sbReq(`sessions?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
+    sbReq(`sessions?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,planned_duration,actual_duration,distress_level,result&order=date.asc`),
     sbReq(`walks?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,duration&order=date.asc`),
     sbReq(`patterns?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,type&order=date.asc`),
   ]);
@@ -119,16 +119,6 @@ const syncFetch = async (dogId) => {
       actualDuration: r.actual_duration,
       distressLevel: r.distress_level,
       result: r.result,
-      context: r.context ?? {},
-      symptoms: {
-        barking: r.symptoms?.barking ?? false,
-        pacing: r.symptoms?.pacing ?? false,
-        destructive: r.symptoms?.destructive ?? false,
-        salivation: r.symptoms?.salivation ?? false,
-      },
-      recoverySeconds: r.recovery_seconds ?? null,
-      preSession: r.pre_session ?? {},
-      environment: { noiseEvent: r.environment?.noise_event ?? false },
     }))),
     walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
     patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
@@ -153,11 +143,6 @@ const syncPush = async (dogId, kind, data) => {
         actual_duration: data.actualDuration,
         distress_level: data.distressLevel,
         result: data.result,
-        context: data.context ?? null,
-        symptoms: data.symptoms ?? null,
-        recovery_seconds: data.recoverySeconds ?? null,
-        pre_session: data.preSession ?? null,
-        environment: data.environment ? { noise_event: !!data.environment.noiseEvent } : null,
       }
     : kind === "walk"
       ? {
