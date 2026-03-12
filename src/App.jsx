@@ -390,10 +390,10 @@ const styles = `
   .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
   .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:20px; }
   .sc-idle { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; transition:opacity 260ms ease, transform 300ms ease; }
-  .sc-idle-label { display:flex; flex-direction:column; align-items:center; gap:2px; text-transform:uppercase; font-size:28px; font-weight:800; letter-spacing:0.03em; line-height:1.02; color:rgba(255,255,255,0.98); text-shadow:0 0 8px rgba(255,255,255,0.28), 0 0 18px rgba(196,247,220,0.24); }
+  .sc-idle-label { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-transform:uppercase; font-size:34px; font-weight:800; letter-spacing:0.04em; line-height:0.96; color:rgba(255,255,255,0.99); text-shadow:0 0 6px rgba(255,255,255,0.24), 0 0 16px rgba(196,247,220,0.20); }
   .sc-idle-label span { display:block; }
   .sc-time { position:absolute; opacity:0; transform:scale(0.95); transition:opacity 300ms ease-in-out, transform 300ms ease-in-out; }
-  .sc-time-value { font-size:52px; line-height:1; font-weight:800; color:var(--green-dark); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
+  .sc-time-value { font-size:56px; line-height:1; font-weight:800; color:var(--green-dark); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
   .session-control.is-running .sc-idle { opacity:0; transform:translateY(-4px); }
   .session-control.is-running .sc-time,
   .session-control.is-complete .sc-time { opacity:1; transform:scale(1); }
@@ -757,6 +757,7 @@ function SessionControl({
 }) {
   const [pressing, setPressing] = useState(false);
   const remaining = Math.max(target - elapsed, 0);
+  const remainingSeconds = Math.max(Math.ceil(remaining), 0);
   const radius = 103;
   const circumference = 2 * Math.PI * radius;
   const frac = Math.min(elapsed / Math.max(target, 1), 1);
@@ -779,7 +780,7 @@ function SessionControl({
           className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""}`}
           onClick={isIdle ? startWithFeedback : undefined}
           aria-label={isRunning
-            ? `${fmt(remaining)} remaining in current session`
+            ? `${remainingSeconds}s remaining in current session`
             : `Start ${fmt(target)} session`}
           aria-live={isRunning ? "polite" : undefined}
         >
@@ -805,7 +806,7 @@ function SessionControl({
             </div>
 
             <div className="sc-time">
-              <div className="sc-time-value">{fmt(remaining)}</div>
+              <div className="sc-time-value">{remainingSeconds}s</div>
             </div>
           </div>
         </button>
@@ -1481,10 +1482,9 @@ export default function PawTimer() {
               </div>
             )}
 
-            <p className="status-msg">
-              {phase === "running"
-                ? (sessionCompleted ? "Target reached — return calmly and end the session." : "Session in progress. Keep transitions calm and predictable.")
-                : !sessions.length
+            {phase !== "running" && (
+              <p className="status-msg">
+                {!sessions.length
                   ? "First session — starting small and positive."
                   : !lastSess || lastSess.distressLevel === "none"
                     ? (lastSess && (lastSess.actualDuration||0) < (lastSess.plannedDuration||0))
@@ -1493,7 +1493,8 @@ export default function PawTimer() {
                     : lastSess.distressLevel === "mild"
                       ? "Mild signs last time — holding until consistently calm."
                       : "Rolled back after strong distress — steady progress matters most."}
-            </p>
+              </p>
+            )}
 
             {/* 4. Stats rings card */}
             {phase === "idle" && (() => {
