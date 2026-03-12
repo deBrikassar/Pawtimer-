@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { getNextDurationSeconds, suggestNext, PROTOCOL } from "../src/lib/protocol";
+import {
+  getNextDurationSeconds,
+  suggestNext,
+  suggestNextWithContext,
+  PROTOCOL,
+} from "../src/lib/protocol";
 
 describe("getNextDurationSeconds", () => {
   it("returns start duration for invalid input", () => {
@@ -32,5 +37,57 @@ describe("suggestNext", () => {
       { distressLevel: "strong", plannedDuration: 80, actualDuration: 20 },
     ];
     expect(suggestNext(sessions, {})).toBe(60);
+  });
+});
+
+describe("suggestNextWithContext", () => {
+  it("falls back to suggestNext when session history is empty", () => {
+    expect(suggestNextWithContext([], [], [], { currentMaxCalm: 120 })).toBe(96);
+  });
+
+  it("steps up for high confidence", () => {
+    const now = new Date();
+    const sessions = Array.from({ length: 6 }).map((_, idx) => ({
+      date: new Date(now.getTime() - (5 - idx) * 86400000).toISOString(),
+      distressLevel: "none",
+      plannedDuration: 60,
+      actualDuration: 60,
+    }));
+    sessions.push({
+      date: now.toISOString(),
+      distressLevel: "none",
+      plannedDuration: 69,
+      actualDuration: 69,
+    });
+
+    const patterns = Array.from({ length: 3 }).flatMap((_, idx) => {
+      const date = new Date(now.getTime() - idx * 86400000).toISOString();
+      return [{ date, type: "keys" }, { date, type: "shoes" }, { date, type: "jacket" }];
+    });
+
+    expect(suggestNextWithContext(sessions, [], patterns, { goalSeconds: 3600 })).toBe(79);
+  });
+
+  it("holds for medium confidence", () => {
+    const now = new Date();
+    const sessions = [
+      { date: new Date(now.getTime() - 86400000).toISOString(), distressLevel: "none", plannedDuration: 60, actualDuration: 60 },
+      { date: now.toISOString(), distressLevel: "mild", plannedDuration: 69, actualDuration: 55 },
+    ];
+
+    expect(suggestNextWithContext(sessions, [], [], {})).toBe(69);
+  });
+
+  it("rolls back to last stable calm duration for low confidence", () => {
+    const now = new Date();
+    const sessions = [
+      { date: new Date(now.getTime() - 4 * 86400000).toISOString(), distressLevel: "none", plannedDuration: 60, actualDuration: 60 },
+      { date: new Date(now.getTime() - 3 * 86400000).toISOString(), distressLevel: "strong", plannedDuration: 69, actualDuration: 20 },
+      { date: new Date(now.getTime() - 2 * 86400000).toISOString(), distressLevel: "strong", plannedDuration: 69, actualDuration: 10 },
+      { date: new Date(now.getTime() - 86400000).toISOString(), distressLevel: "mild", plannedDuration: 69, actualDuration: 30 },
+      { date: now.toISOString(), distressLevel: "strong", plannedDuration: 80, actualDuration: 10 },
+    ];
+
+    expect(suggestNextWithContext(sessions, [], [], {})).toBe(60);
   });
 });

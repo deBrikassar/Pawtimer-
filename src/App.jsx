@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { PROTOCOL, getNextDurationSeconds, suggestNext } from "./lib/protocol";
+import { PROTOCOL, getNextDurationSeconds, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
@@ -1229,7 +1229,7 @@ export default function PawTimer() {
     syncPush(activeDogId, "session", session).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
-    const next = suggestNext(updated, dog);
+    const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
     setTarget(next);
     setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false);
     const n = (dog?.dogName ?? "dog").toUpperCase();
