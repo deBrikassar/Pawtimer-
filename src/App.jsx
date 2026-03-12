@@ -208,6 +208,18 @@ const fmt = (s) => {
   const t = Math.round(s), m = Math.floor(t / 60), sec = t % 60;
   return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
 };
+const parseDurationInput = (value) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  if (raw.includes(":")) {
+    const [mm, ss] = raw.split(":").map((part) => Number(part));
+    if (!Number.isFinite(mm) || !Number.isFinite(ss) || mm < 0 || ss < 0 || ss >= 60) return null;
+    return Math.round(mm * 60 + ss);
+  }
+  const asSeconds = Number(raw);
+  if (!Number.isFinite(asSeconds) || asSeconds < 0) return null;
+  return Math.round(asSeconds);
+};
 const fmtDate = (iso) => {
   const d = new Date(iso);
   const date = d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
@@ -719,6 +731,9 @@ const styles = `
   /* ── History delete button ── */
   .h-del { background:none; border:none; color:var(--brown-muted); font-size:13px; cursor:pointer; padding:4px 6px; border-radius:6px; flex-shrink:0; opacity:0.5; transition:opacity 0.15s,color 0.15s; }
   .h-del:hover { opacity:1; color:var(--red); }
+  .h-actions { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+  .h-edit { background:none; border:none; color:var(--brown-muted); font-size:13px; cursor:pointer; padding:4px 6px; border-radius:6px; opacity:0.7; }
+  .h-edit:hover { opacity:1; color:var(--green-dark); }
 
   /* ── Pattern edit row ── */
   .pat-edit-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--surf-soft); }
@@ -756,6 +771,7 @@ const styles = `
   .streak-num  { font-size:36px; font-weight:700; line-height:1; }
   .streak-lbl  { font-size:14px; letter-spacing:0.01em; opacity:0.9; margin-top:6px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:4px; }
   .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:8px; }
+  .stat-card-span2 { grid-column:span 2; }
   .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
   .stat-val    { font-size:24px; color:var(--brown); font-weight:600; line-height:1.2; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
   .stat-lbl    { font-size:15px; color:var(--text-muted); margin-top:6px; font-weight:500; line-height:1.4; }
@@ -774,6 +790,7 @@ const styles = `
   .dot12 { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
   .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:10px; }
   .insight-card { background:var(--surf); border-radius:var(--radius-sm); padding:10px 12px; box-shadow:var(--shadow); border-left:4px solid var(--border); min-height:78px; }
+  .insight-card-btn { width:100%; text-align:left; border:none; cursor:pointer; }
   .insight-title { font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
   .insight-value { font-size:22px; font-weight:700; color:var(--brown); line-height:1.1; font-variant-numeric:tabular-nums; }
   .insight-sub { font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600; }
@@ -823,6 +840,15 @@ const styles = `
   .coach-body  { font-size:13px; color:var(--text-muted); line-height:1.65; margin-bottom:16px; }
   .coach-btn   { width:100%; padding:14px; background:var(--brown); color:var(--bg); border:none; border-radius:var(--radius-sm); font-size:15px; font-weight:600; cursor:pointer; transition:opacity 0.15s; }
   .coach-btn:hover { opacity:0.88; }
+
+  .metric-help-overlay { position:fixed; inset:0; z-index:240; background:rgba(0,0,0,0.42); display:flex; align-items:flex-end; justify-content:center; padding:18px; }
+  .metric-help-card { width:min(100%, 420px); background:var(--surf); border-radius:var(--radius); padding:18px 16px; box-shadow:var(--shadow-lg); }
+  .metric-help-title { font-size:20px; color:var(--brown); font-weight:700; margin-bottom:8px; }
+  .metric-help-body { font-size:14px; color:var(--text-muted); line-height:1.6; font-weight:400; }
+  .metric-help-detail { margin-top:10px; font-size:12px; color:var(--text-muted); font-weight:500; }
+  .metric-help-close { margin-top:14px; width:100%; border:none; border-radius:10px; background:var(--brown); color:var(--bg); padding:11px; font-size:14px; font-weight:600; cursor:pointer; }
+
+  .train-coverage { text-align:center; }
 
   /* ── Welcome-back banner ── */
   .welcome-back { margin:0 24px 16px; background:var(--surf); border-radius:var(--radius-sm); padding:16px; border-left:3px solid var(--green-dark); box-shadow:0 1px 4px rgba(75,60,48,0.06); display:flex; justify-content:space-between; align-items:center; gap:10px; }
@@ -1165,6 +1191,7 @@ export default function PawTimer() {
   const [showCoach,    setShowCoach]    = useState(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const [openTip,      setOpenTip]      = useState(null);
+  const [metricHelp,   setMetricHelp]   = useState(null);
   const [walkPhase,    setWalkPhase]    = useState("idle"); // idle | timing
   const [walkElapsed,  setWalkElapsed]  = useState(0);
   const walkTimerRef = useRef(null);
@@ -1477,6 +1504,27 @@ export default function PawTimer() {
     setWalkPhase("idle"); setWalkElapsed(0);
   };
 
+  const editWalkDuration = (walkId) => {
+    const currentWalk = walks.find((w) => w.id === walkId);
+    if (!currentWalk) return;
+    const input = window.prompt(
+      "Edit walk duration (seconds or mm:ss)",
+      Number.isFinite(currentWalk.duration) ? String(currentWalk.duration) : ""
+    );
+    if (input === null) return;
+    const parsedDuration = parseDurationInput(input);
+    if (!Number.isFinite(parsedDuration)) {
+      showToast("⚠️ Invalid duration. Use seconds or mm:ss");
+      return;
+    }
+    const updatedWalk = { ...currentWalk, duration: parsedDuration };
+    setWalks((prev) => prev.map((w) => (w.id === walkId ? updatedWalk : w)));
+    pushWithSyncStatus("walk", updatedWalk).then((ok) => {
+      if (!ok) showToast("⚠️ Sync failed — check console");
+    });
+    showToast(`🚶 Walk updated to ${fmt(parsedDuration)}`);
+  };
+
   const logWalk = () => startWalk();
 
   const logPattern = (type) => {
@@ -1498,7 +1546,7 @@ export default function PawTimer() {
     <><style>{styles}</style>
     {toast && <div className="toast">{toast}</div>}
     <DogSelect dogs={dogs} onSelect={handleDogSelect}
-      onCreateNew={() => { setActiveDogId(null); setScreen("onboard"); }}/>
+      onCreateNew={() => { setScreen("onboard"); }}/>
     </>
   );
   if (screen === "onboard") return (
@@ -1678,6 +1726,34 @@ export default function PawTimer() {
       ? { color: "var(--brown-muted)", label: "Gathering data" }
       : { color: "var(--green-dark)", label: "Low" };
 
+  const metricExplainers = {
+    stability: {
+      title: "Stability",
+      body: "How consistent calm-session durations are. Higher stability means your calm sessions are predictable; big swings suggest your dog may still need more repetition at easier levels.",
+      detail: `Median calm · SD ${durationVariability != null ? fmt(durationVariability) : "—"} · ${stabilityTone.label}`,
+    },
+    momentum: {
+      title: "Momentum",
+      body: "Your short-term trend. It compares calm-session rate over the last 7 days against the last 14 days to show whether progress is improving, holding, or slipping.",
+      detail: `7d calm · 14d ${calmRate14 != null ? `${calmRate14}%` : "—"} · ${momentumTone.label}`,
+    },
+    relapseRisk: {
+      title: "Relapse risk",
+      body: "A quick warning signal based on strong-distress sessions in your most recent attempts. More strong distress in the recent window means a higher chance of setbacks and a need to slow down.",
+      detail: `${recentStrongCount}/${relapseWindow} recent sessions strong distress · ${relapseTone.label}`,
+    },
+    adherence: {
+      title: "Adherence",
+      body: "How well daily pattern breaks keep pace with real departures (walks together). Better adherence means cues are practiced enough to support training progress.",
+      detail: `Pattern breaks vs walks by day · ${adherenceTone.label}`,
+    },
+  };
+
+  const openMetricHelp = (metricKey) => {
+    if (!metricExplainers[metricKey]) return;
+    setMetricHelp(metricKey);
+  };
+
   const chartData = sessions.slice(-25).map((s, i) => ({
     session: i + 1,
     duration: Math.round(s.actualDuration / 60 * 10) / 10,
@@ -1701,6 +1777,18 @@ export default function PawTimer() {
     <>
       <style>{styles}</style>
       {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
+      {metricHelp && (
+        <div className="metric-help-overlay" role="dialog" aria-modal="true" aria-labelledby="metric-help-title" onClick={() => setMetricHelp(null)}>
+          <div className="metric-help-card" onClick={(e) => e.stopPropagation()}>
+            <div className="metric-help-title" id="metric-help-title">{metricExplainers[metricHelp]?.title}</div>
+            <div className="metric-help-body">{metricExplainers[metricHelp]?.body}</div>
+            {metricExplainers[metricHelp]?.detail && (
+              <div className="metric-help-detail">{metricExplainers[metricHelp]?.detail}</div>
+            )}
+            <button className="metric-help-close" onClick={() => setMetricHelp(null)} type="button">Got it</button>
+          </div>
+        </div>
+      )}
 
       {/* Coach mark — first launch */}
       {showCoach && (
@@ -1820,7 +1908,7 @@ export default function PawTimer() {
               </p>
             )}
             {phase !== "running" && sessions.length > 0 && (
-              <p className="t-helper" style={{ marginTop: -4, marginBottom: 10 }}>
+              <p className="t-helper train-coverage" style={{ marginTop: -4, marginBottom: 10 }}>
                 Data coverage for smarter recommendations: {recommendationCoveragePct}% ({recommendationCoverageCount}/{totalCount})
               </p>
             )}
@@ -2105,7 +2193,10 @@ export default function PawTimer() {
                       <div className="h-date">{fmtDate(w.date)}</div>
                     </div>
                     <span className="h-badge badge-walk">Walk</span>
-                    <button className="h-del" onClick={() => { setWalks(prev => prev.filter(x => x.id !== w.id)); syncDelete("walk", w.id); }} title="Delete">✕</button>
+                    <div className="h-actions">
+                      <button className="h-edit" onClick={() => editWalkDuration(w.id)} title="Edit duration">✎</button>
+                      <button className="h-del" onClick={() => { setWalks(prev => prev.filter(x => x.id !== w.id)); syncDelete("walk", w.id); }} title="Delete">✕</button>
+                    </div>
                   </div>
                 );
               }
@@ -2133,10 +2224,6 @@ export default function PawTimer() {
         {tab === "progress" && (<div className="tab-content">
           <div className="section">
             <div className="section-title">{name}'s Progress</div>
-            <div className="t-helper" style={{ marginBottom: 12 }}>
-              Daily plan context: {name} is set to ~{normalizedLeaves} departures/day. More departures increase pattern-break targets and tighten confidence requirements before recommending larger desensitization jumps.
-            </div>
-
             {totalCount === 0 ? (
               <div className="empty-state">
                 <div className="es-icon">🌱</div>
@@ -2170,7 +2257,7 @@ export default function PawTimer() {
                 <div className="stat-val">{fmt(bestCalm)}</div>
                 <div className="stat-lbl">Best calm time</div>
               </div>
-              <div className="stat-card">
+              <div className="stat-card stat-card-span2">
                 <div className="stat-val">{fmt(target)}</div>
                 <div className="stat-lbl">Next target</div>
               </div>
@@ -2215,34 +2302,30 @@ export default function PawTimer() {
             )}
             {totalCount > 0 && (
               <div className="insights-grid">
-                <div className="insight-card" style={{ borderLeftColor: stabilityTone.color }}>
+                <button className="insight-card insight-card-btn" style={{ borderLeftColor: stabilityTone.color }} onClick={() => openMetricHelp("stability")} type="button">
                   <div className="insight-title">Stability</div>
                   <div className="insight-value" style={{ color: stabilityTone.color }}>
                     {calmMedian != null ? fmt(calmMedian) : "—"}
                   </div>
-                  <div className="insight-sub">Median calm · SD {durationVariability != null ? fmt(durationVariability) : "—"} · {stabilityTone.label}</div>
-                </div>
-                <div className="insight-card" style={{ borderLeftColor: momentumTone.color }}>
+                </button>
+                <button className="insight-card insight-card-btn" style={{ borderLeftColor: momentumTone.color }} onClick={() => openMetricHelp("momentum")} type="button">
                   <div className="insight-title">Momentum</div>
                   <div className="insight-value" style={{ color: momentumTone.color }}>
                     {calmRate7 != null ? `${calmRate7}%` : "—"}
                   </div>
-                  <div className="insight-sub">7d calm · 14d {calmRate14 != null ? `${calmRate14}%` : "—"} · {momentumTone.label}</div>
-                </div>
-                <div className="insight-card" style={{ borderLeftColor: relapseTone.color }}>
+                </button>
+                <button className="insight-card insight-card-btn" style={{ borderLeftColor: relapseTone.color }} onClick={() => openMetricHelp("relapseRisk")} type="button">
                   <div className="insight-title">Relapse risk</div>
                   <div className="insight-value" style={{ color: relapseTone.color }}>
                     {relapseRisk ? "High" : "Low"}
                   </div>
-                  <div className="insight-sub">{recentStrongCount}/{relapseWindow} recent sessions strong distress · {relapseTone.label}</div>
-                </div>
-                <div className="insight-card" style={{ borderLeftColor: adherenceTone.color }}>
+                </button>
+                <button className="insight-card insight-card-btn" style={{ borderLeftColor: adherenceTone.color }} onClick={() => openMetricHelp("adherence")} type="button">
                   <div className="insight-title">Adherence</div>
                   <div className="insight-value" style={{ color: adherenceTone.color }}>
                     {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
                   </div>
-                  <div className="insight-sub">Pattern breaks vs walks by day · {adherenceTone.label}</div>
-                </div>
+                </button>
               </div>
             )}
             {chartData.length > 1 ? (
@@ -2417,7 +2500,11 @@ export default function PawTimer() {
           { id:"progress", label:"Stats",    icon:<ChartIcon/> },
           { id:"tips",     label:"Settings", icon:<SettingsIcon/> },
         ].map(t => (
-          <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+          <button
+            key={t.id}
+            className={`tab-btn ${tab === t.id ? "active" : ""}`}
+            onClick={() => setTab(t.id)}
+          >
             {t.icon}{t.label}
           </button>
         ))}
