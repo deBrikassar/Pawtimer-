@@ -1548,7 +1548,7 @@ export default function PawTimer() {
     <><style>{styles}</style>
     {toast && <div className="toast">{toast}</div>}
     <DogSelect dogs={dogs} onSelect={handleDogSelect}
-      onCreateNew={() => { setActiveDogId(null); setScreen("onboard"); }}/>
+      onCreateNew={() => { setScreen("onboard"); }}/>
     </>
   );
   if (screen === "onboard") return (
@@ -1752,13 +1752,6 @@ export default function PawTimer() {
     setSeenMetricHelp((prev) => ({ ...prev, [metricKey]: true }));
     setMetricHelp(metricKey);
   };
-
-  useEffect(() => {
-    if (tab !== "progress" || totalCount <= 0 || metricHelp) return;
-    const firstUnseen = ["stability", "momentum", "relapseRisk", "adherence"]
-      .find((key) => !seenMetricHelp[key]);
-    if (firstUnseen) openMetricHelp(firstUnseen);
-  }, [tab, totalCount, seenMetricHelp, metricHelp]);
 
   const chartData = sessions.slice(-25).map((s, i) => ({
     session: i + 1,
@@ -2511,7 +2504,18 @@ export default function PawTimer() {
           { id:"progress", label:"Stats",    icon:<ChartIcon/> },
           { id:"tips",     label:"Settings", icon:<SettingsIcon/> },
         ].map(t => (
-          <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
+          <button
+            key={t.id}
+            className={`tab-btn ${tab === t.id ? "active" : ""}`}
+            onClick={() => {
+              setTab(t.id);
+              if (t.id === "progress" && totalCount > 0 && !metricHelp) {
+                const firstUnseen = ["stability", "momentum", "relapseRisk", "adherence"]
+                  .find((key) => !seenMetricHelp[key]);
+                if (firstUnseen) openMetricHelp(firstUnseen);
+              }
+            }}
+          >
             {t.icon}{t.label}
           </button>
         ))}
