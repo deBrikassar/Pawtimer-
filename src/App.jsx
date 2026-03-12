@@ -201,7 +201,8 @@ const generateId = (name) => {
 const fmt = (s) => {
   if (s == null || isNaN(s)) return "—";
   const t = Math.round(s), m = Math.floor(t / 60), sec = t % 60;
-  return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+  if (m > 0 && sec === 0) return `${m} мин`;
+  return m > 0 ? `${m} мин ${sec} сек` : `${sec} сек`;
 };
 const fmtDate = (iso) => {
   const d = new Date(iso);
@@ -319,30 +320,29 @@ const PATTERN_TYPES = [
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --bg:          #F7F2E7;
     --surf:        #FFFFFF;
-    --surf-soft:   #EDF5EF;
-    --border:      #C6DDD0;
-    --green:       #A8D5BA;
-    --green-light: #CBE9D7;
-    --green-dark:  #3d8c60;
-    --brown:       #4B3C30;
-    --brown-mid:   #6b5a4a;
-    --brown-muted: #9a8878;
+    --surf-soft:   #FDFBF7;
+    --border:      #E7DDD0;
+    --green:       #2E815F;
+    --green-light: #C9D9D1;
+    --green-dark:  #1F7A5A;
+    --brown:       #1F2328;
+    --brown-mid:   #5B5148;
+    --brown-muted: #8A7B6F;
     --amber:       #d4813a;
     --amber-light: #f0a865;
     --red:         #c0392b;
     --orange:      #e67e22;
-    --text:        #4B3C30;
-    --text-muted:  #6b5a4a;
-    --shadow:    0 4px 24px rgba(75,60,48,0.09);
-    --shadow-lg: 0 8px 40px rgba(75,60,48,0.14);
-    --radius:    20px;
-    --radius-sm: 12px;
+    --text:        #1F2328;
+    --text-muted:  #5B5148;
+    --shadow:    0 2px 12px rgba(31,35,40,0.08);
+    --shadow-lg: 0 8px 24px rgba(31,35,40,0.12);
+    --radius:    16px;
+    --radius-sm: 16px;
   }
 
   html { overflow-x: hidden; width: 100%; max-width: 100vw; }
@@ -350,7 +350,7 @@ const styles = `
     height: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-family: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-weight: 400;
     line-height: 1.5;
     min-height: 100vh; min-height: 100dvh;
@@ -433,11 +433,11 @@ const styles = `
   .ob-back-btn { background:none; border:none; color:var(--text-muted); font-size:14px; cursor:pointer; margin-top:14px; display:block; width:100%; text-align:center; padding:8px; }
 
   /* ── Header ── */
-  .header { padding:28px 20px 10px; background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
-  .header::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(168,213,186,0.35) 0%,transparent 70%); border-radius:50%; }
+  .header { padding:24px 24px 12px; background:var(--bg); position:relative; overflow:hidden; }
+  .header::before { content:none; }
   .header-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; gap:16px; }
   .app-title { font-size:28px; font-weight:700; color:var(--brown); line-height:1.2; letter-spacing:-0.02em; }
-  .app-subtitle { font-size:15px; color:var(--text-muted); margin-top:4px; font-weight:400; line-height:1.6; }
+  .app-subtitle { font-size:17px; color:var(--text-muted); margin-top:4px; font-weight:400; line-height:1.4; }
   .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
   .dog-id-badge { display:flex; align-items:center; gap:6px; background:var(--surf); border-radius:99px; padding:4px 10px 4px 8px; box-shadow:var(--shadow); cursor:pointer; border:1.5px solid var(--border); transition:border-color 0.2s; }
   .dog-id-badge:hover { border-color:var(--green-dark); }
@@ -450,44 +450,42 @@ const styles = `
   .dog-photo-overlay { position:absolute; bottom:2px; right:2px; background:var(--brown); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; pointer-events:none; border:2px solid var(--bg); }
 
   /* ── Progress section ── */
-  .prog-section { padding:0 20px; margin-top:16px; }
+  .prog-section { padding:0 24px; margin-top:8px; }
   .train-main { width:min(100%, 460px); margin:0 auto; }
   .prog-track { height:8px; background:var(--border); border-radius:99px; position:relative; overflow:visible; }
   .prog-fill  { height:100%; background:linear-gradient(90deg,var(--green-dark),var(--green)); border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
   .prog-thumb { position:absolute; top:50%; transform:translate(-50%,-50%); width:18px; height:18px; border-radius:50%; background:white; border:2.5px solid var(--green-dark); box-shadow:0 2px 8px rgba(61,140,96,0.35); transition:left 0.8s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; }
-  .prog-meta  { display:flex; justify-content:space-between; margin-top:8px; font-size:14px; color:var(--text-muted); font-weight:500; }
+  .prog-meta  { display:flex; justify-content:space-between; margin-top:10px; font-size:17px; color:var(--text-muted); font-weight:600; line-height:1.3; }
 
   /* ── Session control — single morphing button/timer ── */
-  .session-control-wrap { margin-top:24px; display:flex; justify-content:center; }
+  .session-control-wrap { margin-top:16px; display:flex; justify-content:center; padding:0 24px; }
   .session-control {
-    position:relative; width:clamp(180px, 55vw, 212px); aspect-ratio:1/1;
-    border:none; border-radius:50%; cursor:pointer;
-    background:radial-gradient(circle at 38% 30%, #8fd8ab 0%, #63b082 48%, #3f8f63 100%);
-    box-shadow:0 14px 34px rgba(61,140,96,0.34), inset 0 1px 0 rgba(255,255,255,0.34);
+    position:relative; width:100%; max-width:360px; min-height:52px;
+    border:none; border-radius:16px; cursor:pointer;
+    background:var(--green);
+    box-shadow:0 2px 8px rgba(46,129,95,0.18);
     display:flex; align-items:center; justify-content:center;
-    transition:transform 130ms ease, box-shadow 320ms ease, filter 320ms ease;
+    transition:transform 130ms ease, box-shadow 200ms ease, filter 200ms ease;
     touch-action:manipulation;
   }
-  .session-control::before {
-    content:""; position:absolute; inset:-10px; border-radius:50%; pointer-events:none;
-    border:10px solid rgba(168,213,186,0.28);
-  }
+  .session-control::before { content:none; }
   .session-control.is-running {
-    background:var(--surf);
-    box-shadow:0 16px 36px rgba(61,140,96,0.28), inset 0 1px 0 rgba(255,255,255,0.30);
-    filter:saturate(1.08);
+    background:var(--green-dark);
+    box-shadow:0 2px 8px rgba(31,122,90,0.24);
+    filter:none;
   }
   .session-control.is-pressing { transform:scale(0.96); }
   .session-control:focus-visible { outline:3px solid rgba(61,140,96,0.45); outline-offset:4px; }
-  .sc-ring-svg { position:absolute; inset:-10px; width:calc(100% + 20px); height:calc(100% + 20px); transform:rotate(-90deg); }
+  .sc-ring-svg { display:none; }
   .sc-track { fill:none; stroke:rgba(96,142,111,0.2); stroke-width:10; }
   .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
   .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:20px; }
   .sc-idle { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; transition:opacity 260ms ease, transform 300ms ease; }
-  .sc-idle-label { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-transform:uppercase; font-size:34px; font-weight:800; letter-spacing:0.04em; line-height:0.96; color:rgba(255,255,255,0.99); text-shadow:0 0 6px rgba(255,255,255,0.24), 0 0 16px rgba(196,247,220,0.20); }
+  .sc-idle-label { display:flex; align-items:center; justify-content:center; gap:4px; font-size:17px; font-weight:600; line-height:1.3; color:#FFFFFF; }
   .sc-idle-label span { display:block; }
+  .sc-idle-sub { font-size:13px; line-height:1.38; color:rgba(255,255,255,0.86); font-weight:400; }
   .sc-time { position:absolute; opacity:0; transform:scale(0.95); transition:opacity 300ms ease-in-out, transform 300ms ease-in-out; }
-  .sc-time-value { font-size:56px; line-height:1; font-weight:800; color:var(--green-dark); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
+  .sc-time-value { font-size:17px; line-height:1.3; font-weight:600; color:#FFFFFF; font-variant-numeric:tabular-nums; }
   .session-control.is-running .sc-idle { opacity:0; transform:translateY(-4px); }
   .session-control.is-running .sc-time,
   .session-control.is-complete .sc-time { opacity:1; transform:scale(1); }
@@ -515,10 +513,10 @@ const styles = `
   .ring-sub { font-size:14px; color:var(--text-muted); font-weight:600; margin-top:5px; text-align:center; line-height:1.3; }
 
   /* ── Tool section title ── */
-  .tool-section-title { margin:8px 20px 4px; font-size:13px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); font-weight:700; }
+  .tool-section-title { margin:24px 24px 8px; font-size:17px; color:var(--brown); font-weight:600; }
 
   /* ── Grouped tool card ── */
-  .tool-group-card { margin:0 20px; background:var(--surf); border-radius:var(--radius-sm); box-shadow:0 2px 12px rgba(75,60,48,0.07); overflow:hidden; }
+  .tool-group-card { margin:0 24px; background:var(--surf); border-radius:var(--radius-sm); box-shadow:var(--shadow); overflow:hidden; }
   .tool-row { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; cursor:pointer; transition:background 0.15s; border-bottom:1px solid var(--border); }
   .tool-row:last-child { border-bottom:none; }
   .tool-row:hover { background:var(--surf-soft); }
@@ -541,9 +539,9 @@ const styles = `
   .walk-cancel-btn:hover { background:var(--surf); }
 
   /* ── Daily alone-time card ── */
-  .alone-card   { margin:6px 20px 0; background:var(--surf); border-radius:var(--radius-sm); padding:11px 14px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; align-items:center; gap:16px; }
+  .alone-card   { margin:16px 24px 0; background:var(--surf); border-radius:var(--radius-sm); padding:16px; box-shadow:var(--shadow); display:flex; align-items:center; gap:16px; }
   .alone-left   { flex:1; }
-  .alone-label  { font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:600; margin-bottom:2px; }
+  .alone-label  { font-size:17px; color:var(--brown); font-weight:600; margin-bottom:4px; }
   .alone-total  { font-size:24px; color:var(--brown); font-weight:700; line-height:1.1; }
   .alone-right  { flex:1; }
   .alone-track  { height:6px; background:var(--border); border-radius:99px; overflow:hidden; display:flex; }
@@ -640,7 +638,7 @@ const styles = `
 
   /* ── Tabs ── */
   .tabs { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:rgba(247,242,231,0.97); backdrop-filter:blur(14px); border-top:1.5px solid var(--border); display:flex; z-index:100; padding-bottom:env(safe-area-inset-bottom,0px); }
-  .tab-btn { flex:1; padding:9px 4px 13px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--brown-muted); transition:color 0.18s; font-size:13px; font-weight:500; line-height:1.4; }
+  .tab-btn { flex:1; padding:9px 4px 13px; min-height:44px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--brown-muted); transition:color 0.18s; font-size:13px; font-weight:500; line-height:1.4; }
   .tab-btn.active { color:var(--green-dark); font-weight:700; }
   .tab-btn svg { width:24px; height:24px; }
 
@@ -881,8 +879,8 @@ function SessionControl({
           className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""}`}
           onClick={isIdle ? startWithFeedback : undefined}
           aria-label={isRunning
-            ? `${remainingSeconds}s remaining in current session`
-            : `Start ${fmt(target)} session`}
+            ? `Осталось ${fmt(remainingSeconds)} в текущей сессии`
+            : `Начать сессию на ${fmt(target)}`}
           aria-live={isRunning ? "polite" : undefined}
         >
           <svg className="sc-ring-svg" viewBox="0 0 226 226" aria-hidden="true">
@@ -901,13 +899,12 @@ function SessionControl({
           <div className="sc-content">
             <div className="sc-idle" aria-hidden={isRunning}>
               <div className="sc-idle-label">
-                <span>Start</span>
-                <span>Session</span>
+                <span>Начать сессию</span>
               </div>
             </div>
 
             <div className="sc-time">
-              <div className="sc-time-value">{remainingSeconds}s</div>
+              <div className="sc-time-value">Осталось: {fmt(remainingSeconds)}</div>
             </div>
           </div>
         </button>
@@ -915,8 +912,8 @@ function SessionControl({
 
       {isRunning && (
         <div className="session-actions">
-          <button className="session-end-btn" onClick={onEnd}>End Session</button>
-          <button className="session-cancel-btn" onClick={onCancel}>Cancel (don't save)</button>
+          <button className="session-end-btn" onClick={onEnd}>Завершить сессию</button>
+          <button className="session-cancel-btn" onClick={onCancel}>Отменить (не сохранять)</button>
         </div>
       )}
     </>
@@ -1623,9 +1620,9 @@ export default function PawTimer() {
           <div className="coach-backdrop" onClick={() => { setShowCoach(false); save("pawtimer_coach_seen", true); }}/>
           <div className="coach-tip" style={{ bottom:220 }}>
             <div className="coach-tip-arrow"/>
-            <div className="coach-title" id="coach-title">This is {name}'s first session 🐾</div>
-            <div className="coach-body">Tap <strong>Start Session</strong> when you're ready to leave the apartment. The app will track the time and ask how {name.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())} did when you return.</div>
-            <button className="coach-btn" onClick={() => { setShowCoach(false); save("pawtimer_coach_seen", true); }}>Got it — let's start</button>
+            <div className="coach-title" id="coach-title">Первая сессия {name}</div>
+            <div className="coach-body">Нажмите <strong>«Начать сессию»</strong>, когда будете готовы выйти. После возвращения оцените, как прошла тренировка.</div>
+            <button className="coach-btn" onClick={() => { setShowCoach(false); save("pawtimer_coach_seen", true); }}>Понятно, начинаем</button>
           </div>
         </div>
       )}
@@ -1645,7 +1642,7 @@ export default function PawTimer() {
             </label>
             <div style={{ flex:1 }}>
               <div className="app-title">{name}</div>
-              <div className="app-subtitle">Separation anxiety training</div>
+              <div className="app-subtitle">Тренировка разлуки</div>
             </div>
             {SB_URL && (
               <div className={`sync-dot sync-${syncStatus}`} title={
@@ -1680,9 +1677,10 @@ export default function PawTimer() {
                 <div className="prog-thumb" style={{ left:`${Math.max(Math.min(goalPct,98),2)}%` }}/>
               </div>
               <div className="prog-meta">
-                <span>Current threshold: <strong className="num-stable" style={{color:"var(--brown)"}}>{fmt(target)}</strong></span>
-                <span>Goal: <strong className="num-stable" style={{color:"var(--brown)"}}>{fmt(goalSec)}</strong></span>
+                <span>Текущий шаг: <strong className="num-stable" style={{color:"var(--brown)"}}>{fmt(target)}</strong></span>
+                <span>Цель: <strong className="num-stable" style={{color:"var(--brown)"}}>{fmt(goalSec)}</strong></span>
               </div>
+              <p className="t-helper" style={{marginTop:8}}>Если будет тяжело — остановитесь и вернитесь позже.</p>
             </div>
 
             <SessionControl
@@ -1724,14 +1722,14 @@ export default function PawTimer() {
             {phase !== "running" && (
               <p className="status-msg">
                 {!sessions.length
-                  ? "First session — starting small and positive."
+                  ? "Сегодня начнём с короткого шага. Это уже прогресс."
                   : !lastSess || lastSess.distressLevel === "none"
                     ? (lastSess && (lastSess.actualDuration||0) < (lastSess.plannedDuration||0))
-                      ? `Session ended early — holding until ${name} completes the full time.`
-                      : `${name} completed the last session — stepping up.`
+                      ? `Сессию завершили раньше — пока закрепляем этот шаг.`
+                      : `Прошлая сессия прошла спокойно — можно двигаться дальше.`
                     : lastSess.distressLevel === "mild"
-                      ? "Mild signs last time — holding until consistently calm."
-                      : "Rolled back after strong distress — steady progress matters most."}
+                      ? "В прошлый раз были лёгкие признаки тревоги — пока не увеличиваем время."
+                      : "После сильной тревоги сделали шаг назад — стабильность важнее скорости."}
               </p>
             )}
             {phase !== "running" && sessions.length > 0 && (
@@ -1759,7 +1757,7 @@ export default function PawTimer() {
                         <div className="ring-val">{fmt(target)}</div>
                       </div>
                     </div>
-                    <div className="ring-sub">Next session</div>
+                    <div className="ring-sub">Следующий шаг</div>
                   </div>
                   <div className="ring-col-sep"/>
                   <div className="ring-col">
@@ -1774,7 +1772,7 @@ export default function PawTimer() {
                         <div className="ring-val">{countToday}<span className="t-helper num-stable">/{activeProto.sessionsPerDayMax}</span></div>
                       </div>
                     </div>
-                    <div className="ring-sub">Sessions today</div>
+                    <div className="ring-sub">Сессии сегодня</div>
                   </div>
                 </div>
               );
@@ -1808,8 +1806,8 @@ export default function PawTimer() {
               return (
                 <div className="alone-card">
                   <div className="alone-left">
-                    <div className="alone-label">Today's alone time</div>
-                    <div className="alone-total">{totalLogged === 0 ? "0 mins" : fmt(totalLogged)}</div>
+                    <div className="alone-label">В одиночестве сегодня</div>
+                    <div className="alone-total">{totalLogged === 0 ? "0 мин" : fmt(totalLogged)}</div>
                   </div>
                   <div className="alone-right">
                     <div className="alone-track">
@@ -1832,20 +1830,20 @@ export default function PawTimer() {
             })()}
 
             {/* 6. Other tools — grouped card */}
-            <div className="tool-section-title">Other Tools</div>
+            <div className="tool-section-title">Инструменты</div>
             <div className="tool-group-card">
 
-              {/* Log a walk */}
+              {/* Записать прогулку */}
               <div className="tool-row" onClick={walkPhase === "idle" ? startWalk : undefined}
                 style={{borderRadius: walkPhase === "timing" ? "var(--radius-sm) var(--radius-sm) 0 0" : undefined}}>
                 <div className="tool-row-left">
                   <Img src="walk.png" size={24} alt="Walk"/>
-                  <span className="tool-row-label">Log a walk</span>
+                  <span className="tool-row-label">Записать прогулку</span>
                 </div>
                 <div className="tool-row-right">
                   {walkPhase === "timing"
                     ? <span className="t-helper num-stable" style={{color:"var(--green-dark)",fontWeight:600}}>{fmt(walkElapsed)} ●</span>
-                    : <span className="tool-row-meta">Today: {todayWalks}</span>
+                    : <span className="tool-row-meta">Сегодня: {todayWalks}</span>
                   }
                   <span className="tool-chevron">›</span>
                 </div>
@@ -1863,17 +1861,17 @@ export default function PawTimer() {
                 </div>
               )}
 
-              {/* Pattern breaking */}
+              {/* Прервать паттерн */}
               <div className="tool-row" onClick={() => setPatOpen(o=>!o)}>
                 <div className="tool-row-left">
                   <Img src="pattern-keys.png" size={24} alt="Pattern"/>
                   <span className="tool-row-label">
-                    Pattern breaking
+                    Прервать паттерн
                     {behind && <span className="tool-badge-warn">!</span>}
                   </span>
                 </div>
                 <div className="tool-row-right">
-                  <span className="tool-row-meta">Today: {todayPat}</span>
+                  <span className="tool-row-meta">Сегодня: {todayPat}</span>
                   <span className="tool-chevron">{patOpen ? "∨" : "›"}</span>
                 </div>
               </div>
@@ -1897,11 +1895,11 @@ export default function PawTimer() {
                 </div>
               )}
 
-              {/* Training protocol */}
+              {/* Протокол тренировки */}
               <div className="tool-row" onClick={()=>setHowOpen(o=>!o)}>
                 <div className="tool-row-left">
-                  <span style={{fontSize:18}}>📖</span>
-                  <span className="tool-row-label">Training protocol</span>
+                  <Img src="chart.png" size={20} alt="Протокол"/>
+                  <span className="tool-row-label">Протокол тренировки</span>
                 </div>
                 <div className="tool-row-right">
                   <span className="tool-chevron">{howOpen ? "∨" : "›"}</span>
@@ -1931,13 +1929,13 @@ export default function PawTimer() {
               )}
             </div>
 
-            {/* 7. Help — Daily reminder */}
-            <div className="tool-section-title">Help</div>
+            {/* 7. Помощь — ежедневное напоминание */}
+            <div className="tool-section-title">Помощь</div>
             <div className="tool-group-card" style={{marginBottom:28}}>
               <div className="tool-row" style={{cursor:"default"}}>
                 <div className="tool-row-left">
-                  <span style={{fontSize:18}}>🔔</span>
-                  <span className="tool-row-label">Daily training reminder</span>
+                  <Img src="streak.png" size={20} alt="Напоминание"/>
+                  <span className="tool-row-label">Ежедневное напоминание</span>
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {notifEnabled && (
