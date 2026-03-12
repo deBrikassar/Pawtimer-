@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { PROTOCOL, getNextDurationSeconds, suggestNext } from "./lib/protocol";
+import { PROTOCOL, getNextDurationSeconds, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
@@ -225,15 +225,20 @@ function dailyInfo(sessions) {
  * Rule: ≥ number of complete departure rituals (walks) today,
  *       AND at least desensitizationBlocksPerDayRecommendedMin per day.
  */
-function patternInfo(patterns, walks) {
+function patternInfo(patterns, walks, leavesPerDay = 3, protocol = PROTOCOL) {
   const todayPat   = patterns.filter(p => isToday(p.date)).length;
   const todayWalks = walks.filter(w => isToday(w.date)).length;
-  const recMin = PROTOCOL.desensitizationBlocksPerDayRecommendedMin;
-  const recMax = PROTOCOL.desensitizationBlocksPerDayRecommendedMax;
+  const normalizedLeaves = Math.max(1, Number(leavesPerDay) || 3);
+  const leaveDelta = normalizedLeaves - 3;
+  const recMinBase = protocol.desensitizationBlocksPerDayRecommendedMin;
+  const recMaxBase = protocol.desensitizationBlocksPerDayRecommendedMax;
+  const recMin = Math.max(1, recMinBase + Math.floor(leaveDelta / 2));
+  const recMax = Math.max(recMin, recMaxBase + Math.ceil(leaveDelta / 2));
+  const walkBuffer = leaveDelta > 0 ? Math.ceil(leaveDelta / 3) : 0;
   // must be ≥ walks AND ≥ recMin
-  const needed = Math.max(recMin, todayWalks);
+  const needed = Math.max(recMin, todayWalks + walkBuffer);
   const behind = todayPat < needed;
-  return { todayPat, todayWalks, recMin, recMax, needed, behind };
+  return { todayPat, todayWalks, recMin, recMax, needed, behind, walkBuffer, normalizedLeaves };
 }
 
 const distressLabel = (l) =>
@@ -256,6 +261,12 @@ const sessionDetailBadges = (s) => {
   if (s.environment?.noiseEvent) badges.push("🔊 noise/event");
 
   return badges;
+const getLeaveProfile = (leavesPerDay = 3) => {
+  const normalizedLeaves = Math.max(1, Number(leavesPerDay) || 3);
+  if (normalizedLeaves <= 2) return { key: "low", confidenceScale: 0.9, desc: "lower daily departure load" };
+  if (normalizedLeaves <= 4) return { key: "moderate", confidenceScale: 1, desc: "moderate daily departure load" };
+  if (normalizedLeaves <= 6) return { key: "high", confidenceScale: 1.12, desc: "higher daily departure load" };
+  return { key: "veryHigh", confidenceScale: 1.22, desc: "very high daily departure load" };
 };
 
 // ─── Embedded icon data URIs (base64, 64×64px, rounded corners) ─────────────
@@ -712,6 +723,11 @@ const styles = `
   .ratio-legend { display:flex; gap:14px; margin-top:6px; font-size:14px; color:var(--text-muted); flex-wrap:wrap; }
   .ratio-legend span { display:flex; align-items:center; gap:5px; }
   .dot12 { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .insight-card { background:var(--surf); border-radius:var(--radius-sm); padding:10px 12px; box-shadow:var(--shadow); border-left:4px solid var(--border); min-height:78px; }
+  .insight-title { font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
+  .insight-value { font-size:22px; font-weight:700; color:var(--brown); line-height:1.1; font-variant-numeric:tabular-nums; }
+  .insight-sub { font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600; }
 
   /* ── Settings tab ── */
   .share-card  { background:var(--surf); border-radius:var(--radius); padding:16px; margin-bottom:12px; box-shadow:var(--shadow); }
@@ -1271,16 +1287,24 @@ export default function PawTimer() {
     }
     if (isJoin) {
       const prefix = id.split("-")[0] || "DOG";
+      const suggestedLeaves = Math.min(8, Math.max(1, Math.round(prefix.length / 2) + 2));
+      const confirmed = window.confirm(
+        `No synced profile found yet for ${id}. Join now with placeholder settings (${suggestedLeaves} leaves/day, 1 min calm baseline)? You can edit right away in Settings.`
+      );
+      if (!confirmed) {
+        showToast("Join cancelled — waiting for full dog profile.");
+        return;
+      }
       const placeholder = {
         id, dogName: prefix.toUpperCase(),
-        leavesPerDay: 3, currentMaxCalm: 60, goalSeconds: 2400,
+        leavesPerDay: suggestedLeaves, currentMaxCalm: 60, goalSeconds: 2400,
         createdAt: new Date().toISOString(), isJoined: true,
       };
       const updatedDogs = [...dogs, placeholder];
       save(DOGS_KEY, updatedDogs);
       setDogs(updatedDogs);
       openDog(placeholder);
-      showToast(`✅ Joined ${prefix.toUpperCase()}!`);
+      showToast(`✅ Joined ${prefix.toUpperCase()} with placeholder settings.`);
     } else {
       setActiveDogId(id); setScreen("onboard");
     }
@@ -1328,7 +1352,7 @@ export default function PawTimer() {
     syncPush(activeDogId, "session", session).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
-    const next = suggestNext(updated, dog);
+    const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
     setTarget(next);
     setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false);
     const n = (dog?.dogName ?? "dog").toUpperCase();
@@ -1420,7 +1444,8 @@ export default function PawTimer() {
   const capFull = capPct >= 90;
 
   // Protocol: pattern-break status
-  const { todayPat, todayWalks, recMin, recMax, needed, behind } = patternInfo(patterns, walks);
+  const leaveProfile = getLeaveProfile(dog?.leavesPerDay);
+  const { todayPat, todayWalks, recMin, recMax, needed, behind, walkBuffer, normalizedLeaves } = patternInfo(patterns, walks, dog?.leavesPerDay, activeProto);
 
   // Pattern reminder text
   // IMPORTANT: Pattern breaks must be done SEPARATELY from walks —
@@ -1428,13 +1453,13 @@ export default function PawTimer() {
   // sometimes putting on shoes/jacket does NOT lead to going out.
   const patReminderText = (() => {
     if (todayPat === 0)
-      return `Do ${recMin}–${recMax} pattern breaks today — spread throughout the day, NOT linked to actual walks. Put on shoes (or jacket, or pick up keys), then take them off and sit back down. This teaches ${name} that these actions don't always mean you're leaving.`;
+      return `Do ${recMin}–${recMax} pattern breaks today (based on ~${normalizedLeaves} daily leave${normalizedLeaves === 1 ? "" : "s"}) — spread throughout the day, NOT linked to actual walks. Put on shoes (or jacket, or pick up keys), then take them off and sit back down. This teaches ${name} that these actions don't always mean you're leaving.`;
     if (behind) {
       const deficit = needed - todayPat;
-      return `⚠️ You've logged ${todayWalks} walk${todayWalks !== 1 ? "s" : ""} but only ${todayPat} pattern break${todayPat !== 1 ? "s" : ""}. Do ${deficit} more — pattern breaks must outnumber full departures so the cues lose their predictive power.`;
+      return `⚠️ You've logged ${todayWalks} walk${todayWalks !== 1 ? "s" : ""} but only ${todayPat} pattern break${todayPat !== 1 ? "s" : ""}. Do ${deficit} more — with ~${normalizedLeaves} daily departures we add a ${walkBuffer} extra-cue safety buffer so pattern breaks clearly outnumber full departures.`;
     }
     if (todayPat >= recMax) return `✅ ${todayPat} pattern breaks done today — great work! Cues are losing their power.`;
-    return `${todayPat} of ${recMin}–${recMax} pattern breaks done. Do a few more at random times — not before walks, just scattered through the day.`;
+    return `${todayPat} of ${recMin}–${recMax} pattern breaks done for a ${leaveProfile.desc}. Do a few more at random times — not before walks, just scattered through the day.`;
   })();
 
   // Stats
@@ -1461,6 +1486,94 @@ export default function PawTimer() {
     && hasValue(s.environment?.noiseEvent)
   ).length;
   const recommendationCoveragePct = totalCount ? Math.round((recommendationCoverageCount / totalCount) * 100) : 0;
+  const toDayKey = (iso) => {
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const calcWindowCalmRate = (days) => {
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - (days - 1));
+    const windowSessions = sessions.filter((s) => {
+      const d = new Date(s.date);
+      return !isNaN(d) && d >= cutoff;
+    });
+    if (!windowSessions.length) return null;
+    const calm = windowSessions.filter((s) => s.distressLevel === "none").length;
+    return Math.round((calm / windowSessions.length) * 100);
+  };
+  const calmRate7 = calcWindowCalmRate(7);
+  const calmRate14 = calcWindowCalmRate(14);
+
+  const calmDurations = sessions
+    .filter((s) => s.distressLevel === "none" && Number.isFinite(s.actualDuration))
+    .map((s) => s.actualDuration)
+    .slice(-11);
+  const calmMedian = (() => {
+    if (!calmDurations.length) return null;
+    const sorted = [...calmDurations].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+      ? Math.round((sorted[mid - 1] + sorted[mid]) / 2)
+      : sorted[mid];
+  })();
+  const durationVariability = (() => {
+    const durations = sessions.map((s) => s.actualDuration).filter((n) => Number.isFinite(n));
+    if (durations.length < 2) return null;
+    const mean = durations.reduce((sum, n) => sum + n, 0) / durations.length;
+    const variance = durations.reduce((sum, n) => sum + ((n - mean) ** 2), 0) / durations.length;
+    return Math.round(Math.sqrt(variance));
+  })();
+
+  const relapseWindow = 6;
+  const recentSessions = sessions.slice(-relapseWindow);
+  const recentStrongCount = recentSessions.filter((s) => s.distressLevel === "strong").length;
+  const relapseRisk = recentStrongCount >= 2;
+
+  const adherenceByDay = (() => {
+    const dayMap = new Map();
+    walks.forEach((w) => {
+      const key = toDayKey(w.date);
+      if (!key) return;
+      if (!dayMap.has(key)) dayMap.set(key, { walks: 0, pats: 0 });
+      dayMap.get(key).walks += 1;
+    });
+    patterns.forEach((p) => {
+      const key = toDayKey(p.date);
+      if (!key) return;
+      if (!dayMap.has(key)) dayMap.set(key, { walks: 0, pats: 0 });
+      dayMap.get(key).pats += 1;
+    });
+    const days = [...dayMap.values()];
+    if (!days.length) return null;
+    const score = days.reduce((sum, day) => {
+      if (day.walks === 0 && day.pats > 0) return sum + 1;
+      if (day.walks === 0) return sum;
+      return sum + Math.min(day.pats / day.walks, 1);
+    }, 0) / days.length;
+    return Math.round(score * 100);
+  })();
+
+  const statusTone = (value, { good, warn, invert = false }) => {
+    if (value == null) return { color: "var(--brown-muted)", label: "Building baseline" };
+    if (!invert) {
+      if (value >= good) return { color: "var(--green-dark)", label: "Strong" };
+      if (value >= warn) return { color: "var(--orange)", label: "Mixed" };
+      return { color: "var(--red)", label: "Watch closely" };
+    }
+    if (value <= good) return { color: "var(--green-dark)", label: "Stable" };
+    if (value <= warn) return { color: "var(--orange)", label: "Variable" };
+    return { color: "var(--red)", label: "Unsteady" };
+  };
+  const momentumTone = statusTone(calmRate7, { good: 75, warn: 55 });
+  const stabilityTone = statusTone(durationVariability, { good: 120, warn: 240, invert: true });
+  const adherenceTone = statusTone(adherenceByDay, { good: 85, warn: 65 });
+  const relapseTone = relapseRisk
+    ? { color: "var(--red)", label: "Elevated" }
+    : recentSessions.length < relapseWindow
+      ? { color: "var(--brown-muted)", label: "Gathering data" }
+      : { color: "var(--green-dark)", label: "Low" };
 
   const chartData = sessions.slice(-25).map((s, i) => ({
     session: i + 1,
@@ -1649,10 +1762,18 @@ export default function PawTimer() {
               );
             })()}
 
+            <div className="status-msg" style={{ marginTop: 10 }}>
+              Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)} (base {fmt(target)} × {doseMultiplier.toFixed(2)} leave-frequency factor).
+            </div>
+
+            <div className="status-msg" style={{ marginTop: 10 }}>
+              Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
+            </div>
+
             {/* Advisory warnings */}
-            {countToday >= activeProto.sessionsPerDayMax && (
+            {countToday >= Math.max(1, activeProto.sessionsPerDayMax - (normalizedLeaves >= 7 ? 1 : 0)) && (
               <p className="status-msg" style={{ color:"var(--amber)" }}>
-                ⚠️ {countToday} sessions today — the protocol recommends max {activeProto.sessionsPerDayMax}.
+                ⚠️ {countToday} sessions today — for ~{normalizedLeaves} departures/day, keep it around {Math.max(1, activeProto.sessionsPerDayMax - (normalizedLeaves >= 7 ? 1 : 0))} to avoid overloading real departures.
               </p>
             )}
 
@@ -1785,7 +1906,7 @@ export default function PawTimer() {
                   <div className="proto-section">
                     <div className="proto-title">Daily guidelines</div>
                     <div className="proto-row">📅 Max {activeProto.sessionsPerDayMax} sessions · max {activeProto.maxDailyAloneMinutes} min alone/day</div>
-                    <div className="proto-row">🔁 Pattern breaks: {activeProto.desensitizationBlocksPerDayRecommendedMin}–{activeProto.desensitizationBlocksPerDayRecommendedMax}/day · ≥ number of walks</div>
+                    <div className="proto-row">🔁 Pattern breaks: {recMin}–{recMax}/day for ~{normalizedLeaves} leaves/day · at least walks + {walkBuffer} buffer</div>
                     <div className="proto-row">😴 Rest days: {activeProto.restDaysPerWeekRecommended}/week recommended</div>
                   </div>
                 </div>
@@ -1906,6 +2027,9 @@ export default function PawTimer() {
         {tab === "progress" && (<div className="tab-content">
           <div className="section">
             <div className="section-title">{name}'s Progress</div>
+            <div className="t-helper" style={{ marginBottom: 12 }}>
+              Daily plan context: {name} is set to ~{normalizedLeaves} departures/day. More departures increase pattern-break targets and tighten confidence requirements before recommending larger desensitization jumps.
+            </div>
 
             {totalCount === 0 ? (
               <div className="empty-state">
@@ -1980,6 +2104,38 @@ export default function PawTimer() {
                   <span><div className="dot12" style={{background:"var(--green-dark)"}}/>{noneCount} calm</span>
                   <span><div className="dot12" style={{background:"var(--orange)"}}/>{mildCount} mild</span>
                   <span><div className="dot12" style={{background:"var(--red)"}}/>{strongCount} strong</span>
+                </div>
+              </div>
+            )}
+            {totalCount > 0 && (
+              <div className="insights-grid">
+                <div className="insight-card" style={{ borderLeftColor: stabilityTone.color }}>
+                  <div className="insight-title">Stability</div>
+                  <div className="insight-value" style={{ color: stabilityTone.color }}>
+                    {calmMedian != null ? fmt(calmMedian) : "—"}
+                  </div>
+                  <div className="insight-sub">Median calm · SD {durationVariability != null ? fmt(durationVariability) : "—"} · {stabilityTone.label}</div>
+                </div>
+                <div className="insight-card" style={{ borderLeftColor: momentumTone.color }}>
+                  <div className="insight-title">Momentum</div>
+                  <div className="insight-value" style={{ color: momentumTone.color }}>
+                    {calmRate7 != null ? `${calmRate7}%` : "—"}
+                  </div>
+                  <div className="insight-sub">7d calm · 14d {calmRate14 != null ? `${calmRate14}%` : "—"} · {momentumTone.label}</div>
+                </div>
+                <div className="insight-card" style={{ borderLeftColor: relapseTone.color }}>
+                  <div className="insight-title">Relapse risk</div>
+                  <div className="insight-value" style={{ color: relapseTone.color }}>
+                    {relapseRisk ? "High" : "Low"}
+                  </div>
+                  <div className="insight-sub">{recentStrongCount}/{relapseWindow} recent sessions strong distress · {relapseTone.label}</div>
+                </div>
+                <div className="insight-card" style={{ borderLeftColor: adherenceTone.color }}>
+                  <div className="insight-title">Adherence</div>
+                  <div className="insight-value" style={{ color: adherenceTone.color }}>
+                    {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
+                  </div>
+                  <div className="insight-sub">Pattern breaks vs walks by day · {adherenceTone.label}</div>
                 </div>
               </div>
             )}
@@ -2072,7 +2228,7 @@ export default function PawTimer() {
               <div className="t-helper" style={{ lineHeight:1.6, marginBottom:14 }}>
                 <div><strong style={{ color:"var(--brown)" }}>Sessions:</strong> max {activeProto.sessionsPerDayMax}/day · max {activeProto.maxDailyAloneMinutes} min alone/day</div>
                 <div><strong style={{ color:"var(--brown)" }}>Step up:</strong> +{activeProto.incrementPercentDefault}% after each calm session, then +5 min fixed</div>
-                <div><strong style={{ color:"var(--brown)" }}>Pattern breaks:</strong> {activeProto.desensitizationBlocksPerDayRecommendedMin}–{activeProto.desensitizationBlocksPerDayRecommendedMax}/day recommended</div>
+                <div><strong style={{ color:"var(--brown)" }}>Pattern breaks:</strong> {recMin}–{recMax}/day recommended for ~{normalizedLeaves} leaves/day</div>
               </div>
 
               {!protoWarnAck ? (
