@@ -632,6 +632,11 @@ const styles = `
   .ratio-legend { display:flex; gap:14px; margin-top:6px; font-size:14px; color:var(--text-muted); flex-wrap:wrap; }
   .ratio-legend span { display:flex; align-items:center; gap:5px; }
   .dot12 { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .insight-card { background:var(--surf); border-radius:var(--radius-sm); padding:10px 12px; box-shadow:var(--shadow); border-left:4px solid var(--border); min-height:78px; }
+  .insight-title { font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
+  .insight-value { font-size:22px; font-weight:700; color:var(--brown); line-height:1.1; font-variant-numeric:tabular-nums; }
+  .insight-sub { font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600; }
 
   /* ── Settings tab ── */
   .share-card  { background:var(--surf); border-radius:var(--radius); padding:16px; margin-bottom:12px; box-shadow:var(--shadow); }
@@ -1354,6 +1359,95 @@ export default function PawTimer() {
   })();
   const lastSess = sessions[sessions.length - 1];
 
+  const toDayKey = (iso) => {
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const calcWindowCalmRate = (days) => {
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - (days - 1));
+    const windowSessions = sessions.filter((s) => {
+      const d = new Date(s.date);
+      return !isNaN(d) && d >= cutoff;
+    });
+    if (!windowSessions.length) return null;
+    const calm = windowSessions.filter((s) => s.distressLevel === "none").length;
+    return Math.round((calm / windowSessions.length) * 100);
+  };
+  const calmRate7 = calcWindowCalmRate(7);
+  const calmRate14 = calcWindowCalmRate(14);
+
+  const calmDurations = sessions
+    .filter((s) => s.distressLevel === "none" && Number.isFinite(s.actualDuration))
+    .map((s) => s.actualDuration)
+    .slice(-11);
+  const calmMedian = (() => {
+    if (!calmDurations.length) return null;
+    const sorted = [...calmDurations].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+      ? Math.round((sorted[mid - 1] + sorted[mid]) / 2)
+      : sorted[mid];
+  })();
+  const durationVariability = (() => {
+    const durations = sessions.map((s) => s.actualDuration).filter((n) => Number.isFinite(n));
+    if (durations.length < 2) return null;
+    const mean = durations.reduce((sum, n) => sum + n, 0) / durations.length;
+    const variance = durations.reduce((sum, n) => sum + ((n - mean) ** 2), 0) / durations.length;
+    return Math.round(Math.sqrt(variance));
+  })();
+
+  const relapseWindow = 6;
+  const recentSessions = sessions.slice(-relapseWindow);
+  const recentStrongCount = recentSessions.filter((s) => s.distressLevel === "strong").length;
+  const relapseRisk = recentStrongCount >= 2;
+
+  const adherenceByDay = (() => {
+    const dayMap = new Map();
+    walks.forEach((w) => {
+      const key = toDayKey(w.date);
+      if (!key) return;
+      if (!dayMap.has(key)) dayMap.set(key, { walks: 0, pats: 0 });
+      dayMap.get(key).walks += 1;
+    });
+    patterns.forEach((p) => {
+      const key = toDayKey(p.date);
+      if (!key) return;
+      if (!dayMap.has(key)) dayMap.set(key, { walks: 0, pats: 0 });
+      dayMap.get(key).pats += 1;
+    });
+    const days = [...dayMap.values()];
+    if (!days.length) return null;
+    const score = days.reduce((sum, day) => {
+      if (day.walks === 0 && day.pats > 0) return sum + 1;
+      if (day.walks === 0) return sum;
+      return sum + Math.min(day.pats / day.walks, 1);
+    }, 0) / days.length;
+    return Math.round(score * 100);
+  })();
+
+  const statusTone = (value, { good, warn, invert = false }) => {
+    if (value == null) return { color: "var(--brown-muted)", label: "Building baseline" };
+    if (!invert) {
+      if (value >= good) return { color: "var(--green-dark)", label: "Strong" };
+      if (value >= warn) return { color: "var(--orange)", label: "Mixed" };
+      return { color: "var(--red)", label: "Watch closely" };
+    }
+    if (value <= good) return { color: "var(--green-dark)", label: "Stable" };
+    if (value <= warn) return { color: "var(--orange)", label: "Variable" };
+    return { color: "var(--red)", label: "Unsteady" };
+  };
+  const momentumTone = statusTone(calmRate7, { good: 75, warn: 55 });
+  const stabilityTone = statusTone(durationVariability, { good: 120, warn: 240, invert: true });
+  const adherenceTone = statusTone(adherenceByDay, { good: 85, warn: 65 });
+  const relapseTone = relapseRisk
+    ? { color: "var(--red)", label: "Elevated" }
+    : recentSessions.length < relapseWindow
+      ? { color: "var(--brown-muted)", label: "Gathering data" }
+      : { color: "var(--green-dark)", label: "Low" };
+
   const chartData = sessions.slice(-25).map((s, i) => ({
     session: i + 1,
     duration: Math.round(s.actualDuration / 60 * 10) / 10,
@@ -1855,6 +1949,38 @@ export default function PawTimer() {
                   <span><div className="dot12" style={{background:"var(--green-dark)"}}/>{noneCount} calm</span>
                   <span><div className="dot12" style={{background:"var(--orange)"}}/>{mildCount} mild</span>
                   <span><div className="dot12" style={{background:"var(--red)"}}/>{strongCount} strong</span>
+                </div>
+              </div>
+            )}
+            {totalCount > 0 && (
+              <div className="insights-grid">
+                <div className="insight-card" style={{ borderLeftColor: stabilityTone.color }}>
+                  <div className="insight-title">Stability</div>
+                  <div className="insight-value" style={{ color: stabilityTone.color }}>
+                    {calmMedian != null ? fmt(calmMedian) : "—"}
+                  </div>
+                  <div className="insight-sub">Median calm · SD {durationVariability != null ? fmt(durationVariability) : "—"} · {stabilityTone.label}</div>
+                </div>
+                <div className="insight-card" style={{ borderLeftColor: momentumTone.color }}>
+                  <div className="insight-title">Momentum</div>
+                  <div className="insight-value" style={{ color: momentumTone.color }}>
+                    {calmRate7 != null ? `${calmRate7}%` : "—"}
+                  </div>
+                  <div className="insight-sub">7d calm · 14d {calmRate14 != null ? `${calmRate14}%` : "—"} · {momentumTone.label}</div>
+                </div>
+                <div className="insight-card" style={{ borderLeftColor: relapseTone.color }}>
+                  <div className="insight-title">Relapse risk</div>
+                  <div className="insight-value" style={{ color: relapseTone.color }}>
+                    {relapseRisk ? "High" : "Low"}
+                  </div>
+                  <div className="insight-sub">{recentStrongCount}/{relapseWindow} recent sessions strong distress · {relapseTone.label}</div>
+                </div>
+                <div className="insight-card" style={{ borderLeftColor: adherenceTone.color }}>
+                  <div className="insight-title">Adherence</div>
+                  <div className="insight-value" style={{ color: adherenceTone.color }}>
+                    {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
+                  </div>
+                  <div className="insight-sub">Pattern breaks vs walks by day · {adherenceTone.label}</div>
                 </div>
               </div>
             )}
