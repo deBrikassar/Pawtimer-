@@ -24,6 +24,9 @@ const save = (key, val) => {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
 };
 
+const ensureArray = (value) => (Array.isArray(value) ? value : []);
+const ensureObject = (value) => (value && typeof value === "object" && !Array.isArray(value) ? value : {});
+
 // ─── Cross-device sync (Supabase REST — no SDK needed) ────────────────────────
 // Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel env vars to enable.
 // Without them the app works fine with localStorage only.
@@ -99,7 +102,7 @@ const normalizeSession = (row = {}) => {
   return normalized;
 };
 
-const normalizeSessions = (rows = []) => rows.map(normalizeSession);
+const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
 
 const syncFetch = async (dogId) => {
   const [sessRows, walkRows, patRows] = await Promise.all([
@@ -1091,7 +1094,7 @@ function DogSelect({ dogs, onSelect, onCreateNew }) {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function PawTimer() {
-  const [dogs,        setDogs]        = useState(() => load(DOGS_KEY, []));
+  const [dogs,        setDogs]        = useState(() => ensureArray(load(DOGS_KEY, [])));
   const [activeDogId, setActiveDogId] = useState(() => load(ACTIVE_DOG_KEY, null));
   const [screen,      setScreen]      = useState("select");
   const [sessions,    setSessions]    = useState([]);
@@ -1113,7 +1116,7 @@ export default function PawTimer() {
   const [notifTime,    setNotifTime]    = useState(() => load("pawtimer_notif_time", "09:00"));
   const [notifEnabled, setNotifEnabled] = useState(() => load("pawtimer_notif_on", false));
   const [protoWarnAck, setProtoWarnAck] = useState(false);
-  const [protoOverride,setProtoOverride]= useState(() => load("pawtimer_proto_override", {}));
+  const [protoOverride,setProtoOverride]= useState(() => ensureObject(load("pawtimer_proto_override", {})));
   const [showCoach,    setShowCoach]    = useState(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const [walkPhase,    setWalkPhase]    = useState("idle"); // idle | timing
@@ -1132,13 +1135,13 @@ export default function PawTimer() {
     if (!activeDogId) { setScreen("select"); return; }
     // Look for dog in current dogs list OR in fresh localStorage (covers join race condition)
     const dog = dogs.find(d => d.id === activeDogId)
-              ?? load(DOGS_KEY, []).find(d => d.id === activeDogId);
+              ?? ensureArray(load(DOGS_KEY, [])).find(d => d.id === activeDogId);
     if (!dog) { setScreen("select"); return; }
     const v4 = load(sessKey(activeDogId), null);
-    const rawSessions = Array.isArray(v4) ? v4 : load(legacySessKey(activeDogId), []);
+    const rawSessions = Array.isArray(v4) ? v4 : ensureArray(load(legacySessKey(activeDogId), []));
     const s = normalizeSessions(rawSessions);
-    const w = load(walkKey(activeDogId), []);
-    const p = load(patKey(activeDogId),  []);
+    const w = ensureArray(load(walkKey(activeDogId), []));
+    const p = ensureArray(load(patKey(activeDogId),  []));
     if (!Array.isArray(v4)) save(sessKey(activeDogId), s);
     setSessions(s); setWalks(w); setPatterns(p);
     setTarget(suggestNext(s, dog));
@@ -1217,7 +1220,7 @@ export default function PawTimer() {
   // Boot: restore last active dog
   useEffect(() => {
     const savedId   = load(ACTIVE_DOG_KEY, null);
-    const savedDogs = load(DOGS_KEY, []);
+    const savedDogs = ensureArray(load(DOGS_KEY, []));
     if (savedId && savedDogs.find(d => d.id === savedId)) setActiveDogId(savedId);
     else setScreen("select");
   }, []);
@@ -1267,13 +1270,13 @@ export default function PawTimer() {
   // ── Handlers ─────────────────────────────────────────────────────────────
   const openDog = (dog) => {
     const v4 = load(sessKey(dog.id), null);
-    const rawSessions = Array.isArray(v4) ? v4 : load(legacySessKey(dog.id), []);
+    const rawSessions = Array.isArray(v4) ? v4 : ensureArray(load(legacySessKey(dog.id), []));
     const s = normalizeSessions(rawSessions);
-    const w = load(walkKey(dog.id), []);
-    const p = load(patKey(dog.id),  []);
+    const w = ensureArray(load(walkKey(dog.id), []));
+    const p = ensureArray(load(patKey(dog.id),  []));
     if (!Array.isArray(v4)) save(sessKey(dog.id), s);
     setSessions(s); setWalks(w); setPatterns(p);
-    setPatLabels(load(patLblKey(dog.id), {}));
+    setPatLabels(ensureObject(load(patLblKey(dog.id), {})));
     setDogPhoto(load(photoKey(dog.id), null));
     setTarget(suggestNext(s, dog));
     setActiveDogId(dog.id);
@@ -1282,7 +1285,7 @@ export default function PawTimer() {
 
   const handleDogSelect = (id, isJoin = false) => {
     const existing = dogs.find(d => d.id === id)
-                  ?? load(DOGS_KEY, []).find(d => d.id === id);
+                  ?? ensureArray(load(DOGS_KEY, [])).find(d => d.id === id);
     if (existing) {
       openDog(existing);
       return;
