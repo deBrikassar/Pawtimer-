@@ -261,6 +261,8 @@ const sessionDetailBadges = (s) => {
   if (s.environment?.noiseEvent) badges.push("🔊 noise/event");
 
   return badges;
+};
+
 const getLeaveProfile = (leavesPerDay = 3) => {
   const normalizedLeaves = Math.max(1, Number(leavesPerDay) || 3);
   if (normalizedLeaves <= 2) return { key: "low", confidenceScale: 0.9, desc: "lower daily departure load" };
