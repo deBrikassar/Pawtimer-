@@ -324,20 +324,39 @@ const PATTERN_TYPES = [
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Golos+Text:wght@400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:          #F7F2E7;
-    --surf:        #FFFFFF;
-    --surf-soft:   #EDF5EF;
-    --border:      #C6DDD0;
-    --green:       #A8D5BA;
+    --font-ui: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --font-prose: 'Golos Text', Georgia, serif;
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 32px;
+    --space-5: 40px;
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 20px;
+    --color-bg: #F7F2E7;
+    --color-surface: #FFFFFF;
+    --color-surface-soft: #EDF5EF;
+    --color-border: #C6DDD0;
+    --color-text: #4B3C30;
+    --color-text-muted: #6B5A4A;
+    --color-text-subtle: #7B6757;
+    --color-accent-700: #2E815F;
+    --color-accent-200: #A8D5BA;
+    --bg:          var(--color-bg);
+    --surf:        var(--color-surface);
+    --surf-soft:   var(--color-surface-soft);
+    --border:      var(--color-border);
+    --green:       var(--color-accent-200);
     --green-light: #CBE9D7;
-    --green-dark:  #3d8c60;
-    --brown:       #4B3C30;
-    --brown-mid:   #6b5a4a;
-    --brown-muted: #9a8878;
+    --green-dark:  var(--color-accent-700);
+    --brown:       var(--color-text);
+    --brown-mid:   var(--color-text-muted);
+    --brown-muted: var(--color-text-subtle);
     --amber:       #d4813a;
     --amber-light: #f0a865;
     --red:         #c0392b;
@@ -346,8 +365,7 @@ const styles = `
     --text-muted:  #6b5a4a;
     --shadow:    0 4px 24px rgba(75,60,48,0.09);
     --shadow-lg: 0 8px 40px rgba(75,60,48,0.14);
-    --radius:    20px;
-    --radius-sm: 12px;
+    --radius:    var(--radius-lg);
   }
 
   html { overflow-x: hidden; width: 100%; max-width: 100vw; }
@@ -355,13 +373,19 @@ const styles = `
     height: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-family: var(--font-ui);
     font-weight: 400;
     line-height: 1.5;
     min-height: 100vh; min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
     overflow-x: hidden;
+  }
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid rgba(46,129,95,0.55);
+    outline-offset: 2px;
   }
 
   .app {
@@ -377,7 +401,7 @@ const styles = `
   .ds-logo { margin-bottom:14px; position:relative; z-index:1; display:flex; justify-content:center; }
   .ds-title { font-size:28px; font-weight:700; color:var(--brown); line-height:1.2; letter-spacing:-0.02em; position:relative; z-index:1; }
   .ds-sub { font-size:15px; font-weight:400; color:var(--text-muted); margin-top:8px; position:relative; z-index:1; line-height:1.6; }
-  .ds-body { padding:28px; flex:1; overflow-x:hidden; }
+  .ds-body { padding:var(--space-3); flex:1; overflow-x:hidden; }
   .ds-section-label { font-size:13px; letter-spacing:normal; color:var(--text-muted); font-weight:500; line-height:1.4; margin-bottom:10px; }
   .ds-dog-card { display:flex; align-items:center; gap:14px; background:var(--surf); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:10px; box-shadow:var(--shadow); cursor:pointer; border:2px solid transparent; transition:border-color 0.2s,transform 0.15s; }
   .ds-dog-card:hover { border-color:var(--green-dark); transform:translateY(-1px); }
@@ -415,7 +439,7 @@ const styles = `
   .ob-question { font-size:20px; font-weight:600; color:var(--brown); margin-bottom:10px; line-height:1.3; letter-spacing:-0.01em; }
   .ob-hint { font-size:15px; color:var(--text-muted); margin-bottom:16px; line-height:1.5; }
   .ob-note { font-size:11px; color:var(--green-dark); background:rgba(168,213,186,0.2); border-left:3px solid var(--green); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:8px 12px; margin-bottom:12px; line-height:1.5; }
-  .ob-input { width:100%; padding:16px 18px; background:var(--surf); border:2px solid var(--border); border-radius:var(--radius-sm); font-size:20px; color:var(--brown); outline:none; transition:border-color 0.2s; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; }
+  .ob-input { width:100%; padding:16px; background:var(--surf); border:2px solid var(--border); border-radius:var(--radius-sm); font-size:20px; color:var(--brown); outline:none; transition:border-color 0.2s; font-weight:600; letter-spacing:0.01em; }
   .ob-input:focus { border-color:var(--green-dark); }
   .ob-input::placeholder { color:var(--brown-muted); font-weight:300; font-size:15px; text-transform:none; letter-spacing:0; }
   .ob-options { display:flex; flex-direction:column; gap:10px; }
@@ -438,7 +462,7 @@ const styles = `
   .ob-back-btn { background:none; border:none; color:var(--text-muted); font-size:14px; cursor:pointer; margin-top:14px; display:block; width:100%; text-align:center; padding:8px; }
 
   /* ── Header ── */
-  .header { padding:28px 20px 10px; background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
+  .header { padding:var(--space-4) var(--space-3) var(--space-2); background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
   .header::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(168,213,186,0.35) 0%,transparent 70%); border-radius:50%; }
   .header-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; gap:16px; }
   .app-title { font-size:28px; font-weight:700; color:var(--brown); line-height:1.2; letter-spacing:-0.02em; }
@@ -455,7 +479,7 @@ const styles = `
   .dog-photo-overlay { position:absolute; bottom:2px; right:2px; background:var(--brown); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; pointer-events:none; border:2px solid var(--bg); }
 
   /* ── Progress section ── */
-  .prog-section { padding:0 20px; margin-top:16px; }
+  .prog-section { padding:0 var(--space-3); margin-top:var(--space-2); }
   .train-main { width:min(100%, 460px); margin:0 auto; }
   .prog-track { height:8px; background:var(--border); border-radius:99px; position:relative; overflow:visible; }
   .prog-fill  { height:100%; background:linear-gradient(90deg,var(--green-dark),var(--green)); border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
@@ -488,8 +512,17 @@ const styles = `
   .sc-track { fill:none; stroke:rgba(96,142,111,0.2); stroke-width:10; }
   .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
   .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:20px; }
-  .sc-idle { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; transition:opacity 260ms ease, transform 300ms ease; }
-  .sc-idle-label { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-transform:uppercase; font-size:34px; font-weight:800; letter-spacing:0.04em; line-height:0.96; color:rgba(255,255,255,0.99); text-shadow:0 0 6px rgba(255,255,255,0.24), 0 0 16px rgba(196,247,220,0.20); }
+  .sc-content::before {
+    content:"";
+    position:absolute;
+    inset:18%;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.14) 45%, rgba(0,0,0,0) 72%);
+    pointer-events:none;
+    z-index:0;
+  }
+  .sc-idle { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-idle-label { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-transform:uppercase; font-size:34px; font-weight:800; letter-spacing:0.03em; line-height:1; color:rgba(255,255,255,0.99); text-shadow:0 0 6px rgba(255,255,255,0.24), 0 0 16px rgba(196,247,220,0.20); }
   .sc-idle-label span { display:block; }
   .sc-time { position:absolute; opacity:0; transform:scale(0.95); transition:opacity 300ms ease-in-out, transform 300ms ease-in-out; }
   .sc-time-value { font-size:56px; line-height:1; font-weight:800; color:var(--green-dark); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
@@ -525,7 +558,7 @@ const styles = `
   .ring-val { font-size:24px; font-weight:600; color:var(--brown); line-height:1.2; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
   
   /* ── Tool section title ── */
-  .tool-section-title { margin:8px 20px 4px; font-size:13px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); font-weight:700; }
+  .tool-section-title { margin:8px 24px 8px; font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:700; }
 
   /* ── Grouped tool card ── */
   .tool-group-card { margin:0 20px; background:var(--surf); border-radius:var(--radius-sm); box-shadow:0 2px 12px rgba(75,60,48,0.07); overflow:hidden; }
@@ -553,7 +586,7 @@ const styles = `
   /* ── Daily alone-time card ── */
   .alone-card   { margin:6px 20px 0; background:var(--surf); border-radius:var(--radius-sm); padding:11px 14px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; align-items:center; gap:16px; }
   .alone-left   { flex:1; }
-  .alone-label  { font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:600; margin-bottom:2px; }
+  .alone-label  { font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:600; margin-bottom:2px; }
   .alone-total  { font-size:24px; color:var(--brown); font-weight:700; line-height:1.1; }
   .alone-right  { flex:1; }
   .alone-track  { height:6px; background:var(--border); border-radius:99px; overflow:hidden; display:flex; }
@@ -635,7 +668,7 @@ const styles = `
   .pat-section { margin:0 24px 16px; }
   .pat-header  { display:flex; align-items:center; gap:0; margin-bottom:6px; }
   .pat-title   { font-size:17px; color:var(--brown); }
-  .pat-badge   { font-size:10px; font-weight:500; padding:2px 9px; border-radius:99px; background:rgba(168,213,186,0.3); color:var(--green-dark); letter-spacing:0.05em; text-transform:uppercase; }
+  .pat-badge   { font-size:10px; font-weight:600; padding:2px 9px; border-radius:99px; background:rgba(168,213,186,0.3); color:var(--green-dark); letter-spacing:0.01em; }
   .pat-reminder { font-size:15px; color:var(--text-muted); line-height:1.6; padding:10px 14px; background:var(--surf); border-radius:var(--radius-sm); margin-bottom:10px; border-left:3px solid var(--green-dark); box-shadow:0 2px 8px rgba(75,60,48,0.06); }
   .pat-reminder.warn { border-left-color:var(--amber); color:var(--brown-mid); }
   .pat-btns { display:flex; flex-direction:column; gap:0; }
@@ -650,12 +683,13 @@ const styles = `
 
   /* ── Tabs ── */
   .tabs { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:rgba(247,242,231,0.97); backdrop-filter:blur(14px); border-top:1.5px solid var(--border); display:flex; z-index:100; padding-bottom:env(safe-area-inset-bottom,0px); }
-  .tab-btn { flex:1; padding:9px 4px 13px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--brown-muted); transition:color 0.18s; font-size:13px; font-weight:500; line-height:1.4; }
+  .tab-btn { flex:1; min-height:48px; padding:9px 4px 13px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--color-text-subtle); transition:color 0.18s; font-size:13px; font-weight:500; line-height:1.4; }
   .tab-btn.active { color:var(--green-dark); font-weight:700; }
   .tab-btn svg { width:24px; height:24px; }
+  .tab-btn:focus-visible { outline:2px solid var(--green-dark); outline-offset:-2px; border-radius:10px; }
 
   /* ── Sections ── */
-  .section { padding:10px 18px; overflow-x:hidden; }
+  .section { padding:var(--space-2) var(--space-3); overflow-x:hidden; }
   .section-title { font-size:20px; font-weight:600; color:var(--brown); line-height:1.3; letter-spacing:-0.01em; margin-bottom:14px; }
   .empty-state { text-align:center; padding:40px 24px; color:var(--text-muted); }
   .empty-state .big { font-size:48px; margin-bottom:12px; }
@@ -671,7 +705,7 @@ const styles = `
   /* ── Protocol details ── */
   .proto-section { margin-bottom:12px; }
   .proto-section:last-child { margin-bottom:0; }
-  .proto-title { font-size:12px; text-transform:uppercase; letter-spacing:0.07em; color:var(--green-dark); font-weight:700; margin-bottom:5px; }
+  .proto-title { font-size:13px; letter-spacing:0.01em; color:var(--green-dark); font-weight:700; margin-bottom:5px; }
   .proto-row { font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; }
 
   /* ── Sync status dot ── */
@@ -720,7 +754,7 @@ const styles = `
   .chart-title { font-size:16px; color:var(--brown); margin-bottom:14px; padding-left:12px; }
   .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:12px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:12px; }
   .streak-num  { font-size:36px; font-weight:700; line-height:1; }
-  .streak-lbl  { font-size:14px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.85; margin-top:6px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:4px; }
+  .streak-lbl  { font-size:14px; letter-spacing:0.01em; opacity:0.9; margin-top:6px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:4px; }
   .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:8px; }
   .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
   .stat-val    { font-size:24px; color:var(--brown); font-weight:600; line-height:1.2; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
@@ -740,7 +774,7 @@ const styles = `
   .dot12 { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
   .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:10px; }
   .insight-card { background:var(--surf); border-radius:var(--radius-sm); padding:10px 12px; box-shadow:var(--shadow); border-left:4px solid var(--border); min-height:78px; }
-  .insight-title { font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
+  .insight-title { font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
   .insight-value { font-size:22px; font-weight:700; color:var(--brown); line-height:1.1; font-variant-numeric:tabular-nums; }
   .insight-sub { font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600; }
 
@@ -783,7 +817,7 @@ const styles = `
   /* ── Coach mark (first launch) ── */
   .coach-overlay { position:fixed; inset:0; z-index:200; pointer-events:none; }
   .coach-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.45); pointer-events:all; }
-  .coach-tip { position:absolute; left:24px; right:24px; background:var(--surf); border-radius:var(--radius); padding:20px 22px; box-shadow:var(--shadow-lg); pointer-events:all; animation:slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  .coach-tip { position:absolute; left:24px; right:24px; background:var(--surf); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow-lg); pointer-events:all; animation:slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1); }
   .coach-tip-arrow { width:14px; height:10px; background:var(--surf); clip-path:polygon(50% 0%,0% 100%,100% 100%); position:absolute; top:-9px; left:50%; transform:translateX(-50%); }
   .coach-title { font-size:18px; color:var(--brown); font-weight:600; margin-bottom:6px; }
   .coach-body  { font-size:13px; color:var(--text-muted); line-height:1.65; margin-bottom:16px; }
@@ -791,7 +825,7 @@ const styles = `
   .coach-btn:hover { opacity:0.88; }
 
   /* ── Welcome-back banner ── */
-  .welcome-back { margin:0 20px 10px; background:var(--surf); border-radius:var(--radius-sm); padding:12px 16px; border-left:3px solid var(--green-dark); box-shadow:0 1px 4px rgba(75,60,48,0.06); display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .welcome-back { margin:0 24px 16px; background:var(--surf); border-radius:var(--radius-sm); padding:16px; border-left:3px solid var(--green-dark); box-shadow:0 1px 4px rgba(75,60,48,0.06); display:flex; justify-content:space-between; align-items:center; gap:10px; }
   .welcome-back-text { font-size:14px; color:var(--text-muted); line-height:1.5; }
   .welcome-back-dismiss { background:none; border:none; color:var(--border); font-size:16px; cursor:pointer; padding:2px 4px; flex-shrink:0; }
 
@@ -816,6 +850,7 @@ const styles = `
   .t-helper { font-size:13px; font-weight:500; line-height:1.4; color:var(--text-muted); }
   .t-btn { font-size:16px; font-weight:600; line-height:1.2; letter-spacing:0.01em; }
   .num-stable { font-variant-numeric:tabular-nums; }
+  .prose { font-family:var(--font-prose); line-height:1.7; letter-spacing:0; }
 
   /* ── Typography overrides ── */
   .proto-row { font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; }
@@ -964,13 +999,13 @@ function Onboarding({ onComplete, onBack }) {
   const [calm,   setCalm]   = useState(null);
   const [goal,   setGoal]   = useState(null);
 
-  const nameUp = name.toUpperCase().replace(/\s+/g, " ").trim();
-  const canNext = [nameUp.length >= 1, leaves !== null, calm !== null, goal !== null][step];
-  const displayName = nameUp || "your dog";
+  const cleanName = name.replace(/\s+/g, " ").trim();
+  const canNext = [cleanName.length >= 1, leaves !== null, calm !== null, goal !== null][step];
+  const displayName = cleanName || "your dog";
 
   const handleNext = () => {
     if (step < 3) setStep(s => s + 1);
-    else onComplete({ dogName: nameUp, leavesPerDay: leaves, currentMaxCalm: calm, goalSeconds: goal });
+    else onComplete({ dogName: cleanName, leavesPerDay: leaves, currentMaxCalm: calm, goalSeconds: goal });
   };
 
   return (
@@ -986,7 +1021,7 @@ function Onboarding({ onComplete, onBack }) {
       <div className="ob-body">
         {step === 0 && (<>
           <div className="ob-question">What's your dog's name?</div>
-          <div className="ob-note">Names are case-insensitive — they're shown automatically in CAPITAL LETTERS.</div>
+          <div className="ob-note prose">Names are case-insensitive, and we'll keep your dog's natural spelling.</div>
           <div className="ob-hint">Used to personalise messages throughout the app.</div>
           <input className="ob-input" placeholder="e.g. Luna, Maximilian…"
             value={name} onChange={e => setName(e.target.value)}
@@ -1067,7 +1102,7 @@ function DogSelect({ dogs, onSelect, onCreateNew }) {
             <div key={d.id} className="ds-dog-card" onClick={() => onSelect(d.id)}>
               <PawIcon size={30}/>
               <div>
-                <div className="ds-dog-name">{(d.dogName || "").toUpperCase()}</div>
+                <div className="ds-dog-name">{d.dogName || "Your dog"}</div>
                 <div className="ds-dog-id">ID: {d.id}</div>
               </div>
               <div className="ds-dog-arrow">›</div>
@@ -1090,7 +1125,7 @@ function DogSelect({ dogs, onSelect, onCreateNew }) {
         <div className="ds-join-row">
           <input className="ds-join-input" placeholder="e.g. LUNA-4829"
             value={joinId}
-            onChange={e => { setJoinId(e.target.value.toUpperCase()); setJoinError(""); }}
+            onChange={e => { setJoinId(e.target.value); setJoinError(""); }}
             onKeyDown={e => e.key === "Enter" && joinId.trim() && handleJoin()}
             maxLength={14}/>
           <button className="ds-join-btn" onClick={handleJoin}>Join →</button>
@@ -1330,7 +1365,7 @@ export default function PawTimer() {
         return;
       }
       const placeholder = {
-        id: normalizedId, dogName: prefix.toUpperCase(),
+        id: normalizedId, dogName: prefix,
         leavesPerDay: suggestedLeaves, currentMaxCalm: 60, goalSeconds: 2400,
         createdAt: new Date().toISOString(), isJoined: true,
       };
@@ -1338,7 +1373,7 @@ export default function PawTimer() {
       save(DOGS_KEY, updatedDogs);
       setDogs(updatedDogs);
       openDog(placeholder);
-      showToast(`✅ Joined ${prefix.toUpperCase()} with placeholder settings.`);
+      showToast(`✅ Joined ${prefix} with placeholder settings.`);
     } else {
       setActiveDogId(normalizedId); setScreen("onboard");
     }
@@ -1346,7 +1381,7 @@ export default function PawTimer() {
 
   const handleOnboardComplete = (data) => {
     const id     = canonicalDogId(activeDogId || generateId(data.dogName));
-    const newDog = { ...data, id, dogName: data.dogName.toUpperCase(), createdAt: new Date().toISOString() };
+    const newDog = { ...data, id, dogName: data.dogName, createdAt: new Date().toISOString() };
     setDogs(prev => [...prev.filter(d => d.id !== id), newDog]);
     setActiveDogId(id);
     setTarget(Math.max(Math.round(data.currentMaxCalm * 0.8), PROTOCOL.startDurationSeconds));
@@ -1399,7 +1434,7 @@ export default function PawTimer() {
     const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
     setTarget(next);
     setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false);
-    const n = (dog?.dogName ?? "dog").toUpperCase();
+    const n = dog?.dogName ?? "your dog";
     if (distressLevel === "none")       showToast(`✅ ${n} was calm! Next: ${fmt(next)}`);
     else if (distressLevel === "mild")  showToast(`⚠️ Mild signs — holding at ${fmt(next)}`);
     else                                showToast(`❤️ Rolled back to ${fmt(next)}`);
@@ -1432,7 +1467,7 @@ export default function PawTimer() {
     pushWithSyncStatus("walk", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
-    const n = (dogs.find(d => d.id === activeDogId)?.dogName ?? "dog").toUpperCase();
+    const n = dogs.find(d => d.id === activeDogId)?.dogName ?? "your dog";
     showToast(`🚶 Walk with ${n} logged — ${fmt(duration)}!`);
     setWalkPhase("idle"); setWalkElapsed(0);
   };
@@ -1474,7 +1509,7 @@ export default function PawTimer() {
 
   // ── Computed values ───────────────────────────────────────────────────────
   const dog      = dogs.find(d => d.id === activeDogId);
-  const name     = (dog?.dogName ?? "YOUR DOG").toUpperCase();
+  const name     = dog?.dogName ?? "your dog";
   const goalSec  = dog?.goalSeconds ?? 2400;
   const goalPct  = Math.min((target / goalSec) * 100, 100);
 
@@ -1674,7 +1709,7 @@ export default function PawTimer() {
           <div className="coach-tip" style={{ bottom:220 }}>
             <div className="coach-tip-arrow"/>
             <div className="coach-title" id="coach-title">This is {name}'s first session 🐾</div>
-            <div className="coach-body">Tap <strong>Start Session</strong> when you're ready to leave the apartment. The app will track the time and ask how {name.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())} did when you return.</div>
+            <div className="coach-body prose">Tap <strong>Start Session</strong> when you're ready to step out. We'll track the time and check in on how {name} felt when you come back.</div>
             <button className="coach-btn" onClick={() => { setShowCoach(false); save("pawtimer_coach_seen", true); }}>Got it — let's start</button>
           </div>
         </div>
@@ -1885,7 +1920,7 @@ export default function PawTimer() {
             })()}
 
             {/* 6. Other tools — grouped card */}
-            <div className="tool-section-title">Other Tools</div>
+            <div className="tool-section-title">Helpful tools</div>
             <div className="tool-group-card">
 
               {/* Log a walk */}
@@ -1964,28 +1999,28 @@ export default function PawTimer() {
                 <div className="tool-expand">
                   <div className="proto-section">
                     <div className="proto-title">How to run a session</div>
-                    <div className="proto-row">1. Tap Start — calmly leave the room (no big goodbye)</div>
-                    <div className="proto-row">2. Return any time and tap End Session</div>
-                    <div className="proto-row">3. Rate how {name} did — the app sets the next target</div>
+                    <div className="proto-row prose">1. Tap Start and leave calmly, without a big goodbye.</div>
+                    <div className="proto-row prose">2. Come back whenever you need to and tap End Session.</div>
+                    <div className="proto-row prose">3. Rate how {name} did, and we'll set a gentle next target.</div>
                   </div>
                   <div className="proto-section">
-                    <div className="proto-title">Step-up rules</div>
-                    <div className="proto-row">✅ <strong>Calm (completed):</strong> +15% next session (below 40 min), then +5 min</div>
-                    <div className="proto-row">⚠️ <strong>Mild distress:</strong> Hold same duration</div>
-                    <div className="proto-row">❌ <strong>Strong distress:</strong> Roll back 1–2 sessions</div>
+                    <div className="proto-title">Progress rules</div>
+                    <div className="proto-row prose">✅ <strong>Calm (completed):</strong> Add +15% next session (below 40 min), then +5 min.</div>
+                    <div className="proto-row prose">⚠️ <strong>Mild distress:</strong> Hold the same duration next time.</div>
+                    <div className="proto-row prose">❌ <strong>Strong distress:</strong> Roll back by 1–2 sessions.</div>
                   </div>
                   <div className="proto-section">
-                    <div className="proto-title">Daily guidelines</div>
-                    <div className="proto-row">📅 Max {activeProto.sessionsPerDayMax} sessions · max {activeProto.maxDailyAloneMinutes} min alone/day</div>
-                    <div className="proto-row">🔁 Pattern breaks: {recMin}–{recMax}/day for ~{normalizedLeaves} leaves/day · at least walks + {walkBuffer} buffer</div>
-                    <div className="proto-row">😴 Rest days: {activeProto.restDaysPerWeekRecommended}/week recommended</div>
+                    <div className="proto-title">Daily rhythm</div>
+                    <div className="proto-row prose">📅 Up to {activeProto.sessionsPerDayMax} sessions · up to {activeProto.maxDailyAloneMinutes} min alone/day.</div>
+                    <div className="proto-row prose">🔁 Pattern breaks: {recMin}–{recMax}/day for ~{normalizedLeaves} departures/day · at least walks + {walkBuffer} buffer.</div>
+                    <div className="proto-row prose">😴 Rest days: {activeProto.restDaysPerWeekRecommended}/week is recommended.</div>
                   </div>
                 </div>
               )}
             </div>
 
             {/* 7. Help — Daily reminder */}
-            <div className="tool-section-title">Help</div>
+            <div className="tool-section-title">Support</div>
             <div className="tool-group-card" style={{marginBottom:28}}>
               <div className="tool-row" style={{cursor:"default"}}>
                 <div className="tool-row-left">
