@@ -491,7 +491,7 @@ const styles = `
   .session-control.is-running .sc-idle { opacity:0; transform:translateY(-4px); }
   .session-control.is-running .sc-time,
   .session-control.is-complete .sc-time { opacity:1; transform:scale(1); }
-  .session-actions { margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .session-actions { margin-top:12px; display:flex; flex-direction:column; gap:0; align-items:center; }
   .session-end-btn, .session-cancel-btn { width:min(100%, 260px); padding:12px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown); font-size:16px; font-weight:600; line-height:1.2; letter-spacing:0.01em; cursor:pointer; }
   .session-cancel-btn { background:var(--surf-soft); }
   .session-end-btn:hover, .session-cancel-btn:hover { border-color:var(--green-dark); }
@@ -500,12 +500,14 @@ const styles = `
 
   /* ── Status message ── */
   .status-msg { margin:18px auto 0; max-width:340px; font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; text-align:center; }
-  .status-inline { margin:14px auto 0; max-width:360px; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--text-muted); font-size:15px; line-height:1.5; text-align:center; }
-  .info-wrap { position:relative; display:inline-flex; align-items:center; }
-  .info-btn { width:22px; height:22px; border-radius:999px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown-mid); font-size:13px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; line-height:1; }
-  .info-btn:hover, .info-btn:focus-visible { border-color:var(--green-dark); color:var(--green-dark); outline:none; }
-  .info-pop { position:absolute; top:calc(100% + 8px); right:-6px; width:min(320px, 78vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:10px 12px; font-size:13px; line-height:1.55; text-align:left; z-index:20; }
-  .info-pop strong { color:var(--brown); }
+  .recommendation-pop-wrap { margin:14px auto 0; max-width:360px; display:flex; justify-content:center; position:relative; }
+  .recommendation-pop-btn { width:30px; height:30px; padding:0; border-radius:999px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown-mid); font-size:13px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:0; cursor:pointer; }
+  .recommendation-pop-btn:hover, .recommendation-pop-btn:focus-visible { border-color:var(--green-dark); color:var(--green-dark); outline:none; }
+  .recommendation-pop-btn .icon { width:18px; height:18px; border-radius:999px; border:1.5px solid currentColor; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; line-height:1; }
+  .recommendation-pop { position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:min(360px, 88vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:12px 14px; font-size:13px; line-height:1.55; text-align:left; z-index:20; }
+  .recommendation-pop p { margin:0; }
+  .recommendation-pop p + p { margin-top:10px; }
+  .recommendation-pop strong { color:var(--brown); }
 
   /* ── Stats rings card ── */
   .stats-rings-card { margin:24px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; }
@@ -557,7 +559,7 @@ const styles = `
   .alone-fill.ok   { background:linear-gradient(90deg,var(--green-dark),var(--green)); }
   .alone-fill.near { background:linear-gradient(90deg,var(--orange),var(--amber-light)); }
   .alone-fill.full { background:linear-gradient(90deg,var(--red),var(--orange)); }
-  .alone-legend { display:flex; gap:8px; margin-top:5px; flex-wrap:wrap; align-items:center; }
+  .alone-legend { display:flex; gap:0; margin-top:5px; flex-wrap:wrap; align-items:center; }
 
   /* ── Streak fire ── */
   .streak-fire { font-size:24px; line-height:1; display:inline-flex; align-items:center; margin-right:6px; position:relative; top:-1px; }
@@ -629,12 +631,12 @@ const styles = `
 
   /* ── Pattern Breaking section ── */
   .pat-section { margin:0 24px 16px; }
-  .pat-header  { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .pat-header  { display:flex; align-items:center; gap:0; margin-bottom:6px; }
   .pat-title   { font-size:17px; color:var(--brown); }
   .pat-badge   { font-size:10px; font-weight:500; padding:2px 9px; border-radius:99px; background:rgba(168,213,186,0.3); color:var(--green-dark); letter-spacing:0.05em; text-transform:uppercase; }
   .pat-reminder { font-size:15px; color:var(--text-muted); line-height:1.6; padding:10px 14px; background:var(--surf); border-radius:var(--radius-sm); margin-bottom:10px; border-left:3px solid var(--green-dark); box-shadow:0 2px 8px rgba(75,60,48,0.06); }
   .pat-reminder.warn { border-left-color:var(--amber); color:var(--brown-mid); }
-  .pat-btns { display:flex; flex-direction:column; gap:8px; }
+  .pat-btns { display:flex; flex-direction:column; gap:0; }
   .btn-pat { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surf); color:var(--brown); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-weight:400; cursor:pointer; transition:border-color 0.2s,transform 0.15s; text-align:left; box-shadow:0 2px 8px rgba(75,60,48,0.05); }
   .btn-pat:hover { border-color:var(--green-dark); transform:translateX(3px); }
   .btn-pat:active { transform:translateX(0); }
@@ -717,7 +719,7 @@ const styles = `
   .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:12px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:12px; }
   .streak-num  { font-size:36px; font-weight:700; line-height:1; }
   .streak-lbl  { font-size:14px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.85; margin-top:6px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:4px; }
-  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:8px; }
   .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
   .stat-val    { font-size:24px; color:var(--brown); font-weight:600; line-height:1.2; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
   .stat-lbl    { font-size:15px; color:var(--text-muted); margin-top:6px; font-weight:500; line-height:1.4; }
@@ -734,7 +736,7 @@ const styles = `
   .ratio-legend { display:flex; gap:14px; margin-top:6px; font-size:14px; color:var(--text-muted); flex-wrap:wrap; }
   .ratio-legend span { display:flex; align-items:center; gap:5px; }
   .dot12 { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:10px; }
   .insight-card { background:var(--surf); border-radius:var(--radius-sm); padding:10px 12px; box-shadow:var(--shadow); border-left:4px solid var(--border); min-height:78px; }
   .insight-title { font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
   .insight-value { font-size:22px; font-weight:700; color:var(--brown); line-height:1.1; font-variant-numeric:tabular-nums; }
@@ -1798,40 +1800,24 @@ export default function PawTimer() {
               );
             })()}
 
-            <div className="status-inline">
-              Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)}
-              <span className="info-wrap" onMouseEnter={() => setOpenTip("recommendation")} onMouseLeave={() => setOpenTip((prev) => (prev === "recommendation" ? null : prev))}>
-                <button
-                  className="info-btn"
-                  aria-label="How recommendation confidence is calculated"
-                  onClick={() => setOpenTip((prev) => (prev === "recommendation" ? null : "recommendation"))}
-                >
-                  i
-                </button>
-                {openTip === "recommendation" && (
-                  <div className="info-pop" role="tooltip">
-                    <strong>How this updates:</strong> recommendations respond to recent outcomes (No distress / Mild distress / Strong distress), calm streak consistency, and total completed sessions. As calm successes accumulate, confidence typically moves from BUILDING → STABLE → STRONG and target durations can increase.
-                  </div>
-                )}
-              </span>
-            </div>
-
-            <div className="status-inline" style={{ marginTop: 8 }}>
-              Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc})
-              <span className="info-wrap" onMouseEnter={() => setOpenTip("leaveProfile")} onMouseLeave={() => setOpenTip((prev) => (prev === "leaveProfile" ? null : prev))}>
-                <button
-                  className="info-btn"
-                  aria-label="How leave frequency affects recommendations"
-                  onClick={() => setOpenTip((prev) => (prev === "leaveProfile" ? null : "leaveProfile"))}
-                >
-                  i
-                </button>
-                {openTip === "leaveProfile" && (
-                  <div className="info-pop" role="tooltip">
-                    Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
-                  </div>
-                )}
-              </span>
+            <div className="recommendation-pop-wrap">
+              <button
+                className="recommendation-pop-btn"
+                aria-label="Show recommendation details"
+                onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}
+              >
+                <span className="icon">i</span>
+              </button>
+              {openTip === "recommendations" && (
+                <div className="recommendation-pop" role="tooltip">
+                  <p>
+                    Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)}.
+                  </p>
+                  <p>
+                    Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Advisory warnings */}
