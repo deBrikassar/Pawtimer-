@@ -1384,7 +1384,7 @@ export default function PawTimer() {
           <div className="coach-tip" style={{ bottom:220 }}>
             <div className="coach-tip-arrow"/>
             <div className="coach-title" id="coach-title">This is {name}'s first session 🐾</div>
-            <div className="coach-body">Tap <strong>Start Session</strong> when you're ready to leave the room. The app will track the time and ask how {name.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())} did when you return.</div>
+            <div className="coach-body">Tap <strong>Start Session</strong> when you're ready to leave the apartment. The app will track the time and ask how {name.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())} did when you return.</div>
             <button className="coach-btn" onClick={() => { setShowCoach(false); save("pawtimer_coach_seen", true); }}>Got it — let's start</button>
           </div>
         </div>
