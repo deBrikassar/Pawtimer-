@@ -8,7 +8,6 @@ import {
 // ─── Storage keys ─────────────────────────────────────────────────────────────
 const DOGS_KEY       = "pawtimer_dogs_v3";
 const ACTIVE_DOG_KEY = "pawtimer_active_dog_v3";
-const METRIC_HELP_SEEN_KEY = "pawtimer_metric_help_seen_v1";
 const SESS_SCHEMA_VERSION = 4;
 const sessKey    = (id) => `pawtimer_sess_v${SESS_SCHEMA_VERSION}_${id}`;
 const legacySessKey = (id) => `pawtimer_sess_v3_${id}`;
@@ -845,7 +844,7 @@ const styles = `
   .metric-help-overlay { position:fixed; inset:0; z-index:240; background:rgba(0,0,0,0.42); display:flex; align-items:flex-end; justify-content:center; padding:18px; }
   .metric-help-card { width:min(100%, 420px); background:var(--surf); border-radius:var(--radius); padding:18px 16px; box-shadow:var(--shadow-lg); }
   .metric-help-title { font-size:20px; color:var(--brown); font-weight:700; margin-bottom:8px; }
-  .metric-help-body { font-size:14px; color:var(--text-muted); line-height:1.6; }
+  .metric-help-body { font-size:14px; color:var(--text-muted); line-height:1.6; font-weight:400; }
   .metric-help-close { margin-top:14px; width:100%; border:none; border-radius:10px; background:var(--brown); color:var(--bg); padding:11px; font-size:14px; font-weight:600; cursor:pointer; }
 
   .train-coverage { text-align:center; }
@@ -1192,7 +1191,6 @@ export default function PawTimer() {
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const [openTip,      setOpenTip]      = useState(null);
   const [metricHelp,   setMetricHelp]   = useState(null);
-  const [seenMetricHelp, setSeenMetricHelp] = useState(() => ensureObject(load(METRIC_HELP_SEEN_KEY, {})));
   const [walkPhase,    setWalkPhase]    = useState("idle"); // idle | timing
   const [walkElapsed,  setWalkElapsed]  = useState(0);
   const walkTimerRef = useRef(null);
@@ -1230,7 +1228,6 @@ export default function PawTimer() {
   useEffect(() => { save("pawtimer_notif_time", notifTime); }, [notifTime]);
   useEffect(() => { save("pawtimer_notif_on", notifEnabled); }, [notifEnabled]);
   useEffect(() => { save("pawtimer_proto_override", protoOverride); }, [protoOverride]);
-  useEffect(() => { save(METRIC_HELP_SEEN_KEY, seenMetricHelp); }, [seenMetricHelp]);
 
   // ── Notification scheduling ──────────────────────────────────────────────
   const scheduleNotif = useCallback(async (time, dogName) => {
@@ -1749,7 +1746,6 @@ export default function PawTimer() {
 
   const openMetricHelp = (metricKey) => {
     if (!metricExplainers[metricKey]) return;
-    setSeenMetricHelp((prev) => ({ ...prev, [metricKey]: true }));
     setMetricHelp(metricKey);
   };
 
@@ -2220,10 +2216,6 @@ export default function PawTimer() {
         {tab === "progress" && (<div className="tab-content">
           <div className="section">
             <div className="section-title">{name}'s Progress</div>
-            <div className="t-helper" style={{ marginBottom: 12 }}>
-              Daily plan context: {name} is set to ~{normalizedLeaves} departures/day. More departures increase pattern-break targets and tighten confidence requirements before recommending larger desensitization jumps.
-            </div>
-
             {totalCount === 0 ? (
               <div className="empty-state">
                 <div className="es-icon">🌱</div>
@@ -2507,14 +2499,7 @@ export default function PawTimer() {
           <button
             key={t.id}
             className={`tab-btn ${tab === t.id ? "active" : ""}`}
-            onClick={() => {
-              setTab(t.id);
-              if (t.id === "progress" && totalCount > 0 && !metricHelp) {
-                const firstUnseen = ["stability", "momentum", "relapseRisk", "adherence"]
-                  .find((key) => !seenMetricHelp[key]);
-                if (firstUnseen) openMetricHelp(firstUnseen);
-              }
-            }}
+            onClick={() => setTab(t.id)}
           >
             {t.icon}{t.label}
           </button>
