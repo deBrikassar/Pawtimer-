@@ -8,7 +8,9 @@ import {
 // ─── Storage keys ─────────────────────────────────────────────────────────────
 const DOGS_KEY       = "pawtimer_dogs_v3";
 const ACTIVE_DOG_KEY = "pawtimer_active_dog_v3";
-const sessKey    = (id) => `pawtimer_sess_v3_${id}`;
+const SESS_SCHEMA_VERSION = 4;
+const sessKey    = (id) => `pawtimer_sess_v${SESS_SCHEMA_VERSION}_${id}`;
+const legacySessKey = (id) => `pawtimer_sess_v3_${id}`;
 const walkKey    = (id) => `pawtimer_walk_v3_${id}`;
 const patKey     = (id) => `pawtimer_pat_v3_${id}`;
 const patLblKey  = (id) => `pawtimer_patlbl_v3_${id}`;  // custom pattern labels
@@ -57,22 +59,74 @@ const mergeById = (a = [], b = []) => {
   return Object.values(m).sort((x, y) => new Date(x.date) - new Date(y.date));
 };
 
+const asBool = (value) => value === true || value === 1;
+const hasValue = (value) => value !== null && value !== undefined;
+
+const normalizeSymptom = (value) => {
+  if (Number.isFinite(value)) return Math.max(0, Number(value));
+  return asBool(value) ? 1 : 0;
+};
+
+const normalizeSession = (row = {}) => {
+  const context = row.context ?? {};
+  const symptoms = row.symptoms ?? {};
+  const preSession = row.preSession ?? row.pre_session ?? {};
+  const environment = row.environment ?? {};
+
+  const normalized = {
+    ...row,
+    distressLevel: row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong"),
+    context: {
+      timeOfDay: context.timeOfDay ?? context.time_of_day ?? null,
+      departureType: context.departureType ?? context.departure_type ?? null,
+      cuesUsed: Array.isArray(context.cuesUsed ?? context.cues_used) ? (context.cuesUsed ?? context.cues_used) : [],
+    },
+    symptoms: {
+      barking: normalizeSymptom(symptoms.barking),
+      pacing: normalizeSymptom(symptoms.pacing),
+      destructive: normalizeSymptom(symptoms.destructive),
+      salivation: normalizeSymptom(symptoms.salivation),
+    },
+    recoverySeconds: Number.isFinite(row.recoverySeconds) ? row.recoverySeconds : (Number.isFinite(row.recovery_seconds) ? row.recovery_seconds : null),
+    preSession: {
+      walkDuration: Number.isFinite(preSession.walkDuration) ? preSession.walkDuration : (Number.isFinite(preSession.walk_duration) ? preSession.walk_duration : null),
+      enrichmentGiven: hasValue(preSession.enrichmentGiven) ? preSession.enrichmentGiven : (hasValue(preSession.enrichment_given) ? preSession.enrichment_given : null),
+    },
+    environment: {
+      noiseEvent: hasValue(environment.noiseEvent) ? !!environment.noiseEvent : asBool(environment.noise_event),
+    },
+  };
+  return normalized;
+};
+
+const normalizeSessions = (rows = []) => rows.map(normalizeSession);
+
 const syncFetch = async (dogId) => {
   const [sessRows, walkRows, patRows] = await Promise.all([
-    sbReq(`sessions?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,planned_duration,actual_duration,distress_level,result&order=date.asc`),
+    sbReq(`sessions?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
     sbReq(`walks?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,duration&order=date.asc`),
     sbReq(`patterns?dog_id=eq.${encodeURIComponent(dogId)}&select=id,date,type&order=date.asc`),
   ]);
   if (!Array.isArray(sessRows) || !Array.isArray(walkRows) || !Array.isArray(patRows)) return null;
   return {
-    sessions: sessRows.map((r) => ({
+    sessions: normalizeSessions(sessRows.map((r) => ({
       id: r.id,
       date: r.date,
       plannedDuration: r.planned_duration,
       actualDuration: r.actual_duration,
       distressLevel: r.distress_level,
       result: r.result,
-    })),
+      context: r.context ?? {},
+      symptoms: {
+        barking: r.symptoms?.barking ?? false,
+        pacing: r.symptoms?.pacing ?? false,
+        destructive: r.symptoms?.destructive ?? false,
+        salivation: r.symptoms?.salivation ?? false,
+      },
+      recoverySeconds: r.recovery_seconds ?? null,
+      preSession: r.pre_session ?? {},
+      environment: { noiseEvent: r.environment?.noise_event ?? false },
+    }))),
     walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
     patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
   };
@@ -96,6 +150,11 @@ const syncPush = async (dogId, kind, data) => {
         actual_duration: data.actualDuration,
         distress_level: data.distressLevel,
         result: data.result,
+        context: data.context ?? null,
+        symptoms: data.symptoms ?? null,
+        recovery_seconds: data.recoverySeconds ?? null,
+        pre_session: data.preSession ?? null,
+        environment: data.environment ? { noise_event: !!data.environment.noiseEvent } : null,
       }
     : kind === "walk"
       ? {
@@ -185,6 +244,23 @@ function patternInfo(patterns, walks, leavesPerDay = 3, protocol = PROTOCOL) {
 const distressLabel = (l) =>
   l === "none" ? "No distress" : l === "mild" ? "Mild distress" : l === "strong" ? "Strong distress" : "—";
 
+const symptomIntensity = (v) => (Number.isFinite(v) ? v : asBool(v) ? 1 : 0);
+
+const sessionDetailBadges = (s) => {
+  const badges = [];
+  if (s.context?.timeOfDay) badges.push(`🕒 ${s.context.timeOfDay}`);
+  if (s.context?.departureType) badges.push(`🚪 ${s.context.departureType}`);
+  if (Array.isArray(s.context?.cuesUsed) && s.context.cuesUsed.length) badges.push(`🧩 ${s.context.cuesUsed.length} cue${s.context.cuesUsed.length === 1 ? "" : "s"}`);
+
+  const symptomTotal = ["barking", "pacing", "destructive", "salivation"].reduce((sum, key) => sum + symptomIntensity(s.symptoms?.[key]), 0);
+  if (symptomTotal > 0) badges.push(`💬 symptoms ${symptomTotal}`);
+
+  if (Number.isFinite(s.recoverySeconds)) badges.push(`❤️ recovery ${fmt(s.recoverySeconds)}`);
+  if (Number.isFinite(s.preSession?.walkDuration)) badges.push(`🚶 walk ${fmt(s.preSession.walkDuration)}`);
+  if (s.preSession?.enrichmentGiven) badges.push("🦴 enrichment");
+  if (s.environment?.noiseEvent) badges.push("🔊 noise/event");
+
+  return badges;
 const getLeaveProfile = (leavesPerDay = 3) => {
   const normalizedLeaves = Math.max(1, Number(leavesPerDay) || 3);
   if (normalizedLeaves <= 2) return { key: "low", confidenceScale: 0.9, desc: "lower daily departure load" };
@@ -621,6 +697,8 @@ const styles = `
   .badge-strong { background:rgba(192,57,43,0.10);  color:var(--red); }
   .badge-walk   { background:rgba(74,158,110,0.15);  color:var(--green-dark); }
   .badge-pat    { background:rgba(75,60,48,0.09);    color:var(--brown-mid); }
+  .h-extra-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .h-badge-mini { font-size:11px; font-weight:600; padding:2px 7px; border-radius:99px; background:rgba(75,60,48,0.08); color:var(--brown-mid); letter-spacing:0.02em; }
 
   /* ── Stats ── */
   .chart-wrap  { background:var(--surf); border-radius:var(--radius); padding:16px 8px 12px; box-shadow:var(--shadow); margin-bottom:12px; }
@@ -1054,9 +1132,12 @@ export default function PawTimer() {
     const dog = dogs.find(d => d.id === activeDogId)
               ?? load(DOGS_KEY, []).find(d => d.id === activeDogId);
     if (!dog) { setScreen("select"); return; }
-    const s = load(sessKey(activeDogId), []);
+    const v4 = load(sessKey(activeDogId), null);
+    const rawSessions = Array.isArray(v4) ? v4 : load(legacySessKey(activeDogId), []);
+    const s = normalizeSessions(rawSessions);
     const w = load(walkKey(activeDogId), []);
     const p = load(patKey(activeDogId),  []);
+    if (!Array.isArray(v4)) save(sessKey(activeDogId), s);
     setSessions(s); setWalks(w); setPatterns(p);
     setTarget(suggestNext(s, dog));
     setScreen("app");
@@ -1113,7 +1194,7 @@ export default function PawTimer() {
       const remote = await syncFetch(activeDogId);
       if (!live) return;
       if (!remote) { setSyncStatus("err"); return; }
-      setSessions(prev => { const m = mergeById(prev, remote.sessions); save(sessKey(activeDogId), m); return m; });
+      setSessions(prev => { const m = normalizeSessions(mergeById(prev, remote.sessions)); save(sessKey(activeDogId), m); return m; });
       setWalks   (prev => { const m = mergeById(prev, remote.walks);    save(walkKey(activeDogId), m); return m; });
       setPatterns(prev => { const m = mergeById(prev, remote.patterns); save(patKey(activeDogId),  m); return m; });
       setSyncStatus("ok");
@@ -1183,9 +1264,12 @@ export default function PawTimer() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const openDog = (dog) => {
-    const s = load(sessKey(dog.id), []);
+    const v4 = load(sessKey(dog.id), null);
+    const rawSessions = Array.isArray(v4) ? v4 : load(legacySessKey(dog.id), []);
+    const s = normalizeSessions(rawSessions);
     const w = load(walkKey(dog.id), []);
     const p = load(patKey(dog.id),  []);
+    if (!Array.isArray(v4)) save(sessKey(dog.id), s);
     setSessions(s); setWalks(w); setPatterns(p);
     setPatLabels(load(patLblKey(dog.id), {}));
     setDogPhoto(load(photoKey(dog.id), null));
@@ -1245,11 +1329,24 @@ export default function PawTimer() {
 
   const recordResult = (distressLevel) => {
     const dog = dogs.find(d => d.id === activeDogId);
-    const session = {
-      id: Date.now(), date: new Date().toISOString(),
+    const now = new Date();
+    const hour = now.getHours();
+    const timeOfDay = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
+    const session = normalizeSession({
+      id: Date.now(), date: now.toISOString(),
       plannedDuration: target, actualDuration: finalElapsed,
       distressLevel, result: distressLevel === "none" ? "success" : "distress",
-    };
+      context: { timeOfDay, departureType: "training", cuesUsed: [] },
+      symptoms: {
+        barking: distressLevel === "strong" ? 2 : distressLevel === "mild" ? 1 : 0,
+        pacing: distressLevel === "strong" ? 2 : distressLevel === "mild" ? 1 : 0,
+        destructive: distressLevel === "strong" ? 1 : 0,
+        salivation: distressLevel === "strong" ? 1 : 0,
+      },
+      recoverySeconds: distressLevel === "none" ? 0 : null,
+      preSession: { walkDuration: null, enrichmentGiven: null },
+      environment: { noiseEvent: false },
+    });
     const updated = [...sessions, session];
     setSessions(updated);
     syncPush(activeDogId, "session", session).then(ok => {
@@ -1381,6 +1478,14 @@ export default function PawTimer() {
   })();
   const lastSess = sessions[sessions.length - 1];
 
+  const recommendationCoverageCount = sessions.filter(s =>
+    (hasValue(s.context?.timeOfDay) || hasValue(s.context?.departureType) || (Array.isArray(s.context?.cuesUsed) && s.context.cuesUsed.length > 0))
+    && ["barking","pacing","destructive","salivation"].some(k => hasValue(s.symptoms?.[k]))
+    && hasValue(s.recoverySeconds)
+    && (hasValue(s.preSession?.walkDuration) || hasValue(s.preSession?.enrichmentGiven))
+    && hasValue(s.environment?.noiseEvent)
+  ).length;
+  const recommendationCoveragePct = totalCount ? Math.round((recommendationCoverageCount / totalCount) * 100) : 0;
   const toDayKey = (iso) => {
     const d = new Date(iso);
     if (isNaN(d)) return "";
@@ -1609,6 +1714,11 @@ export default function PawTimer() {
                     : lastSess.distressLevel === "mild"
                       ? "Mild signs last time — holding until consistently calm."
                       : "Rolled back after strong distress — steady progress matters most."}
+              </p>
+            )}
+            {phase !== "running" && sessions.length > 0 && (
+              <p className="t-helper" style={{ marginTop: -4, marginBottom: 10 }}>
+                Data coverage for smarter recommendations: {recommendationCoveragePct}% ({recommendationCoverageCount}/{totalCount})
               </p>
             )}
 
@@ -1859,12 +1969,20 @@ export default function PawTimer() {
                 const s = item.data;
                 const lv = s.distressLevel ?? (s.result === "success" ? "none" : "strong");
                 const icon = lv === "none" ? "result-calm.png" : lv === "mild" ? "result-mild.png" : "result-strong.png";
+                const detailBadges = sessionDetailBadges(s);
                 return (
                   <div className="h-item" key={`s-${s.id}`}>
                     <div className={`h-dot dot-${lv}`}><Img src={icon} size={22}/></div>
                     <div className="h-info">
                       <div className="h-main">{fmt(s.actualDuration)} <span className="t-helper">of {fmt(s.plannedDuration)}</span></div>
                       <div className="h-date">{fmtDate(s.date)}</div>
+                      {detailBadges.length > 0 && (
+                        <div className="h-extra-badges">
+                          {detailBadges.slice(0, 4).map((badge, idx) => (
+                            <span key={`${s.id}-badge-${idx}`} className="h-badge-mini">{badge}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <span className={`h-badge badge-${lv}`}>{distressLabel(lv)}</span>
                     <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete("session", s.id); }} title="Delete">✕</button>
@@ -1937,6 +2055,10 @@ export default function PawTimer() {
               <div className="stat-card">
                 <div className="stat-val">{Math.round((noneCount/totalCount)*100)}<span className="t-helper">%</span></div>
                 <div className="stat-lbl">Success rate</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-val">{recommendationCoveragePct}<span className="t-helper">%</span></div>
+                <div className="stat-lbl">Recommendation quality</div>
               </div>
               <div className="stat-card">
                 <div className="stat-val">{fmt(bestCalm)}</div>
