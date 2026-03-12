@@ -491,7 +491,7 @@ const styles = `
   .session-control.is-running .sc-idle { opacity:0; transform:translateY(-4px); }
   .session-control.is-running .sc-time,
   .session-control.is-complete .sc-time { opacity:1; transform:scale(1); }
-  .session-actions { margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .session-actions { margin-top:12px; display:flex; flex-direction:column; gap:0; align-items:center; }
   .session-end-btn, .session-cancel-btn { width:min(100%, 260px); padding:12px 14px; border-radius:12px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown); font-size:16px; font-weight:600; line-height:1.2; letter-spacing:0.01em; cursor:pointer; }
   .session-cancel-btn { background:var(--surf-soft); }
   .session-end-btn:hover, .session-cancel-btn:hover { border-color:var(--green-dark); }
@@ -500,9 +500,15 @@ const styles = `
 
   /* ── Status message ── */
   .status-msg { margin:18px auto 0; max-width:340px; font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; text-align:center; }
+  .ring-sub-btn { margin-top:5px; background:transparent; border:none; padding:0; font-size:14px; color:var(--text-muted); font-weight:600; text-align:center; line-height:1.3; cursor:pointer; }
+  .ring-sub-btn:hover, .ring-sub-btn:focus-visible { color:var(--green-dark); outline:none; }
+  .recommendation-pop { position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:min(360px, 88vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:12px 14px; font-size:13px; line-height:1.55; text-align:left; z-index:20; }
+  .recommendation-pop p { margin:0; }
+  .recommendation-pop p + p { margin-top:10px; }
+  .recommendation-pop strong { color:var(--brown); }
 
   /* ── Stats rings card ── */
-  .stats-rings-card { margin:24px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; }
+  .stats-rings-card { margin:24px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; position:relative; }
   .ring-col { flex:1; display:flex; flex-direction:column; align-items:center; }
   .ring-col-sep { width:1px; background:var(--border); align-self:stretch; margin:8px 0; }
   .ring-wrap { position:relative; width:88px; height:88px; }
@@ -512,8 +518,7 @@ const styles = `
   .ring-fill-2 { fill:none; stroke:var(--green); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.9s cubic-bezier(0.34,1.56,0.64,1); transform:rotate(-90deg); transform-origin:44px 44px; }
   .ring-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
   .ring-val { font-size:24px; font-weight:600; color:var(--brown); line-height:1.2; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
-  .ring-sub { font-size:14px; color:var(--text-muted); font-weight:600; margin-top:5px; text-align:center; line-height:1.3; }
-
+  
   /* ── Tool section title ── */
   .tool-section-title { margin:8px 20px 4px; font-size:13px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); font-weight:700; }
 
@@ -551,7 +556,7 @@ const styles = `
   .alone-fill.ok   { background:linear-gradient(90deg,var(--green-dark),var(--green)); }
   .alone-fill.near { background:linear-gradient(90deg,var(--orange),var(--amber-light)); }
   .alone-fill.full { background:linear-gradient(90deg,var(--red),var(--orange)); }
-  .alone-legend { display:flex; gap:8px; margin-top:5px; flex-wrap:wrap; align-items:center; }
+  .alone-legend { display:flex; gap:0; margin-top:5px; flex-wrap:wrap; align-items:center; }
 
   /* ── Streak fire ── */
   .streak-fire { font-size:24px; line-height:1; display:inline-flex; align-items:center; margin-right:6px; position:relative; top:-1px; }
@@ -623,12 +628,12 @@ const styles = `
 
   /* ── Pattern Breaking section ── */
   .pat-section { margin:0 24px 16px; }
-  .pat-header  { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .pat-header  { display:flex; align-items:center; gap:0; margin-bottom:6px; }
   .pat-title   { font-size:17px; color:var(--brown); }
   .pat-badge   { font-size:10px; font-weight:500; padding:2px 9px; border-radius:99px; background:rgba(168,213,186,0.3); color:var(--green-dark); letter-spacing:0.05em; text-transform:uppercase; }
   .pat-reminder { font-size:15px; color:var(--text-muted); line-height:1.6; padding:10px 14px; background:var(--surf); border-radius:var(--radius-sm); margin-bottom:10px; border-left:3px solid var(--green-dark); box-shadow:0 2px 8px rgba(75,60,48,0.06); }
   .pat-reminder.warn { border-left-color:var(--amber); color:var(--brown-mid); }
-  .pat-btns { display:flex; flex-direction:column; gap:8px; }
+  .pat-btns { display:flex; flex-direction:column; gap:0; }
   .btn-pat { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surf); color:var(--brown); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-weight:400; cursor:pointer; transition:border-color 0.2s,transform 0.15s; text-align:left; box-shadow:0 2px 8px rgba(75,60,48,0.05); }
   .btn-pat:hover { border-color:var(--green-dark); transform:translateX(3px); }
   .btn-pat:active { transform:translateX(0); }
@@ -711,7 +716,7 @@ const styles = `
   .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:12px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:12px; }
   .streak-num  { font-size:36px; font-weight:700; line-height:1; }
   .streak-lbl  { font-size:14px; text-transform:uppercase; letter-spacing:0.06em; opacity:0.85; margin-top:6px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:4px; }
-  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:8px; }
   .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
   .stat-val    { font-size:24px; color:var(--brown); font-weight:600; line-height:1.2; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
   .stat-lbl    { font-size:15px; color:var(--text-muted); margin-top:6px; font-weight:500; line-height:1.4; }
@@ -728,7 +733,7 @@ const styles = `
   .ratio-legend { display:flex; gap:14px; margin-top:6px; font-size:14px; color:var(--text-muted); flex-wrap:wrap; }
   .ratio-legend span { display:flex; align-items:center; gap:5px; }
   .dot12 { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:10px; }
   .insight-card { background:var(--surf); border-radius:var(--radius-sm); padding:10px 12px; box-shadow:var(--shadow); border-left:4px solid var(--border); min-height:78px; }
   .insight-title { font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
   .insight-value { font-size:22px; font-weight:700; color:var(--brown); line-height:1.1; font-variant-numeric:tabular-nums; }
@@ -1119,6 +1124,7 @@ export default function PawTimer() {
   const [protoOverride,setProtoOverride]= useState(() => ensureObject(load("pawtimer_proto_override", {})));
   const [showCoach,    setShowCoach]    = useState(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
+  const [openTip,      setOpenTip]      = useState(null);
   const [walkPhase,    setWalkPhase]    = useState("idle"); // idle | timing
   const [walkElapsed,  setWalkElapsed]  = useState(0);
   const walkTimerRef = useRef(null);
@@ -1518,10 +1524,21 @@ export default function PawTimer() {
   );
   const recommendationConfidence = (() => {
     if (!sessions.length) return "building";
-    const recent = sessions.slice(-6);
-    const calmRate = recent.filter((s) => s.distressLevel === "none").length / recent.length;
-    const threshold = normalizedLeaves >= 7 ? 0.85 : normalizedLeaves >= 5 ? 0.75 : 0.65;
-    return calmRate >= threshold ? "high" : calmRate >= threshold - 0.15 ? "medium" : "low";
+
+    const recent = sessions.slice(-8);
+    const calmRecent = recent.filter((s) => s.distressLevel === "none").length;
+    const mildRecent = recent.filter((s) => s.distressLevel === "mild").length;
+    const strongRecent = recent.filter((s) => s.distressLevel === "strong").length;
+
+    const sessionVolumeScore = Math.min(1, sessions.length / 12);
+    const qualityScore = Math.max(0, Math.min(1, (calmRecent + (mildRecent * 0.45) - (strongRecent * 0.8)) / Math.max(1, recent.length)));
+    const streakScore = Math.min(1, streak / 5);
+
+    const weighted = (sessionVolumeScore * 0.3) + (qualityScore * 0.5) + (streakScore * 0.2);
+
+    if (weighted >= 0.72) return "strong";
+    if (weighted >= 0.42) return "stable";
+    return "building";
   })();
 
   const calmDurations = sessions
@@ -1759,7 +1776,7 @@ export default function PawTimer() {
                         <div className="ring-val">{fmt(target)}</div>
                       </div>
                     </div>
-                    <div className="ring-sub">Next session</div>
+                    <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Next session</button>
                   </div>
                   <div className="ring-col-sep"/>
                   <div className="ring-col">
@@ -1774,19 +1791,22 @@ export default function PawTimer() {
                         <div className="ring-val">{countToday}<span className="t-helper num-stable">/{activeProto.sessionsPerDayMax}</span></div>
                       </div>
                     </div>
-                    <div className="ring-sub">Sessions today</div>
+                    <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Sessions today</button>
                   </div>
+                  {openTip === "recommendations" && (
+                    <div className="recommendation-pop" role="tooltip">
+                      <p>
+                        Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)}.
+                      </p>
+                      <p>
+                        Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
+                      </p>
+                    </div>
+                  )}
                 </div>
               );
             })()}
 
-            <div className="status-msg" style={{ marginTop: 10 }}>
-              Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)} (base {fmt(target)} × {doseMultiplier.toFixed(2)} leave-frequency factor).
-            </div>
-
-            <div className="status-msg" style={{ marginTop: 10 }}>
-              Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
-            </div>
 
             {/* Advisory warnings */}
             {countToday >= Math.max(1, activeProto.sessionsPerDayMax - (normalizedLeaves >= 7 ? 1 : 0)) && (
