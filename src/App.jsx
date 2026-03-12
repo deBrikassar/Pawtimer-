@@ -500,6 +500,12 @@ const styles = `
 
   /* ── Status message ── */
   .status-msg { margin:18px auto 0; max-width:340px; font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; text-align:center; }
+  .status-inline { margin:14px auto 0; max-width:360px; display:flex; align-items:center; justify-content:center; gap:8px; color:var(--text-muted); font-size:15px; line-height:1.5; text-align:center; }
+  .info-wrap { position:relative; display:inline-flex; align-items:center; }
+  .info-btn { width:22px; height:22px; border-radius:999px; border:1.5px solid var(--border); background:var(--surf); color:var(--brown-mid); font-size:13px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; line-height:1; }
+  .info-btn:hover, .info-btn:focus-visible { border-color:var(--green-dark); color:var(--green-dark); outline:none; }
+  .info-pop { position:absolute; top:calc(100% + 8px); right:-6px; width:min(320px, 78vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:10px 12px; font-size:13px; line-height:1.55; text-align:left; z-index:20; }
+  .info-pop strong { color:var(--brown); }
 
   /* ── Stats rings card ── */
   .stats-rings-card { margin:24px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; }
@@ -1119,6 +1125,7 @@ export default function PawTimer() {
   const [protoOverride,setProtoOverride]= useState(() => ensureObject(load("pawtimer_proto_override", {})));
   const [showCoach,    setShowCoach]    = useState(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
+  const [openTip,      setOpenTip]      = useState(null);
   const [walkPhase,    setWalkPhase]    = useState("idle"); // idle | timing
   const [walkElapsed,  setWalkElapsed]  = useState(0);
   const walkTimerRef = useRef(null);
@@ -1518,10 +1525,21 @@ export default function PawTimer() {
   );
   const recommendationConfidence = (() => {
     if (!sessions.length) return "building";
-    const recent = sessions.slice(-6);
-    const calmRate = recent.filter((s) => s.distressLevel === "none").length / recent.length;
-    const threshold = normalizedLeaves >= 7 ? 0.85 : normalizedLeaves >= 5 ? 0.75 : 0.65;
-    return calmRate >= threshold ? "high" : calmRate >= threshold - 0.15 ? "medium" : "low";
+
+    const recent = sessions.slice(-8);
+    const calmRecent = recent.filter((s) => s.distressLevel === "none").length;
+    const mildRecent = recent.filter((s) => s.distressLevel === "mild").length;
+    const strongRecent = recent.filter((s) => s.distressLevel === "strong").length;
+
+    const sessionVolumeScore = Math.min(1, sessions.length / 12);
+    const qualityScore = Math.max(0, Math.min(1, (calmRecent + (mildRecent * 0.45) - (strongRecent * 0.8)) / Math.max(1, recent.length)));
+    const streakScore = Math.min(1, streak / 5);
+
+    const weighted = (sessionVolumeScore * 0.3) + (qualityScore * 0.5) + (streakScore * 0.2);
+
+    if (weighted >= 0.72) return "strong";
+    if (weighted >= 0.42) return "stable";
+    return "building";
   })();
 
   const calmDurations = sessions
@@ -1780,12 +1798,40 @@ export default function PawTimer() {
               );
             })()}
 
-            <div className="status-msg" style={{ marginTop: 10 }}>
-              Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)} (base {fmt(target)} × {doseMultiplier.toFixed(2)} leave-frequency factor).
+            <div className="status-inline">
+              Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)}
+              <span className="info-wrap" onMouseEnter={() => setOpenTip("recommendation")} onMouseLeave={() => setOpenTip((prev) => (prev === "recommendation" ? null : prev))}>
+                <button
+                  className="info-btn"
+                  aria-label="How recommendation confidence is calculated"
+                  onClick={() => setOpenTip((prev) => (prev === "recommendation" ? null : "recommendation"))}
+                >
+                  i
+                </button>
+                {openTip === "recommendation" && (
+                  <div className="info-pop" role="tooltip">
+                    <strong>How this updates:</strong> recommendations respond to recent outcomes (No distress / Mild distress / Strong distress), calm streak consistency, and total completed sessions. As calm successes accumulate, confidence typically moves from BUILDING → STABLE → STRONG and target durations can increase.
+                  </div>
+                )}
+              </span>
             </div>
 
-            <div className="status-msg" style={{ marginTop: 10 }}>
-              Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
+            <div className="status-inline" style={{ marginTop: 8 }}>
+              Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc})
+              <span className="info-wrap" onMouseEnter={() => setOpenTip("leaveProfile")} onMouseLeave={() => setOpenTip((prev) => (prev === "leaveProfile" ? null : prev))}>
+                <button
+                  className="info-btn"
+                  aria-label="How leave frequency affects recommendations"
+                  onClick={() => setOpenTip((prev) => (prev === "leaveProfile" ? null : "leaveProfile"))}
+                >
+                  i
+                </button>
+                {openTip === "leaveProfile" && (
+                  <div className="info-pop" role="tooltip">
+                    Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
+                  </div>
+                )}
+              </span>
             </div>
 
             {/* Advisory warnings */}
