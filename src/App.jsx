@@ -32,6 +32,7 @@ const ensureObject = (value) => (value && typeof value === "object" && !Array.is
 // Without them the app works fine with localStorage only.
 const SB_URL = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_URL)  ?? "";
 const SB_KEY = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY) ?? "";
+const SYNC_ENABLED = Boolean(SB_URL && SB_KEY);
 
 const sbReq = async (path, opts = {}) => {
   if (!SB_URL || !SB_KEY) return null;
@@ -1177,7 +1178,7 @@ export default function PawTimer() {
 
   // ── Cross-device sync: fetch remote on mount + poll every 15 s ────────────
   useEffect(() => {
-    if (!activeDogId || !SB_URL) return;
+    if (!activeDogId || !SYNC_ENABLED) { setSyncStatus("idle"); return; }
     let live = true;
     const sync = async () => {
       setSyncStatus("syncing");
@@ -1317,6 +1318,14 @@ export default function PawTimer() {
     setPhase("rating");
   };
 
+  const pushWithSyncStatus = async (kind, data) => {
+    if (!SYNC_ENABLED || !activeDogId) return false;
+    setSyncStatus("syncing");
+    const ok = await syncPush(activeDogId, kind, data);
+    setSyncStatus(ok ? "ok" : "err");
+    return ok;
+  };
+
   const recordResult = (distressLevel) => {
     const dog = dogs.find(d => d.id === activeDogId);
     const now = new Date();
@@ -1339,7 +1348,7 @@ export default function PawTimer() {
     });
     const updated = [...sessions, session];
     setSessions(updated);
-    syncPush(activeDogId, "session", session).then(ok => {
+    pushWithSyncStatus("session", session).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
     const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
@@ -1375,7 +1384,7 @@ export default function PawTimer() {
     const duration = walkElapsed;
     const entry = { id: `walk-${Date.now()}`, date: new Date().toISOString(), duration };
     setWalks(prev => [...prev, entry]);
-    syncPush(activeDogId, "walk", entry).then(ok => {
+    pushWithSyncStatus("walk", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
     const n = (dogs.find(d => d.id === activeDogId)?.dogName ?? "dog").toUpperCase();
@@ -1393,7 +1402,7 @@ export default function PawTimer() {
   const logPattern = (type) => {
     const entry = { id: Date.now(), date: new Date().toISOString(), type };
     setPatterns(prev => [...prev, entry]);
-    syncPush(activeDogId, "pattern", entry).then(ok => {
+    pushWithSyncStatus("pattern", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
     showToast(`✓ Pattern break logged!`);
@@ -1632,9 +1641,9 @@ export default function PawTimer() {
               <div className="app-title">{name}</div>
               <div className="app-subtitle">Separation anxiety training</div>
             </div>
-            {SB_URL && (
+            {SYNC_ENABLED && (
               <div className={`sync-dot sync-${syncStatus}`} title={
-                syncStatus==="ok" ? "Synced" : syncStatus==="syncing" ? "Syncing…" : syncStatus==="err" ? "Sync error" : ""
+                syncStatus==="ok" ? "Synced" : syncStatus==="syncing" ? "Syncing…" : "Not synced"
               }/>
             )}
           </div>
