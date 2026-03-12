@@ -35,26 +35,42 @@ const SB_KEY = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPA
 const SYNC_ENABLED = Boolean(SB_URL && SB_KEY);
 const canonicalDogId = (value) => String(value || "").trim().toUpperCase();
 
+const normalizeSbUrl = (value) => String(value || "").replace(/\/+$/, "").replace(/\/rest\/v1$/i, "");
+const SB_BASE_URL = normalizeSbUrl(SB_URL);
+
 const sbReq = async (path, opts = {}) => {
-  if (!SB_URL || !SB_KEY) return null;
+  if (!SB_BASE_URL || !SB_KEY) {
+    return { ok: false, data: null, error: "Supabase env vars are missing", status: 0 };
+  }
   try {
     const headers = {
       apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
       "Content-Type": "application/json",
+      ...(opts.headers || {}),
     };
     if (opts.prefer) headers["Prefer"] = opts.prefer;
-    const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    const res = await fetch(`${SB_BASE_URL}/rest/v1/${path}`, {
       method: opts.method ?? "GET",
       headers,
       body: opts.body,
     });
+    const text = await res.text().catch(() => "");
     if (!res.ok) {
-      console.warn("Supabase error:", res.status, await res.text().catch(()=>""));
-      return null;
+      const detail = text || `${res.status} ${res.statusText}`;
+      console.warn("Supabase error:", res.status, detail);
+      return { ok: false, data: null, error: detail, status: res.status };
     }
-    const t = await res.text();
-    return t ? JSON.parse(t) : true;
-  } catch(e) { console.warn("Supabase fetch error:", e); return null; }
+    if (!text) return { ok: true, data: null, error: null, status: res.status };
+    try {
+      return { ok: true, data: JSON.parse(text), error: null, status: res.status };
+    } catch {
+      return { ok: false, data: null, error: "Invalid JSON response from Supabase", status: res.status };
+    }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.warn("Supabase fetch error:", message);
+    return { ok: false, data: null, error: message, status: 0 };
+  }
 };
 
 // Merge two arrays by id — newer item wins, preserves chronological order
@@ -109,49 +125,65 @@ const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession)
 const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=ilike.${encodeURIComponent(id)}`;
-  const [dogRows, sessRows, walkRows, patRows] = await Promise.all([
+  const [dogRes, sessRes, walkRes, patRes] = await Promise.all([
     sbReq(`dogs?id=ilike.${encodeURIComponent(id)}&select=id,settings&limit=5`),
     sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result&order=date.asc`),
     sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
   ]);
-  if (!Array.isArray(sessRows) || !Array.isArray(walkRows) || !Array.isArray(patRows)) return null;
-  const matchedDog = Array.isArray(dogRows)
-    ? dogRows.find((d) => canonicalDogId(d?.id) === id) ?? dogRows[0] ?? null
-    : null;
+
+  const errors = [
+    !dogRes.ok ? `dogs: ${dogRes.error}` : null,
+    !sessRes.ok ? `sessions: ${sessRes.error}` : null,
+    !walkRes.ok ? `walks: ${walkRes.error}` : null,
+    !patRes.ok ? `patterns: ${patRes.error}` : null,
+  ].filter(Boolean);
+  if (errors.length) {
+    return { result: null, error: `Sync fetch failed (${errors.join(" | ")})` };
+  }
+
+  const dogRows = Array.isArray(dogRes.data) ? dogRes.data : [];
+  const sessRows = Array.isArray(sessRes.data) ? sessRes.data : [];
+  const walkRows = Array.isArray(walkRes.data) ? walkRes.data : [];
+  const patRows = Array.isArray(patRes.data) ? patRes.data : [];
+
+  const matchedDog = dogRows.find((d) => canonicalDogId(d?.id) === id) ?? dogRows[0] ?? null;
   return {
-    dog: matchedDog && matchedDog.settings && typeof matchedDog.settings === "object"
-      ? { ...matchedDog.settings, id: canonicalDogId(matchedDog.id) }
-      : null,
-    sessions: normalizeSessions(sessRows.map((r) => ({
-      id: r.id,
-      date: r.date,
-      plannedDuration: r.planned_duration,
-      actualDuration: r.actual_duration,
-      distressLevel: r.distress_level,
-      result: r.result,
-    }))),
-    walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
-    patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
+    error: null,
+    result: {
+      dog: matchedDog && matchedDog.settings && typeof matchedDog.settings === "object"
+        ? { ...matchedDog.settings, id: canonicalDogId(matchedDog.id) }
+        : null,
+      sessions: normalizeSessions(sessRows.map((r) => ({
+        id: r.id,
+        date: r.date,
+        plannedDuration: r.planned_duration,
+        actualDuration: r.actual_duration,
+        distressLevel: r.distress_level,
+        result: r.result,
+      }))),
+      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
+      patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
+    },
   };
 };
 
 
 const syncUpsertDog = async (dog) => {
   const id = canonicalDogId(dog?.id);
-  if (!id) return false;
-  const result = await sbReq("dogs", {
+  if (!id) return { ok: false, error: "Dog ID missing" };
+  const res = await sbReq("dogs", {
     method: "POST",
     body: JSON.stringify({ id, settings: { ...(dog || {}), id } }),
-    prefer: "resolution=merge-duplicates",
+    prefer: "resolution=merge-duplicates,return=minimal",
   });
-  return result !== null;
+  return res.ok ? { ok: true, error: null } : { ok: false, error: `Dog upsert failed: ${res.error}` };
 };
 
 const syncPush = async (dogId, kind, data, dogSettings = null) => {
   const id = canonicalDogId(dogId);
   const dogReady = await syncUpsertDog(dogSettings && typeof dogSettings === "object" ? { ...dogSettings, id } : { id });
-  if (!dogReady) return false;
+  if (!dogReady.ok) return { ok: false, error: dogReady.error };
 
   const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : "patterns";
   const row = kind === "session"
@@ -178,22 +210,26 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           type: data.type,
         };
 
-  const result = await sbReq(table, {
+  const res = await sbReq(table, {
     method: "POST",
     body: JSON.stringify(row),
-    prefer: "resolution=merge-duplicates",
+    prefer: "resolution=merge-duplicates,return=minimal",
   });
-  if (result === null) return false;
-  return true;
+  return res.ok
+    ? { ok: true, error: null }
+    : { ok: false, error: `${kind} push failed: ${res.error}` };
 };
 
-const syncDelete = (kind, id) => {
+const syncDelete = async (kind, id) => {
   const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : "patterns";
-  return sbReq(`${table}?id=eq.${String(id)}`, { method: "DELETE" });
+  const res = await sbReq(`${table}?id=eq.${String(id)}`, { method: "DELETE" });
+  return res.ok;
 };
 
-const syncDeleteSessionsForDog = (dogId) =>
-  sbReq(`sessions?dog_id=ilike.${encodeURIComponent(canonicalDogId(dogId))}`, { method: "DELETE" });
+const syncDeleteSessionsForDog = async (dogId) => {
+  const res = await sbReq(`sessions?dog_id=ilike.${encodeURIComponent(canonicalDogId(dogId))}`, { method: "DELETE" });
+  return res.ok;
+};
 
 // ─── Dog ID: up to 6-letter prefix + 4-digit number (e.g. LUNA-4829) ─────────
 const generateId = (name) => {
@@ -720,12 +756,17 @@ const styles = `
   .proto-title { font-size:13px; letter-spacing:0.01em; color:var(--green-dark); font-weight:700; margin-bottom:5px; }
   .proto-row { font-size:15px; font-weight:400; color:var(--text-muted); line-height:1.6; }
 
-  /* ── Sync status dot ── */
-  .sync-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  /* ── Sync status badge ── */
+  .sync-badge { border:none; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; cursor:pointer; flex-shrink:0; }
+  .sync-dot { width:8px; height:8px; border-radius:50%; }
   .sync-idle    { background:var(--border); }
   .sync-syncing { background:var(--amber); animation:pulse 1s infinite; }
   .sync-ok      { background:var(--green-dark); }
   .sync-err     { background:var(--red); }
+  .sync-badge.sync-state-idle { background:var(--surf-soft); color:var(--text-muted); }
+  .sync-badge.sync-state-syncing { background:rgba(245,183,80,0.18); color:var(--brown); }
+  .sync-badge.sync-state-ok { background:rgba(168,213,186,0.35); color:var(--green-dark); }
+  .sync-badge.sync-state-err { background:rgba(192,57,43,0.12); color:var(--red); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
   /* ── History delete button ── */
@@ -809,6 +850,17 @@ const styles = `
   .settings-btn:hover { border-color:var(--green-dark); background:var(--surf-soft); }
   .settings-btn.danger { color:var(--red); }
   .settings-btn.danger:hover { border-color:var(--red); }
+
+
+  .diag-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+  .diag-run-btn { border:1px solid var(--green-dark); background:transparent; color:var(--green-dark); border-radius:999px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; }
+  .diag-run-btn:disabled { opacity:0.6; cursor:not-allowed; }
+  .diag-grid { display:grid; gap:6px; font-size:13px; color:var(--text-muted); margin-bottom:10px; }
+  .diag-grid code { color:var(--brown); background:var(--surf-soft); padding:2px 6px; border-radius:6px; }
+  .diag-summary { font-size:14px; font-weight:700; margin-bottom:8px; }
+  .diag-summary.ok { color:var(--green-dark); }
+  .diag-summary.err { color:var(--red); }
+  .diag-json { font-size:11px; background:#1f1f1f; color:#e7e7e7; border-radius:10px; padding:10px; overflow:auto; max-height:220px; }
 
   /* ── Toast (bottom center, thumb-reachable) ── */
   .toast { position:fixed; bottom:calc(80px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%); background:var(--brown); color:var(--bg); padding:13px 24px; border-radius:99px; font-size:14px; font-weight:500; z-index:999; animation:toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1),toastOut 0.3s ease 2.7s forwards; box-shadow:0 8px 32px rgba(0,0,0,0.22); max-width:88vw; text-align:center; white-space:nowrap; }
@@ -1184,6 +1236,9 @@ export default function PawTimer() {
   const [editingPat,   setEditingPat]   = useState(null);   // type being renamed
   const [dogPhoto,     setDogPhoto]     = useState(null);   // base64 dog photo
   const [syncStatus,   setSyncStatus]   = useState("idle"); // idle|syncing|ok|err
+  const [syncError,    setSyncError]    = useState("");
+  const [syncDiagRunning, setSyncDiagRunning] = useState(false);
+  const [syncDiagResult,  setSyncDiagResult]  = useState(null);
   const [notifTime,    setNotifTime]    = useState(() => load("pawtimer_notif_time", "09:00"));
   const [notifEnabled, setNotifEnabled] = useState(() => load("pawtimer_notif_on", false));
   const [protoWarnAck, setProtoWarnAck] = useState(false);
@@ -1265,13 +1320,17 @@ export default function PawTimer() {
 
   // ── Cross-device sync: fetch remote on mount + poll every 15 s ────────────
   useEffect(() => {
-    if (!activeDogId || !SYNC_ENABLED) { setSyncStatus("idle"); return; }
+    if (!activeDogId || !SYNC_ENABLED) { setSyncStatus("idle"); setSyncError(""); return; }
     let live = true;
     const sync = async () => {
       setSyncStatus("syncing");
-      const remote = await syncFetch(canonicalDogId(activeDogId));
+      const { result: remote, error } = await syncFetch(canonicalDogId(activeDogId));
       if (!live) return;
-      if (!remote) { setSyncStatus("err"); return; }
+      if (!remote) {
+        setSyncStatus("err");
+        setSyncError(error || "Unknown sync fetch error");
+        return;
+      }
       if (remote.dog) {
         setDogs((prev) => {
           const mergedDog = { ...remote.dog, id: canonicalDogId(remote.dog.id || activeDogId) };
@@ -1283,6 +1342,7 @@ export default function PawTimer() {
       setSessions(prev => { const m = normalizeSessions(mergeById(prev, remote.sessions)); save(sessKey(activeDogId), m); return m; });
       setWalks   (prev => { const m = mergeById(prev, remote.walks);    save(walkKey(activeDogId), m); return m; });
       setPatterns(prev => { const m = mergeById(prev, remote.patterns); save(patKey(activeDogId),  m); return m; });
+      setSyncError("");
       setSyncStatus("ok");
     };
     sync();
@@ -1310,8 +1370,11 @@ export default function PawTimer() {
     if (!SYNC_ENABLED || !activeDogId) return;
     const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
     if (!dog) return;
-    syncUpsertDog(dog).then((ok) => {
-      if (!ok) setSyncStatus("err");
+    syncUpsertDog(dog).then(({ ok, error }) => {
+      if (!ok) {
+        setSyncStatus("err");
+        setSyncError(error || "Unable to sync dog settings");
+      }
     });
   }, [activeDogId, dogs]);
 
@@ -1428,9 +1491,68 @@ export default function PawTimer() {
     const currentDog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
     const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
     setSyncStatus("syncing");
-    const ok = await syncPush(canonicalDogId(activeDogId), kind, data, dogSettings);
-    setSyncStatus(ok ? "ok" : "err");
+    const { ok, error } = await syncPush(canonicalDogId(activeDogId), kind, data, dogSettings);
+    if (ok) {
+      setSyncError("");
+      setSyncStatus("ok");
+    } else {
+      setSyncError(error || "Push failed");
+      setSyncStatus("err");
+    }
     return ok;
+  };
+
+  const runSyncDiagnostics = async () => {
+    setSyncDiagRunning(true);
+    try {
+      const report = {
+        checkedAt: new Date().toISOString(),
+        env: {
+          syncEnabled: SYNC_ENABLED,
+          hasUrl: Boolean(SB_URL),
+          hasAnonKey: Boolean(SB_KEY),
+          normalizedUrl: SB_BASE_URL || "(missing)",
+          urlLooksValid: /^https:\/\/[^\s]+\.supabase\.co$/i.test(SB_BASE_URL || ""),
+        },
+        checks: {},
+      };
+
+      if (!SB_BASE_URL || !SB_KEY) {
+        report.checks.summary = { ok: false, message: "Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY" };
+        setSyncDiagResult(report);
+        return;
+      }
+
+      const readDogs = await sbReq("dogs?select=id&limit=1");
+      const readSessions = await sbReq("sessions?select=id&limit=1");
+      const readWalks = await sbReq("walks?select=id&limit=1");
+      const readPatterns = await sbReq("patterns?select=id&limit=1");
+      const diagId = `DIAG-${Date.now()}`;
+      const writeProbe = await sbReq("dogs", {
+        method: "POST",
+        body: JSON.stringify({ id: diagId, settings: { id: diagId, diag: true } }),
+        prefer: "resolution=merge-duplicates,return=minimal",
+      });
+      const deleteProbe = await sbReq(`dogs?id=eq.${diagId}`, { method: "DELETE" });
+
+      report.checks = {
+        dogsRead: readDogs,
+        sessionsRead: readSessions,
+        walksRead: readWalks,
+        patternsRead: readPatterns,
+        dogsWriteProbe: writeProbe,
+        dogsDeleteProbe: deleteProbe,
+      };
+
+      const failed = Object.values(report.checks).find((c) => c && c.ok === false);
+      report.checks.summary = failed
+        ? { ok: false, message: "One or more checks failed" }
+        : { ok: true, message: "All checks passed" };
+
+      setSyncDiagResult(report);
+    } finally {
+      setSyncDiagRunning(false);
+    }
   };
 
   const recordResult = (distressLevel) => {
@@ -1821,9 +1943,19 @@ export default function PawTimer() {
               <div className="app-subtitle">Separation anxiety training</div>
             </div>
             {SYNC_ENABLED && (
-              <div className={`sync-dot sync-${syncStatus}`} title={
-                syncStatus==="ok" ? "Synced" : syncStatus==="syncing" ? "Syncing…" : "Not synced"
-              }/>
+              <button
+                className={`sync-badge sync-state-${syncStatus}`}
+                type="button"
+                title={syncError || (syncStatus === "ok" ? "Synced" : syncStatus === "syncing" ? "Syncing…" : "Not synced")}
+                onClick={() => {
+                  if (syncError) window.alert(`Sync error:
+
+${syncError}`);
+                }}
+              >
+                <span className={`sync-dot sync-${syncStatus}`} />
+                <span>{syncStatus === "ok" ? "Synced" : syncStatus === "syncing" ? "Syncing" : syncStatus === "err" ? "Sync issue" : "Sync off"}</span>
+              </button>
             )}
           </div>
         </div>
@@ -2379,6 +2511,33 @@ export default function PawTimer() {
                 <li>On their phone: open PawTimer → "Join with a dog ID"</li>
                 <li>Enter the ID — they're in immediately, no extra setup</li>
               </ol>
+            </div>
+
+            <div className="settings-section-label">Sync</div>
+            <div className="share-card">
+              <div className="diag-head">
+                <div className="share-title" style={{ marginBottom:0 }}>Sync diagnostics</div>
+                <button className="diag-run-btn" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>
+                  {syncDiagRunning ? "Running…" : "Run connection test"}
+                </button>
+              </div>
+              <div className="share-sub" style={{ marginBottom:10 }}>
+                Use this if sync turns red. It checks env setup, read access, and write/delete permissions.
+              </div>
+              <div className="diag-grid">
+                <div>Sync enabled: <strong>{SYNC_ENABLED ? "Yes" : "No"}</strong></div>
+                <div>VITE_SUPABASE_URL: <strong>{SB_URL ? "Set" : "Missing"}</strong></div>
+                <div>VITE_SUPABASE_ANON_KEY: <strong>{SB_KEY ? "Set" : "Missing"}</strong></div>
+                <div>Supabase base URL: <code>{SB_BASE_URL || "(missing)"}</code></div>
+              </div>
+              {syncDiagResult && (
+                <>
+                  <div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>
+                    {syncDiagResult.checks?.summary?.ok ? "✓ All checks passed" : "✕ Some checks failed"}
+                  </div>
+                  <pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre>
+                </>
+              )}
             </div>
 
             {/* Pattern label customisation */}
