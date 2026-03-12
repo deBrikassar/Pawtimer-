@@ -388,13 +388,12 @@ const styles = `
   .sc-ring-svg { position:absolute; inset:-10px; width:calc(100% + 20px); height:calc(100% + 20px); transform:rotate(-90deg); }
   .sc-track { fill:none; stroke:rgba(96,142,111,0.2); stroke-width:10; }
   .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
-  .sc-content { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:70%; padding:20px; }
-  .sc-idle { display:flex; align-items:center; justify-content:center; gap:10px; transition:opacity 260ms ease, transform 300ms ease; }
-  .sc-play { width:28px; height:28px; display:flex; align-items:center; justify-content:center; transition:opacity 260ms ease, transform 300ms ease; }
-  .sc-idle-label { font-size:16px; font-weight:600; letter-spacing:0.01em; line-height:1.2; color:rgba(255,255,255,0.97); transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:20px; }
+  .sc-idle { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; transition:opacity 260ms ease, transform 300ms ease; }
+  .sc-idle-label { display:flex; flex-direction:column; align-items:center; gap:2px; text-transform:uppercase; font-size:28px; font-weight:800; letter-spacing:0.03em; line-height:1.02; color:rgba(255,255,255,0.98); text-shadow:0 0 8px rgba(255,255,255,0.28), 0 0 18px rgba(196,247,220,0.24); }
+  .sc-idle-label span { display:block; }
   .sc-time { position:absolute; opacity:0; transform:scale(0.95); transition:opacity 300ms ease-in-out, transform 300ms ease-in-out; }
-  .sc-time-value { font-size:48px; line-height:1; font-weight:700; color:var(--green-dark); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
-  .sc-time-sub { font-size:13px; margin-top:8px; font-weight:500; line-height:1.4; color:var(--green-dark); opacity:0.82; }
+  .sc-time-value { font-size:52px; line-height:1; font-weight:800; color:var(--green-dark); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
   .session-control.is-running .sc-idle { opacity:0; transform:translateY(-4px); }
   .session-control.is-running .sc-time,
   .session-control.is-complete .sc-time { opacity:1; transform:scale(1); }
@@ -799,17 +798,14 @@ function SessionControl({
 
           <div className="sc-content">
             <div className="sc-idle" aria-hidden={isRunning}>
-              <div className="sc-play">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M8 6L20 12L8 18V6Z" fill="rgba(255,255,255,0.95)"/>
-                </svg>
+              <div className="sc-idle-label">
+                <span>Start</span>
+                <span>Session</span>
               </div>
-              <div className="sc-idle-label">Start Session</div>
             </div>
 
             <div className="sc-time">
               <div className="sc-time-value">{fmt(remaining)}</div>
-              <div className="sc-time-sub">Session in progress</div>
             </div>
           </div>
         </button>
