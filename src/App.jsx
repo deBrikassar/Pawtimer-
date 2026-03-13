@@ -170,7 +170,7 @@ const syncFetch = async (dogId) => {
   const [dogRes, sessRes, walkRes, patRes, feedingRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
     sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
-    sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`),
+    sbReq(`walks?${dogFilter}&select=id,date,duration,walk_type&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
     sbReq(`feedings?${dogFilter}&select=id,date,food_type,amount&order=date.asc`),
   ]);
@@ -223,7 +223,7 @@ const syncFetch = async (dogId) => {
         preSession: r.pre_session,
         environment: r.environment,
       }))),
-      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
+      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration, type: r.walk_type || "regular_walk" })),
       patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
       feedings: normalizeFeedings(feedingRows.map((r) => ({ id: r.id, date: r.date, food_type: r.food_type, amount: r.amount }))),
     },
@@ -270,6 +270,7 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           dog_id: id,
           date: data.date,
           duration: data.duration,
+          walk_type: data.type ?? "regular_walk",
         }
       : kind === "pattern"
       ? {
@@ -322,7 +323,7 @@ const hydrateDogFromLocal = (dogId) => {
   if (!Array.isArray(v4)) save(sessKey(id), localSessions);
   return {
     sessions: localSessions,
-    walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: w?.type || "regular" })),
+    walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: w?.type || "regular_walk" })),
     patterns: ensureArray(load(patKey(id), [])),
     feedings: normalizeFeedings(load(feedingKey(id), [])),
     patLabels: ensureObject(load(patLblKey(id), {})),
@@ -474,6 +475,16 @@ const PATTERN_TYPES = [
     desc:  "Put jacket on, then take it off without going out",
   },
 ];
+
+const WALK_TYPE_OPTIONS = [
+  { value: "sniffy_decompression", label: "sniffy decompression" },
+  { value: "regular_walk", label: "regular walk" },
+  { value: "intense_exercise", label: "intense exercise" },
+  { value: "training_walk", label: "training walk" },
+  { value: "toilet_break", label: "toilet break" },
+];
+
+const walkTypeLabel = (walkType) => (WALK_TYPE_OPTIONS.find((option) => option.value === walkType)?.label ?? "regular walk");
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const styles = `
@@ -728,6 +739,13 @@ const styles = `
 
   /* ── Walk timer banner ── */
   .walk-timer-banner { margin:0 20px; padding:10px 14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; display:flex; align-items:center; justify-content:space-between; }
+  .walk-type-panel { margin:0 20px; padding:14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; }
+  .walk-type-title { font-size:15px; font-weight:700; color:var(--brown); margin-bottom:6px; }
+  .walk-type-sub { font-size:13px; color:var(--text-muted); margin-bottom:10px; }
+  .walk-type-grid { display:grid; gap:8px; }
+  .walk-type-option { width:100%; text-align:left; border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-size:14px; text-transform:capitalize; color:var(--brown); background:var(--surf); cursor:pointer; }
+  .walk-type-option:hover { border-color:var(--green-dark); }
+  .walk-type-actions { display:flex; justify-content:flex-end; margin-top:8px; }
   .walk-timer-left .walk-timer-elapsed { font-size:26px; font-weight:700; color:var(--green-dark); line-height:1.1; }
   .walk-timer-left .walk-timer-lbl { font-size:14px; color:var(--text-muted); margin-top:1px; }
   .walk-timer-btns { display:flex; gap:8px; align-items:center; }
@@ -1360,8 +1378,9 @@ export default function PawTimer() {
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const [openTip,      setOpenTip]      = useState(null);
   const [metricHelp,   setMetricHelp]   = useState(null);
-  const [walkPhase,    setWalkPhase]    = useState("idle"); // idle | timing
+  const [walkPhase,    setWalkPhase]    = useState("idle"); // idle | timing | classify
   const [walkElapsed,  setWalkElapsed]  = useState(0);
+  const [walkPendingDuration, setWalkPendingDuration] = useState(0);
   const [feedingOpen, setFeedingOpen] = useState(false);
   const [feedingDraft, setFeedingDraft] = useState(() => ({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }));
   const walkTimerRef = useRef(null);
@@ -1797,20 +1816,29 @@ export default function PawTimer() {
 
   const endWalk = () => {
     clearInterval(walkTimerRef.current);
-    const duration = walkElapsed;
-    const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration, type: "regular" };
-    setWalks(prev => [...prev, entry]);
-    pushWithSyncStatus("walk", entry).then(ok => {
+    setWalkPendingDuration(walkElapsed);
+    setWalkPhase("classify");
+  };
+
+  const saveWalkWithType = (walkType) => {
+    const duration = walkPendingDuration;
+    const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration, type: walkType };
+    setWalks((prev) => [...prev, entry]);
+    pushWithSyncStatus("walk", entry).then((ok) => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
     const n = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName ?? "your dog";
-    showToast(`🚶 Walk with ${n} logged — ${fmt(duration)}!`);
-    setWalkPhase("idle"); setWalkElapsed(0);
+    showToast(`🚶 ${walkTypeLabel(walkType)} with ${n} logged — ${fmt(duration)}!`);
+    setWalkPhase("idle");
+    setWalkElapsed(0);
+    setWalkPendingDuration(0);
   };
 
   const cancelWalk = () => {
     clearInterval(walkTimerRef.current);
-    setWalkPhase("idle"); setWalkElapsed(0);
+    setWalkPhase("idle");
+    setWalkElapsed(0);
+    setWalkPendingDuration(0);
   };
 
   const editWalkDuration = (walkId) => {
@@ -2389,6 +2417,28 @@ ${syncError}`);
                 </div>
               )}
 
+              {walkPhase === "classify" && (
+                <div className="walk-type-panel">
+                  <div className="walk-type-title">Classify this walk</div>
+                  <div className="walk-type-sub">{fmt(walkPendingDuration)} · select a walk type to save.</div>
+                  <div className="walk-type-grid">
+                    {WALK_TYPE_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        className="walk-type-option"
+                        onClick={() => saveWalkWithType(option.value)}
+                        type="button"
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="walk-type-actions">
+                    <button className="walk-cancel-btn" type="button" onClick={cancelWalk}>Cancel</button>
+                  </div>
+                </div>
+              )}
+
               {/* Pattern breaking */}
               <div className="tool-row" onClick={() => setPatOpen(o=>!o)}>
                 <div className="tool-row-left">
@@ -2541,10 +2591,10 @@ ${syncError}`);
                   <div className="h-item" key={`w-${w.id}`}>
                     <div className="h-dot dot-walk"><Img src="walk.png" size={22}/></div>
                     <div className="h-info">
-                      <div className="h-main">Walk with {name}{w.duration ? ` · ${fmt(w.duration)}` : ""}</div>
+                      <div className="h-main">{walkTypeLabel(w.type)} with {name}{w.duration ? ` · ${fmt(w.duration)}` : ""}</div>
                       <div className="h-date">{fmtDate(w.date)}</div>
                     </div>
-                    <span className="h-badge badge-walk">Walk</span>
+                    <span className="h-badge badge-walk">{walkTypeLabel(w.type)}</span>
                     <div className="h-actions">
                       <button className="h-edit" onClick={() => editWalkDuration(w.id)} title="Edit duration">✎</button>
                       <button className="h-del" onClick={() => { setWalks(prev => prev.filter(x => x.id !== w.id)); syncDelete("walk", w.id); }} title="Delete">✕</button>

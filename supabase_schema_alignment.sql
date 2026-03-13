@@ -29,6 +29,7 @@ create table if not exists public.walks (
   dog_id text not null,
   date timestamptz not null,
   duration integer not null default 0,
+  walk_type text not null default 'regular_walk',
   created_at timestamptz default now()
 );
 
@@ -58,6 +59,7 @@ alter table if exists public.walks
   add column if not exists dog_id text,
   add column if not exists date timestamptz,
   add column if not exists duration integer,
+  add column if not exists walk_type text,
   add column if not exists created_at timestamptz default now();
 
 alter table if exists public.patterns
@@ -87,6 +89,7 @@ alter table if exists public.walks
   alter column dog_id type text using dog_id::text,
   alter column date type timestamptz using date::timestamptz,
   alter column duration type integer using coalesce(duration, 0)::integer,
+  alter column walk_type type text using coalesce(walk_type, 'regular_walk')::text,
   alter column duration set default 0;
 
 update public.walks set duration = 0 where duration is null;
@@ -109,7 +112,9 @@ alter table if exists public.sessions
 alter table if exists public.walks
   alter column dog_id set not null,
   alter column date set not null,
-  alter column duration set not null;
+  alter column duration set not null,
+  alter column walk_type set default 'regular_walk',
+  alter column walk_type set not null;
 
 alter table if exists public.patterns
   alter column dog_id set not null,

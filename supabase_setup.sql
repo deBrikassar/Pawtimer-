@@ -33,6 +33,7 @@ create table if not exists walks (
   dog_id     text not null references dogs(id) on delete cascade,
   date       timestamptz not null,
   duration   integer not null default 0, -- seconds
+  walk_type  text not null default 'regular_walk',
   created_at timestamptz default now()
 );
 
@@ -56,7 +57,8 @@ alter table if exists sessions
   add column if not exists environment jsonb not null default '{}';
 
 alter table if exists walks
-  add column if not exists duration integer not null default 0;
+  add column if not exists duration integer not null default 0,
+  add column if not exists walk_type text not null default 'regular_walk';
 
 -- Ensure patterns table exists on older environments
 create table if not exists patterns (
