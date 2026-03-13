@@ -34,6 +34,13 @@ const SB_URL = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPA
 const SB_KEY = (typeof import.meta !== "undefined" && import.meta.env?.VITE_SUPABASE_ANON_KEY) ?? "";
 const SYNC_ENABLED = Boolean(SB_URL && SB_KEY);
 const canonicalDogId = (value) => String(value || "").trim().toUpperCase();
+const SYNC_DEBUG = (typeof import.meta !== "undefined" && import.meta.env?.DEV)
+  || (typeof window !== "undefined" && window.localStorage?.getItem("pawtimer_sync_debug") === "1");
+
+const logSyncDebug = (...args) => {
+  if (!SYNC_DEBUG) return;
+  console.info("[pawtimer-sync]", ...args);
+};
 
 const normalizeSbUrl = (value) => String(value || "").replace(/\/+$/, "").replace(/\/rest\/v1$/i, "");
 const SB_BASE_URL = normalizeSbUrl(SB_URL);
@@ -125,6 +132,7 @@ const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession)
 const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
+  logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
   const [dogRes, sessRes, walkRes, patRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
     sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
@@ -133,11 +141,18 @@ const syncFetch = async (dogId) => {
   ]);
 
   if (!dogRes.ok) {
+    logSyncDebug("syncFetch:dogLookupFailed", { dogId: id, error: dogRes.error });
     return { result: null, error: `Dog lookup failed: ${dogRes.error}` };
   }
 
   const dogRows = Array.isArray(dogRes.data) ? dogRes.data : [];
   const matchedDog = dogRows.find((d) => canonicalDogId(d?.id) === id) ?? null;
+  logSyncDebug("syncFetch:dogLookupResult", {
+    dogId: id,
+    dogFound: Boolean(matchedDog),
+    dogRowsReturned: dogRows.length,
+    usedLocalFallback: false,
+  });
 
   const relatedErrors = [
     !sessRes.ok ? `sessions: ${sessRes.error}` : null,
@@ -1296,9 +1311,19 @@ export default function PawTimer() {
     const normalizedId = canonicalDogId(activeDogId);
     const dog = dogs.find((d) => canonicalDogId(d.id) === normalizedId)
       ?? ensureArray(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === normalizedId);
-    if (!dog) { setScreen("select"); return; }
+    if (!dog) {
+      logSyncDebug("hydrateDog:missingLocalDog", { dogId: normalizedId, syncEnabled: SYNC_ENABLED });
+      setScreen("select");
+      return;
+    }
 
     const local = hydrateDogFromLocal(normalizedId);
+    logSyncDebug("hydrateDog:localCacheLoaded", {
+      dogId: normalizedId,
+      sessions: local.sessions.length,
+      walks: local.walks.length,
+      patterns: local.patterns.length,
+    });
     setSessions(local.sessions);
     setWalks(local.walks);
     setPatterns(local.patterns);
@@ -1374,6 +1399,13 @@ export default function PawTimer() {
       const remoteSessions = normalizeSessions(remote.sessions);
       const remoteWalks = ensureArray(remote.walks);
       const remotePatterns = ensureArray(remote.patterns);
+      logSyncDebug("syncPoll:remoteLoaded", {
+        dogId: canonicalDogId(activeDogId),
+        dogFound: Boolean(remote.dog),
+        sessions: remoteSessions.length,
+        walks: remoteWalks.length,
+        patterns: remotePatterns.length,
+      });
       setSessions(remoteSessions);
       setWalks(remoteWalks);
       setPatterns(remotePatterns);
@@ -1462,12 +1494,14 @@ export default function PawTimer() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const openDog = (dog) => {
+    logSyncDebug("openDog", { dogId: canonicalDogId(dog?.id), hasLocalDogRecord: Boolean(dog) });
     setActiveDogId(canonicalDogId(dog.id));
     setScreen("app");
   };
 
   const handleDogSelect = async (id, isJoin = false) => {
     const normalizedId = canonicalDogId(id);
+    logSyncDebug("handleDogSelect:start", { enteredDogId: id, canonicalDogId: normalizedId, isJoin, syncEnabled: SYNC_ENABLED });
 
     if (isJoin && SYNC_ENABLED) {
       setSyncStatus("syncing");
@@ -1475,6 +1509,11 @@ export default function PawTimer() {
       if (!remote?.dog) {
         setSyncStatus("err");
         setSyncError(error || `No shared dog account found for ${normalizedId}`);
+        logSyncDebug("handleDogSelect:joinFailed", {
+          dogId: normalizedId,
+          reason: error || "No shared dog account found",
+          localPlaceholderCreated: false,
+        });
         showToast(`⚠️ No shared profile found for ${normalizedId} yet.`);
         return;
       }
@@ -1502,29 +1541,19 @@ export default function PawTimer() {
     const existing = dogs.find(d => canonicalDogId(d.id) === normalizedId)
                   ?? ensureArray(load(DOGS_KEY, [])).find(d => canonicalDogId(d.id) === normalizedId);
     if (existing) {
+      logSyncDebug("handleDogSelect:existingLocalDog", { dogId: normalizedId, isJoin, source: "localStorage/in-memory" });
       openDog(existing);
       return;
     }
     if (isJoin) {
-      const prefix = id.split("-")[0] || "DOG";
-      const suggestedLeaves = Math.min(8, Math.max(1, Math.round(prefix.length / 2) + 2));
-      const confirmed = window.confirm(
-        `No synced profile found yet for ${normalizedId}. Join now with placeholder settings (${suggestedLeaves} leaves/day, 1 min calm baseline)? You can edit right away in Settings.`
-      );
-      if (!confirmed) {
-        showToast("Join cancelled — waiting for full dog profile.");
-        return;
-      }
-      const placeholder = {
-        id: normalizedId, dogName: prefix,
-        leavesPerDay: suggestedLeaves, currentMaxCalm: 60, goalSeconds: 2400,
-        createdAt: new Date().toISOString(), isJoined: true,
-      };
-      const updatedDogs = [...dogs, placeholder];
-      save(DOGS_KEY, updatedDogs);
-      setDogs(updatedDogs);
-      openDog(placeholder);
-      showToast(`✅ Joined ${prefix} with placeholder settings.`);
+      setSyncStatus("err");
+      setSyncError(`No shared dog account found for ${normalizedId}`);
+      logSyncDebug("handleDogSelect:noRemoteDogNoFallback", {
+        dogId: normalizedId,
+        localPlaceholderCreated: false,
+        blockedByLocalState: false,
+      });
+      showToast(`⚠️ No shared profile found for ${normalizedId}. Check the ID and try again.`);
     } else {
       setActiveDogId(normalizedId); setScreen("onboard");
     }
