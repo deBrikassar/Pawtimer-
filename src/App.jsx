@@ -8,10 +8,11 @@ import {
 // ─── Storage keys ─────────────────────────────────────────────────────────────
 const DOGS_KEY       = "pawtimer_dogs_v3";
 const ACTIVE_DOG_KEY = "pawtimer_active_dog_v3";
-const SESS_SCHEMA_VERSION = 4;
+const SESS_SCHEMA_VERSION = 5;
 const sessKey    = (id) => `pawtimer_sess_v${SESS_SCHEMA_VERSION}_${id}`;
 const legacySessKey = (id) => `pawtimer_sess_v3_${id}`;
-const walkKey    = (id) => `pawtimer_walk_v3_${id}`;
+const legacyWalkKey = (id) => `pawtimer_walk_v3_${id}`;
+const walkKey    = (id) => `pawtimer_walk_v4_${id}`;
 const patKey     = (id) => `pawtimer_pat_v3_${id}`;
 const patLblKey  = (id) => `pawtimer_patlbl_v3_${id}`;  // custom pattern labels
 const photoKey   = (id) => `pawtimer_photo_v3_${id}`;   // dog photo (base64)
@@ -106,14 +107,32 @@ const normalizeSession = (row = {}) => {
     distressLevel: row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong"),
     context: {
       timeOfDay: context.timeOfDay ?? context.time_of_day ?? null,
-      departureType: context.departureType ?? context.departure_type ?? null,
+      departureType: context.departureType ?? context.departure_type ?? "training",
       cuesUsed: Array.isArray(context.cuesUsed ?? context.cues_used) ? (context.cuesUsed ?? context.cues_used) : [],
+      location: context.location ?? null,
+      barrierUsed: hasValue(context.barrierUsed) ? !!context.barrierUsed : asBool(context.barrier_used),
+      enrichmentPresent: hasValue(context.enrichmentPresent) ? !!context.enrichmentPresent : asBool(context.enrichment_present),
+      mediaOn: hasValue(context.mediaOn) ? !!context.mediaOn : asBool(context.media_on),
+      whoLeft: context.whoLeft ?? null,
+      anotherPersonStayed: hasValue(context.anotherPersonStayed) ? !!context.anotherPersonStayed : asBool(context.another_person_stayed),
     },
     symptoms: {
       barking: normalizeSymptom(symptoms.barking),
       pacing: normalizeSymptom(symptoms.pacing),
       destructive: normalizeSymptom(symptoms.destructive),
       salivation: normalizeSymptom(symptoms.salivation),
+    },
+    latencyToFirstDistress: Number.isFinite(row.latencyToFirstDistress) ? row.latencyToFirstDistress : (Number.isFinite(row.latency_to_first_distress) ? row.latency_to_first_distress : null),
+    belowThreshold: hasValue(row.belowThreshold) ? !!row.belowThreshold : asBool(row.below_threshold),
+    distressType: row.distressType ?? row.distress_type ?? null,
+    distressSeverity: row.distressSeverity ?? row.distress_severity ?? null,
+    videoReview: {
+      recorded: hasValue((row.videoReview || {}).recorded) ? !!row.videoReview.recorded : asBool((row.video_review || {}).recorded),
+      firstSubtleDistressTs: (row.videoReview || {}).firstSubtleDistressTs ?? (row.video_review || {}).first_subtle_distress_ts ?? null,
+      firstActiveDistressTs: (row.videoReview || {}).firstActiveDistressTs ?? (row.video_review || {}).first_active_distress_ts ?? null,
+      eventTags: Array.isArray((row.videoReview || {}).eventTags ?? (row.video_review || {}).event_tags) ? ((row.videoReview || {}).eventTags ?? (row.video_review || {}).event_tags) : [],
+      notes: (row.videoReview || {}).notes ?? (row.video_review || {}).notes ?? null,
+      ratingConfidence: Number.isFinite((row.videoReview || {}).ratingConfidence) ? row.videoReview.ratingConfidence : (Number.isFinite((row.video_review || {}).rating_confidence) ? row.video_review.rating_confidence : null),
     },
     recoverySeconds: Number.isFinite(row.recoverySeconds) ? row.recoverySeconds : (Number.isFinite(row.recovery_seconds) ? row.recovery_seconds : null),
     preSession: {
@@ -271,7 +290,7 @@ const hydrateDogFromLocal = (dogId) => {
   if (!Array.isArray(v4)) save(sessKey(id), localSessions);
   return {
     sessions: localSessions,
-    walks: ensureArray(load(walkKey(id), [])),
+    walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: w?.type || "regular" })),
     patterns: ensureArray(load(patKey(id), [])),
     patLabels: ensureObject(load(patLblKey(id), {})),
     photo: load(photoKey(id), null),
@@ -1654,13 +1673,18 @@ export default function PawTimer() {
       id: makeEntryId("sess", activeDogId), date: now.toISOString(),
       plannedDuration: target, actualDuration: finalElapsed,
       distressLevel, result: distressLevel === "none" ? "success" : "distress",
-      context: { timeOfDay, departureType: "training", cuesUsed: [] },
+      belowThreshold: distressLevel === "none" && finalElapsed >= target,
+      latencyToFirstDistress: distressLevel === "none" ? finalElapsed : Math.min(finalElapsed, target),
+      distressType: distressLevel === "none" ? "none" : distressLevel === "mild" ? "passive" : "active",
+      distressSeverity: distressLevel === "none" ? "none" : distressLevel === "mild" ? "subtle" : "active",
+      context: { timeOfDay, departureType: "training", cuesUsed: [], location: null, barrierUsed: null, enrichmentPresent: null, mediaOn: null, whoLeft: null, anotherPersonStayed: null },
       symptoms: {
         barking: distressLevel === "strong" ? 2 : distressLevel === "mild" ? 1 : 0,
         pacing: distressLevel === "strong" ? 2 : distressLevel === "mild" ? 1 : 0,
         destructive: distressLevel === "strong" ? 1 : 0,
         salivation: distressLevel === "strong" ? 1 : 0,
       },
+      videoReview: { recorded: false, firstSubtleDistressTs: null, firstActiveDistressTs: null, eventTags: [], notes: null, ratingConfidence: null },
       recoverySeconds: distressLevel === "none" ? 0 : null,
       preSession: { walkDuration: null, enrichmentGiven: null },
       environment: { noiseEvent: false },
@@ -1701,7 +1725,7 @@ export default function PawTimer() {
   const endWalk = () => {
     clearInterval(walkTimerRef.current);
     const duration = walkElapsed;
-    const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration };
+    const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration, type: "regular" };
     setWalks(prev => [...prev, entry]);
     pushWithSyncStatus("walk", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");

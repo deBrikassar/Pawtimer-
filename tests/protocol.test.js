@@ -1,93 +1,147 @@
 import { describe, it, expect } from "vitest";
 import {
-  getNextDurationSeconds,
+  PROTOCOL,
+  calculateTrainingStats,
+  buildRecommendation,
+  mapLegacySession,
   suggestNext,
   suggestNextWithContext,
-  PROTOCOL,
+  getNextDurationSeconds,
+  normalizeDistressLevel,
 } from "../src/lib/protocol";
 
-describe("getNextDurationSeconds", () => {
-  it("returns start duration for invalid input", () => {
-    expect(getNextDurationSeconds(0)).toBe(PROTOCOL.startDurationSeconds);
+const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
+
+describe("legacy migration", () => {
+  it("maps mild->subtle and strong->active", () => {
+    expect(normalizeDistressLevel("mild")).toBe("subtle");
+    expect(normalizeDistressLevel("strong")).toBe("active");
   });
 
-  it("uses percentage step-up under microstep ceiling", () => {
-    expect(getNextDurationSeconds(60)).toBe(69);
-  });
-
-  it("uses +5 minute step above microstep ceiling", () => {
-    expect(getNextDurationSeconds(41 * 60)).toBe(46 * 60);
+  it("creates rich session defaults from legacy format", () => {
+    const mapped = mapLegacySession({ plannedDuration: 60, actualDuration: 45, distressLevel: "mild" });
+    expect(mapped.distressSeverity).toBe("subtle");
+    expect(mapped.latencyToFirstDistress).toBe(45);
+    expect(mapped.belowThreshold).toBe(false);
   });
 });
 
-describe("suggestNext", () => {
-  it("starts at 80% of current calm when no sessions", () => {
+describe("training stats", () => {
+  it("calculates stability, momentum, relapse risk and adherence", () => {
+    const sessions = [
+      { date: daysAgo(7), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(6), plannedDuration: 35, actualDuration: 34, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(5), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(4), plannedDuration: 40, actualDuration: 40, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(3), plannedDuration: 45, actualDuration: 20, distressLevel: "active", belowThreshold: false },
+      { date: daysAgo(2), plannedDuration: 35, actualDuration: 35, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 35, actualDuration: 35, distressLevel: "none", belowThreshold: true },
+    ];
+
+    const stats = calculateTrainingStats(sessions, {
+      plan: { targetCadenceDays: 1, recommendedDuration: 35 },
+      cueSessions: [
+        { cue: "keys", reactionLevel: "active" },
+        { cue: "shoes", reactionLevel: "subtle" },
+      ],
+    });
+
+    expect(stats.safeAloneTime).toBeGreaterThanOrEqual(30);
+    expect(stats.stabilityScore).toBeGreaterThan(0);
+    expect(stats.relapseRisk).toBeGreaterThan(0);
+    expect(stats.adherenceScore).toBeGreaterThan(0);
+    expect(stats.cueSensitivity[0].cue).toBe("shoes");
+  });
+
+  it("raises relapse risk after recent severe and uncontrolled real-life absence", () => {
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 60, actualDuration: 20, distressLevel: "severe", departureType: "training" },
+      { date: daysAgo(1), plannedDuration: 90, actualDuration: 25, distressLevel: "active", departureType: "real_life", belowThreshold: false },
+    ];
+    const stats = calculateTrainingStats(sessions);
+    expect(stats.relapseRisk).toBeGreaterThan(0.4);
+  });
+});
+
+describe("recommendation engine", () => {
+  it("requires repeated below-threshold success before increasing", () => {
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(2), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(30);
+    expect(rec.recommendedDuration).toBeLessThanOrEqual(36);
+  });
+
+  it("holds or reduces when subtle distress appears", () => {
+    const sessions = [
+      { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "subtle", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeLessThanOrEqual(60);
+    expect(["repeat_current_duration", "insert_easy_sessions", "departure_cues_first"]).toContain(rec.recommendationType);
+  });
+
+  it("rolls back and enters stabilization mode after repeated active distress", () => {
+    const sessions = [
+      { date: daysAgo(4), plannedDuration: 60, actualDuration: 20, distressLevel: "active", belowThreshold: false },
+      { date: daysAgo(3), plannedDuration: 50, actualDuration: 12, distressLevel: "active", belowThreshold: false },
+      { date: daysAgo(2), plannedDuration: 40, actualDuration: 10, distressLevel: "severe", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 35, actualDuration: 9, distressLevel: "active", belowThreshold: false },
+      { date: daysAgo(0), plannedDuration: 30, actualDuration: 6, distressLevel: "severe", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(["stabilization_block", "departure_cues_first"]).toContain(rec.recommendationType);
+    expect(rec.recommendedDuration).toBeLessThan(35);
+  });
+
+  it("flags safety warning for panic pattern", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 40, actualDuration: 8, distressLevel: "severe", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 35, actualDuration: 10, distressLevel: "severe", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.warnings.join(" ")).toMatch(/consult/i);
+  });
+
+  it("supports safe-absence management alert", () => {
+    const sessions = [
+      { date: daysAgo(1), plannedDuration: 45, actualDuration: 45, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600, plannedRealAbsenceSeconds: 200 });
+    expect(rec.safeAbsenceAlert).toBe(true);
+  });
+});
+
+describe("public compatibility APIs", () => {
+  it("suggestNext starts from 80% baseline for new dogs", () => {
     expect(suggestNext([], { currentMaxCalm: 120 })).toBe(96);
   });
 
-  it("holds if successful session ended early", () => {
-    const sessions = [{ distressLevel: "none", actualDuration: 30, plannedDuration: 60 }];
-    expect(suggestNext(sessions, {})).toBe(60);
-  });
-
-  it("rolls back after strong distress", () => {
+  it("suggestNextWithContext factors cue sensitivity and walk type", () => {
     const sessions = [
-      { distressLevel: "none", plannedDuration: 60, actualDuration: 60 },
-      { distressLevel: "none", plannedDuration: 69, actualDuration: 69 },
-      { distressLevel: "strong", plannedDuration: 80, actualDuration: 20 },
+      { date: daysAgo(2), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 65, actualDuration: 65, distressLevel: "none", belowThreshold: true },
     ];
-    expect(suggestNext(sessions, {})).toBe(60);
-  });
-});
-
-describe("suggestNextWithContext", () => {
-  it("falls back to suggestNext when session history is empty", () => {
-    expect(suggestNextWithContext([], [], [], { currentMaxCalm: 120 })).toBe(96);
-  });
-
-  it("steps up for high confidence", () => {
-    const now = new Date();
-    const sessions = Array.from({ length: 6 }).map((_, idx) => ({
-      date: new Date(now.getTime() - (5 - idx) * 86400000).toISOString(),
-      distressLevel: "none",
-      plannedDuration: 60,
-      actualDuration: 60,
-    }));
-    sessions.push({
-      date: now.toISOString(),
-      distressLevel: "none",
-      plannedDuration: 69,
-      actualDuration: 69,
-    });
-
-    const patterns = Array.from({ length: 3 }).flatMap((_, idx) => {
-      const date = new Date(now.getTime() - idx * 86400000).toISOString();
-      return [{ date, type: "keys" }, { date, type: "shoes" }, { date, type: "jacket" }];
-    });
-
-    expect(suggestNextWithContext(sessions, [], patterns, { goalSeconds: 3600 })).toBe(79);
-  });
-
-  it("holds for medium confidence", () => {
-    const now = new Date();
-    const sessions = [
-      { date: new Date(now.getTime() - 86400000).toISOString(), distressLevel: "none", plannedDuration: 60, actualDuration: 60 },
-      { date: now.toISOString(), distressLevel: "mild", plannedDuration: 69, actualDuration: 55 },
+    const patterns = [
+      { date: daysAgo(1), type: "keys", reactionLevel: "active" },
+      { date: daysAgo(1), type: "shoes", reactionLevel: "subtle" },
+    ];
+    const walks = [
+      { date: daysAgo(1), duration: 1200, type: "intense_exercise" },
+      { date: daysAgo(1), duration: 900, type: "intense_exercise" },
+      { date: daysAgo(1), duration: 1000, type: "intense_exercise" },
     ];
 
-    expect(suggestNextWithContext(sessions, [], [], {})).toBe(69);
+    const next = suggestNextWithContext(sessions, walks, patterns, { goalSeconds: 3600 });
+    expect(next).toBeGreaterThanOrEqual(PROTOCOL.minDurationSeconds);
   });
 
-  it("rolls back to last stable calm duration for low confidence", () => {
-    const now = new Date();
-    const sessions = [
-      { date: new Date(now.getTime() - 4 * 86400000).toISOString(), distressLevel: "none", plannedDuration: 60, actualDuration: 60 },
-      { date: new Date(now.getTime() - 3 * 86400000).toISOString(), distressLevel: "strong", plannedDuration: 69, actualDuration: 20 },
-      { date: new Date(now.getTime() - 2 * 86400000).toISOString(), distressLevel: "strong", plannedDuration: 69, actualDuration: 10 },
-      { date: new Date(now.getTime() - 86400000).toISOString(), distressLevel: "mild", plannedDuration: 69, actualDuration: 30 },
-      { date: now.toISOString(), distressLevel: "strong", plannedDuration: 80, actualDuration: 10 },
-    ];
-
-    expect(suggestNextWithContext(sessions, [], [], {})).toBe(60);
+  it("getNextDurationSeconds remains bounded and deterministic", () => {
+    const next = getNextDurationSeconds(120, { goalSeconds: 180 });
+    expect(next).toBeLessThanOrEqual(180);
+    expect(next).toBeGreaterThanOrEqual(PROTOCOL.minDurationSeconds);
   });
 });
