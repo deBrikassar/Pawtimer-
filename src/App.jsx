@@ -167,13 +167,18 @@ const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
-  const [dogRes, sessRes, walkRes, patRes, feedingRes] = await Promise.all([
+  const [dogRes, sessRes, walkPrimaryRes, patRes, feedingRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
     sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
     sbReq(`walks?${dogFilter}&select=id,date,duration,walk_type&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
     sbReq(`feedings?${dogFilter}&select=id,date,food_type,amount&order=date.asc`),
   ]);
+
+  let walkRes = walkPrimaryRes;
+  if (!walkRes.ok && /walk_type/i.test(String(walkRes.error || ""))) {
+    walkRes = await sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`);
+  }
 
   if (!dogRes.ok) {
     logSyncDebug("syncFetch:dogLookupFailed", { dogId: id, error: dogRes.error });
@@ -223,7 +228,7 @@ const syncFetch = async (dogId) => {
         preSession: r.pre_session,
         environment: r.environment,
       }))),
-      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration, type: r.walk_type || "regular_walk" })),
+      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration, type: normalizeWalkType(r.walk_type) })),
       patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
       feedings: normalizeFeedings(feedingRows.map((r) => ({ id: r.id, date: r.date, food_type: r.food_type, amount: r.amount }))),
     },
@@ -270,7 +275,7 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           dog_id: id,
           date: data.date,
           duration: data.duration,
-          walk_type: data.type ?? "regular_walk",
+          walk_type: normalizeWalkType(data.type),
         }
       : kind === "pattern"
       ? {
@@ -292,9 +297,16 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
     body: JSON.stringify(row),
     prefer: "resolution=merge-duplicates,return=minimal",
   });
-  return res.ok
-    ? { ok: true, error: null }
-    : { ok: false, error: `${kind} push failed: ${res.error}` };
+  if (res.ok) return { ok: true, error: null };
+
+  if (kind === "walk" && /walk_type/i.test(String(res.error || ""))) {
+    return {
+      ok: false,
+      error: "walk push failed: Supabase is missing walks.walk_type. Run supabase_sync_schema_migration.sql (or add walks.walk_type text not null default 'regular_walk').",
+    };
+  }
+
+  return { ok: false, error: `${kind} push failed: ${res.error}` };
 };
 
 const syncDelete = async (kind, id) => {
@@ -323,7 +335,7 @@ const hydrateDogFromLocal = (dogId) => {
   if (!Array.isArray(v4)) save(sessKey(id), localSessions);
   return {
     sessions: localSessions,
-    walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: w?.type || "regular_walk" })),
+    walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: normalizeWalkType(w?.type) })),
     patterns: ensureArray(load(patKey(id), [])),
     feedings: normalizeFeedings(load(feedingKey(id), [])),
     patLabels: ensureObject(load(patLblKey(id), {})),
@@ -484,7 +496,13 @@ const WALK_TYPE_OPTIONS = [
   { value: "toilet_break", label: "toilet break" },
 ];
 
-const walkTypeLabel = (walkType) => (WALK_TYPE_OPTIONS.find((option) => option.value === walkType)?.label ?? "regular walk");
+const normalizeWalkType = (value) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "regular") return "regular_walk";
+  return WALK_TYPE_OPTIONS.some((option) => option.value === normalized) ? normalized : "regular_walk";
+};
+
+const walkTypeLabel = (walkType) => (WALK_TYPE_OPTIONS.find((option) => option.value === normalizeWalkType(walkType))?.label ?? "regular walk");
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const styles = `
@@ -1822,13 +1840,13 @@ export default function PawTimer() {
 
   const saveWalkWithType = (walkType) => {
     const duration = walkPendingDuration;
-    const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration, type: walkType };
+    const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration, type: normalizeWalkType(walkType) };
     setWalks((prev) => [...prev, entry]);
     pushWithSyncStatus("walk", entry).then((ok) => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
     const n = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName ?? "your dog";
-    showToast(`🚶 ${walkTypeLabel(walkType)} with ${n} logged — ${fmt(duration)}!`);
+    showToast(`🚶 ${walkTypeLabel(normalizeWalkType(walkType))} with ${n} logged — ${fmt(duration)}!`);
     setWalkPhase("idle");
     setWalkElapsed(0);
     setWalkPendingDuration(0);
