@@ -27,6 +27,16 @@ const save = (key, val) => {
 const ensureArray = (value) => (Array.isArray(value) ? value : []);
 const ensureObject = (value) => (value && typeof value === "object" && !Array.isArray(value) ? value : {});
 
+const normalizeDogRecord = (dog = {}) => ({ ...dog, id: String(dog?.id || "").trim().toUpperCase() });
+const normalizeDogList = (list = []) => {
+  const byId = new Map();
+  ensureArray(list).forEach((dog) => {
+    const normalized = normalizeDogRecord(dog);
+    if (normalized.id) byId.set(normalized.id, normalized);
+  });
+  return Array.from(byId.values());
+};
+
 // ─── Cross-device sync (Supabase REST — no SDK needed) ────────────────────────
 // Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel env vars to enable.
 // Without them the app works fine with localStorage only.
@@ -1249,7 +1259,7 @@ function DogSelect({ dogs, onSelect, onCreateNew }) {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function PawTimer() {
-  const [dogs,        setDogs]        = useState(() => ensureArray(load(DOGS_KEY, [])));
+  const [dogs,        setDogs]        = useState(() => normalizeDogList(load(DOGS_KEY, [])));
   const [activeDogId, setActiveDogId] = useState(() => canonicalDogId(load(ACTIVE_DOG_KEY, null)));
   const [screen,      setScreen]      = useState("select");
   const [sessions,    setSessions]    = useState([]);
@@ -1287,7 +1297,7 @@ export default function PawTimer() {
   const startRef = useRef(null);
 
   // ── Persistence ──────────────────────────────────────────────────────────
-  useEffect(() => { save(DOGS_KEY, dogs); }, [dogs]);
+  useEffect(() => { save(DOGS_KEY, normalizeDogList(dogs)); }, [dogs]);
   useEffect(() => { save(ACTIVE_DOG_KEY, canonicalDogId(activeDogId)); }, [activeDogId]);
 
   useEffect(() => {
@@ -1397,17 +1407,6 @@ export default function PawTimer() {
     else setScreen("select");
   }, []);
 
-  useEffect(() => {
-    if (!SYNC_ENABLED || !activeDogId) return;
-    const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
-    if (!dog) return;
-    syncUpsertDog(dog).then(({ ok, error }) => {
-      if (!ok) {
-        setSyncStatus("err");
-        setSyncError(error || "Unable to sync dog settings");
-      }
-    });
-  }, [activeDogId, dogs]);
 
   // Coach mark: show on first ever app open (no sessions yet)
   useEffect(() => {
@@ -1453,30 +1452,71 @@ export default function PawTimer() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const openDog = (dog) => {
-    const v4 = load(sessKey(dog.id), null);
-    const rawSessions = Array.isArray(v4) ? v4 : ensureArray(load(legacySessKey(dog.id), []));
+    const normalizedDog = normalizeDogRecord(dog);
+    const dogId = normalizedDog.id;
+    const v4 = load(sessKey(dogId), null);
+    const rawSessions = Array.isArray(v4) ? v4 : ensureArray(load(legacySessKey(dogId), []));
     const s = normalizeSessions(rawSessions);
-    const w = ensureArray(load(walkKey(dog.id), []));
-    const p = ensureArray(load(patKey(dog.id),  []));
-    if (!Array.isArray(v4)) save(sessKey(dog.id), s);
+    const w = ensureArray(load(walkKey(dogId), []));
+    const p = ensureArray(load(patKey(dogId),  []));
+    if (!Array.isArray(v4)) save(sessKey(dogId), s);
     setSessions(s); setWalks(w); setPatterns(p);
-    setPatLabels(ensureObject(load(patLblKey(dog.id), {})));
-    setDogPhoto(load(photoKey(dog.id), null));
-    setTarget(suggestNext(s, dog));
-    setActiveDogId(canonicalDogId(dog.id));
+    setPatLabels(ensureObject(load(patLblKey(dogId), {})));
+    setDogPhoto(load(photoKey(dogId), null));
+    setTarget(suggestNext(s, normalizedDog));
+    setActiveDogId(dogId);
     setScreen("app");
   };
 
-  const handleDogSelect = (id, isJoin = false) => {
+  const handleDogSelect = async (id, isJoin = false) => {
     const normalizedId = canonicalDogId(id);
+    const localDogs = normalizeDogList(load(DOGS_KEY, []));
     const existing = dogs.find(d => canonicalDogId(d.id) === normalizedId)
-                  ?? ensureArray(load(DOGS_KEY, [])).find(d => canonicalDogId(d.id) === normalizedId);
+                  ?? localDogs.find(d => canonicalDogId(d.id) === normalizedId);
     if (existing) {
       openDog(existing);
       return;
     }
+
+    if (isJoin && SYNC_ENABLED) {
+      setSyncStatus("syncing");
+      const { result: remote, error } = await syncFetch(normalizedId);
+      if (remote) {
+        const prefix = normalizedId.split("-")[0] || "DOG";
+        const remoteDog = remote.dog
+          ? normalizeDogRecord(remote.dog)
+          : { id: normalizedId, dogName: prefix, leavesPerDay: 4, currentMaxCalm: 60, goalSeconds: 2400, isJoined: true };
+        const mergedDog = { ...remoteDog, id: normalizedId };
+        const updatedDogs = normalizeDogList([...dogs, ...localDogs, mergedDog]);
+        save(DOGS_KEY, updatedDogs);
+        setDogs(updatedDogs);
+
+        const mergedSessions = normalizeSessions(mergeById([], remote.sessions));
+        const mergedWalks = mergeById([], remote.walks);
+        const mergedPatterns = mergeById([], remote.patterns);
+        save(sessKey(normalizedId), mergedSessions);
+        save(walkKey(normalizedId), mergedWalks);
+        save(patKey(normalizedId), mergedPatterns);
+
+        setSessions(mergedSessions);
+        setWalks(mergedWalks);
+        setPatterns(mergedPatterns);
+        setPatLabels(ensureObject(load(patLblKey(normalizedId), {})));
+        setDogPhoto(load(photoKey(normalizedId), null));
+        setTarget(suggestNext(mergedSessions, mergedDog));
+        setActiveDogId(normalizedId);
+        setScreen("app");
+        setSyncError("");
+        setSyncStatus("ok");
+        showToast(`✅ Joined ${mergedDog.dogName || prefix} by ID.`);
+        return;
+      }
+      setSyncStatus("err");
+      setSyncError(error || "Unable to fetch dog by ID");
+    }
+
     if (isJoin) {
-      const prefix = id.split("-")[0] || "DOG";
+      const prefix = normalizedId.split("-")[0] || "DOG";
       const suggestedLeaves = Math.min(8, Math.max(1, Math.round(prefix.length / 2) + 2));
       const confirmed = window.confirm(
         `No synced profile found yet for ${normalizedId}. Join now with placeholder settings (${suggestedLeaves} leaves/day, 1 min calm baseline)? You can edit right away in Settings.`
@@ -1490,10 +1530,18 @@ export default function PawTimer() {
         leavesPerDay: suggestedLeaves, currentMaxCalm: 60, goalSeconds: 2400,
         createdAt: new Date().toISOString(), isJoined: true,
       };
-      const updatedDogs = [...dogs, placeholder];
+      const updatedDogs = normalizeDogList([...dogs, ...localDogs, placeholder]);
       save(DOGS_KEY, updatedDogs);
       setDogs(updatedDogs);
       openDog(placeholder);
+      if (SYNC_ENABLED) {
+        syncUpsertDog(placeholder).then(({ ok, error }) => {
+          if (!ok) {
+            setSyncStatus("err");
+            setSyncError(error || "Unable to sync dog settings");
+          }
+        });
+      }
       showToast(`✅ Joined ${prefix} with placeholder settings.`);
     } else {
       setActiveDogId(normalizedId); setScreen("onboard");
@@ -1503,7 +1551,15 @@ export default function PawTimer() {
   const handleOnboardComplete = (data) => {
     const id     = canonicalDogId(activeDogId || generateId(data.dogName));
     const newDog = { ...data, id, dogName: data.dogName, createdAt: new Date().toISOString() };
-    setDogs(prev => [...prev.filter(d => d.id !== id), newDog]);
+    setDogs(prev => normalizeDogList([...prev.filter(d => canonicalDogId(d.id) !== id), newDog]));
+    if (SYNC_ENABLED) {
+      syncUpsertDog(newDog).then(({ ok, error }) => {
+        if (!ok) {
+          setSyncStatus("err");
+          setSyncError(error || "Unable to sync dog settings");
+        }
+      });
+    }
     setActiveDogId(id);
     setTarget(Math.max(Math.round(data.currentMaxCalm * 0.8), PROTOCOL.startDurationSeconds));
   };
