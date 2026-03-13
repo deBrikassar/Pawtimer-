@@ -122,6 +122,15 @@ const normalizeSession = (row = {}) => {
 
 const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
 
+const hasRemoteSnapshotData = (remote) => {
+  if (!remote || typeof remote !== "object") return false;
+  if (remote.dog) return true;
+  if (Array.isArray(remote.sessions) && remote.sessions.length > 0) return true;
+  if (Array.isArray(remote.walks) && remote.walks.length > 0) return true;
+  if (Array.isArray(remote.patterns) && remote.patterns.length > 0) return true;
+  return false;
+};
+
 const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=ilike.${encodeURIComponent(id)}`;
@@ -1339,9 +1348,20 @@ export default function PawTimer() {
           return next;
         });
       }
-      setSessions(prev => { const m = normalizeSessions(mergeById(prev, remote.sessions)); save(sessKey(activeDogId), m); return m; });
-      setWalks   (prev => { const m = mergeById(prev, remote.walks);    save(walkKey(activeDogId), m); return m; });
-      setPatterns(prev => { const m = mergeById(prev, remote.patterns); save(patKey(activeDogId),  m); return m; });
+      const canonicalId = canonicalDogId(activeDogId);
+      const syncedSessions = normalizeSessions(ensureArray(remote.sessions));
+      const syncedWalks = ensureArray(remote.walks)
+        .filter((w) => w && w.id)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      const syncedPatterns = ensureArray(remote.patterns)
+        .filter((p) => p && p.id)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      setSessions(syncedSessions);
+      setWalks(syncedWalks);
+      setPatterns(syncedPatterns);
+      save(sessKey(canonicalId), syncedSessions);
+      save(walkKey(canonicalId), syncedWalks);
+      save(patKey(canonicalId), syncedPatterns);
       setSyncError("");
       setSyncStatus("ok");
     };
@@ -1436,7 +1456,7 @@ export default function PawTimer() {
     setScreen("app");
   };
 
-  const handleDogSelect = (id, isJoin = false) => {
+  const handleDogSelect = async (id, isJoin = false) => {
     const normalizedId = canonicalDogId(id);
     const existing = dogs.find(d => canonicalDogId(d.id) === normalizedId)
                   ?? ensureArray(load(DOGS_KEY, [])).find(d => canonicalDogId(d.id) === normalizedId);
@@ -1445,6 +1465,44 @@ export default function PawTimer() {
       return;
     }
     if (isJoin) {
+      if (SYNC_ENABLED) {
+        setSyncStatus("syncing");
+        const { result: remote, error } = await syncFetch(normalizedId);
+        if (remote && hasRemoteSnapshotData(remote)) {
+          const prefix = normalizedId.split("-")[0] || "DOG";
+          const joinedDog = remote.dog
+            ? { ...remote.dog, id: normalizedId, isJoined: true }
+            : {
+                id: normalizedId,
+                dogName: prefix,
+                leavesPerDay: 3,
+                currentMaxCalm: 60,
+                goalSeconds: 2400,
+                createdAt: new Date().toISOString(),
+                isJoined: true,
+              };
+          const updatedDogs = [...dogs.filter((d) => canonicalDogId(d.id) !== normalizedId), joinedDog];
+          const syncedSessions = normalizeSessions(ensureArray(remote.sessions));
+          const syncedWalks = ensureArray(remote.walks);
+          const syncedPatterns = ensureArray(remote.patterns);
+
+          save(DOGS_KEY, updatedDogs);
+          save(sessKey(normalizedId), syncedSessions);
+          save(walkKey(normalizedId), syncedWalks);
+          save(patKey(normalizedId), syncedPatterns);
+          setDogs(updatedDogs);
+          setSyncError("");
+          setSyncStatus("ok");
+          openDog(joinedDog);
+          showToast(`✅ Joined ${joinedDog.dogName || prefix} via synced account.`);
+          return;
+        }
+        if (error) {
+          setSyncStatus("err");
+          setSyncError(error);
+        }
+      }
+
       const prefix = id.split("-")[0] || "DOG";
       const suggestedLeaves = Math.min(8, Math.max(1, Math.round(prefix.length / 2) + 2));
       const confirmed = window.confirm(
