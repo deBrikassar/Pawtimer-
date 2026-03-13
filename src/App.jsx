@@ -136,6 +136,14 @@ const normalizeSession = (row = {}) => {
 
 const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
 
+const isMissingTableError = (errorText = "") => {
+  const msg = String(errorText || "").toLowerCase();
+  return msg.includes('"code":"42p01"')
+    || msg.includes('"code":"pgrst205"')
+    || msg.includes('does not exist')
+    || msg.includes('could not find the table');
+};
+
 const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=ilike.${encodeURIComponent(id)}`;
@@ -146,24 +154,32 @@ const syncFetch = async (dogId) => {
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
   ]);
 
+  const walkTableMissing = !walkRes.ok && isMissingTableError(walkRes.error);
+  const patternTableMissing = !patRes.ok && isMissingTableError(patRes.error);
+
   const errors = [
     !dogRes.ok ? `dogs: ${dogRes.error}` : null,
     !sessRes.ok ? `sessions: ${sessRes.error}` : null,
-    !walkRes.ok ? `walks: ${walkRes.error}` : null,
-    !patRes.ok ? `patterns: ${patRes.error}` : null,
+    (!walkRes.ok && !walkTableMissing) ? `walks: ${walkRes.error}` : null,
+    (!patRes.ok && !patternTableMissing) ? `patterns: ${patRes.error}` : null,
   ].filter(Boolean);
   if (errors.length) {
-    return { result: null, error: `Sync fetch failed (${errors.join(" | ")})` };
+    return { result: null, error: `Sync fetch failed (${errors.join(" | ")})`, warnings: [] };
   }
+
+  const warnings = [];
+  if (walkTableMissing) warnings.push("Supabase table 'walks' is missing. Run supabase_setup.sql to enable walk sync.");
+  if (patternTableMissing) warnings.push("Supabase table 'patterns' is missing. Run supabase_setup.sql to enable pattern-break sync.");
 
   const dogRows = Array.isArray(dogRes.data) ? dogRes.data : [];
   const sessRows = Array.isArray(sessRes.data) ? sessRes.data : [];
-  const walkRows = Array.isArray(walkRes.data) ? walkRes.data : [];
-  const patRows = Array.isArray(patRes.data) ? patRes.data : [];
+  const walkRows = walkTableMissing ? [] : (Array.isArray(walkRes.data) ? walkRes.data : []);
+  const patRows = patternTableMissing ? [] : (Array.isArray(patRes.data) ? patRes.data : []);
 
   const matchedDog = dogRows.find((d) => canonicalDogId(d?.id) === id) ?? dogRows[0] ?? null;
   return {
     error: null,
+    warnings,
     result: {
       dog: matchedDog && matchedDog.settings && typeof matchedDog.settings === "object"
         ? { ...matchedDog.settings, id: canonicalDogId(matchedDog.id) }
@@ -181,6 +197,7 @@ const syncFetch = async (dogId) => {
     },
   };
 };
+
 
 
 const syncUpsertDog = async (dog) => {
@@ -1338,7 +1355,7 @@ export default function PawTimer() {
     let live = true;
     const sync = async () => {
       setSyncStatus("syncing");
-      const { result: remote, error } = await syncFetch(canonicalDogId(activeDogId));
+      const { result: remote, error, warnings } = await syncFetch(canonicalDogId(activeDogId));
       if (!live) return;
       if (!remote) {
         setSyncStatus("err");
@@ -1363,7 +1380,7 @@ export default function PawTimer() {
       save(sessKey(canonicalActiveDogId), syncedSessions);
       save(walkKey(canonicalActiveDogId), syncedWalks);
       save(patKey(canonicalActiveDogId), syncedPatterns);
-      setSyncError("");
+      setSyncError(Array.isArray(warnings) && warnings.length ? warnings.join(" ") : "");
       setSyncStatus("ok");
     };
     sync();
@@ -1517,11 +1534,16 @@ export default function PawTimer() {
     if (ok) {
       setSyncError("");
       setSyncStatus("ok");
-    } else {
-      setSyncError(error || "Push failed");
-      setSyncStatus("err");
+      return true;
     }
-    return ok;
+    if (isMissingTableError(error) && (kind === "walk" || kind === "pattern")) {
+      setSyncStatus("ok");
+      setSyncError(`Supabase table for ${kind === "walk" ? "walks" : "patterns"} is missing. Run supabase_setup.sql to sync this data type.`);
+      return true;
+    }
+    setSyncError(error || "Push failed");
+    setSyncStatus("err");
+    return false;
   };
 
   const runSyncDiagnostics = async () => {
