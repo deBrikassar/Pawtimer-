@@ -97,14 +97,15 @@ pawtimer/
 ## Supabase setup (optional cloud sync)
 
 1. Create a new Supabase project.
-2. Open **SQL Editor** → run `supabase_setup.sql` from this repository.
-3. In Supabase project settings, copy:
+2. Open **SQL Editor** → run `supabase_setup.sql` from this repository (new projects).
+3. If you already have a project with schema drift, run `supabase_schema_alignment.sql` to patch missing tables/columns safely.
+4. In Supabase project settings, copy:
    - Project URL
    - Anon public key
-4. Add both values as Vercel environment variables:
+5. Add both values as Vercel environment variables:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-5. Redeploy your app.
+6. Redeploy your app.
 
 > The app still works without Supabase — cloud sync is optional.
 
