@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { PROTOCOL, getNextDurationSeconds, suggestNext, suggestNextWithContext } from "./lib/protocol";
+import { PROTOCOL, getNextDurationSeconds, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
@@ -106,7 +106,7 @@ const normalizeSession = (row = {}) => {
 
   const normalized = {
     ...row,
-    distressLevel: row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong"),
+    distressLevel: normalizeDistressLevel(row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong")),
     context: {
       timeOfDay: context.timeOfDay ?? context.time_of_day ?? null,
       departureType: context.departureType ?? context.departure_type ?? "training",
@@ -167,13 +167,18 @@ const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
-  const [dogRes, sessRes, walkPrimaryRes, patRes, feedingRes] = await Promise.all([
+  const [dogRes, sessPrimaryRes, walkPrimaryRes, patRes, feedingRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
-    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
+    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,latency_to_first_distress,distress_type,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
     sbReq(`walks?${dogFilter}&select=id,date,duration,walk_type&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
     sbReq(`feedings?${dogFilter}&select=id,date,food_type,amount&order=date.asc`),
   ]);
+
+  let sessRes = sessPrimaryRes;
+  if (!sessRes.ok && /(latency_to_first_distress|distress_type)/i.test(String(sessRes.error || ""))) {
+    sessRes = await sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`);
+  }
 
   let walkRes = walkPrimaryRes;
   if (!walkRes.ok && /walk_type/i.test(String(walkRes.error || ""))) {
@@ -222,6 +227,8 @@ const syncFetch = async (dogId) => {
         actualDuration: r.actual_duration,
         distressLevel: r.distress_level,
         result: r.result,
+        latencyToFirstDistress: r.latency_to_first_distress,
+        distressType: r.distress_type,
         context: r.context,
         symptoms: r.symptoms,
         recoverySeconds: r.recovery_seconds,
@@ -263,6 +270,8 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
         actual_duration: data.actualDuration,
         distress_level: data.distressLevel,
         result: data.result,
+        latency_to_first_distress: data.latencyToFirstDistress ?? null,
+        distress_type: data.distressType ?? null,
         context: data.context ?? null,
         symptoms: data.symptoms ?? null,
         recovery_seconds: data.recoverySeconds ?? null,
@@ -292,11 +301,23 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           amount: data.amount,
         };
 
-  const res = await sbReq(table, {
+  let res = await sbReq(table, {
     method: "POST",
     body: JSON.stringify(row),
     prefer: "resolution=merge-duplicates,return=minimal",
   });
+
+  if (!res.ok && kind === "session" && /(latency_to_first_distress|distress_type)/i.test(String(res.error || ""))) {
+    const fallbackRow = { ...row };
+    delete fallbackRow.latency_to_first_distress;
+    delete fallbackRow.distress_type;
+    res = await sbReq(table, {
+      method: "POST",
+      body: JSON.stringify(fallbackRow),
+      prefer: "resolution=merge-duplicates,return=minimal",
+    });
+  }
+
   if (res.ok) return { ok: true, error: null };
 
   if (kind === "walk" && /walk_type/i.test(String(res.error || ""))) {
@@ -416,7 +437,20 @@ function patternInfo(patterns, walks, leavesPerDay = 3, protocol = PROTOCOL) {
 }
 
 const distressLabel = (l) =>
-  l === "none" ? "No distress" : l === "mild" ? "Mild distress" : l === "strong" ? "Strong distress" : "—";
+  l === "none" ? "No distress" : l === "subtle" ? "Subtle stress" : l === "active" ? "Active distress" : l === "severe" ? "Severe distress" : "—";
+
+const DISTRESS_TYPES = [
+  "barking",
+  "whining/howling",
+  "pacing",
+  "scratching at door",
+  "panting",
+  "lip licking",
+  "hypervigilance",
+  "unable to settle",
+  "escape attempt",
+  "other",
+];
 
 const symptomIntensity = (v) => (Number.isFinite(v) ? v : asBool(v) ? 1 : 0);
 
@@ -782,7 +816,8 @@ const styles = `
   .alone-fill   { height:100%; transition:width 0.6s; flex-shrink:0; }
   .alone-fill.ok   { background:linear-gradient(90deg,var(--green-dark),var(--green)); }
   .alone-fill.near { background:linear-gradient(90deg,var(--orange),var(--amber-light)); }
-  .alone-fill.full { background:linear-gradient(90deg,var(--red),var(--orange)); }
+  .alone-fill.active { background:linear-gradient(90deg,#d65f3c,var(--orange)); }
+  .alone-fill.full { background:linear-gradient(90deg,var(--red),#d65f3c); }
   .alone-legend { display:flex; gap:0; margin-top:5px; flex-wrap:wrap; align-items:center; }
 
   /* ── Streak fire ── */
@@ -838,8 +873,13 @@ const styles = `
   .btn-result .result-desc { font-size:13px; opacity:0.82; margin-top:2px; font-weight:400; }
   .btn-none   { background:var(--green);  color:var(--brown); box-shadow:0 4px 16px rgba(168,213,186,0.45); }
   .btn-mild   { background:var(--orange); color:white; box-shadow:0 4px 16px rgba(230,126,34,0.30); }
-  .btn-strong { background:var(--red);    color:white; box-shadow:0 4px 16px rgba(192,57,43,0.28); }
+  .btn-strong { background:#d65f3c; color:white; box-shadow:0 4px 16px rgba(214,95,60,0.28); }
+  .btn-severe { background:var(--red); color:white; box-shadow:0 4px 16px rgba(192,57,43,0.30); }
   .btn-result:hover { transform:translateY(-2px); }
+  .outcome-details { margin-top:10px; padding:12px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surf-soft); display:flex; flex-direction:column; gap:8px; }
+  .field-label { font-size:13px; color:var(--brown); font-weight:600; }
+  .text-input { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font-size:14px; color:var(--brown); background:white; }
+  .btn-save-outcome { margin-top:4px; border:none; border-radius:10px; padding:11px 12px; font-size:14px; font-weight:600; background:var(--brown); color:white; cursor:pointer; }
 
   /* ── Contextual tips ── */
   .ctx { margin:0 20px 12px; padding:11px 14px; background:var(--surf); border-radius:var(--radius-sm); border-left:3px solid var(--green-dark); font-size:14px; color:var(--text-muted); line-height:1.65; box-shadow:0 2px 8px rgba(75,60,48,0.06); }
@@ -930,8 +970,9 @@ const styles = `
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
   .h-dot { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
   .dot-none   { background:rgba(168,213,186,0.3); }
-  .dot-mild   { background:rgba(230,126,34,0.12); }
-  .dot-strong { background:rgba(192,57,43,0.10); }
+  .dot-subtle { background:rgba(230,126,34,0.12); }
+  .dot-active { background:rgba(214,95,60,0.14); }
+  .dot-severe { background:rgba(192,57,43,0.10); }
   .dot-walk   { background:rgba(74,158,110,0.15); }
   .dot-feed   { background:rgba(212,129,58,0.16); color:var(--brown); font-size:18px; }
   .dot-pat    { background:rgba(75,60,48,0.09); }
@@ -940,8 +981,9 @@ const styles = `
   .h-date { font-size:13px; font-weight:500; line-height:1.4; color:var(--text-muted); margin-top:6px; }
   .h-badge { font-size:13px; font-weight:600; padding:3px 9px; border-radius:99px; letter-spacing:0.03em; white-space:nowrap; flex-shrink:0; }
   .badge-none   { background:rgba(168,213,186,0.3);  color:var(--green-dark); }
-  .badge-mild   { background:rgba(230,126,34,0.12); color:var(--orange); }
-  .badge-strong { background:rgba(192,57,43,0.10);  color:var(--red); }
+  .badge-subtle { background:rgba(230,126,34,0.12); color:var(--orange); }
+  .badge-active { background:rgba(214,95,60,0.14); color:#b4492b; }
+  .badge-severe { background:rgba(192,57,43,0.10);  color:var(--red); }
   .badge-walk   { background:rgba(74,158,110,0.15);  color:var(--green-dark); }
   .badge-feed   { background:rgba(212,129,58,0.16); color:#8a4c19; }
   .badge-pat    { background:rgba(75,60,48,0.09);    color:var(--brown-mid); }
@@ -968,6 +1010,7 @@ const styles = `
   .ratio-bar   { height:12px; border-radius:99px; overflow:hidden; display:flex; }
   .ratio-good  { background:var(--green);  transition:width 0.6s; }
   .ratio-mild  { background:var(--orange); transition:width 0.6s; }
+  .ratio-active { background:#d65f3c; transition:width 0.6s; }
   .ratio-bad   { background:var(--red);    transition:width 0.6s; }
   .ratio-legend { display:flex; gap:14px; margin-top:6px; font-size:14px; color:var(--text-muted); flex-wrap:wrap; }
   .ratio-legend span { display:flex; align-items:center; gap:5px; }
@@ -1378,6 +1421,9 @@ export default function PawTimer() {
   const [elapsed,      setElapsed]      = useState(0);
   const [finalElapsed, setFinalElapsed] = useState(0);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [sessionOutcome, setSessionOutcome] = useState(null);
+  const [latencyDraft, setLatencyDraft] = useState("");
+  const [distressTypeDraft, setDistressTypeDraft] = useState("");
   const [target,       setTarget]       = useState(PROTOCOL.startDurationSeconds);
   const [toast,        setToast]        = useState(null);
   const [patOpen,      setPatOpen]      = useState(false);  // collapsible pattern breaking
@@ -1694,7 +1740,14 @@ export default function PawTimer() {
     setTarget(Math.max(Math.round(data.currentMaxCalm * 0.8), PROTOCOL.startDurationSeconds));
   };
 
-  const startSession = () => { setElapsed(0); setSessionCompleted(false); setPhase("running"); };
+  const startSession = () => {
+    setElapsed(0);
+    setSessionCompleted(false);
+    setSessionOutcome(null);
+    setLatencyDraft("");
+    setDistressTypeDraft("");
+    setPhase("running");
+  };
 
   const endSession = () => {
     // Freeze the elapsed time, move to rating
@@ -1774,25 +1827,33 @@ export default function PawTimer() {
     }
   };
 
-  const recordResult = (distressLevel) => {
+  const recordResult = (distressLevelInput, options = {}) => {
+    const distressLevel = normalizeDistressLevel(distressLevelInput);
     const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
     const now = new Date();
     const hour = now.getHours();
     const timeOfDay = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
+    const latencyInput = Number(options.latencyToFirstDistress);
+    const latencyToFirstDistress = Number.isFinite(latencyInput) && latencyInput >= 0
+      ? Math.round(latencyInput)
+      : distressLevel === "none"
+        ? finalElapsed
+        : null;
+    const distressType = options.distressType || (distressLevel === "none" ? "none" : null);
     const session = normalizeSession({
       id: makeEntryId("sess", activeDogId), date: now.toISOString(),
       plannedDuration: target, actualDuration: finalElapsed,
       distressLevel, result: distressLevel === "none" ? "success" : "distress",
       belowThreshold: distressLevel === "none" && finalElapsed >= target,
-      latencyToFirstDistress: distressLevel === "none" ? finalElapsed : Math.min(finalElapsed, target),
-      distressType: distressLevel === "none" ? "none" : distressLevel === "mild" ? "passive" : "active",
-      distressSeverity: distressLevel === "none" ? "none" : distressLevel === "mild" ? "subtle" : "active",
+      latencyToFirstDistress,
+      distressType,
+      distressSeverity: distressLevel,
       context: { timeOfDay, departureType: "training", cuesUsed: [], location: null, barrierUsed: null, enrichmentPresent: null, mediaOn: null, whoLeft: null, anotherPersonStayed: null },
       symptoms: {
-        barking: distressLevel === "strong" ? 2 : distressLevel === "mild" ? 1 : 0,
-        pacing: distressLevel === "strong" ? 2 : distressLevel === "mild" ? 1 : 0,
-        destructive: distressLevel === "strong" ? 1 : 0,
-        salivation: distressLevel === "strong" ? 1 : 0,
+        barking: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0,
+        pacing: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0,
+        destructive: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0,
+        salivation: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0,
       },
       videoReview: { recorded: false, firstSubtleDistressTs: null, firstActiveDistressTs: null, eventTags: [], notes: null, ratingConfidence: null },
       recoverySeconds: distressLevel === "none" ? 0 : null,
@@ -1807,14 +1868,17 @@ export default function PawTimer() {
     const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
     setTarget(next);
     setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false);
+    setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft("");
     const n = dog?.dogName ?? "your dog";
     if (distressLevel === "none")       showToast(`✅ ${n} was calm! Next: ${fmt(next)}`);
-    else if (distressLevel === "mild")  showToast(`⚠️ Mild signs — holding at ${fmt(next)}`);
+    else if (distressLevel === "subtle")  showToast(`⚠️ Subtle stress signs — holding at ${fmt(next)}`);
     else                                showToast(`❤️ Rolled back to ${fmt(next)}`);
   };
 
   const cancelSession = () => {
-    setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false); clearInterval(timerRef.current);
+    setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false);
+    setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft("");
+    clearInterval(timerRef.current);
   };
 
   // ── Walk timer ────────────────────────────────────────────────────────────
@@ -1976,8 +2040,9 @@ export default function PawTimer() {
 
   // Stats
   const noneCount   = sessions.filter(s => s.distressLevel === "none").length;
-  const mildCount   = sessions.filter(s => s.distressLevel === "mild").length;
-  const strongCount = sessions.filter(s => s.distressLevel === "strong").length;
+  const subtleCount = sessions.filter(s => s.distressLevel === "subtle").length;
+  const activeCount = sessions.filter(s => s.distressLevel === "active").length;
+  const severeCount = sessions.filter(s => s.distressLevel === "severe").length;
   const totalCount  = sessions.length;
   const totalAlone  = sessions.reduce((sum, s) => sum + (s.actualDuration || 0), 0);
   const bestCalm    = sessions.filter(s => s.distressLevel === "none")
@@ -2028,11 +2093,12 @@ export default function PawTimer() {
 
     const recent = sessions.slice(-8);
     const calmRecent = recent.filter((s) => s.distressLevel === "none").length;
-    const mildRecent = recent.filter((s) => s.distressLevel === "mild").length;
-    const strongRecent = recent.filter((s) => s.distressLevel === "strong").length;
+    const subtleRecent = recent.filter((s) => s.distressLevel === "subtle").length;
+    const activeRecent = recent.filter((s) => s.distressLevel === "active").length;
+    const severeRecent = recent.filter((s) => s.distressLevel === "severe").length;
 
     const sessionVolumeScore = Math.min(1, sessions.length / 12);
-    const qualityScore = Math.max(0, Math.min(1, (calmRecent + (mildRecent * 0.45) - (strongRecent * 0.8)) / Math.max(1, recent.length)));
+    const qualityScore = Math.max(0, Math.min(1, (calmRecent + (subtleRecent * 0.45) - (activeRecent * 0.7) - (severeRecent * 0.9)) / Math.max(1, recent.length)));
     const streakScore = Math.min(1, streak / 5);
 
     const weighted = (sessionVolumeScore * 0.3) + (qualityScore * 0.5) + (streakScore * 0.2);
@@ -2064,8 +2130,9 @@ export default function PawTimer() {
 
   const relapseWindow = 6;
   const recentSessions = sessions.slice(-relapseWindow);
-  const recentStrongCount = recentSessions.filter((s) => s.distressLevel === "strong").length;
-  const relapseRisk = recentStrongCount >= 2;
+  const recentSevereCount = recentSessions.filter((s) => s.distressLevel === "severe").length;
+  const recentHighDistressCount = recentSessions.filter((s) => ["active", "severe"].includes(s.distressLevel)).length;
+  const relapseRisk = recentHighDistressCount >= 2;
 
   const adherenceByDay = (() => {
     const dayMap = new Map();
@@ -2124,8 +2191,8 @@ export default function PawTimer() {
     },
     relapseRisk: {
       title: "Relapse risk",
-      body: "A quick warning signal based on strong-distress sessions in your most recent attempts. More strong distress in the recent window means a higher chance of setbacks and a need to slow down.",
-      detail: `${recentStrongCount}/${relapseWindow} recent sessions strong distress · ${relapseTone.label}`,
+      body: "A quick warning signal based on high-distress sessions in your most recent attempts. More active/severe distress in the recent window means a higher chance of setbacks and a need to slow down.",
+      detail: `${recentHighDistressCount}/${relapseWindow} recent sessions active/severe distress (${recentSevereCount} severe) · ${relapseTone.label}`,
     },
     adherence: {
       title: "Adherence",
@@ -2146,7 +2213,7 @@ export default function PawTimer() {
   }));
   const CustomDot = ({ cx, cy, payload }) => {
     const c = payload.distressLevel === "none" ? "var(--green-dark)"
-            : payload.distressLevel === "mild" ? "var(--orange)" : "var(--red)";
+            : payload.distressLevel === "subtle" ? "var(--orange)" : payload.distressLevel === "active" ? "#d65f3c" : "var(--red)";
     return <circle cx={cx} cy={cy} r={5} fill={c} stroke="white" strokeWidth={2}/>;
   };
 
@@ -2271,20 +2338,60 @@ ${syncError}`);
                   {fmt(finalElapsed)} session — how did {name} handle it?
                 </div>
                 <div className="result-grid">
-                  <button className="btn-result btn-none" onClick={() => recordResult("none")}>
+                  <button className="btn-result btn-none" onClick={() => { setSessionOutcome("none"); recordResult("none"); }}>
                     <Img src="result-calm.png" size={36} alt="No distress"/>
-                    <div><div>No Distress</div><div className="result-desc">{name} was completely calm</div></div>
+                    <div><div>No distress</div><div className="result-desc">{name} was completely calm</div></div>
                   </button>
-                  <button className="btn-result btn-mild" onClick={() => recordResult("mild")}>
-                    <Img src="result-mild.png" size={36} alt="Mild distress"/>
-                    <div><div>Mild Distress</div><div className="result-desc">Slight whining or restlessness</div></div>
+                  <button className="btn-result btn-mild" onClick={() => setSessionOutcome("subtle")}>
+                    <Img src="result-mild.png" size={36} alt="Subtle stress"/>
+                    <div><div>Subtle stress</div><div className="result-desc">Mild/passive signs (restless, lip licking, etc.)</div></div>
                   </button>
-                  <button className="btn-result btn-strong" onClick={() => recordResult("strong")}>
-                    <Img src="result-strong.png" size={36} alt="Strong distress"/>
-                    <div><div>Strong Distress</div><div className="result-desc">Barking, pacing, or destructive</div></div>
+                  <button className="btn-result btn-strong" onClick={() => setSessionOutcome("active")}>
+                    <Img src="result-strong.png" size={36} alt="Active distress"/>
+                    <div><div>Active distress</div><div className="result-desc">Barking, pacing, unable to settle</div></div>
+                  </button>
+                  <button className="btn-result btn-severe" onClick={() => setSessionOutcome("severe")}>
+                    <Img src="result-strong.png" size={36} alt="Severe distress"/>
+                    <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
                   </button>
                 </div>
-                <button className="btn-cancel" onClick={() => { setPhase("idle"); setElapsed(0); setFinalElapsed(0); }}>
+                {sessionOutcome && sessionOutcome !== "none" && (
+                  <div className="outcome-details">
+                    <label className="field-label" htmlFor="latency-input">Latency to first stress (seconds)</label>
+                    <input
+                      id="latency-input"
+                      className="text-input"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Optional"
+                      value={latencyDraft}
+                      onChange={(e) => setLatencyDraft(e.target.value)}
+                    />
+                    <label className="field-label" htmlFor="distress-type">Distress type (optional)</label>
+                    <select
+                      id="distress-type"
+                      className="text-input"
+                      value={distressTypeDraft}
+                      onChange={(e) => setDistressTypeDraft(e.target.value)}
+                    >
+                      <option value="">Select distress type</option>
+                      {DISTRESS_TYPES.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                    <button
+                      className="btn-save-outcome"
+                      onClick={() => recordResult(sessionOutcome, {
+                        latencyToFirstDistress: latencyDraft,
+                        distressType: distressTypeDraft || null,
+                      })}
+                    >
+                      Save session
+                    </button>
+                  </div>
+                )}
+                <button className="btn-cancel" onClick={() => { setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft(""); }}>
                   Discard this session
                 </button>
               </div>
@@ -2298,9 +2405,9 @@ ${syncError}`);
                     ? (lastSess && (lastSess.actualDuration||0) < (lastSess.plannedDuration||0))
                       ? `Session ended early — holding until ${name} completes the full time.`
                       : `${name} completed the last session — stepping up.`
-                    : lastSess.distressLevel === "mild"
+                    : lastSess.distressLevel === "subtle"
                       ? "Mild signs last time — holding until consistently calm."
-                      : "Rolled back after strong distress — steady progress matters most."}
+                      : "Rolled back after higher distress — steady progress matters most."}
               </p>
             )}
             {phase !== "running" && sessions.length > 0 && (
@@ -2372,11 +2479,13 @@ ${syncError}`);
               const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
               const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
               const calmSec   = loggedTodaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const mildSec   = loggedTodaySess.filter(s=>s.distressLevel==="mild").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const strongSec = loggedTodaySess.filter(s=>s.distressLevel==="strong").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const subtleSec = loggedTodaySess.filter(s=>s.distressLevel==="subtle").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const activeSec = loggedTodaySess.filter(s=>s.distressLevel==="active").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const severeSec = loggedTodaySess.filter(s=>s.distressLevel==="severe").reduce((sum,s)=>sum+(s.actualDuration||0),0);
               const calmPct   = totalLogged ? (calmSec/totalLogged)*100 : 0;
-              const mildPct   = totalLogged ? (mildSec/totalLogged)*100 : 0;
-              const strongPct = totalLogged ? (strongSec/totalLogged)*100 : 0;
+              const subtlePct = totalLogged ? (subtleSec/totalLogged)*100 : 0;
+              const activePct = totalLogged ? (activeSec/totalLogged)*100 : 0;
+              const severePct = totalLogged ? (severeSec/totalLogged)*100 : 0;
               return (
                 <div className="alone-card">
                   <div className="alone-left">
@@ -2387,15 +2496,17 @@ ${syncError}`);
                     <div className="alone-track">
                       {totalLogged > 0 ? (<>
                         <div className="alone-fill ok"   style={{width:`${calmPct}%`}}/>
-                        <div className="alone-fill near" style={{width:`${mildPct}%`}}/>
-                        <div className="alone-fill full" style={{width:`${strongPct}%`}}/>
+                        <div className="alone-fill near" style={{width:`${subtlePct}%`}}/>
+                        <div className="alone-fill active" style={{width:`${activePct}%`}}/>
+                        <div className="alone-fill full" style={{width:`${severePct}%`}}/>
                       </>) : <div style={{width:"100%",height:"100%",background:"var(--border)",borderRadius:99}}/>}
                     </div>
                     {totalLogged > 0 && (
                       <div className="alone-legend">
                         {calmSec>0   && <span className="t-helper" style={{color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
-                        {mildSec>0   && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(mildSec)} mild</span>}
-                        {strongSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(strongSec)} distress</span>}
+                        {subtleSec>0 && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(subtleSec)} subtle</span>}
+                        {activeSec>0 && <span className="t-helper" style={{color:"#d65f3c"}}>{fmt(activeSec)} active</span>}
+                        {severeSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(severeSec)} severe</span>}
                       </div>
                     )}
                   </div>
@@ -2581,8 +2692,8 @@ ${syncError}`);
             ) : timeline.map(item => {
               if (item.kind === "session") {
                 const s = item.data;
-                const lv = s.distressLevel ?? (s.result === "success" ? "none" : "strong");
-                const icon = lv === "none" ? "result-calm.png" : lv === "mild" ? "result-mild.png" : "result-strong.png";
+                const lv = normalizeDistressLevel(s.distressLevel ?? (s.result === "success" ? "none" : "strong"));
+                const icon = lv === "none" ? "result-calm.png" : lv === "subtle" ? "result-mild.png" : lv === "active" ? "result-strong.png" : "result-strong.png";
                 const detailBadges = sessionDetailBadges(s);
                 return (
                   <div className="h-item" key={`s-${s.id}`}>
@@ -2724,13 +2835,15 @@ ${syncError}`);
                 <div className="ratio-title">Outcome breakdown — {totalCount} sessions</div>
                 <div className="ratio-bar">
                   <div className="ratio-good" style={{width:`${(noneCount/totalCount)*100}%`}}/>
-                  <div className="ratio-mild" style={{width:`${(mildCount/totalCount)*100}%`}}/>
-                  <div className="ratio-bad"  style={{width:`${(strongCount/totalCount)*100}%`}}/>
+                  <div className="ratio-mild" style={{width:`${(subtleCount/totalCount)*100}%`}}/>
+                  <div className="ratio-active" style={{width:`${(activeCount/totalCount)*100}%`}}/>
+                  <div className="ratio-bad"  style={{width:`${(severeCount/totalCount)*100}%`}}/>
                 </div>
                 <div className="ratio-legend">
                   <span><div className="dot12" style={{background:"var(--green-dark)"}}/>{noneCount} calm</span>
-                  <span><div className="dot12" style={{background:"var(--orange)"}}/>{mildCount} mild</span>
-                  <span><div className="dot12" style={{background:"var(--red)"}}/>{strongCount} strong</span>
+                  <span><div className="dot12" style={{background:"var(--orange)"}}/>{subtleCount} subtle</span>
+                  <span><div className="dot12" style={{background:"#d65f3c"}}/>{activeCount} active</span>
+                  <span><div className="dot12" style={{background:"var(--red)"}}/>{severeCount} severe</span>
                 </div>
               </div>
             )}
@@ -2825,8 +2938,8 @@ ${syncError}`);
               </div>
               <div className="proto-title" style={{ marginTop:8 }}>Progress rules</div>
               <div className="proto-row prose">✅ <strong>Calm (completed):</strong> Add +15% next session (below 40 min), then +5 min.</div>
-              <div className="proto-row prose">⚠️ <strong>Mild distress:</strong> Hold the same duration next time.</div>
-              <div className="proto-row prose">❌ <strong>Strong distress:</strong> Roll back by 1–2 sessions.</div>
+              <div className="proto-row prose">⚠️ <strong>Subtle stress:</strong> Hold the same duration next time.</div>
+              <div className="proto-row prose">❌ <strong>Active/Severe distress:</strong> Roll back by 1–2 sessions.</div>
               <div className="proto-title" style={{ marginTop:10 }}>Daily rhythm</div>
               <div className="proto-row prose">📅 Up to {activeProto.sessionsPerDayMax} sessions · up to {activeProto.maxDailyAloneMinutes} min alone/day.</div>
               <div className="proto-row prose">🔁 Pattern breaks: {recMin}–{recMax}/day for ~{normalizedLeaves} departures/day · at least walks + {walkBuffer} buffer.</div>
