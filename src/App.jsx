@@ -1306,7 +1306,6 @@ export default function PawTimer() {
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [target,       setTarget]       = useState(PROTOCOL.startDurationSeconds);
   const [toast,        setToast]        = useState(null);
-  const [howOpen,      setHowOpen]      = useState(false);  // collapsible how-it-works
   const [patOpen,      setPatOpen]      = useState(false);  // collapsible pattern breaking
   const [patLabels,    setPatLabels]    = useState({});     // custom pattern labels
   const [editingPat,   setEditingPat]   = useState(null);   // type being renamed
@@ -2329,59 +2328,6 @@ ${syncError}`);
                 </div>
               )}
 
-              {/* Training protocol */}
-              <div className="tool-row" onClick={()=>setHowOpen(o=>!o)}>
-                <div className="tool-row-left">
-                  <span style={{fontSize:18}}>📖</span>
-                  <span className="tool-row-label">Training protocol</span>
-                </div>
-                <div className="tool-row-right">
-                  <span className="tool-chevron">{howOpen ? "∨" : "›"}</span>
-                </div>
-              </div>
-              {howOpen && (
-                <div className="tool-expand">
-                  <div className="proto-section">
-                    <div className="proto-title">How to run a session</div>
-                    <div className="proto-row prose">1. Tap Start and leave calmly, without a big goodbye.</div>
-                    <div className="proto-row prose">2. Come back whenever you need to and tap End Session.</div>
-                    <div className="proto-row prose">3. Rate how {name} did, and we'll set a gentle next target.</div>
-                  </div>
-                  <div className="proto-section">
-                    <div className="proto-title">Progress rules</div>
-                    <div className="proto-row prose">✅ <strong>Calm (completed):</strong> Add +15% next session (below 40 min), then +5 min.</div>
-                    <div className="proto-row prose">⚠️ <strong>Mild distress:</strong> Hold the same duration next time.</div>
-                    <div className="proto-row prose">❌ <strong>Strong distress:</strong> Roll back by 1–2 sessions.</div>
-                  </div>
-                  <div className="proto-section">
-                    <div className="proto-title">Daily rhythm</div>
-                    <div className="proto-row prose">📅 Up to {activeProto.sessionsPerDayMax} sessions · up to {activeProto.maxDailyAloneMinutes} min alone/day.</div>
-                    <div className="proto-row prose">🔁 Pattern breaks: {recMin}–{recMax}/day for ~{normalizedLeaves} departures/day · at least walks + {walkBuffer} buffer.</div>
-                    <div className="proto-row prose">😴 Rest days: {activeProto.restDaysPerWeekRecommended}/week is recommended.</div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 7. Help — Daily reminder */}
-            <div className="tool-section-title">Support</div>
-            <div className="tool-group-card" style={{marginBottom:28}}>
-              <div className="tool-row" style={{cursor:"default"}}>
-                <div className="tool-row-left">
-                  <span style={{fontSize:18}}>🔔</span>
-                  <span className="tool-row-label">Daily training reminder</span>
-                </div>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  {notifEnabled && (
-                    <input type="time" value={notifTime}
-                      onChange={e=>{ setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName??"your dog"); }}
-                      className="notif-time-input"/>
-                  )}
-                  <button className={`notif-toggle ${notifEnabled?"on":""}`} onClick={handleToggleNotif}>
-                    {notifEnabled ? "On" : "Off"}
-                  </button>
-                </div>
-              </div>
             </div>
 
           </div>
@@ -2620,7 +2566,7 @@ ${syncError}`);
           <div className="section">
             <div className="section-title">Settings</div>
 
-            <div className="settings-section-label">Your dog</div>
+            <div className="settings-section-label">Dog profile</div>
 
             {/* Dog ID */}
             <div className="share-card">
@@ -2637,7 +2583,41 @@ ${syncError}`);
               </ol>
             </div>
 
-            <div className="settings-section-label">Sync</div>
+            <div className="settings-section-label">Training protocol</div>
+            <div className="share-card">
+              <div className="share-title">How to run a session</div>
+              <div className="proto-section" style={{ marginTop:0 }}>
+                <div className="proto-row prose">1. Tap Start and leave calmly, without a big goodbye.</div>
+                <div className="proto-row prose">2. Come back whenever you need to and tap End Session.</div>
+                <div className="proto-row prose">3. Rate how {name} did, and we'll set a gentle next target.</div>
+              </div>
+              <div className="proto-title" style={{ marginTop:8 }}>Progress rules</div>
+              <div className="proto-row prose">✅ <strong>Calm (completed):</strong> Add +15% next session (below 40 min), then +5 min.</div>
+              <div className="proto-row prose">⚠️ <strong>Mild distress:</strong> Hold the same duration next time.</div>
+              <div className="proto-row prose">❌ <strong>Strong distress:</strong> Roll back by 1–2 sessions.</div>
+              <div className="proto-title" style={{ marginTop:10 }}>Daily rhythm</div>
+              <div className="proto-row prose">📅 Up to {activeProto.sessionsPerDayMax} sessions · up to {activeProto.maxDailyAloneMinutes} min alone/day.</div>
+              <div className="proto-row prose">🔁 Pattern breaks: {recMin}–{recMax}/day for ~{normalizedLeaves} departures/day · at least walks + {walkBuffer} buffer.</div>
+              <div className="proto-row prose">😴 Rest days: {activeProto.restDaysPerWeekRecommended}/week is recommended.</div>
+            </div>
+
+            <div className="settings-section-label">Notifications</div>
+            <div className="share-card">
+              <div className="share-title">Daily training reminder</div>
+              <div className="share-sub">Set a gentle daily prompt so sessions stay consistent.</div>
+              <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, flexWrap:"wrap"}}>
+                {notifEnabled ? (
+                  <input type="time" value={notifTime}
+                    onChange={e=>{ setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName??"your dog"); }}
+                    className="notif-time-input"/>
+                ) : <span className="t-helper">Turn reminders on to choose a time.</span>}
+                <button className={`notif-toggle ${notifEnabled?"on":""}`} onClick={handleToggleNotif}>
+                  {notifEnabled ? "On" : "Off"}
+                </button>
+              </div>
+            </div>
+
+            <div className="settings-section-label">App preferences</div>
             <div className="share-card">
               <div className="diag-head">
                 <div className="share-title" style={{ marginBottom:0 }}>Sync diagnostics</div>
