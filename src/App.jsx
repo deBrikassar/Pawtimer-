@@ -8,12 +8,13 @@ import {
 // ─── Storage keys ─────────────────────────────────────────────────────────────
 const DOGS_KEY       = "pawtimer_dogs_v3";
 const ACTIVE_DOG_KEY = "pawtimer_active_dog_v3";
-const SESS_SCHEMA_VERSION = 5;
+const SESS_SCHEMA_VERSION = 6;
 const sessKey    = (id) => `pawtimer_sess_v${SESS_SCHEMA_VERSION}_${id}`;
 const legacySessKeyV4 = (id) => `pawtimer_sess_v4_${id}`;
 const legacySessKey = (id) => `pawtimer_sess_v3_${id}`;
 const legacyWalkKey = (id) => `pawtimer_walk_v3_${id}`;
-const walkKey    = (id) => `pawtimer_walk_v4_${id}`;
+const walkKey    = (id) => `pawtimer_walk_v5_${id}`;
+const legacyWalkKeyV4 = (id) => `pawtimer_walk_v4_${id}`;
 const patKey     = (id) => `pawtimer_pat_v3_${id}`;
 const patLblKey  = (id) => `pawtimer_patlbl_v3_${id}`;  // custom pattern labels
 const photoKey   = (id) => `pawtimer_photo_v3_${id}`;   // dog photo (base64)
@@ -102,6 +103,9 @@ const normalizeSession = (row = {}) => {
   const symptoms = row.symptoms ?? {};
   const preSession = row.preSession ?? row.pre_session ?? {};
   const environment = row.environment ?? {};
+  const feeding = row.feeding ?? {};
+  const walkContext = row.walkContext ?? row.walk_context ?? {};
+  const dailyLoad = row.dailyLoad ?? row.daily_load ?? {};
 
   const normalized = {
     ...row,
@@ -144,6 +148,38 @@ const normalizeSession = (row = {}) => {
       walkDuration: Number.isFinite(preSession.walkDuration) ? preSession.walkDuration : (Number.isFinite(preSession.walk_duration) ? preSession.walk_duration : null),
       enrichmentGiven: hasValue(preSession.enrichmentGiven) ? preSession.enrichmentGiven : (hasValue(preSession.enrichment_given) ? preSession.enrichment_given : null),
     },
+    feeding: {
+      timeOfLastMeal: feeding.timeOfLastMeal ?? feeding.time_of_last_meal ?? null,
+      mealType: feeding.mealType ?? feeding.meal_type ?? null,
+      amount: feeding.amount ?? null,
+      offeredDuringSession: hasValue(feeding.offeredDuringSession) ? !!feeding.offeredDuringSession : asBool(feeding.offered_during_session),
+      engagedDuringAbsence: hasValue(feeding.engagedDuringAbsence) ? !!feeding.engagedDuringAbsence : asBool(feeding.engaged_during_absence),
+      ateAmount: feeding.ateAmount ?? feeding.ate_amount ?? null,
+      latencyToStartEatingSec: Number.isFinite(feeding.latencyToStartEatingSec) ? feeding.latencyToStartEatingSec : (Number.isFinite(feeding.latency_to_start_eating_sec) ? feeding.latency_to_start_eating_sec : null),
+      stoppedEatingWhenOwnerLeft: hasValue(feeding.stoppedEatingWhenOwnerLeft) ? !!feeding.stoppedEatingWhenOwnerLeft : asBool(feeding.stopped_eating_when_owner_left),
+    },
+    walkContext: {
+      walkType: walkContext.walkType ?? walkContext.walk_type ?? null,
+      intensity: walkContext.intensity ?? null,
+      timingToSessionMinutes: Number.isFinite(walkContext.timingToSessionMinutes) ? walkContext.timingToSessionMinutes : (Number.isFinite(walkContext.timing_to_session_minutes) ? walkContext.timing_to_session_minutes : null),
+      notes: walkContext.notes ?? null,
+    },
+    dailyLoad: {
+      otherTrainingDone: hasValue(dailyLoad.otherTrainingDone) ? !!dailyLoad.otherTrainingDone : asBool(dailyLoad.other_training_done),
+      cognitiveLoad: dailyLoad.cognitiveLoad ?? dailyLoad.cognitive_load ?? null,
+      visitors: hasValue(dailyLoad.visitors) ? !!dailyLoad.visitors : asBool(dailyLoad.visitors),
+      grooming: hasValue(dailyLoad.grooming) ? !!dailyLoad.grooming : asBool(dailyLoad.grooming),
+      vetVisit: hasValue(dailyLoad.vetVisit) ? !!dailyLoad.vetVisit : asBool(dailyLoad.vet_visit),
+      noisyDay: hasValue(dailyLoad.noisyDay) ? !!dailyLoad.noisyDay : asBool(dailyLoad.noisy_day),
+      poorSleep: hasValue(dailyLoad.poorSleep) ? !!dailyLoad.poorSleep : asBool(dailyLoad.poor_sleep),
+      longRealLifeAbsenceEarlier: hasValue(dailyLoad.longRealLifeAbsenceEarlier) ? !!dailyLoad.longRealLifeAbsenceEarlier : asBool(dailyLoad.long_real_life_absence_earlier),
+      medicationOrCalmingAid: dailyLoad.medicationOrCalmingAid ?? dailyLoad.medication_or_calming_aid ?? null,
+      whoLeft: dailyLoad.whoLeft ?? dailyLoad.who_left ?? null,
+      anotherPersonStayed: hasValue(dailyLoad.anotherPersonStayed) ? !!dailyLoad.anotherPersonStayed : asBool(dailyLoad.another_person_stayed),
+      location: dailyLoad.location ?? null,
+      barrierUsed: hasValue(dailyLoad.barrierUsed) ? !!dailyLoad.barrierUsed : asBool(dailyLoad.barrier_used),
+      mediaOn: hasValue(dailyLoad.mediaOn) ? !!dailyLoad.mediaOn : asBool(dailyLoad.media_on),
+    },
     environment: {
       noiseEvent: hasValue(environment.noiseEvent) ? !!environment.noiseEvent : asBool(environment.noise_event),
     },
@@ -159,8 +195,8 @@ const syncFetch = async (dogId) => {
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
   const [dogRes, sessRes, walkRes, patRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
-    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
-    sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`),
+    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment,latency_to_first_distress,below_threshold,distress_type,distress_severity,video_review,feeding,walk_context,daily_load&order=date.asc`),
+    sbReq(`walks?${dogFilter}&select=id,date,duration,type,intensity,timing_to_session_minutes,notes&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
   ]);
 
@@ -209,8 +245,16 @@ const syncFetch = async (dogId) => {
         recoverySeconds: r.recovery_seconds,
         preSession: r.pre_session,
         environment: r.environment,
+        latencyToFirstDistress: r.latency_to_first_distress,
+        belowThreshold: r.below_threshold,
+        distressType: r.distress_type,
+        distressSeverity: r.distress_severity,
+        videoReview: r.video_review,
+        feeding: r.feeding,
+        walkContext: r.walk_context,
+        dailyLoad: r.daily_load,
       }))),
-      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
+      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration, type: r.type || "regular", intensity: r.intensity || null, timingToSessionMinutes: r.timing_to_session_minutes ?? null, notes: r.notes ?? null })),
       patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
     },
   };
@@ -249,6 +293,14 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
         recovery_seconds: data.recoverySeconds ?? null,
         pre_session: data.preSession ?? null,
         environment: data.environment ?? null,
+        latency_to_first_distress: data.latencyToFirstDistress ?? null,
+        below_threshold: data.belowThreshold ?? null,
+        distress_type: data.distressType ?? null,
+        distress_severity: data.distressSeverity ?? null,
+        video_review: data.videoReview ?? null,
+        feeding: data.feeding ?? null,
+        walk_context: data.walkContext ?? null,
+        daily_load: data.dailyLoad ?? null,
       }
     : kind === "walk"
       ? {
@@ -256,6 +308,10 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           dog_id: id,
           date: data.date,
           duration: data.duration,
+          type: data.type ?? "regular",
+          intensity: data.intensity ?? null,
+          timing_to_session_minutes: data.timingToSessionMinutes ?? null,
+          notes: data.notes ?? null,
         }
       : {
           id: String(data.id),
@@ -300,7 +356,7 @@ const hydrateDogFromLocal = (dogId) => {
   if (!Array.isArray(v4)) save(sessKey(id), localSessions);
   return {
     sessions: localSessions,
-    walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: w?.type || "regular" })),
+    walks: ensureArray(load(walkKey(id), load(legacyWalkKeyV4(id), load(legacyWalkKey(id), [])))).map((w) => ({ ...w, type: w?.type || "regular", intensity: w?.intensity || null, timingToSessionMinutes: Number.isFinite(w?.timingToSessionMinutes) ? w.timingToSessionMinutes : null, notes: w?.notes || null })),
     patterns: ensureArray(load(patKey(id), [])),
     patLabels: ensureObject(load(patLblKey(id), {})),
     photo: load(photoKey(id), null),
