@@ -19,8 +19,19 @@ create table if not exists sessions (
   actual_duration  integer not null,  -- seconds
   distress_level   text not null check (distress_level in ('none', 'mild', 'strong')),
   result           text not null check (result in ('success', 'distress')),
+  context          jsonb not null default '{}'::jsonb,
+  symptoms         jsonb not null default '{}'::jsonb,
+  recovery_seconds integer,
+  pre_session      jsonb not null default '{}'::jsonb,
+  environment      jsonb not null default '{}'::jsonb,
   created_at       timestamptz default now()
 );
+
+alter table sessions add column if not exists context jsonb not null default '{}'::jsonb;
+alter table sessions add column if not exists symptoms jsonb not null default '{}'::jsonb;
+alter table sessions add column if not exists recovery_seconds integer;
+alter table sessions add column if not exists pre_session jsonb not null default '{}'::jsonb;
+alter table sessions add column if not exists environment jsonb not null default '{}'::jsonb;
 
 -- 3. Walks table — one row per "walked together" log
 create table if not exists walks (

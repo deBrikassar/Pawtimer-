@@ -122,15 +122,21 @@ const normalizeSession = (row = {}) => {
 
 const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
 
+const isMissingColumnError = (error = "") => /column .* does not exist/i.test(String(error));
+
 const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=ilike.${encodeURIComponent(id)}`;
-  const [dogRes, sessRes, walkRes, patRes] = await Promise.all([
+  const [dogRes, detailedSessRes, walkRes, patRes] = await Promise.all([
     sbReq(`dogs?id=ilike.${encodeURIComponent(id)}&select=id,settings&limit=5`),
-    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result&order=date.asc`),
+    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
     sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
   ]);
+
+  const sessRes = detailedSessRes.ok || !isMissingColumnError(detailedSessRes.error)
+    ? detailedSessRes
+    : await sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result&order=date.asc`);
 
   const errors = [
     !dogRes.ok ? `dogs: ${dogRes.error}` : null,
@@ -161,6 +167,11 @@ const syncFetch = async (dogId) => {
         actualDuration: r.actual_duration,
         distressLevel: r.distress_level,
         result: r.result,
+        context: r.context,
+        symptoms: r.symptoms,
+        recoverySeconds: r.recovery_seconds,
+        preSession: r.pre_session,
+        environment: r.environment,
       }))),
       walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
       patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
@@ -195,6 +206,11 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
         actual_duration: data.actualDuration,
         distress_level: data.distressLevel,
         result: data.result,
+        context: data.context ?? {},
+        symptoms: data.symptoms ?? {},
+        recovery_seconds: Number.isFinite(data.recoverySeconds) ? data.recoverySeconds : null,
+        pre_session: data.preSession ?? {},
+        environment: data.environment ?? {},
       }
     : kind === "walk"
       ? {
@@ -210,11 +226,28 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           type: data.type,
         };
 
-  const res = await sbReq(table, {
+  let res = await sbReq(table, {
     method: "POST",
     body: JSON.stringify(row),
     prefer: "resolution=merge-duplicates,return=minimal",
   });
+
+  if (!res.ok && kind === "session" && isMissingColumnError(res.error)) {
+    const fallbackRow = {
+      id: String(data.id),
+      dog_id: id,
+      date: data.date,
+      planned_duration: data.plannedDuration,
+      actual_duration: data.actualDuration,
+      distress_level: data.distressLevel,
+      result: data.result,
+    };
+    res = await sbReq(table, {
+      method: "POST",
+      body: JSON.stringify(fallbackRow),
+      prefer: "resolution=merge-duplicates,return=minimal",
+    });
+  }
   return res.ok
     ? { ok: true, error: null }
     : { ok: false, error: `${kind} push failed: ${res.error}` };
@@ -1338,6 +1371,8 @@ export default function PawTimer() {
           save(DOGS_KEY, next);
           return next;
         });
+        setPatLabels(ensureObject(remote.dog.patLabels));
+        setDogPhoto(remote.dog.dogPhoto ?? null);
       }
       setSessions(prev => { const m = normalizeSessions(mergeById(prev, remote.sessions)); save(sessKey(activeDogId), m); return m; });
       setWalks   (prev => { const m = mergeById(prev, remote.walks);    save(walkKey(activeDogId), m); return m; });
@@ -1369,14 +1404,15 @@ export default function PawTimer() {
   useEffect(() => {
     if (!SYNC_ENABLED || !activeDogId) return;
     const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
-    if (!dog) return;
-    syncUpsertDog(dog).then(({ ok, error }) => {
+    const sharedDog = buildSharedDogPayload(dog);
+    if (!sharedDog) return;
+    syncUpsertDog(sharedDog).then(({ ok, error }) => {
       if (!ok) {
         setSyncStatus("err");
         setSyncError(error || "Unable to sync dog settings");
       }
     });
-  }, [activeDogId, dogs]);
+  }, [activeDogId, dogs, patLabels, dogPhoto]);
 
   // Coach mark: show on first ever app open (no sessions yet)
   useEffect(() => {
@@ -1486,10 +1522,20 @@ export default function PawTimer() {
     setPhase("rating");
   };
 
+  function buildSharedDogPayload(dog) {
+    if (!dog) return null;
+    return {
+      ...dog,
+      id: canonicalDogId(dog.id),
+      patLabels: ensureObject(patLabels),
+      dogPhoto: dogPhoto ?? null,
+    };
+  }
+
   const pushWithSyncStatus = async (kind, data) => {
     if (!SYNC_ENABLED || !activeDogId) return false;
     const currentDog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
-    const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
+    const dogSettings = buildSharedDogPayload(currentDog);
     setSyncStatus("syncing");
     const { ok, error } = await syncPush(canonicalDogId(activeDogId), kind, data, dogSettings);
     if (ok) {
