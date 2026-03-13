@@ -5,7 +5,7 @@ export const PROTOCOL = {
   restDaysPerWeekMin: 1,
   restDaysPerWeekRecommended: 2,
   startDurationSeconds: 30,
-  minDurationSeconds: 15,
+  minDurationSeconds: 30,
   goalDurationDefaultSeconds: 7200,
   stabilizationDistressThreshold: 2,
   stabilizationWindow: 6,
@@ -106,6 +106,17 @@ function getLatestSessions(sessions, count) {
   return sessions.slice(-count);
 }
 
+function sortByDateAsc(sessions = []) {
+  return [...sessions].sort((a, b) => {
+    const timeA = toTimestamp(a?.date);
+    const timeB = toTimestamp(b?.date);
+    if (timeA == null && timeB == null) return 0;
+    if (timeA == null) return -1;
+    if (timeB == null) return 1;
+    return timeA - timeB;
+  });
+}
+
 function countStreak(items, predicate) {
   let streak = 0;
   for (let i = items.length - 1; i >= 0; i -= 1) {
@@ -184,8 +195,7 @@ function classifyWindow(sessions = []) {
 }
 
 function computeSafeAloneTime(sessions = []) {
-  const calm = sessions
-    .map(toRichSession)
+  const calm = getLatestSessions(sortByDateAsc(sessions).map(toRichSession), PROTOCOL.confidenceSessionWindow)
     .filter((s) => s.belowThreshold);
   if (!calm.length) return PROTOCOL.startDurationSeconds;
 
@@ -288,7 +298,7 @@ function buildCueStats(cueSessions = []) {
 }
 
 export function calculateTrainingStats(sessions = [], options = {}) {
-  const richSessions = sessions.map(toRichSession);
+  const richSessions = sortByDateAsc(sessions).map(toRichSession);
   const realAbsences = richSessions.filter((s) => s.departureType === "real_life");
   const trainingSessions = richSessions.filter((s) => s.departureType !== "real_life");
   const safeAloneTime = computeSafeAloneTime(trainingSessions);
@@ -349,7 +359,7 @@ function chooseRecommendationType(last, stats, recent) {
 }
 
 export function buildRecommendation(sessions = [], options = {}) {
-  const rich = sessions.map(toRichSession);
+  const rich = sortByDateAsc(sessions).map(toRichSession);
   const training = rich.filter((s) => s.departureType !== "real_life");
   const recent = getLatestSessions(training, PROTOCOL.calmWindow);
   const last = training[training.length - 1] || null;

@@ -84,6 +84,27 @@ describe("recommendation engine", () => {
     expect(["repeat_current_duration", "insert_easy_sessions", "departure_cues_first"]).toContain(rec.recommendationType);
   });
 
+  it("never recommends below 30 seconds even with legacy 15s history", () => {
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(2), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(30);
+  });
+
+  it("uses latest session data even when input order is stale", () => {
+    const sessions = [
+      { date: daysAgo(0), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(2), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(30);
+    expect(rec.recommendationType).not.toBe("stabilization_block");
+  });
+
   it("rolls back and enters stabilization mode after repeated active distress", () => {
     const sessions = [
       { date: daysAgo(4), plannedDuration: 60, actualDuration: 20, distressLevel: "active", belowThreshold: false },
