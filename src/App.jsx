@@ -124,10 +124,10 @@ const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession)
 
 const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
-  const dogFilter = `dog_id=ilike.${encodeURIComponent(id)}`;
+  const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
   const [dogRes, sessRes, walkRes, patRes] = await Promise.all([
-    sbReq(`dogs?id=ilike.${encodeURIComponent(id)}&select=id,settings&limit=5`),
-    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result&order=date.asc`),
+    sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
+    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
     sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
   ]);
@@ -147,7 +147,7 @@ const syncFetch = async (dogId) => {
   const walkRows = Array.isArray(walkRes.data) ? walkRes.data : [];
   const patRows = Array.isArray(patRes.data) ? patRes.data : [];
 
-  const matchedDog = dogRows.find((d) => canonicalDogId(d?.id) === id) ?? dogRows[0] ?? null;
+  const matchedDog = dogRows.find((d) => canonicalDogId(d?.id) === id) ?? null;
   return {
     error: null,
     result: {
@@ -161,6 +161,11 @@ const syncFetch = async (dogId) => {
         actualDuration: r.actual_duration,
         distressLevel: r.distress_level,
         result: r.result,
+        context: r.context,
+        symptoms: r.symptoms,
+        recoverySeconds: r.recovery_seconds,
+        preSession: r.pre_session,
+        environment: r.environment,
       }))),
       walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
       patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
@@ -195,6 +200,11 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
         actual_duration: data.actualDuration,
         distress_level: data.distressLevel,
         result: data.result,
+        context: data.context ?? null,
+        symptoms: data.symptoms ?? null,
+        recovery_seconds: data.recoverySeconds ?? null,
+        pre_session: data.preSession ?? null,
+        environment: data.environment ?? null,
       }
     : kind === "walk"
       ? {
@@ -227,8 +237,25 @@ const syncDelete = async (kind, id) => {
 };
 
 const syncDeleteSessionsForDog = async (dogId) => {
-  const res = await sbReq(`sessions?dog_id=ilike.${encodeURIComponent(canonicalDogId(dogId))}`, { method: "DELETE" });
+  const res = await sbReq(`sessions?dog_id=eq.${encodeURIComponent(canonicalDogId(dogId))}`, { method: "DELETE" });
   return res.ok;
+};
+
+const makeEntryId = (kind, dogId) => `${kind}-${canonicalDogId(dogId)}-${Date.now()}`;
+
+const hydrateDogFromLocal = (dogId) => {
+  const id = canonicalDogId(dogId);
+  const v4 = load(sessKey(id), null);
+  const rawSessions = Array.isArray(v4) ? v4 : ensureArray(load(legacySessKey(id), []));
+  const localSessions = normalizeSessions(rawSessions);
+  if (!Array.isArray(v4)) save(sessKey(id), localSessions);
+  return {
+    sessions: localSessions,
+    walks: ensureArray(load(walkKey(id), [])),
+    patterns: ensureArray(load(patKey(id), [])),
+    patLabels: ensureObject(load(patLblKey(id), {})),
+    photo: load(photoKey(id), null),
+  };
 };
 
 // ─── Dog ID: up to 6-letter prefix + 4-digit number (e.g. LUNA-4829) ─────────
@@ -1261,20 +1288,20 @@ export default function PawTimer() {
 
   useEffect(() => {
     if (!activeDogId) { setScreen("select"); return; }
-    // Look for dog in current dogs list OR in fresh localStorage (covers join race condition)
-    const dog = dogs.find(d => d.id === activeDogId)
-              ?? ensureArray(load(DOGS_KEY, [])).find(d => d.id === activeDogId);
+    const normalizedId = canonicalDogId(activeDogId);
+    const dog = dogs.find((d) => canonicalDogId(d.id) === normalizedId)
+      ?? ensureArray(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === normalizedId);
     if (!dog) { setScreen("select"); return; }
-    const v4 = load(sessKey(activeDogId), null);
-    const rawSessions = Array.isArray(v4) ? v4 : ensureArray(load(legacySessKey(activeDogId), []));
-    const s = normalizeSessions(rawSessions);
-    const w = ensureArray(load(walkKey(activeDogId), []));
-    const p = ensureArray(load(patKey(activeDogId),  []));
-    if (!Array.isArray(v4)) save(sessKey(activeDogId), s);
-    setSessions(s); setWalks(w); setPatterns(p);
-    setTarget(suggestNext(s, dog));
+
+    const local = hydrateDogFromLocal(normalizedId);
+    setSessions(local.sessions);
+    setWalks(local.walks);
+    setPatterns(local.patterns);
+    setPatLabels(local.patLabels);
+    setDogPhoto(local.photo);
+    setTarget(suggestNext(local.sessions, dog));
     setScreen("app");
-  }, [activeDogId]);
+  }, [activeDogId, dogs]);
 
   useEffect(() => { if (activeDogId) save(sessKey(activeDogId), sessions); }, [sessions, activeDogId]);
   useEffect(() => { if (activeDogId) save(walkKey(activeDogId), walks);    }, [walks,    activeDogId]);
@@ -1305,7 +1332,7 @@ export default function PawTimer() {
   }, []);
 
   const handleToggleNotif = async () => {
-    const dog = dogs.find(d => d.id === activeDogId);
+    const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
     const dogName = dog?.dogName ?? "your dog";
     if (!notifEnabled) {
       const ok = await scheduleNotif(notifTime, dogName);
@@ -1339,9 +1366,15 @@ export default function PawTimer() {
           return next;
         });
       }
-      setSessions(prev => { const m = normalizeSessions(mergeById(prev, remote.sessions)); save(sessKey(activeDogId), m); return m; });
-      setWalks   (prev => { const m = mergeById(prev, remote.walks);    save(walkKey(activeDogId), m); return m; });
-      setPatterns(prev => { const m = mergeById(prev, remote.patterns); save(patKey(activeDogId),  m); return m; });
+      const remoteSessions = normalizeSessions(remote.sessions);
+      const remoteWalks = ensureArray(remote.walks);
+      const remotePatterns = ensureArray(remote.patterns);
+      setSessions(remoteSessions);
+      setWalks(remoteWalks);
+      setPatterns(remotePatterns);
+      save(sessKey(activeDogId), remoteSessions);
+      save(walkKey(activeDogId), remoteWalks);
+      save(patKey(activeDogId), remotePatterns);
       setSyncError("");
       setSyncStatus("ok");
     };
@@ -1362,7 +1395,9 @@ export default function PawTimer() {
   useEffect(() => {
     const savedId   = load(ACTIVE_DOG_KEY, null);
     const savedDogs = ensureArray(load(DOGS_KEY, []));
-    if (savedId && savedDogs.find(d => canonicalDogId(d.id) === canonicalDogId(savedId))) setActiveDogId(canonicalDogId(savedId));
+    if (savedId && (SYNC_ENABLED || savedDogs.find(d => canonicalDogId(d.id) === canonicalDogId(savedId)))) {
+      setActiveDogId(canonicalDogId(savedId));
+    }
     else setScreen("select");
   }, []);
 
@@ -1422,21 +1457,11 @@ export default function PawTimer() {
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const openDog = (dog) => {
-    const v4 = load(sessKey(dog.id), null);
-    const rawSessions = Array.isArray(v4) ? v4 : ensureArray(load(legacySessKey(dog.id), []));
-    const s = normalizeSessions(rawSessions);
-    const w = ensureArray(load(walkKey(dog.id), []));
-    const p = ensureArray(load(patKey(dog.id),  []));
-    if (!Array.isArray(v4)) save(sessKey(dog.id), s);
-    setSessions(s); setWalks(w); setPatterns(p);
-    setPatLabels(ensureObject(load(patLblKey(dog.id), {})));
-    setDogPhoto(load(photoKey(dog.id), null));
-    setTarget(suggestNext(s, dog));
     setActiveDogId(canonicalDogId(dog.id));
     setScreen("app");
   };
 
-  const handleDogSelect = (id, isJoin = false) => {
+  const handleDogSelect = async (id, isJoin = false) => {
     const normalizedId = canonicalDogId(id);
     const existing = dogs.find(d => canonicalDogId(d.id) === normalizedId)
                   ?? ensureArray(load(DOGS_KEY, [])).find(d => canonicalDogId(d.id) === normalizedId);
@@ -1445,6 +1470,28 @@ export default function PawTimer() {
       return;
     }
     if (isJoin) {
+      if (SYNC_ENABLED) {
+        setSyncStatus("syncing");
+        const { result: remote, error } = await syncFetch(normalizedId);
+        if (!remote?.dog) {
+          setSyncStatus("err");
+          setSyncError(error || `No shared dog account found for ${normalizedId}`);
+          showToast(`⚠️ No shared profile found for ${normalizedId} yet.`);
+          return;
+        }
+
+        const sharedDog = { ...remote.dog, id: normalizedId };
+        setDogs((prev) => [...prev.filter((d) => canonicalDogId(d.id) !== normalizedId), sharedDog]);
+        setSessions(normalizeSessions(remote.sessions));
+        setWalks(ensureArray(remote.walks));
+        setPatterns(ensureArray(remote.patterns));
+        setSyncError("");
+        setSyncStatus("ok");
+        openDog(sharedDog);
+        showToast(`✅ Joined shared profile ${normalizedId}.`);
+        return;
+      }
+
       const prefix = id.split("-")[0] || "DOG";
       const suggestedLeaves = Math.min(8, Math.max(1, Math.round(prefix.length / 2) + 2));
       const confirmed = window.confirm(
@@ -1556,12 +1603,12 @@ export default function PawTimer() {
   };
 
   const recordResult = (distressLevel) => {
-    const dog = dogs.find(d => d.id === activeDogId);
+    const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
     const now = new Date();
     const hour = now.getHours();
     const timeOfDay = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
     const session = normalizeSession({
-      id: Date.now(), date: now.toISOString(),
+      id: makeEntryId("sess", activeDogId), date: now.toISOString(),
       plannedDuration: target, actualDuration: finalElapsed,
       distressLevel, result: distressLevel === "none" ? "success" : "distress",
       context: { timeOfDay, departureType: "training", cuesUsed: [] },
@@ -1611,12 +1658,12 @@ export default function PawTimer() {
   const endWalk = () => {
     clearInterval(walkTimerRef.current);
     const duration = walkElapsed;
-    const entry = { id: `walk-${Date.now()}`, date: new Date().toISOString(), duration };
+    const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration };
     setWalks(prev => [...prev, entry]);
     pushWithSyncStatus("walk", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
-    const n = dogs.find(d => d.id === activeDogId)?.dogName ?? "your dog";
+    const n = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName ?? "your dog";
     showToast(`🚶 Walk with ${n} logged — ${fmt(duration)}!`);
     setWalkPhase("idle"); setWalkElapsed(0);
   };
@@ -1650,7 +1697,7 @@ export default function PawTimer() {
   const logWalk = () => startWalk();
 
   const logPattern = (type) => {
-    const entry = { id: Date.now(), date: new Date().toISOString(), type };
+    const entry = { id: makeEntryId("pat", activeDogId), date: new Date().toISOString(), type };
     setPatterns(prev => [...prev, entry]);
     pushWithSyncStatus("pattern", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
@@ -1678,7 +1725,7 @@ export default function PawTimer() {
   );
 
   // ── Computed values ───────────────────────────────────────────────────────
-  const dog      = dogs.find(d => d.id === activeDogId);
+  const dog      = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
   const name     = dog?.dogName ?? "your dog";
   const goalSec  = dog?.goalSeconds ?? 2400;
   const goalPct  = Math.min((target / goalSec) * 100, 100);
@@ -2250,7 +2297,7 @@ ${syncError}`);
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   {notifEnabled && (
                     <input type="time" value={notifTime}
-                      onChange={e=>{ setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find(d=>d.id===activeDogId)?.dogName??"your dog"); }}
+                      onChange={e=>{ setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName??"your dog"); }}
                       className="notif-time-input"/>
                   )}
                   <button className={`notif-toggle ${notifEnabled?"on":""}`} onClick={handleToggleNotif}>
