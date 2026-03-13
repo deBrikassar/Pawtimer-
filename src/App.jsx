@@ -38,6 +38,12 @@ const canonicalDogId = (value) => String(value || "").trim().toUpperCase();
 const normalizeSbUrl = (value) => String(value || "").replace(/\/+$/, "").replace(/\/rest\/v1$/i, "");
 const SB_BASE_URL = normalizeSbUrl(SB_URL);
 
+const isMissingPublicTableError = (result, tableName) => {
+  if (!result || result.ok !== false || result.status !== 404) return false;
+  const msg = String(result.error || "").toLowerCase();
+  return msg.includes(`table 'public.${String(tableName || "").toLowerCase()}'`) && msg.includes('schema cache');
+};
+
 const sbReq = async (path, opts = {}) => {
   if (!SB_BASE_URL || !SB_KEY) {
     return { ok: false, data: null, error: "Supabase env vars are missing", status: 0 };
@@ -143,11 +149,12 @@ const syncFetch = async (dogId) => {
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
   ]);
 
+  const patternsTableMissing = isMissingPublicTableError(patRes, "patterns");
   const errors = [
     !dogRes.ok ? `dogs: ${dogRes.error}` : null,
     !sessRes.ok ? `sessions: ${sessRes.error}` : null,
     !walkRes.ok ? `walks: ${walkRes.error}` : null,
-    !patRes.ok ? `patterns: ${patRes.error}` : null,
+    (!patRes.ok && !patternsTableMissing) ? `patterns: ${patRes.error}` : null,
   ].filter(Boolean);
   if (errors.length) {
     return { result: null, error: `Sync fetch failed (${errors.join(" | ")})` };
@@ -157,6 +164,7 @@ const syncFetch = async (dogId) => {
   const sessRows = Array.isArray(sessRes.data) ? sessRes.data : [];
   const walkRows = Array.isArray(walkRes.data) ? walkRes.data : [];
   const patRows = Array.isArray(patRes.data) ? patRes.data : [];
+  if (patternsTableMissing) console.warn("Supabase table 'patterns' missing; pattern sync is running in local-only mode.");
 
   const matchedDog = dogRows.find((d) => canonicalDogId(d?.id) === id) ?? dogRows[0] ?? null;
   return {
@@ -226,6 +234,10 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
     body: JSON.stringify(row),
     prefer: "resolution=merge-duplicates,return=minimal",
   });
+  if (kind === "pattern" && isMissingPublicTableError(res, "patterns")) {
+    console.warn("Skipping remote pattern push: Supabase 'patterns' table is missing.");
+    return { ok: true, error: null };
+  }
   return res.ok
     ? { ok: true, error: null }
     : { ok: false, error: `${kind} push failed: ${res.error}` };
@@ -243,18 +255,28 @@ const syncDeleteSessionsForDog = async (dogId) => {
 };
 
 const summarizeDiagnosticsChecks = (checks = {}) => {
-  const failedChecks = Object.entries(checks)
+  const failedChecks = [];
+  const warningChecks = [];
+
+  Object.entries(checks)
     .filter(([k, v]) => k !== "summary" && v && v.ok === false)
-    .map(([name, result]) => ({
-      name,
-      status: result.status ?? 0,
-      error: result.error || "Unknown error",
-    }));
+    .forEach(([name, result]) => {
+      const item = {
+        name,
+        status: result.status ?? 0,
+        error: result.error || "Unknown error",
+      };
+      if (name === "patternsRead" && isMissingPublicTableError(result, "patterns")) warningChecks.push(item);
+      else failedChecks.push(item);
+    });
 
   return {
     ok: failedChecks.length === 0,
-    message: failedChecks.length === 0 ? "All checks passed" : `${failedChecks.length} check(s) failed`,
+    message: failedChecks.length === 0
+      ? (warningChecks.length ? "Checks passed with warnings" : "All checks passed")
+      : `${failedChecks.length} check(s) failed`,
     failedChecks,
+    warningChecks,
   };
 };
 
@@ -872,6 +894,8 @@ const styles = `
   .diag-summary.err { color:var(--red); }
   .diag-fail-list { margin:0 0 8px 18px; padding:0; color:var(--red); font-size:13px; line-height:1.5; }
   .diag-fail-list li { margin-bottom:4px; }
+  .diag-warn-list { margin:0 0 8px 18px; padding:0; color:var(--orange); font-size:13px; line-height:1.5; }
+  .diag-warn-list li { margin-bottom:4px; }
   .diag-json { font-size:11px; background:#1f1f1f; color:#e7e7e7; border-radius:10px; padding:10px; overflow:auto; max-height:220px; }
 
   /* ── Toast (bottom center, thumb-reachable) ── */
@@ -2483,6 +2507,13 @@ ${syncError}`);
                     <ul className="diag-fail-list">
                       {syncDiagResult.checks.summary.failedChecks.map((f) => (
                         <li key={f.name}><strong>{f.name}</strong> ({f.status || "no-status"}): {f.error}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {Array.isArray(syncDiagResult.checks?.summary?.warningChecks) && syncDiagResult.checks.summary.warningChecks.length > 0 && (
+                    <ul className="diag-warn-list">
+                      {syncDiagResult.checks.summary.warningChecks.map((w) => (
+                        <li key={w.name}><strong>{w.name}</strong> ({w.status || "no-status"}): {w.error}</li>
                       ))}
                     </ul>
                   )}
