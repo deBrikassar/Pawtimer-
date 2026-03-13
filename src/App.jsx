@@ -26,6 +26,20 @@ const save = (key, val) => {
 
 const ensureArray = (value) => (Array.isArray(value) ? value : []);
 const ensureObject = (value) => (value && typeof value === "object" && !Array.isArray(value) ? value : {});
+const normalizeDogRecord = (dog) => {
+  if (!dog || typeof dog !== "object") return null;
+  const id = canonicalDogId(dog.id);
+  if (!id) return null;
+  return { ...dog, id };
+};
+const normalizeDogList = (value) => {
+  const byId = new Map();
+  ensureArray(value).forEach((dog) => {
+    const normalized = normalizeDogRecord(dog);
+    if (normalized) byId.set(normalized.id, normalized);
+  });
+  return [...byId.values()];
+};
 
 // ─── Cross-device sync (Supabase REST — no SDK needed) ────────────────────────
 // Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel env vars to enable.
@@ -1217,7 +1231,7 @@ function DogSelect({ dogs, onSelect, onCreateNew }) {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function PawTimer() {
-  const [dogs,        setDogs]        = useState(() => ensureArray(load(DOGS_KEY, [])));
+  const [dogs,        setDogs]        = useState(() => normalizeDogList(load(DOGS_KEY, [])));
   const [activeDogId, setActiveDogId] = useState(() => canonicalDogId(load(ACTIVE_DOG_KEY, null)));
   const [screen,      setScreen]      = useState("select");
   const [sessions,    setSessions]    = useState([]);
@@ -1256,14 +1270,14 @@ export default function PawTimer() {
   const startRef = useRef(null);
 
   // ── Persistence ──────────────────────────────────────────────────────────
-  useEffect(() => { save(DOGS_KEY, dogs); }, [dogs]);
+  useEffect(() => { save(DOGS_KEY, normalizeDogList(dogs)); }, [dogs]);
   useEffect(() => { save(ACTIVE_DOG_KEY, canonicalDogId(activeDogId)); }, [activeDogId]);
 
   useEffect(() => {
     if (!activeDogId) { setScreen("select"); return; }
     // Look for dog in current dogs list OR in fresh localStorage (covers join race condition)
-    const dog = dogs.find(d => d.id === activeDogId)
-              ?? ensureArray(load(DOGS_KEY, [])).find(d => d.id === activeDogId);
+    const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))
+              ?? normalizeDogList(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
     if (!dog) { setScreen("select"); return; }
     const v4 = load(sessKey(activeDogId), null);
     const rawSessions = Array.isArray(v4) ? v4 : ensureArray(load(legacySessKey(activeDogId), []));
@@ -1274,7 +1288,7 @@ export default function PawTimer() {
     setSessions(s); setWalks(w); setPatterns(p);
     setTarget(suggestNext(s, dog));
     setScreen("app");
-  }, [activeDogId]);
+  }, [activeDogId, dogs]);
 
   useEffect(() => { if (activeDogId) save(sessKey(activeDogId), sessions); }, [sessions, activeDogId]);
   useEffect(() => { if (activeDogId) save(walkKey(activeDogId), walks);    }, [walks,    activeDogId]);
@@ -1339,9 +1353,16 @@ export default function PawTimer() {
           return next;
         });
       }
-      setSessions(prev => { const m = normalizeSessions(mergeById(prev, remote.sessions)); save(sessKey(activeDogId), m); return m; });
-      setWalks   (prev => { const m = mergeById(prev, remote.walks);    save(walkKey(activeDogId), m); return m; });
-      setPatterns(prev => { const m = mergeById(prev, remote.patterns); save(patKey(activeDogId),  m); return m; });
+      const canonicalActiveDogId = canonicalDogId(activeDogId);
+      const syncedSessions = normalizeSessions(remote.sessions);
+      const syncedWalks = ensureArray(remote.walks).sort((a, b) => new Date(a.date) - new Date(b.date));
+      const syncedPatterns = ensureArray(remote.patterns).sort((a, b) => new Date(a.date) - new Date(b.date));
+      setSessions(syncedSessions);
+      setWalks(syncedWalks);
+      setPatterns(syncedPatterns);
+      save(sessKey(canonicalActiveDogId), syncedSessions);
+      save(walkKey(canonicalActiveDogId), syncedWalks);
+      save(patKey(canonicalActiveDogId), syncedPatterns);
       setSyncError("");
       setSyncStatus("ok");
     };
@@ -1361,7 +1382,8 @@ export default function PawTimer() {
   // Boot: restore last active dog
   useEffect(() => {
     const savedId   = load(ACTIVE_DOG_KEY, null);
-    const savedDogs = ensureArray(load(DOGS_KEY, []));
+    const savedDogs = normalizeDogList(load(DOGS_KEY, []));
+    setDogs(savedDogs);
     if (savedId && savedDogs.find(d => canonicalDogId(d.id) === canonicalDogId(savedId))) setActiveDogId(canonicalDogId(savedId));
     else setScreen("select");
   }, []);
