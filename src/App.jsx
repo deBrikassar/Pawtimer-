@@ -10,6 +10,7 @@ const DOGS_KEY       = "pawtimer_dogs_v3";
 const ACTIVE_DOG_KEY = "pawtimer_active_dog_v3";
 const SESS_SCHEMA_VERSION = 5;
 const sessKey    = (id) => `pawtimer_sess_v${SESS_SCHEMA_VERSION}_${id}`;
+const legacySessKeyV4 = (id) => `pawtimer_sess_v4_${id}`;
 const legacySessKey = (id) => `pawtimer_sess_v3_${id}`;
 const legacyWalkKey = (id) => `pawtimer_walk_v3_${id}`;
 const walkKey    = (id) => `pawtimer_walk_v4_${id}`;
@@ -123,7 +124,11 @@ const normalizeSession = (row = {}) => {
       salivation: normalizeSymptom(symptoms.salivation),
     },
     latencyToFirstDistress: Number.isFinite(row.latencyToFirstDistress) ? row.latencyToFirstDistress : (Number.isFinite(row.latency_to_first_distress) ? row.latency_to_first_distress : null),
-    belowThreshold: hasValue(row.belowThreshold) ? !!row.belowThreshold : asBool(row.below_threshold),
+    belowThreshold: hasValue(row.belowThreshold)
+      ? !!row.belowThreshold
+      : hasValue(row.below_threshold)
+        ? asBool(row.below_threshold)
+        : undefined,
     distressType: row.distressType ?? row.distress_type ?? null,
     distressSeverity: row.distressSeverity ?? row.distress_severity ?? null,
     videoReview: {
@@ -285,7 +290,12 @@ const makeEntryId = (kind, dogId) => `${kind}-${canonicalDogId(dogId)}-${Date.no
 const hydrateDogFromLocal = (dogId) => {
   const id = canonicalDogId(dogId);
   const v4 = load(sessKey(id), null);
-  const rawSessions = Array.isArray(v4) ? v4 : ensureArray(load(legacySessKey(id), []));
+  const v4Sessions = load(legacySessKeyV4(id), null);
+  const rawSessions = Array.isArray(v4)
+    ? v4
+    : Array.isArray(v4Sessions)
+      ? v4Sessions
+      : ensureArray(load(legacySessKey(id), []));
   const localSessions = normalizeSessions(rawSessions);
   if (!Array.isArray(v4)) save(sessKey(id), localSessions);
   return {
