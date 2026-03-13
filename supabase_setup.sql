@@ -19,6 +19,11 @@ create table if not exists sessions (
   actual_duration  integer not null,  -- seconds
   distress_level   text not null check (distress_level in ('none', 'mild', 'strong')),
   result           text not null check (result in ('success', 'distress')),
+  context          jsonb not null default '{}',
+  symptoms         jsonb not null default '{}',
+  recovery_seconds integer,
+  pre_session      jsonb not null default '{}',
+  environment      jsonb not null default '{}',
   created_at       timestamptz default now()
 );
 
@@ -32,6 +37,28 @@ create table if not exists walks (
 );
 
 -- 4. Pattern-break table — one row per desensitization cue log
+create table if not exists patterns (
+  id         text primary key,
+  dog_id     text not null references dogs(id) on delete cascade,
+  date       timestamptz not null,
+  type       text not null check (type in ('keys', 'shoes', 'jacket')),
+  created_at timestamptz default now()
+);
+
+
+
+-- Compatibility for existing deployments created before sync metadata expansion
+alter table if exists sessions
+  add column if not exists context jsonb not null default '{}',
+  add column if not exists symptoms jsonb not null default '{}',
+  add column if not exists recovery_seconds integer,
+  add column if not exists pre_session jsonb not null default '{}',
+  add column if not exists environment jsonb not null default '{}';
+
+alter table if exists walks
+  add column if not exists duration integer not null default 0;
+
+-- Ensure patterns table exists on older environments
 create table if not exists patterns (
   id         text primary key,
   dog_id     text not null references dogs(id) on delete cascade,

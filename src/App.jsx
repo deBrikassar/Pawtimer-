@@ -152,8 +152,11 @@ const syncFetch = async (dogId) => {
   return {
     error: relatedErrors.length ? `Related data fetch failed (${relatedErrors.join(" | ")})` : null,
     result: {
-      dog: matchedDog && matchedDog.settings && typeof matchedDog.settings === "object"
-        ? { ...matchedDog.settings, id: canonicalDogId(matchedDog.id) }
+      dog: matchedDog
+        ? {
+            ...(matchedDog.settings && typeof matchedDog.settings === "object" ? matchedDog.settings : {}),
+            id: canonicalDogId(matchedDog.id),
+          }
         : null,
       sessions: normalizeSessions(sessRows.map((r) => ({
         id: r.id,
@@ -1465,6 +1468,37 @@ export default function PawTimer() {
 
   const handleDogSelect = async (id, isJoin = false) => {
     const normalizedId = canonicalDogId(id);
+
+    if (isJoin && SYNC_ENABLED) {
+      setSyncStatus("syncing");
+      const { result: remote, error } = await syncFetch(normalizedId);
+      if (!remote?.dog) {
+        setSyncStatus("err");
+        setSyncError(error || `No shared dog account found for ${normalizedId}`);
+        showToast(`⚠️ No shared profile found for ${normalizedId} yet.`);
+        return;
+      }
+
+      const sharedDog = { ...remote.dog, id: normalizedId };
+      setDogs((prev) => [...prev.filter((d) => canonicalDogId(d.id) !== normalizedId), sharedDog]);
+      setSessions(normalizeSessions(remote.sessions));
+      setWalks(ensureArray(remote.walks));
+      setPatterns(ensureArray(remote.patterns));
+
+      if (error) {
+        setSyncStatus("err");
+        setSyncError(error);
+        showToast(`⚠️ Joined ${normalizedId}, but related history failed to load.`);
+      } else {
+        setSyncError("");
+        setSyncStatus("ok");
+        showToast(`✅ Joined shared profile ${normalizedId}.`);
+      }
+
+      openDog(sharedDog);
+      return;
+    }
+
     const existing = dogs.find(d => canonicalDogId(d.id) === normalizedId)
                   ?? ensureArray(load(DOGS_KEY, [])).find(d => canonicalDogId(d.id) === normalizedId);
     if (existing) {
@@ -1472,36 +1506,6 @@ export default function PawTimer() {
       return;
     }
     if (isJoin) {
-      if (SYNC_ENABLED) {
-        setSyncStatus("syncing");
-        const { result: remote, error } = await syncFetch(normalizedId);
-        if (!remote?.dog) {
-          setSyncStatus("err");
-          setSyncError(error || `No shared dog account found for ${normalizedId}`);
-          showToast(`⚠️ No shared profile found for ${normalizedId} yet.`);
-          return;
-        }
-
-        const sharedDog = { ...remote.dog, id: normalizedId };
-        setDogs((prev) => [...prev.filter((d) => canonicalDogId(d.id) !== normalizedId), sharedDog]);
-        setSessions(normalizeSessions(remote.sessions));
-        setWalks(ensureArray(remote.walks));
-        setPatterns(ensureArray(remote.patterns));
-
-        if (error) {
-          setSyncStatus("err");
-          setSyncError(error);
-          showToast(`⚠️ Joined ${normalizedId}, but related history failed to load.`);
-        } else {
-          setSyncError("");
-          setSyncStatus("ok");
-          showToast(`✅ Joined shared profile ${normalizedId}.`);
-        }
-
-        openDog(sharedDog);
-        return;
-      }
-
       const prefix = id.split("-")[0] || "DOG";
       const suggestedLeaves = Math.min(8, Math.max(1, Math.round(prefix.length / 2) + 2));
       const confirmed = window.confirm(
