@@ -41,7 +41,12 @@ const SB_BASE_URL = normalizeSbUrl(SB_URL);
 const isMissingPublicTableError = (result, tableName) => {
   if (!result || result.ok !== false || result.status !== 404) return false;
   const msg = String(result.error || "").toLowerCase();
-  return msg.includes(`table 'public.${String(tableName || "").toLowerCase()}'`) && msg.includes('schema cache');
+  const table = String(tableName || "").toLowerCase();
+  const hasSchemaCacheHint = msg.includes("schema cache");
+  const hasTableName = table
+    ? (msg.includes(`public.${table}`) || msg.includes(`table '${table}'`) || msg.includes(`table "${table}"`))
+    : true;
+  return hasSchemaCacheHint && hasTableName;
 };
 
 const sbReq = async (path, opts = {}) => {
@@ -266,7 +271,7 @@ const summarizeDiagnosticsChecks = (checks = {}) => {
         status: result.status ?? 0,
         error: result.error || "Unknown error",
       };
-      if (name === "patternsRead" && isMissingPublicTableError(result, "patterns")) warningChecks.push(item);
+      if (name === "patternsRead" && (result.status === 404 || isMissingPublicTableError(result, "patterns"))) warningChecks.push(item);
       else failedChecks.push(item);
     });
 
