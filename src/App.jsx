@@ -2446,12 +2446,6 @@ ${syncError}`);
                       : "Rolled back after higher distress — steady progress matters most."}
               </p>
             )}
-            {phase !== "running" && sessions.length > 0 && (
-              <p className="t-helper train-coverage" style={{ marginTop: -4, marginBottom: 10 }}>
-                Data coverage for smarter recommendations: {recommendationCoveragePct}% ({recommendationCoverageCount}/{totalCount})
-              </p>
-            )}
-
             {/* 4. Stats rings card */}
             {phase === "idle" && (() => {
               const R = 36; const C = 2*Math.PI*R;
@@ -2855,6 +2849,9 @@ ${syncError}`);
                 <div className="stat-icon"><Img src="pattern-keys.png" size={36} alt="pattern breaks"/></div>
               </div>
             </div>
+            <p className="t-helper train-coverage" style={{ marginTop: 0, marginBottom: 14 }}>
+              Data coverage for smarter recommendations: {recommendationCoveragePct}% ({recommendationCoverageCount}/{totalCount})
+            </p>
             <div className="goal-card" style={{margin:"0 0 14px"}}>
               <div className="goal-label">
                 <span className="goal-title">Progress toward goal</span>
