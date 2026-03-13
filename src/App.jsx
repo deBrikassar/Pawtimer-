@@ -750,6 +750,10 @@ const styles = `
   .session-cancel-btn { background:var(--surf-soft); }
   .session-end-btn:hover, .session-cancel-btn:hover { border-color:var(--green-dark); }
 
+  .readiness-hint { margin:12px auto 0; width:min(100%, 320px); padding:8px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surf-soft); display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .readiness-label { font-size:12px; color:var(--text-muted); font-weight:600; }
+  .readiness-value { font-size:12px; font-weight:700; letter-spacing:0.03em; }
+
   .session-feedback { width:min(100%, 420px); margin:0; }
 
   /* ── Status message ── */
@@ -2134,6 +2138,33 @@ export default function PawTimer() {
   const recentHighDistressCount = recentSessions.filter((s) => ["active", "severe"].includes(s.distressLevel)).length;
   const relapseRisk = recentHighDistressCount >= 2;
 
+  const trainingReadiness = (() => {
+    const now = Date.now();
+    const lastWalk = walks.length ? walks[walks.length - 1] : null;
+    const lastWalkTs = lastWalk ? new Date(lastWalk.date).getTime() : NaN;
+    const walkToday = walks.some((w) => isToday(w.date));
+    const walkWithinTwoHours = Number.isFinite(lastWalkTs) && ((now - lastWalkTs) <= (2 * 60 * 60 * 1000));
+
+    const lastSession = sessions.length ? sessions[sessions.length - 1] : null;
+    const lastSessionLevel = normalizeDistressLevel(lastSession?.distressLevel);
+    const lastSessionTs = lastSession ? new Date(lastSession.date).getTime() : NaN;
+    const minutesSinceLastSession = Number.isFinite(lastSessionTs) ? ((now - lastSessionTs) / 60000) : null;
+
+    if (!walkToday || ["active", "severe"].includes(lastSessionLevel) || (minutesSinceLastSession != null && minutesSinceLastSession < 5)) {
+      return { level: "LOW", color: "var(--red)" };
+    }
+
+    if (walkWithinTwoHours && lastSessionLevel === "none" && (minutesSinceLastSession == null || minutesSinceLastSession >= 10)) {
+      return { level: "HIGH", color: "var(--green-dark)" };
+    }
+
+    if (!walkWithinTwoHours || lastSessionLevel === "subtle" || (minutesSinceLastSession != null && minutesSinceLastSession >= 5 && minutesSinceLastSession < 10)) {
+      return { level: "MEDIUM", color: "var(--orange)" };
+    }
+
+    return { level: "MEDIUM", color: "var(--orange)" };
+  })();
+
   const adherenceByDay = (() => {
     const dayMap = new Map();
     walks.forEach((w) => {
@@ -2330,6 +2361,11 @@ ${syncError}`);
               onCancel={cancelSession}
               completed={sessionCompleted}
             />
+
+            <div className="readiness-hint" role="status" aria-live="polite">
+              <span className="readiness-label">Training readiness:</span>
+              <span className="readiness-value" style={{ color: trainingReadiness.color }}>{trainingReadiness.level}</span>
+            </div>
 
             {phase === "rating" && (
               <div className="rating-screen session-feedback">
