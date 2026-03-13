@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { PROTOCOL, getNextDurationSeconds, suggestNext, suggestNextWithContext } from "./lib/protocol";
+import { PROTOCOL, getNextDurationSeconds, suggestNext, suggestNextWithContext, calculateTrainingStats, buildRecommendation } from "./lib/protocol";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
@@ -159,8 +159,8 @@ const syncFetch = async (dogId) => {
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
   const [dogRes, sessRes, walkRes, patRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
-    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment,below_threshold,latency_to_first_stress,distress_severity,distress_type,rating_confidence,video_review,stress_event_timestamps&order=date.asc`),
-    sbReq(`walks?${dogFilter}&select=id,date,duration,walk_type,intensity,time_relative_to_session,notes&order=date.asc`),
+    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
+    sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
   ]);
 
@@ -209,15 +209,8 @@ const syncFetch = async (dogId) => {
         recoverySeconds: r.recovery_seconds,
         preSession: r.pre_session,
         environment: r.environment,
-        belowThreshold: r.below_threshold,
-        latencyToFirstStress: r.latency_to_first_stress,
-        distressSeverity: r.distress_severity,
-        distressType: r.distress_type,
-        ratingConfidence: r.rating_confidence,
-        videoReview: r.video_review,
-        stressEventTimestamps: r.stress_event_timestamps,
       }))),
-      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration, walkType: r.walk_type, intensity: r.intensity, timeRelativeToSession: r.time_relative_to_session, notes: r.notes })),
+      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
       patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
     },
   };
@@ -251,18 +244,20 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
         actual_duration: data.actualDuration,
         distress_level: data.distressLevel,
         result: data.result,
-        context: data.context ?? null,
         symptoms: data.symptoms ?? null,
         recovery_seconds: data.recoverySeconds ?? null,
         pre_session: data.preSession ?? null,
         environment: data.environment ?? null,
-        below_threshold: data.belowThreshold ?? null,
-        latency_to_first_stress: data.latencyToFirstStress ?? data.latencyToFirstDistress ?? null,
-        distress_severity: data.distressSeverity ?? data.distressLevel ?? null,
-        distress_type: data.distressType ?? null,
-        rating_confidence: data.ratingConfidence ?? data.videoReview?.ratingConfidence ?? null,
-        video_review: data.videoReview ?? null,
-        stress_event_timestamps: data.stressEventTimestamps ?? null,
+        context: {
+          ...(data.context || {}),
+          belowThreshold: data.belowThreshold ?? data.context?.belowThreshold ?? null,
+          latencyToFirstStress: data.latencyToFirstStress ?? data.latencyToFirstDistress ?? null,
+          distressSeverity: data.distressSeverity ?? data.distressLevel ?? null,
+          distressType: data.distressType ?? null,
+          ratingConfidence: data.ratingConfidence ?? data.videoReview?.ratingConfidence ?? null,
+          videoReview: data.videoReview ?? null,
+          stressEventTimestamps: data.stressEventTimestamps ?? null,
+        },
       }
     : kind === "walk"
       ? {
@@ -270,10 +265,6 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           dog_id: id,
           date: data.date,
           duration: data.duration,
-          walk_type: data.walkType ?? data.type ?? "regular_walk",
-          intensity: data.intensity ?? null,
-          time_relative_to_session: data.timeRelativeToSession ?? null,
-          notes: data.notes ?? null,
         }
       : {
           id: String(data.id),
@@ -1343,6 +1334,14 @@ export default function PawTimer() {
   const [metricHelp,   setMetricHelp]   = useState(null);
   const [walkPhase,    setWalkPhase]    = useState("idle"); // idle | timing
   const [walkElapsed,  setWalkElapsed]  = useState(0);
+  const [walkDraft,    setWalkDraft]    = useState({ walkType: "regular_walk", intensity: 2, timeRelativeToSession: "before", notes: "" });
+  const [feedingOpen,  setFeedingOpen]  = useState(false);
+  const [contextOpen,  setContextOpen]  = useState(false);
+  const [cueOpen,      setCueOpen]      = useState(false);
+  const [feedingDraft, setFeedingDraft] = useState({ foodType: "meal", amount: "small", offeredDuringSession: false, eatenDuringSession: "yes", latencyToStartEating: "", stoppedEatingWhenOwnerLeft: false });
+  const [contextDraft, setContextDraft] = useState({ otherTraining: false, cognitiveLoad: "low", visitors: false, grooming: false, vetVisits: false, noisyEnvironment: false, poorSleep: false, realAbsenceEarlier: false, medicationOrCalmingAids: false, whoLeft: "owner", anotherPersonStayed: false, location: "living room", barrierUsed: false, mediaOn: false });
+  const [cueDraft,     setCueDraft]     = useState({ cue: "keys", reactionLevel: "none" });
+  const [plannedAbsenceSec, setPlannedAbsenceSec] = useState(0);
   const walkTimerRef = useRef(null);
   const walkStartRef = useRef(null);
 
@@ -1517,6 +1516,14 @@ export default function PawTimer() {
   const showToast = useCallback((msg) => {
     setToast(msg); setTimeout(() => setToast(null), 3200);
   }, []);
+
+  const updateActiveDog = useCallback((patch) => {
+    if (!activeDogId) return;
+    setDogs((prev) => prev.map((d) => {
+      if (canonicalDogId(d.id) !== canonicalDogId(activeDogId)) return d;
+      return { ...d, ...patch };
+    }));
+  }, [activeDogId]);
 
   // ── Timer ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1752,9 +1759,24 @@ export default function PawTimer() {
 
   const endWalk = () => {
     clearInterval(walkTimerRef.current);
+    setWalkPhase("classify");
+  };
+
+  const saveWalkClassification = () => {
     const duration = walkElapsed;
-    const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration, type: "regular" };
-    setWalks(prev => [...prev, entry]);
+    const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration };
+    setWalks((prev) => [...prev, entry]);
+    updateActiveDog({
+      walkMeta: {
+        ...walkMeta,
+        [entry.id]: {
+          walkType: walkDraft.walkType,
+          intensity: Number(walkDraft.intensity) || 2,
+          timeRelativeToSession: walkDraft.timeRelativeToSession,
+          notes: walkDraft.notes || null,
+        },
+      },
+    });
     pushWithSyncStatus("walk", entry).then(ok => {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
@@ -1800,6 +1822,47 @@ export default function PawTimer() {
     showToast(`✓ Pattern break logged!`);
   };
 
+  const logFeeding = () => {
+    const entry = {
+      id: makeEntryId("feed", activeDogId),
+      feedingTime: new Date().toISOString(),
+      foodType: feedingDraft.foodType,
+      amount: feedingDraft.amount,
+      offeredDuringSession: Boolean(feedingDraft.offeredDuringSession),
+      engagedDuringAbsence: feedingDraft.eatenDuringSession !== "no",
+      eatenDuringSession: feedingDraft.eatenDuringSession,
+      latencyToStartEating: Number(feedingDraft.latencyToStartEating) || null,
+      stoppedEatingWhenOwnerLeft: Boolean(feedingDraft.stoppedEatingWhenOwnerLeft),
+    };
+    updateActiveDog({ feedingLogs: [...feedingLogs, entry] });
+    setFeedingDraft({ foodType: "meal", amount: "small", offeredDuringSession: false, eatenDuringSession: "yes", latencyToStartEating: "", stoppedEatingWhenOwnerLeft: false });
+    showToast("🍽️ Feeding context logged");
+  };
+
+  const logDailyContext = () => {
+    const entry = { id: makeEntryId("ctx", activeDogId), date: new Date().toISOString(), ...contextDraft };
+    updateActiveDog({ dailyContexts: [...dailyContexts, entry] });
+    showToast("📝 Session context saved");
+  };
+
+  const logCueExposure = () => {
+    const entry = { id: makeEntryId("cue", activeDogId), date: new Date().toISOString(), cue: cueDraft.cue, reactionLevel: cueDraft.reactionLevel };
+    updateActiveDog({ cueLogs: [...cueLogs, entry] });
+    if (["keys", "shoes", "coat"].includes(cueDraft.cue)) {
+      logPattern(cueDraft.cue === "coat" ? "jacket" : cueDraft.cue);
+    }
+    showToast("🧩 Cue reaction logged");
+  };
+
+  const logRealLifeAbsence = () => {
+    const dur = Number(plannedAbsenceSec) || 0;
+    if (dur <= 0) return;
+    const entry = { id: makeEntryId("real", activeDogId), date: new Date().toISOString(), duration: dur, aboveSafe: dur > target };
+    updateActiveDog({ realAbsences: [...realAbsences, entry] });
+    setPlannedAbsenceSec(0);
+    showToast(entry.aboveSafe ? "⚠️ Real-life absence above safe threshold logged" : "✅ Real-life absence logged");
+  };
+
   const copyDogId = () => {
     navigator.clipboard?.writeText(activeDogId).catch(() => {});
     showToast(`📋 ID copied: ${activeDogId}`);
@@ -1822,6 +1885,11 @@ export default function PawTimer() {
   // ── Computed values ───────────────────────────────────────────────────────
   const dog      = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
   const name     = dog?.dogName ?? "your dog";
+  const feedingLogs = ensureArray(dog?.feedingLogs);
+  const dailyContexts = ensureArray(dog?.dailyContexts);
+  const cueLogs = ensureArray(dog?.cueLogs);
+  const walkMeta = ensureObject(dog?.walkMeta);
+  const realAbsences = ensureArray(dog?.realAbsences);
   const goalSec  = dog?.goalSeconds ?? 2400;
   const goalPct  = Math.min((target / goalSec) * 100, 100);
 
@@ -1989,6 +2057,39 @@ export default function PawTimer() {
     : recentSessions.length < relapseWindow
       ? { color: "var(--brown-muted)", label: "Gathering data" }
       : { color: "var(--green-dark)", label: "Low" };
+
+  const walkContextRows = walks.map((w) => ({
+    ...w,
+    walkType: walkMeta[w.id]?.walkType || "regular_walk",
+    intensity: walkMeta[w.id]?.intensity || 2,
+    timeRelativeToSession: walkMeta[w.id]?.timeRelativeToSession || "before",
+    notes: walkMeta[w.id]?.notes || null,
+  }));
+  const realAbsenceSessions = realAbsences.map((r) => ({
+    id: r.id,
+    date: r.date,
+    plannedDuration: r.duration,
+    actualDuration: r.duration,
+    departureType: "real_life",
+    distressLevel: "subtle",
+    belowThreshold: !r.aboveSafe,
+  }));
+  const statsV2 = calculateTrainingStats([...sessions, ...realAbsenceSessions], {
+    feedingEvents: feedingLogs,
+    walks: walkContextRows,
+    dailyContext: dailyContexts,
+    cueSessions: cueLogs,
+    plan: { recommendedDuration: target, targetCadenceDays: 1 },
+  });
+  const recommendationV2 = buildRecommendation([...sessions, ...realAbsenceSessions], {
+    goalSeconds: goalSec,
+    plannedRealAbsenceSeconds: plannedAbsenceSec,
+    feedingEvents: feedingLogs,
+    walks: walkContextRows,
+    dailyContext: dailyContexts,
+    cueSessions: cueLogs,
+    plan: { recommendedDuration: target, targetCadenceDays: 1 },
+  });
 
   const metricExplainers = {
     stability: {
@@ -2312,6 +2413,24 @@ ${syncError}`);
                   </div>
                 </div>
               )}
+              {walkPhase === "classify" && (
+                <div className="tool-expand" style={{display:"grid",gap:8}}>
+                  <div className="t-helper">Classify this walk (shown when End Walk is pressed).</div>
+                  <select value={walkDraft.walkType} onChange={(e) => setWalkDraft((p) => ({ ...p, walkType: e.target.value }))}>
+                    <option value="sniffy_decompression">sniffy decompression</option>
+                    <option value="regular_walk">regular walk</option>
+                    <option value="intense_exercise">intense exercise</option>
+                    <option value="training_walk">training walk</option>
+                    <option value="toilet_break">toilet break</option>
+                  </select>
+                  <input type="number" min="1" max="5" value={walkDraft.intensity} onChange={(e) => setWalkDraft((p) => ({ ...p, intensity: e.target.value }))} placeholder="intensity 1-5"/>
+                  <select value={walkDraft.timeRelativeToSession} onChange={(e) => setWalkDraft((p) => ({ ...p, timeRelativeToSession: e.target.value }))}>
+                    <option value="before">before session</option><option value="after">after session</option><option value="unrelated">unrelated</option>
+                  </select>
+                  <input value={walkDraft.notes} onChange={(e) => setWalkDraft((p) => ({ ...p, notes: e.target.value }))} placeholder="notes (optional)"/>
+                  <div style={{display:"flex",gap:8}}><button className="walk-cancel-btn" onClick={cancelWalk}>Cancel</button><button className="walk-end-btn" onClick={saveWalkClassification}>Save walk</button></div>
+                </div>
+              )}
 
               {/* Pattern breaking */}
               <div className="tool-row" onClick={() => setPatOpen(o=>!o)}>
@@ -2347,58 +2466,24 @@ ${syncError}`);
                 </div>
               )}
 
-              {/* Training protocol */}
-              <div className="tool-row" onClick={()=>setHowOpen(o=>!o)}>
-                <div className="tool-row-left">
-                  <span style={{fontSize:18}}>📖</span>
-                  <span className="tool-row-label">Training protocol</span>
-                </div>
-                <div className="tool-row-right">
-                  <span className="tool-chevron">{howOpen ? "∨" : "›"}</span>
-                </div>
+              <div className="tool-row" onClick={() => setFeedingOpen(o=>!o)}>
+                <div className="tool-row-left"><span style={{fontSize:18}}>🍽️</span><span className="tool-row-label">Feeding log</span></div>
+                <div className="tool-row-right"><span className="tool-row-meta">{feedingLogs.length}</span><span className="tool-chevron">{feedingOpen ? "∨" : "›"}</span></div>
               </div>
-              {howOpen && (
-                <div className="tool-expand">
-                  <div className="proto-section">
-                    <div className="proto-title">How to run a session</div>
-                    <div className="proto-row prose">1. Tap Start and leave calmly, without a big goodbye.</div>
-                    <div className="proto-row prose">2. Come back whenever you need to and tap End Session.</div>
-                    <div className="proto-row prose">3. Rate how {name} did, and we'll set a gentle next target.</div>
-                  </div>
-                  <div className="proto-section">
-                    <div className="proto-title">Progress rules</div>
-                    <div className="proto-row prose">✅ <strong>Calm (completed):</strong> Add +15% next session (below 40 min), then +5 min.</div>
-                    <div className="proto-row prose">⚠️ <strong>Mild distress:</strong> Hold the same duration next time.</div>
-                    <div className="proto-row prose">❌ <strong>Strong distress:</strong> Roll back by 1–2 sessions.</div>
-                  </div>
-                  <div className="proto-section">
-                    <div className="proto-title">Daily rhythm</div>
-                    <div className="proto-row prose">📅 Up to {activeProto.sessionsPerDayMax} sessions · up to {activeProto.maxDailyAloneMinutes} min alone/day.</div>
-                    <div className="proto-row prose">🔁 Pattern breaks: {recMin}–{recMax}/day for ~{normalizedLeaves} departures/day · at least walks + {walkBuffer} buffer.</div>
-                    <div className="proto-row prose">😴 Rest days: {activeProto.restDaysPerWeekRecommended}/week is recommended.</div>
-                  </div>
-                </div>
-              )}
-            </div>
+              {feedingOpen && <div className="tool-expand" style={{display:"grid",gap:8}}><select value={feedingDraft.foodType} onChange={e=>setFeedingDraft(p=>({...p,foodType:e.target.value}))}><option value="meal">meal</option><option value="treat">treat</option><option value="kong">kong</option><option value="lick_mat">lick mat</option><option value="chew">chew</option></select><select value={feedingDraft.amount} onChange={e=>setFeedingDraft(p=>({...p,amount:e.target.value}))}><option value="small">small</option><option value="medium">medium</option><option value="large">large</option></select><label><input type="checkbox" checked={feedingDraft.offeredDuringSession} onChange={e=>setFeedingDraft(p=>({...p,offeredDuringSession:e.target.checked}))}/> offered during session</label><select value={feedingDraft.eatenDuringSession} onChange={e=>setFeedingDraft(p=>({...p,eatenDuringSession:e.target.value}))}><option value="yes">eaten fully</option><option value="partial">partial</option><option value="no">no</option></select><input placeholder="latency to start eating (sec)" value={feedingDraft.latencyToStartEating} onChange={e=>setFeedingDraft(p=>({...p,latencyToStartEating:e.target.value}))}/><label><input type="checkbox" checked={feedingDraft.stoppedEatingWhenOwnerLeft} onChange={e=>setFeedingDraft(p=>({...p,stoppedEatingWhenOwnerLeft:e.target.checked}))}/> stopped when owner left</label><button className="walk-end-btn" onClick={logFeeding}>Save feeding log</button></div>}
 
-            {/* 7. Help — Daily reminder */}
-            <div className="tool-section-title">Support</div>
-            <div className="tool-group-card" style={{marginBottom:28}}>
-              <div className="tool-row" style={{cursor:"default"}}>
-                <div className="tool-row-left">
-                  <span style={{fontSize:18}}>🔔</span>
-                  <span className="tool-row-label">Daily training reminder</span>
-                </div>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  {notifEnabled && (
-                    <input type="time" value={notifTime}
-                      onChange={e=>{ setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName??"your dog"); }}
-                      className="notif-time-input"/>
-                  )}
-                  <button className={`notif-toggle ${notifEnabled?"on":""}`} onClick={handleToggleNotif}>
-                    {notifEnabled ? "On" : "Off"}
-                  </button>
-                </div>
+              <div className="tool-row" onClick={() => setContextOpen(o=>!o)}><div className="tool-row-left"><span style={{fontSize:18}}>📝</span><span className="tool-row-label">Session context</span></div><div className="tool-row-right"><span className="tool-row-meta">{dailyContexts.length}</span><span className="tool-chevron">{contextOpen ? "∨" : "›"}</span></div></div>
+              {contextOpen && <div className="tool-expand" style={{display:"grid",gap:6}}><label><input type="checkbox" checked={contextDraft.visitors} onChange={e=>setContextDraft(p=>({...p,visitors:e.target.checked}))}/> visitors</label><label><input type="checkbox" checked={contextDraft.grooming} onChange={e=>setContextDraft(p=>({...p,grooming:e.target.checked}))}/> grooming</label><label><input type="checkbox" checked={contextDraft.vetVisits} onChange={e=>setContextDraft(p=>({...p,vetVisits:e.target.checked}))}/> vet visit</label><label><input type="checkbox" checked={contextDraft.noisyEnvironment} onChange={e=>setContextDraft(p=>({...p,noisyEnvironment:e.target.checked}))}/> noisy day</label><label><input type="checkbox" checked={contextDraft.poorSleep} onChange={e=>setContextDraft(p=>({...p,poorSleep:e.target.checked}))}/> poor sleep</label><input placeholder="location / room" value={contextDraft.location} onChange={e=>setContextDraft(p=>({...p,location:e.target.value}))}/><label><input type="checkbox" checked={contextDraft.barrierUsed} onChange={e=>setContextDraft(p=>({...p,barrierUsed:e.target.checked}))}/> barrier used</label><label><input type="checkbox" checked={contextDraft.mediaOn} onChange={e=>setContextDraft(p=>({...p,mediaOn:e.target.checked}))}/> TV/radio on</label><button className="walk-end-btn" onClick={logDailyContext}>Save context</button></div>}
+
+              <div className="tool-row" onClick={() => setCueOpen(o=>!o)}><div className="tool-row-left"><span style={{fontSize:18}}>🚪</span><span className="tool-row-label">Cue training</span></div><div className="tool-row-right"><span className="tool-row-meta">{cueLogs.length}</span><span className="tool-chevron">{cueOpen ? "∨" : "›"}</span></div></div>
+              {cueOpen && <div className="tool-expand" style={{display:"grid",gap:8}}><select value={cueDraft.cue} onChange={e=>setCueDraft(p=>({...p,cue:e.target.value}))}><option value="keys">keys</option><option value="shoes">shoes</option><option value="coat">coat</option><option value="bag">bag</option><option value="door">door</option></select><select value={cueDraft.reactionLevel} onChange={e=>setCueDraft(p=>({...p,reactionLevel:e.target.value}))}><option value="none">no distress</option><option value="subtle">subtle stress</option><option value="active">active distress</option><option value="severe">severe distress</option></select><button className="walk-end-btn" onClick={logCueExposure}>Log cue exposure</button></div>}
+
+              <div className="tool-expand" style={{display:"grid",gap:6,marginTop:8}}>
+                <div className="t-helper"><strong>Readiness:</strong> {Math.round(statsV2.dailyReadinessScore * 100)}% · <strong>Safe alone:</strong> {fmt(statsV2.safeAloneTime)}</div>
+                <div className="t-helper"><strong>Food engagement:</strong> {Math.round(statsV2.foodEngagementUnderAbsence * 100)}% · <strong>Cue sensitivity entries:</strong> {statsV2.cueSensitivity.length}</div>
+                <div className="t-helper"><strong>Recommendation:</strong> {recommendationV2.recommendationType.replaceAll("_", " ")} · next {fmt(recommendationV2.recommendedDuration)}</div>
+                <input value={plannedAbsenceSec} onChange={e=>setPlannedAbsenceSec(e.target.value)} placeholder="planned real-life absence (sec)"/>
+                <button className="walk-end-btn" onClick={logRealLifeAbsence}>Save real-life absence</button>
               </div>
             </div>
 
@@ -2713,6 +2798,21 @@ ${syncError}`);
                 </div>
               ))}
             </div>
+            <div className="share-card">
+              <div className="share-title">Notifications</div>
+              <div className="share-sub" style={{ marginBottom:10 }}>Daily reminder lives in Settings.</div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                {notifEnabled && (
+                  <input type="time" value={notifTime}
+                    onChange={e=>{ setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName??"your dog"); }}
+                    className="notif-time-input"/>
+                )}
+                <button className={`notif-toggle ${notifEnabled?"on":""}`} onClick={handleToggleNotif}>
+                  {notifEnabled ? "On" : "Off"}
+                </button>
+              </div>
+            </div>
+
             <div className="share-card">
               <div className="share-title">Training Protocol</div>
               <div className="t-helper" style={{ lineHeight:1.6, marginBottom:14 }}>
