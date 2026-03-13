@@ -1469,7 +1469,22 @@ export default function PawTimer() {
       const remoteSessions = normalizeSessions(remote.sessions);
       const remoteWalks = ensureArray(remote.walks);
       const remotePatterns = ensureArray(remote.patterns);
-      const remoteFeedings = normalizeFeedings(remote.feedings);
+      let remoteFeedings = normalizeFeedings(remote.feedings);
+
+      const localFeedings = normalizeFeedings(load(feedingKey(activeDogId), feedings));
+      const missingRemoteFeedings = localFeedings.filter((localEntry) => !remoteFeedings.some((remoteEntry) => remoteEntry.id === localEntry.id));
+      if (missingRemoteFeedings.length > 0) {
+        const currentDog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
+        const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
+        for (const entry of missingRemoteFeedings) {
+          await syncPush(canonicalDogId(activeDogId), "feeding", entry, dogSettings);
+        }
+        const feedingRefresh = await sbReq(`feedings?dog_id=eq.${encodeURIComponent(canonicalDogId(activeDogId))}&select=id,date,food_type,amount&order=date.asc`);
+        if (feedingRefresh.ok) {
+          remoteFeedings = normalizeFeedings(feedingRefresh.data);
+        }
+      }
+
       logSyncDebug("syncPoll:remoteLoaded", {
         dogId: canonicalDogId(activeDogId),
         dogFound: Boolean(remote.dog),
