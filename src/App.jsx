@@ -189,16 +189,38 @@ const normalizeSession = (row = {}) => {
 
 const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
 
+
+const mapDistressForLegacyColumn = (level) => {
+  const normalized = String(level || "none").toLowerCase();
+  if (normalized === "none") return "none";
+  if (normalized === "subtle" || normalized === "mild" || normalized === "passive") return "mild";
+  return "strong";
+};
+
+const parseRichSessionFromContext = (row = {}) => {
+  const rich = row?.context?.richSession;
+  return rich && typeof rich === "object" ? rich : {};
+};
+
 const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
-  const [dogRes, sessRes, walkRes, patRes] = await Promise.all([
-    sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
-    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment,latency_to_first_distress,below_threshold,distress_type,distress_severity,video_review,feeding,walk_context,daily_load&order=date.asc`),
-    sbReq(`walks?${dogFilter}&select=id,date,duration,type,intensity,timing_to_session_minutes,notes&order=date.asc`),
-    sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
-  ]);
+
+  const dogRes = await sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`);
+  let sessRes = await sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment,latency_to_first_distress,below_threshold,distress_type,distress_severity,video_review,feeding,walk_context,daily_load&order=date.asc`);
+  if (!sessRes.ok) {
+    logSyncDebug("syncFetch:sessionsFallback", { dogId: id, error: sessRes.error });
+    sessRes = await sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`);
+  }
+
+  let walkRes = await sbReq(`walks?${dogFilter}&select=id,date,duration,type,intensity,timing_to_session_minutes,notes&order=date.asc`);
+  if (!walkRes.ok) {
+    logSyncDebug("syncFetch:walksFallback", { dogId: id, error: walkRes.error });
+    walkRes = await sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`);
+  }
+
+  const patRes = await sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`);
 
   if (!dogRes.ok) {
     logSyncDebug("syncFetch:dogLookupFailed", { dogId: id, error: dogRes.error });
@@ -233,27 +255,30 @@ const syncFetch = async (dogId) => {
             id: canonicalDogId(matchedDog.id),
           }
         : null,
-      sessions: normalizeSessions(sessRows.map((r) => ({
-        id: r.id,
-        date: r.date,
-        plannedDuration: r.planned_duration,
-        actualDuration: r.actual_duration,
-        distressLevel: r.distress_level,
-        result: r.result,
-        context: r.context,
-        symptoms: r.symptoms,
-        recoverySeconds: r.recovery_seconds,
-        preSession: r.pre_session,
-        environment: r.environment,
-        latencyToFirstDistress: r.latency_to_first_distress,
-        belowThreshold: r.below_threshold,
-        distressType: r.distress_type,
-        distressSeverity: r.distress_severity,
-        videoReview: r.video_review,
-        feeding: r.feeding,
-        walkContext: r.walk_context,
-        dailyLoad: r.daily_load,
-      }))),
+      sessions: normalizeSessions(sessRows.map((r) => {
+        const rich = parseRichSessionFromContext(r);
+        return {
+          id: r.id,
+          date: r.date,
+          plannedDuration: r.planned_duration,
+          actualDuration: r.actual_duration,
+          distressLevel: r.distress_level,
+          result: r.result,
+          context: r.context,
+          symptoms: r.symptoms,
+          recoverySeconds: r.recovery_seconds,
+          preSession: r.pre_session,
+          environment: r.environment,
+          latencyToFirstDistress: r.latency_to_first_distress ?? rich.latencyToFirstDistress ?? null,
+          belowThreshold: r.below_threshold ?? rich.belowThreshold ?? null,
+          distressType: r.distress_type ?? rich.distressType ?? null,
+          distressSeverity: r.distress_severity ?? rich.distressSeverity ?? null,
+          videoReview: r.video_review ?? rich.videoReview ?? null,
+          feeding: r.feeding ?? rich.feeding ?? null,
+          walkContext: r.walk_context ?? rich.walkContext ?? null,
+          dailyLoad: r.daily_load ?? rich.dailyLoad ?? null,
+        };
+      })),
       walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration, type: r.type || "regular", intensity: r.intensity || null, timingToSessionMinutes: r.timing_to_session_minutes ?? null, notes: r.notes ?? null })),
       patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
     },
@@ -279,6 +304,17 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
   if (!dogReady.ok) return { ok: false, error: dogReady.error };
 
   const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : "patterns";
+  const richSessionPayload = {
+    latencyToFirstDistress: data.latencyToFirstDistress ?? null,
+    belowThreshold: data.belowThreshold ?? null,
+    distressType: data.distressType ?? null,
+    distressSeverity: data.distressSeverity ?? null,
+    videoReview: data.videoReview ?? null,
+    feeding: data.feeding ?? null,
+    walkContext: data.walkContext ?? null,
+    dailyLoad: data.dailyLoad ?? null,
+  };
+
   const row = kind === "session"
     ? {
         id: String(data.id),
@@ -288,7 +324,10 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
         actual_duration: data.actualDuration,
         distress_level: data.distressLevel,
         result: data.result,
-        context: data.context ?? null,
+        context: {
+          ...(data.context ?? {}),
+          richSession: richSessionPayload,
+        },
         symptoms: data.symptoms ?? null,
         recovery_seconds: data.recoverySeconds ?? null,
         pre_session: data.preSession ?? null,
@@ -320,11 +359,53 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           type: data.type,
         };
 
-  const res = await sbReq(table, {
+  let res = await sbReq(table, {
     method: "POST",
     body: JSON.stringify(row),
     prefer: "resolution=merge-duplicates,return=minimal",
   });
+
+  if (!res.ok && kind === "session") {
+    const legacyRow = {
+      id: String(data.id),
+      dog_id: id,
+      date: data.date,
+      planned_duration: data.plannedDuration,
+      actual_duration: data.actualDuration,
+      distress_level: mapDistressForLegacyColumn(data.distressLevel),
+      result: data.result ?? (mapDistressForLegacyColumn(data.distressLevel) === "none" ? "success" : "distress"),
+      context: {
+        ...(data.context ?? {}),
+        richSession: richSessionPayload,
+      },
+      symptoms: data.symptoms ?? {},
+      recovery_seconds: data.recoverySeconds ?? null,
+      pre_session: data.preSession ?? {},
+      environment: data.environment ?? {},
+    };
+    logSyncDebug("syncPush:sessionFallback", { dogId: id, error: res.error });
+    res = await sbReq(table, {
+      method: "POST",
+      body: JSON.stringify(legacyRow),
+      prefer: "resolution=merge-duplicates,return=minimal",
+    });
+  }
+
+  if (!res.ok && kind === "walk") {
+    const legacyWalk = {
+      id: data.id,
+      dog_id: id,
+      date: data.date,
+      duration: data.duration,
+    };
+    logSyncDebug("syncPush:walkFallback", { dogId: id, error: res.error });
+    res = await sbReq(table, {
+      method: "POST",
+      body: JSON.stringify(legacyWalk),
+      prefer: "resolution=merge-duplicates,return=minimal",
+    });
+  }
+
   return res.ok
     ? { ok: true, error: null }
     : { ok: false, error: `${kind} push failed: ${res.error}` };
