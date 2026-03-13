@@ -150,41 +150,22 @@ begin
   end if;
 end $$;
 
--- 7) RLS/policies (non-destructive)
+-- 7) RLS/policies (rerunnable + deterministic)
 alter table public.dogs enable row level security;
 alter table public.sessions enable row level security;
 alter table public.walks enable row level security;
 alter table public.patterns enable row level security;
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_policies
-    where schemaname='public' and tablename='dogs' and policyname='Public dog access'
-  ) then
-    create policy "Public dog access" on public.dogs for all using (true) with check (true);
-  end if;
+drop policy if exists "Public dog access" on public.dogs;
+create policy "Public dog access" on public.dogs for all using (true) with check (true);
 
-  if not exists (
-    select 1 from pg_policies
-    where schemaname='public' and tablename='sessions' and policyname='Public session access'
-  ) then
-    create policy "Public session access" on public.sessions for all using (true) with check (true);
-  end if;
+drop policy if exists "Public session access" on public.sessions;
+create policy "Public session access" on public.sessions for all using (true) with check (true);
 
-  if not exists (
-    select 1 from pg_policies
-    where schemaname='public' and tablename='walks' and policyname='Public walk access'
-  ) then
-    create policy "Public walk access" on public.walks for all using (true) with check (true);
-  end if;
+drop policy if exists "Public walk access" on public.walks;
+create policy "Public walk access" on public.walks for all using (true) with check (true);
 
-  if not exists (
-    select 1 from pg_policies
-    where schemaname='public' and tablename='patterns' and policyname='Public pattern access'
-  ) then
-    create policy "Public pattern access" on public.patterns for all using (true) with check (true);
-  end if;
-end $$;
+drop policy if exists "Public pattern access" on public.patterns;
+create policy "Public pattern access" on public.patterns for all using (true) with check (true);
 
 commit;
