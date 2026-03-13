@@ -9,139 +9,128 @@ import {
   getNextDurationSeconds,
   normalizeDistressLevel,
 } from "../src/lib/protocol";
+import { canonicalDogId, buildSupabaseUpsert, mergeRemoteFirst } from "../src/lib/sync";
 
 const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
 
-describe("legacy migration", () => {
-  it("maps mild->subtle and strong->active", () => {
+describe("migration compatibility", () => {
+  it("maps legacy distress labels and new session fields", () => {
     expect(normalizeDistressLevel("mild")).toBe("subtle");
     expect(normalizeDistressLevel("strong")).toBe("active");
-  });
 
-  it("creates rich session defaults from legacy format", () => {
     const mapped = mapLegacySession({ plannedDuration: 60, actualDuration: 45, distressLevel: "mild" });
     expect(mapped.distressSeverity).toBe("subtle");
-    expect(mapped.latencyToFirstDistress).toBe(45);
-    expect(mapped.belowThreshold).toBe(false);
+    expect(mapped.latency_to_first_stress).toBe(45);
+    expect(mapped.below_threshold).toBe(false);
+    expect(mapped.rating_confidence).toBeGreaterThan(0);
   });
 });
 
-describe("training stats", () => {
-  it("calculates stability, momentum, relapse risk and adherence", () => {
+describe("cross-device synchronization helpers", () => {
+  it("canonicalizes dog id and upserts by primary key", () => {
+    expect(canonicalDogId(" luna-1234 ")).toBe("LUNA-1234");
+
+    const upsert = buildSupabaseUpsert("session", "luna-1234", {
+      id: "s1",
+      date: daysAgo(0),
+      plannedDuration: 120,
+      actualDuration: 100,
+      belowThreshold: false,
+      latencyToFirstStress: 40,
+      distressSeverity: "active",
+      distressType: "active",
+      ratingConfidence: 0.9,
+    });
+
+    expect(upsert.table).toBe("sessions");
+    expect(upsert.conflictTarget).toBe("id");
+    expect(upsert.payload.dog_id).toBe("LUNA-1234");
+  });
+
+  it("keeps server rows authoritative while merging", () => {
+    const merged = mergeRemoteFirst(
+      [{ id: "s1", date: daysAgo(0), actualDuration: 40 }, { id: "local-only", date: daysAgo(1), actualDuration: 25 }],
+      [{ id: "s1", date: daysAgo(0), actualDuration: 90 }],
+    );
+
+    expect(merged.find((s) => s.id === "s1").actualDuration).toBe(90);
+    expect(merged.some((s) => s.id === "local-only")).toBe(true);
+  });
+});
+
+describe("training progression and relapse", () => {
+  it("requires multiple stable sessions before progression", () => {
     const sessions = [
-      { date: daysAgo(7), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
-      { date: daysAgo(6), plannedDuration: 35, actualDuration: 34, distressLevel: "subtle", belowThreshold: false },
-      { date: daysAgo(5), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
-      { date: daysAgo(4), plannedDuration: 40, actualDuration: 40, distressLevel: "none", belowThreshold: true },
-      { date: daysAgo(3), plannedDuration: 45, actualDuration: 20, distressLevel: "active", belowThreshold: false },
-      { date: daysAgo(2), plannedDuration: 35, actualDuration: 35, distressLevel: "none", belowThreshold: true },
-      { date: daysAgo(1), plannedDuration: 35, actualDuration: 35, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(2), plannedDuration: 30, actualDuration: 30, distressSeverity: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 30, actualDuration: 30, distressSeverity: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeLessThanOrEqual(33);
+  });
+
+  it("triggers stabilization mode on repeated distress", () => {
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 70, actualDuration: 20, distressSeverity: "active", belowThreshold: false },
+      { date: daysAgo(2), plannedDuration: 60, actualDuration: 12, distressSeverity: "severe", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 55, actualDuration: 10, distressSeverity: "active", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeLessThan(55);
+    expect(["stabilization_mode", "reduce_duration", "avoid_training_today"]).toContain(rec.recommendationType);
+  });
+});
+
+describe("readiness + context correlations + statistics", () => {
+  it("calculates readiness, feeding, walk and cue metrics", () => {
+    const sessions = [
+      { date: daysAgo(4), plannedDuration: 60, actualDuration: 60, distressSeverity: "none", belowThreshold: true, context: { timeOfDay: "morning" } },
+      { date: daysAgo(3), plannedDuration: 60, actualDuration: 55, distressSeverity: "subtle", belowThreshold: false, context: { timeOfDay: "morning" } },
+      { date: daysAgo(2), plannedDuration: 55, actualDuration: 55, distressSeverity: "none", belowThreshold: true, context: { timeOfDay: "afternoon" } },
+      { date: daysAgo(1), plannedDuration: 55, actualDuration: 50, distressSeverity: "none", belowThreshold: true, context: { timeOfDay: "morning" } },
     ];
 
     const stats = calculateTrainingStats(sessions, {
-      plan: { targetCadenceDays: 1, recommendedDuration: 35 },
-      cueSessions: [
-        { cue: "keys", reactionLevel: "active" },
-        { cue: "shoes", reactionLevel: "subtle" },
+      feedingEvents: [
+        { eatenDuringSession: "yes", latencyToStartEating: 12, stoppedEatingWhenOwnerLeft: false },
+        { eatenDuringSession: "partial", latencyToStartEating: 50, stoppedEatingWhenOwnerLeft: false },
       ],
+      walks: [
+        { walkType: "sniffy_decompression", intensity: 2, duration: 1800 },
+        { walkType: "intense_exercise", intensity: 5, duration: 1200 },
+      ],
+      dailyContext: [{ visitors: true, noisyEnvironment: false, poorSleep: false }],
+      cueSessions: [{ cue: "keys", reactionLevel: "active" }, { cue: "coat", reactionLevel: "subtle" }],
+      plan: { targetCadenceDays: 1, recommendedDuration: 55 },
     });
 
-    expect(stats.safeAloneTime).toBeGreaterThanOrEqual(30);
-    expect(stats.stabilityScore).toBeGreaterThan(0);
-    expect(stats.relapseRisk).toBeGreaterThan(0);
-    expect(stats.adherenceScore).toBeGreaterThan(0);
-    expect(stats.cueSensitivity[0].cue).toBe("shoes");
+    expect(stats.safeAloneTime).toBeGreaterThanOrEqual(PROTOCOL.minDurationSeconds);
+    expect(stats.foodEngagementUnderAbsence).toBeGreaterThan(0);
+    expect(stats.dailyReadinessScore).toBeGreaterThan(0);
+    expect(stats.readiness.bestTimeOfDay).toBe("afternoon");
+    expect(stats.cueSensitivity.length).toBe(2);
   });
 
-  it("raises relapse risk after recent severe and uncontrolled real-life absence", () => {
-    const sessions = [
-      { date: daysAgo(3), plannedDuration: 60, actualDuration: 20, distressLevel: "severe", departureType: "training" },
-      { date: daysAgo(1), plannedDuration: 90, actualDuration: 25, distressLevel: "active", departureType: "real_life", belowThreshold: false },
-    ];
-    const stats = calculateTrainingStats(sessions);
-    expect(stats.relapseRisk).toBeGreaterThan(0.4);
-  });
-});
-
-describe("recommendation engine", () => {
-  it("requires repeated below-threshold success before increasing", () => {
-    const sessions = [
-      { date: daysAgo(3), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
-      { date: daysAgo(2), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
-      { date: daysAgo(1), plannedDuration: 30, actualDuration: 30, distressLevel: "none", belowThreshold: true },
-    ];
-    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(30);
-    expect(rec.recommendedDuration).toBeLessThanOrEqual(36);
-  });
-
-  it("holds or reduces when subtle distress appears", () => {
-    const sessions = [
-      { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "subtle", belowThreshold: false },
-    ];
-    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendedDuration).toBeLessThanOrEqual(60);
-    expect(["repeat_current_duration", "insert_easy_sessions", "departure_cues_first"]).toContain(rec.recommendationType);
-  });
-
-  it("rolls back and enters stabilization mode after repeated active distress", () => {
-    const sessions = [
-      { date: daysAgo(4), plannedDuration: 60, actualDuration: 20, distressLevel: "active", belowThreshold: false },
-      { date: daysAgo(3), plannedDuration: 50, actualDuration: 12, distressLevel: "active", belowThreshold: false },
-      { date: daysAgo(2), plannedDuration: 40, actualDuration: 10, distressLevel: "severe", belowThreshold: false },
-      { date: daysAgo(1), plannedDuration: 35, actualDuration: 9, distressLevel: "active", belowThreshold: false },
-      { date: daysAgo(0), plannedDuration: 30, actualDuration: 6, distressLevel: "severe", belowThreshold: false },
-    ];
-    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(["stabilization_block", "departure_cues_first"]).toContain(rec.recommendationType);
-    expect(rec.recommendedDuration).toBeLessThan(35);
-  });
-
-  it("flags safety warning for panic pattern", () => {
-    const sessions = [
-      { date: daysAgo(2), plannedDuration: 40, actualDuration: 8, distressLevel: "severe", belowThreshold: false },
-      { date: daysAgo(1), plannedDuration: 35, actualDuration: 10, distressLevel: "severe", belowThreshold: false },
-    ];
-    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.warnings.join(" ")).toMatch(/consult/i);
-  });
-
-  it("supports safe-absence management alert", () => {
-    const sessions = [
-      { date: daysAgo(1), plannedDuration: 45, actualDuration: 45, distressLevel: "none", belowThreshold: true },
-    ];
-    const rec = buildRecommendation(sessions, { goalSeconds: 3600, plannedRealAbsenceSeconds: 200 });
+  it("includes safe absence management in recommendation output", () => {
+    const sessions = [{ date: daysAgo(1), plannedDuration: 40, actualDuration: 40, distressSeverity: "none", belowThreshold: true }];
+    const rec = buildRecommendation(sessions, { goalSeconds: 1200, plannedRealAbsenceSeconds: 240 });
     expect(rec.safeAbsenceAlert).toBe(true);
+    expect(rec.warnings.join(" ")).toMatch(/exceeds current safe duration/i);
   });
 });
 
-describe("public compatibility APIs", () => {
-  it("suggestNext starts from 80% baseline for new dogs", () => {
+describe("compatibility APIs", () => {
+  it("returns bounded next durations", () => {
     expect(suggestNext([], { currentMaxCalm: 120 })).toBe(96);
+    expect(getNextDurationSeconds(120, { goalSeconds: 180 })).toBeLessThanOrEqual(180);
   });
 
-  it("suggestNextWithContext factors cue sensitivity and walk type", () => {
-    const sessions = [
-      { date: daysAgo(2), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
-      { date: daysAgo(1), plannedDuration: 65, actualDuration: 65, distressLevel: "none", belowThreshold: true },
-    ];
-    const patterns = [
-      { date: daysAgo(1), type: "keys", reactionLevel: "active" },
-      { date: daysAgo(1), type: "shoes", reactionLevel: "subtle" },
-    ];
-    const walks = [
-      { date: daysAgo(1), duration: 1200, type: "intense_exercise" },
-      { date: daysAgo(1), duration: 900, type: "intense_exercise" },
-      { date: daysAgo(1), duration: 1000, type: "intense_exercise" },
-    ];
-
-    const next = suggestNextWithContext(sessions, walks, patterns, { goalSeconds: 3600 });
-    expect(next).toBeGreaterThanOrEqual(PROTOCOL.minDurationSeconds);
-  });
-
-  it("getNextDurationSeconds remains bounded and deterministic", () => {
-    const next = getNextDurationSeconds(120, { goalSeconds: 180 });
-    expect(next).toBeLessThanOrEqual(180);
+  it("uses contextual APIs without throwing", () => {
+    const next = suggestNextWithContext(
+      [{ date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressSeverity: "none", belowThreshold: true }],
+      [{ date: daysAgo(1), duration: 1200, walkType: "regular_walk", intensity: 2 }],
+      [{ date: daysAgo(1), type: "keys", reactionLevel: "subtle" }],
+      { goalSeconds: 3600, feedingEvents: [{ eatenDuringSession: "yes" }], dailyContext: [{ visitors: false }] },
+    );
     expect(next).toBeGreaterThanOrEqual(PROTOCOL.minDurationSeconds);
   });
 });

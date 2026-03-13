@@ -159,8 +159,8 @@ const syncFetch = async (dogId) => {
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
   const [dogRes, sessRes, walkRes, patRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
-    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
-    sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`),
+    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment,below_threshold,latency_to_first_stress,distress_severity,distress_type,rating_confidence,video_review,stress_event_timestamps&order=date.asc`),
+    sbReq(`walks?${dogFilter}&select=id,date,duration,walk_type,intensity,time_relative_to_session,notes&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
   ]);
 
@@ -209,8 +209,15 @@ const syncFetch = async (dogId) => {
         recoverySeconds: r.recovery_seconds,
         preSession: r.pre_session,
         environment: r.environment,
+        belowThreshold: r.below_threshold,
+        latencyToFirstStress: r.latency_to_first_stress,
+        distressSeverity: r.distress_severity,
+        distressType: r.distress_type,
+        ratingConfidence: r.rating_confidence,
+        videoReview: r.video_review,
+        stressEventTimestamps: r.stress_event_timestamps,
       }))),
-      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
+      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration, walkType: r.walk_type, intensity: r.intensity, timeRelativeToSession: r.time_relative_to_session, notes: r.notes })),
       patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
     },
   };
@@ -249,6 +256,13 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
         recovery_seconds: data.recoverySeconds ?? null,
         pre_session: data.preSession ?? null,
         environment: data.environment ?? null,
+        below_threshold: data.belowThreshold ?? null,
+        latency_to_first_stress: data.latencyToFirstStress ?? data.latencyToFirstDistress ?? null,
+        distress_severity: data.distressSeverity ?? data.distressLevel ?? null,
+        distress_type: data.distressType ?? null,
+        rating_confidence: data.ratingConfidence ?? data.videoReview?.ratingConfidence ?? null,
+        video_review: data.videoReview ?? null,
+        stress_event_timestamps: data.stressEventTimestamps ?? null,
       }
     : kind === "walk"
       ? {
@@ -256,6 +270,10 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           dog_id: id,
           date: data.date,
           duration: data.duration,
+          walk_type: data.walkType ?? data.type ?? "regular_walk",
+          intensity: data.intensity ?? null,
+          time_relative_to_session: data.timeRelativeToSession ?? null,
+          notes: data.notes ?? null,
         }
       : {
           id: String(data.id),
@@ -264,7 +282,7 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           type: data.type,
         };
 
-  const res = await sbReq(table, {
+  const res = await sbReq(`${table}?on_conflict=id`, {
     method: "POST",
     body: JSON.stringify(row),
     prefer: "resolution=merge-duplicates,return=minimal",
