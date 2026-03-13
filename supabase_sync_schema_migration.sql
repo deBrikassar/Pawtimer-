@@ -49,7 +49,8 @@ alter table public.sessions
 
 -- 2) Add missing columns expected by frontend (walks/patterns)
 alter table public.walks
-  add column if not exists duration integer;
+  add column if not exists duration integer,
+  add column if not exists walk_type text;
 
 alter table public.patterns
   add column if not exists type text;
@@ -58,6 +59,10 @@ alter table public.patterns
 update public.walks
 set duration = 0
 where duration is null;
+
+update public.walks
+set walk_type = 'regular_walk'
+where walk_type is null or walk_type = '';
 
 update public.sessions
 set context = '{}'::jsonb
