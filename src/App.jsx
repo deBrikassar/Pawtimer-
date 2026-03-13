@@ -14,6 +14,7 @@ const legacySessKeyV4 = (id) => `pawtimer_sess_v4_${id}`;
 const legacySessKey = (id) => `pawtimer_sess_v3_${id}`;
 const legacyWalkKey = (id) => `pawtimer_walk_v3_${id}`;
 const walkKey    = (id) => `pawtimer_walk_v4_${id}`;
+const feedingKey = (id) => `pawtimer_feed_v1_${id}`;
 const patKey     = (id) => `pawtimer_pat_v3_${id}`;
 const patLblKey  = (id) => `pawtimer_patlbl_v3_${id}`;  // custom pattern labels
 const photoKey   = (id) => `pawtimer_photo_v3_${id}`;   // dog photo (base64)
@@ -152,16 +153,26 @@ const normalizeSession = (row = {}) => {
 };
 
 const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
+const normalizeFeedings = (rows = []) => ensureArray(rows)
+  .map((row) => ({
+    id: String(row?.id || ""),
+    date: row?.date || new Date().toISOString(),
+    foodType: row?.foodType ?? row?.food_type ?? "meal",
+    amount: row?.amount ?? "small",
+  }))
+  .filter((row) => row.id)
+  .sort((a, b) => new Date(a.date) - new Date(b.date));
 
 const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
-  const [dogRes, sessRes, walkRes, patRes] = await Promise.all([
+  const [dogRes, sessRes, walkRes, patRes, feedingRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
     sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
     sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
+    sbReq(`feedings?${dogFilter}&select=id,date,food_type,amount&order=date.asc`),
   ]);
 
   if (!dogRes.ok) {
@@ -182,11 +193,13 @@ const syncFetch = async (dogId) => {
     !sessRes.ok ? `sessions: ${sessRes.error}` : null,
     !walkRes.ok ? `walks: ${walkRes.error}` : null,
     !patRes.ok ? `patterns: ${patRes.error}` : null,
+    !feedingRes.ok ? `feedings: ${feedingRes.error}` : null,
   ].filter(Boolean);
 
   const sessRows = Array.isArray(sessRes.data) ? sessRes.data : [];
   const walkRows = Array.isArray(walkRes.data) ? walkRes.data : [];
   const patRows = Array.isArray(patRes.data) ? patRes.data : [];
+  const feedingRows = Array.isArray(feedingRes.data) ? feedingRes.data : [];
 
   return {
     error: relatedErrors.length ? `Related data fetch failed (${relatedErrors.join(" | ")})` : null,
@@ -212,6 +225,7 @@ const syncFetch = async (dogId) => {
       }))),
       walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration })),
       patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
+      feedings: normalizeFeedings(feedingRows.map((r) => ({ id: r.id, date: r.date, food_type: r.food_type, amount: r.amount }))),
     },
   };
 };
@@ -234,7 +248,7 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
   const dogReady = await syncUpsertDog(dogSettings && typeof dogSettings === "object" ? { ...dogSettings, id } : { id });
   if (!dogReady.ok) return { ok: false, error: dogReady.error };
 
-  const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : "patterns";
+  const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : kind === "pattern" ? "patterns" : "feedings";
   const row = kind === "session"
     ? {
         id: String(data.id),
@@ -257,11 +271,19 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           date: data.date,
           duration: data.duration,
         }
-      : {
+      : kind === "pattern"
+      ? {
           id: String(data.id),
           dog_id: id,
           date: data.date,
           type: data.type,
+        }
+      : {
+          id: String(data.id),
+          dog_id: id,
+          date: data.date,
+          food_type: data.foodType,
+          amount: data.amount,
         };
 
   const res = await sbReq(table, {
@@ -275,7 +297,7 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
 };
 
 const syncDelete = async (kind, id) => {
-  const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : "patterns";
+  const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : kind === "pattern" ? "patterns" : "feedings";
   const res = await sbReq(`${table}?id=eq.${String(id)}`, { method: "DELETE" });
   return res.ok;
 };
@@ -302,9 +324,16 @@ const hydrateDogFromLocal = (dogId) => {
     sessions: localSessions,
     walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: w?.type || "regular" })),
     patterns: ensureArray(load(patKey(id), [])),
+    feedings: normalizeFeedings(load(feedingKey(id), [])),
     patLabels: ensureObject(load(patLblKey(id), {})),
     photo: load(photoKey(id), null),
   };
+};
+
+const toDateTimeLocalValue = (value = new Date()) => {
+  const d = value instanceof Date ? value : new Date(value);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 // ─── Dog ID: up to 6-letter prefix + 4-digit number (e.g. LUNA-4829) ─────────
@@ -868,6 +897,7 @@ const styles = `
   .dot-mild   { background:rgba(230,126,34,0.12); }
   .dot-strong { background:rgba(192,57,43,0.10); }
   .dot-walk   { background:rgba(74,158,110,0.15); }
+  .dot-feed   { background:rgba(212,129,58,0.16); color:var(--brown); font-size:18px; }
   .dot-pat    { background:rgba(75,60,48,0.09); }
   .h-info { flex:1; min-width:0; }
   .h-main { font-size:24px; font-weight:600; line-height:1.2; letter-spacing:-0.01em; color:var(--brown); font-variant-numeric:tabular-nums; }
@@ -877,6 +907,7 @@ const styles = `
   .badge-mild   { background:rgba(230,126,34,0.12); color:var(--orange); }
   .badge-strong { background:rgba(192,57,43,0.10);  color:var(--red); }
   .badge-walk   { background:rgba(74,158,110,0.15);  color:var(--green-dark); }
+  .badge-feed   { background:rgba(212,129,58,0.16); color:#8a4c19; }
   .badge-pat    { background:rgba(75,60,48,0.09);    color:var(--brown-mid); }
   .h-extra-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
   .h-badge-mini { font-size:11px; font-weight:600; padding:2px 7px; border-radius:99px; background:rgba(75,60,48,0.08); color:var(--brown-mid); letter-spacing:0.02em; }
@@ -975,6 +1006,12 @@ const styles = `
   .metric-help-body { font-size:14px; color:var(--text-muted); line-height:1.6; font-weight:400; }
   .metric-help-detail { margin-top:10px; font-size:12px; color:var(--text-muted); font-weight:500; }
   .metric-help-close { margin-top:14px; width:100%; border:none; border-radius:10px; background:var(--brown); color:var(--bg); padding:11px; font-size:14px; font-weight:600; cursor:pointer; }
+
+  .feeding-overlay { position:fixed; inset:0; background:rgba(75,60,48,0.3); display:flex; align-items:center; justify-content:center; padding:16px; z-index:220; }
+  .feeding-card { width:min(100%, 360px); background:var(--surf); border:1.5px solid var(--border); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .feeding-field { display:flex; flex-direction:column; gap:6px; }
+  .feeding-field input, .feeding-field select { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 11px; background:var(--surf-soft); color:var(--brown); font-size:14px; }
+  .feeding-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
 
   .train-coverage { text-align:center; }
 
@@ -1299,6 +1336,7 @@ export default function PawTimer() {
   const [sessions,    setSessions]    = useState([]);
   const [walks,       setWalks]       = useState([]);
   const [patterns,    setPatterns]    = useState([]);
+  const [feedings,    setFeedings]    = useState([]);
   const [tab,          setTab]          = useState("home");
   const [phase,        setPhase]        = useState("idle"); // idle | running | rating
   const [elapsed,      setElapsed]      = useState(0);
@@ -1324,6 +1362,8 @@ export default function PawTimer() {
   const [metricHelp,   setMetricHelp]   = useState(null);
   const [walkPhase,    setWalkPhase]    = useState("idle"); // idle | timing
   const [walkElapsed,  setWalkElapsed]  = useState(0);
+  const [feedingOpen, setFeedingOpen] = useState(false);
+  const [feedingDraft, setFeedingDraft] = useState(() => ({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }));
   const walkTimerRef = useRef(null);
   const walkStartRef = useRef(null);
 
@@ -1355,6 +1395,7 @@ export default function PawTimer() {
     setSessions(local.sessions);
     setWalks(local.walks);
     setPatterns(local.patterns);
+    setFeedings(normalizeFeedings(local.feedings));
     setPatLabels(local.patLabels);
     setDogPhoto(local.photo);
     setTarget(suggestNext(local.sessions, dog));
@@ -1364,6 +1405,7 @@ export default function PawTimer() {
   useEffect(() => { if (activeDogId) save(sessKey(activeDogId), sessions); }, [sessions, activeDogId]);
   useEffect(() => { if (activeDogId) save(walkKey(activeDogId), walks);    }, [walks,    activeDogId]);
   useEffect(() => { if (activeDogId) save(patKey(activeDogId),  patterns); }, [patterns, activeDogId]);
+  useEffect(() => { if (activeDogId) save(feedingKey(activeDogId), feedings); }, [feedings, activeDogId]);
   useEffect(() => { if (activeDogId) save(patLblKey(activeDogId), patLabels); }, [patLabels, activeDogId]);
   useEffect(() => { if (activeDogId) save(photoKey(activeDogId), dogPhoto); }, [dogPhoto, activeDogId]);
   useEffect(() => { save("pawtimer_notif_time", notifTime); }, [notifTime]);
@@ -1427,19 +1469,38 @@ export default function PawTimer() {
       const remoteSessions = normalizeSessions(remote.sessions);
       const remoteWalks = ensureArray(remote.walks);
       const remotePatterns = ensureArray(remote.patterns);
+      let remoteFeedings = normalizeFeedings(remote.feedings);
+
+      const localFeedings = normalizeFeedings(load(feedingKey(activeDogId), feedings));
+      const missingRemoteFeedings = localFeedings.filter((localEntry) => !remoteFeedings.some((remoteEntry) => remoteEntry.id === localEntry.id));
+      if (missingRemoteFeedings.length > 0) {
+        const currentDog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
+        const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
+        for (const entry of missingRemoteFeedings) {
+          await syncPush(canonicalDogId(activeDogId), "feeding", entry, dogSettings);
+        }
+        const feedingRefresh = await sbReq(`feedings?dog_id=eq.${encodeURIComponent(canonicalDogId(activeDogId))}&select=id,date,food_type,amount&order=date.asc`);
+        if (feedingRefresh.ok) {
+          remoteFeedings = normalizeFeedings(feedingRefresh.data);
+        }
+      }
+
       logSyncDebug("syncPoll:remoteLoaded", {
         dogId: canonicalDogId(activeDogId),
         dogFound: Boolean(remote.dog),
         sessions: remoteSessions.length,
         walks: remoteWalks.length,
         patterns: remotePatterns.length,
+        feedings: remoteFeedings.length,
       });
       setSessions(remoteSessions);
       setWalks(remoteWalks);
       setPatterns(remotePatterns);
+      setFeedings(remoteFeedings);
       save(sessKey(activeDogId), remoteSessions);
       save(walkKey(activeDogId), remoteWalks);
       save(patKey(activeDogId), remotePatterns);
+      save(feedingKey(activeDogId), remoteFeedings);
       setSyncError("");
       setSyncStatus("ok");
     };
@@ -1551,6 +1612,7 @@ export default function PawTimer() {
       setSessions(normalizeSessions(remote.sessions));
       setWalks(ensureArray(remote.walks));
       setPatterns(ensureArray(remote.patterns));
+      setFeedings(normalizeFeedings(remote.feedings));
 
       if (error) {
         setSyncStatus("err");
@@ -1645,6 +1707,7 @@ export default function PawTimer() {
       const readSessions = await sbReq("sessions?select=id&limit=1");
       const readWalks = await sbReq("walks?select=id&limit=1");
       const readPatterns = await sbReq("patterns?select=id&limit=1");
+      const readFeedings = await sbReq("feedings?select=id&limit=1");
       const diagId = `DIAG-${Date.now()}`;
       const writeProbe = await sbReq("dogs", {
         method: "POST",
@@ -1658,6 +1721,7 @@ export default function PawTimer() {
         sessionsRead: readSessions,
         walksRead: readWalks,
         patternsRead: readPatterns,
+        feedingsRead: readFeedings,
         dogsWriteProbe: writeProbe,
         dogsDeleteProbe: deleteProbe,
       };
@@ -1779,6 +1843,36 @@ export default function PawTimer() {
       if (!ok) showToast("⚠️ Sync failed — check console");
     });
     showToast(`✓ Pattern break logged!`);
+  };
+
+  const openFeedingForm = () => {
+    setFeedingDraft({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" });
+    setFeedingOpen(true);
+  };
+
+  const cancelFeedingForm = () => {
+    setFeedingOpen(false);
+    setFeedingDraft({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" });
+  };
+
+  const saveFeeding = () => {
+    const when = feedingDraft.time ? new Date(feedingDraft.time) : new Date();
+    if (Number.isNaN(when.getTime())) {
+      showToast("⚠️ Please enter a valid feeding time");
+      return;
+    }
+    const entry = {
+      id: makeEntryId("feed", activeDogId),
+      date: when.toISOString(),
+      foodType: feedingDraft.foodType,
+      amount: feedingDraft.amount,
+    };
+    setFeedings((prev) => normalizeFeedings([...prev, entry]));
+    pushWithSyncStatus("feeding", entry).then((ok) => {
+      if (!ok) showToast("⚠️ Sync failed — check console");
+    });
+    setFeedingOpen(false);
+    showToast("🍽️ Feeding logged");
   };
 
   const copyDogId = () => {
@@ -2015,6 +2109,7 @@ export default function PawTimer() {
     ...sessions.map(s => ({ kind:"session", date:s.date, data:s })),
     ...walks.map(w    => ({ kind:"walk",    date:w.date, data:w })),
     ...patterns.map(p => ({ kind:"pat",     date:p.date, data:p })),
+    ...feedings.map(f => ({ kind:"feeding", date:f.date, data:f })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -2328,7 +2423,62 @@ ${syncError}`);
                 </div>
               )}
 
+              <div className="tool-row" onClick={openFeedingForm}>
+                <div className="tool-row-left">
+                  <span aria-hidden="true">🍽️</span>
+                  <span className="tool-row-label">Add Feeding</span>
+                </div>
+                <div className="tool-row-right">
+                  <span className="tool-row-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
+                  <span className="tool-chevron">›</span>
+                </div>
+              </div>
+
             </div>
+
+            {feedingOpen && (
+              <div className="feeding-overlay" role="dialog" aria-modal="true" aria-labelledby="feeding-title" onClick={cancelFeedingForm}>
+                <div className="feeding-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="section-title" id="feeding-title" style={{ marginBottom: 10 }}>Log feeding</div>
+                  <label className="feeding-field">
+                    <span className="t-helper">Feeding time</span>
+                    <input
+                      type="datetime-local"
+                      value={feedingDraft.time}
+                      onChange={(e) => setFeedingDraft((prev) => ({ ...prev, time: e.target.value }))}
+                    />
+                  </label>
+                  <label className="feeding-field">
+                    <span className="t-helper">Food type</span>
+                    <select
+                      value={feedingDraft.foodType}
+                      onChange={(e) => setFeedingDraft((prev) => ({ ...prev, foodType: e.target.value }))}
+                    >
+                      <option value="meal">meal</option>
+                      <option value="treat">treat</option>
+                      <option value="kong">kong</option>
+                      <option value="lick mat">lick mat</option>
+                      <option value="chew">chew</option>
+                    </select>
+                  </label>
+                  <label className="feeding-field">
+                    <span className="t-helper">Amount</span>
+                    <select
+                      value={feedingDraft.amount}
+                      onChange={(e) => setFeedingDraft((prev) => ({ ...prev, amount: e.target.value }))}
+                    >
+                      <option value="small">small</option>
+                      <option value="medium">medium</option>
+                      <option value="large">large</option>
+                    </select>
+                  </label>
+                  <div className="feeding-actions">
+                    <button className="walk-cancel-btn" type="button" onClick={cancelFeedingForm}>Cancel</button>
+                    <button className="walk-end-btn" type="button" onClick={saveFeeding}>Save</button>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
 
@@ -2414,6 +2564,20 @@ ${syncError}`);
                     </div>
                     <span className="h-badge badge-pat">Pattern break</span>
                     <button className="h-del" onClick={() => { setPatterns(prev => prev.filter(x => x.id !== p.id)); syncDelete("pattern", p.id); }} title="Delete">✕</button>
+                  </div>
+                );
+              }
+              if (item.kind === "feeding") {
+                const f = item.data;
+                return (
+                  <div className="h-item" key={`f-${f.id}`}>
+                    <div className="h-dot dot-feed">🍽️</div>
+                    <div className="h-info">
+                      <div className="h-main" style={{ textTransform: "capitalize" }}>{f.foodType} · {f.amount}</div>
+                      <div className="h-date">{fmtDate(f.date)}</div>
+                    </div>
+                    <span className="h-badge badge-feed">Feeding</span>
+                    <button className="h-del" onClick={() => { setFeedings(prev => prev.filter(x => x.id !== f.id)); syncDelete("feeding", f.id); }} title="Delete">✕</button>
                   </div>
                 );
               }
