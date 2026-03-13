@@ -195,13 +195,34 @@ function classifyWindow(sessions = []) {
 }
 
 function computeSafeAloneTime(sessions = []) {
-  const calm = getLatestSessions(sortByDateAsc(sessions).map(toRichSession), PROTOCOL.confidenceSessionWindow)
-    .filter((s) => s.belowThreshold);
+  const sorted = sortByDateAsc(sessions).map(toRichSession);
+  const nowTime = Date.now();
+  const calm = getLatestSessions(sorted, PROTOCOL.confidenceSessionWindow)
+    .filter((s) => s.belowThreshold)
+    .map((s) => {
+      const ageDays = Math.max(0, (nowTime - (toTimestamp(s.date) ?? nowTime)) / DAY_MS);
+      let recencyWeight = 0.1;
+      if (ageDays <= 1) recencyWeight = 1;
+      else if (ageDays <= 3) recencyWeight = 0.7;
+      else if (ageDays <= 7) recencyWeight = 0.4;
+
+      return {
+        ...s,
+        recencyWeight,
+      };
+    });
   if (!calm.length) return PROTOCOL.startDurationSeconds;
 
-  const weighted = calm.reduce((sum, s) => sum + (s.actualDuration * s.confidence), 0);
-  const weight = calm.reduce((sum, s) => sum + s.confidence, 0);
-  return Math.max(PROTOCOL.minDurationSeconds, Math.round(weighted / Math.max(weight, 1)));
+  const weighted = calm.reduce((sum, s) => sum + (s.actualDuration * s.confidence * s.recencyWeight), 0);
+  const weight = calm.reduce((sum, s) => sum + (s.confidence * s.recencyWeight), 0);
+  return Math.max(PROTOCOL.minDurationSeconds, Math.round(weighted / Math.max(weight, 0.01)));
+}
+
+function hasPriorStressEvent(sessions = []) {
+  return sessions.some((session) => {
+    const level = normalizeDistressLevel(session?.distressLevel);
+    return level !== DISTRESS_LEVELS.NONE;
+  });
 }
 
 function computeStability(sessions = []) {
@@ -336,10 +357,11 @@ export function calculateTrainingStats(sessions = [], options = {}) {
   };
 }
 
-function getStepMultiplier(stats, latestSessions = []) {
+function getStepMultiplier(stats, latestSessions = [], allSessions = []) {
   const calmStreak = countStreak(latestSessions, (s) => s.belowThreshold);
 
   if (stats.relapseRisk >= 0.72) return -0.25;
+  if (!hasPriorStressEvent(allSessions) && calmStreak >= 1) return 0.2;
   if (calmStreak >= 4 && stats.stabilityScore >= PROTOCOL.largeStepStabilityGate && stats.subtleDistressRate <= 0.15) {
     return 0.2;
   }
@@ -378,7 +400,7 @@ export function buildRecommendation(sessions = [], options = {}) {
   } else if (recommendationType === "insert_easy_sessions") {
     recommendedDuration = Math.round(safeAlone * PROTOCOL.easySessionRatio);
   } else {
-    const multiplier = getStepMultiplier(stats, recent);
+    const multiplier = getStepMultiplier(stats, recent, training);
     recommendedDuration = Math.round(safeAlone * (1 + multiplier));
   }
 
