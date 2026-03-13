@@ -53,6 +53,17 @@ describe("training stats", () => {
     expect(stats.cueSensitivity[0].cue).toBe("shoes");
   });
 
+
+  it("prioritizes recent calm sessions when computing safe alone time", () => {
+    const sessions = [
+      { date: daysAgo(10), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(9), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+    ];
+    const stats = calculateTrainingStats(sessions);
+    expect(stats.safeAloneTime).toBeGreaterThanOrEqual(40);
+  });
+
   it("raises relapse risk after recent severe and uncontrolled real-life absence", () => {
     const sessions = [
       { date: daysAgo(3), plannedDuration: 60, actualDuration: 20, distressLevel: "severe", departureType: "training" },
@@ -73,6 +84,25 @@ describe("recommendation engine", () => {
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recommendedDuration).toBeGreaterThanOrEqual(30);
     expect(rec.recommendedDuration).toBeLessThanOrEqual(36);
+  });
+
+
+  it("steps up by about 20% after calm sessions before first stress event", () => {
+    const sessions = [
+      { date: daysAgo(0), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(60);
+  });
+
+  it("does not let older short sessions drag recommendation near minimum", () => {
+    const sessions = [
+      { date: daysAgo(14), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(8), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(52);
   });
 
   it("holds or reduces when subtle distress appears", () => {
