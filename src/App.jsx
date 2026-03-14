@@ -687,6 +687,7 @@ const styles = `
   }
   .app-decor { position:absolute; inset:0; pointer-events:none; z-index:0; }
   .app-decor span { position:absolute; opacity:0.3; background-repeat:no-repeat; background-size:contain; }
+  .decor-paw-a, .decor-paw-b, .decor-paw-c, .decor-paw-d, .decor-paw-e { opacity:0.5; filter:drop-shadow(0 0 1px rgba(126,184,151,0.45)); }
   .decor-paw-a { width:64px; height:64px; top:168px; left:22px; transform:rotate(-8deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
   .decor-paw-b { width:54px; height:54px; top:612px; right:18px; transform:rotate(11deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
   .decor-paw-c { width:58px; height:58px; top:298px; left:18px; transform:rotate(6deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
@@ -877,15 +878,15 @@ const styles = `
   .tool-section-title { margin:0 0 8px; font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); color:var(--green-dark); font-weight:var(--type-overline-weight); text-transform:uppercase; padding:0 2px; }
 
   /* ── Grouped tool card ── */
-  .tool-group-card { margin:5px 6px 0; background:linear-gradient(160deg,#ffffff 0%, #f8fcf9 100%); border:1px solid rgba(96,142,111,0.2); border-radius:18px; box-shadow:0 12px 30px rgba(59,90,71,0.14); overflow:visible; padding:14px; }
+  .tool-group-card { margin:0 6px 0; background:linear-gradient(160deg,#ffffff 0%, #f8fcf9 100%); border:1px solid rgba(96,142,111,0.2); border-radius:18px; box-shadow:0 12px 30px rgba(59,90,71,0.14); overflow:visible; padding:12px; }
   .quick-actions-row { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
-  .quick-action-btn { border:1px solid rgba(96,142,111,0.22); border-radius:14px; padding:13px 12px; background:#ffffff; cursor:pointer; display:grid; grid-template-rows:28px auto auto; gap:8px; align-content:start; justify-items:start; box-shadow:0 9px 22px rgba(59,90,71,0.09); transition:transform 240ms cubic-bezier(0.22,1,0.36,1), box-shadow 260ms cubic-bezier(0.22,1,0.36,1), border-color 260ms cubic-bezier(0.22,1,0.36,1), background 260ms ease; min-height:100px; text-align:left; }
+  .quick-action-btn { border:1px solid rgba(96,142,111,0.22); border-radius:14px; padding:13px 12px; background:#ffffff; cursor:pointer; display:grid; grid-template-rows:28px auto auto; gap:8px; align-content:center; justify-items:center; box-shadow:0 9px 22px rgba(59,90,71,0.09); transition:transform 240ms cubic-bezier(0.22,1,0.36,1), box-shadow 260ms cubic-bezier(0.22,1,0.36,1), border-color 260ms cubic-bezier(0.22,1,0.36,1), background 260ms ease; min-height:100px; text-align:center; }
   .quick-action-btn:hover { transform:translateY(-2px); border-color:rgba(46,129,95,0.45); box-shadow:0 14px 28px rgba(59,90,71,0.14); background:#f8fcf9; }
   .quick-action-btn:active { transform:translateY(0) scale(0.99); }
   .quick-action-icon { width:28px; height:28px; display:flex; align-items:center; justify-content:center; }
   .quick-action-icon .qa-glyph { font-size:20px; line-height:1; display:block; }
-  .quick-action-label { font-size:14px; line-height:1.25; color:var(--brown); font-weight:600; text-align:left; }
-  .quick-action-meta  { font-size:12px; color:var(--text-muted); line-height:1.2; }
+  .quick-action-label { font-size:14px; line-height:1.25; color:var(--brown); font-weight:600; text-align:center; }
+  .quick-action-meta  { font-size:12px; color:var(--text-muted); line-height:1.2; text-align:center; }
   .quick-action-btn.warn .quick-action-meta { color:var(--amber); }
   .tool-badge-warn { background:var(--amber); color:white; font-size:10px; font-weight:400; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; }
   .tool-expand { background:var(--surf-soft); padding:12px 14px; border-top:1px solid var(--border); }
@@ -2590,7 +2591,6 @@ export default function PawTimer() {
 
             {/* 6. Other tools — redesigned quick actions */}
             <div className="tool-group-card">
-              <div className="tool-section-title">Helpful tools</div>
               <div className="quick-actions-row">
                 <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
                   <span className="quick-action-icon"><Img src="walk.png" size={22} alt="Walk"/></span>
