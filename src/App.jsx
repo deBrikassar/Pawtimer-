@@ -728,11 +728,13 @@ const styles = `
   .ob-back-btn { background:none; border:none; color:var(--text-muted); font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); cursor:pointer; margin-top:14px; display:block; width:100%; text-align:center; padding:8px; }
 
   /* ── Header ── */
-  .header { padding:var(--space-4) var(--space-3) var(--space-2); background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
+  .header { padding:var(--space-3) var(--space-3) var(--space-1); background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
   .header::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(168,213,186,0.35) 0%,transparent 70%); border-radius:50%; }
-  .header-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; gap:16px; }
+  .header-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; gap:12px; }
+  .identity-zone { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
+  .identity-copy { flex:1; min-width:0; }
   .app-title { font-size:var(--type-page-title-size); font-weight:var(--type-page-title-weight); color:var(--brown); line-height:var(--type-page-title-line); letter-spacing:var(--type-page-title-track); }
-  .app-subtitle { font-size:var(--type-body-size); color:var(--text-muted); margin-top:4px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
+  .app-subtitle { font-size:var(--type-body-size); color:var(--text-muted); margin-top:2px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
   .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
   .dog-id-badge { display:flex; align-items:center; gap:6px; background:var(--surf); border-radius:99px; padding:4px 10px 4px 8px; box-shadow:var(--shadow); cursor:pointer; border:1.5px solid var(--border); transition:border-color 0.2s; }
   .dog-id-badge:hover { border-color:var(--green-dark); }
@@ -745,12 +747,14 @@ const styles = `
   .dog-photo-overlay { position:absolute; bottom:2px; right:2px; background:var(--brown); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; pointer-events:none; border:2px solid var(--bg); }
 
   /* ── Progress section ── */
-  .prog-section { padding:0 var(--space-3); margin-top:var(--space-2); }
+  .prog-section { margin-top:18px; padding:14px 14px 10px; border-radius:var(--radius-sm); background:rgba(253,251,247,0.78); border:1px solid rgba(96,142,111,0.14); }
   .train-main { width:min(100%, 460px); margin:0 auto; }
-  .prog-track { height:8px; background:var(--border); border-radius:99px; position:relative; overflow:visible; }
+  .prog-track { height:10px; background:linear-gradient(90deg,rgba(96,142,111,0.16),rgba(96,142,111,0.09)); border-radius:99px; position:relative; overflow:visible; }
   .prog-fill  { height:100%; background:linear-gradient(90deg,var(--green-dark),var(--green)); border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
-  .prog-thumb { position:absolute; top:50%; transform:translate(-50%,-50%); width:18px; height:18px; border-radius:50%; background:white; border:2.5px solid var(--green-dark); box-shadow:0 2px 8px rgba(61,140,96,0.35); transition:left 0.8s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; }
-  .prog-meta  { display:flex; justify-content:space-between; margin-top:8px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); font-weight:var(--type-secondary-weight); }
+  .prog-thumb { position:absolute; top:50%; transform:translate(-50%,-50%); width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0 30%, #d6f0df 52%, #9dcead 100%); box-shadow:0 5px 13px rgba(61,140,96,0.28), 0 0 0 2px rgba(255,255,255,0.92), 0 0 0 4px rgba(61,140,96,0.22); transition:left 0.8s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; }
+  .prog-thumb::before { content:''; position:absolute; inset:6px; border-radius:50%; background:rgba(61,140,96,0.9); }
+  .prog-meta  { display:flex; justify-content:space-between; margin-top:10px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); font-weight:var(--type-secondary-weight); }
+  .prog-meta strong { color:var(--brown); font-weight:600; }
 
   /* ── Session control — single morphing button/timer ── */
   .session-control-wrap { margin-top:24px; display:flex; justify-content:center; }
@@ -2341,17 +2345,19 @@ export default function PawTimer() {
         {/* Header */}
         <div className="header">
           <div className="header-top">
-            <label className="dog-photo-btn" title="Tap to change photo">
-              <input type="file" accept="image/*" style={{ display:"none" }} onChange={handlePhotoUpload}/>
-              {dogPhoto
-                ? <img src={dogPhoto} className="dog-photo-img" alt={name}/>
-                : <div className="dog-photo-placeholder"><PawIcon size={28}/></div>
-              }
-              <div className="dog-photo-overlay">📷</div>
-            </label>
-            <div style={{ flex:1 }}>
-              <div className="app-title">{name}</div>
-              <div className="app-subtitle">Separation anxiety training</div>
+            <div className="identity-zone">
+              <label className="dog-photo-btn" title="Tap to change photo">
+                <input type="file" accept="image/*" style={{ display:"none" }} onChange={handlePhotoUpload}/>
+                {dogPhoto
+                  ? <img src={dogPhoto} className="dog-photo-img" alt={name}/>
+                  : <div className="dog-photo-placeholder"><PawIcon size={28}/></div>
+                }
+                <div className="dog-photo-overlay">📷</div>
+              </label>
+              <div className="identity-copy">
+                <div className="app-title">{name}</div>
+                <div className="app-subtitle">Separation anxiety training</div>
+              </div>
             </div>
             {SYNC_ENABLED && (
               <button
@@ -2396,8 +2402,8 @@ ${syncError}`);
                 <div className="prog-thumb" style={{ left:`${Math.max(Math.min(goalPct,98),2)}%` }}/>
               </div>
               <div className="prog-meta">
-                <span>Current threshold: <strong className="num-stable" style={{color:"var(--brown)"}}>{fmt(target)}</strong></span>
-                <span>Goal: <strong className="num-stable" style={{color:"var(--brown)"}}>{fmt(goalSec)}</strong></span>
+                <span>Threshold <strong className="num-stable">{fmt(target)}</strong></span>
+                <span>Goal <strong className="num-stable">{fmt(goalSec)}</strong></span>
               </div>
             </div>
 
