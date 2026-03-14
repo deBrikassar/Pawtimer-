@@ -544,8 +544,8 @@ const styles = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --font-ui: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    --font-prose: 'Golos Text', Georgia, serif;
+    --font-ui: 'Manrope';
+    --font-prose: 'Golos Text';
     --space-1: 8px;
     --space-2: 16px;
     --space-3: 24px;
@@ -594,27 +594,27 @@ const styles = `
     --type-page-title-track: -0.025em;
     --type-section-title-size: 22px;
     --type-section-title-line: 28px;
-    --type-section-title-weight: 650;
+    --type-section-title-weight: 600;
     --type-section-title-track: -0.02em;
     --type-card-title-size: 18px;
     --type-card-title-line: 24px;
-    --type-card-title-weight: 650;
+    --type-card-title-weight: 600;
     --type-card-title-track: -0.015em;
     --type-body-lg-size: 16px;
     --type-body-lg-line: 24px;
-    --type-body-lg-weight: 500;
+    --type-body-lg-weight: 400;
     --type-body-lg-track: -0.01em;
     --type-body-size: 15px;
     --type-body-line: 22px;
-    --type-body-weight: 500;
+    --type-body-weight: 400;
     --type-body-track: -0.005em;
     --type-secondary-size: 13px;
     --type-secondary-line: 18px;
-    --type-secondary-weight: 500;
+    --type-secondary-weight: 400;
     --type-secondary-track: 0;
     --type-overline-size: 11px;
     --type-overline-line: 14px;
-    --type-overline-weight: 600;
+    --type-overline-weight: 400;
     --type-overline-track: 0.04em;
     --type-metric-xl-size: 40px;
     --type-metric-xl-line: 42px;
@@ -626,11 +626,11 @@ const styles = `
     --type-metric-lg-track: -0.025em;
     --type-button-lg-size: 18px;
     --type-button-lg-line: 22px;
-    --type-button-lg-weight: 700;
+    --type-button-lg-weight: 500;
     --type-button-lg-track: -0.01em;
     --type-button-size: 16px;
     --type-button-line: 20px;
-    --type-button-weight: 650;
+    --type-button-weight: 500;
     --type-button-track: -0.01em;
   }
 
@@ -679,7 +679,7 @@ const styles = `
   .ds-divider-line { flex:1; height:1px; background:var(--border); }
   .ds-divider-text { font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); color:var(--text-muted); font-weight:var(--type-secondary-weight); }
   .ds-btn { width:100%; padding:17px; border:none; border-radius:var(--radius); font-size:var(--type-button-lg-size); font-weight:var(--type-button-lg-weight); line-height:var(--type-button-lg-line); letter-spacing:var(--type-button-lg-track); cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:10px; }
-  .ds-btn-primary { background:var(--brown); color:white; box-shadow:0 4px 20px rgba(75,60,48,0.25); }
+  .ds-btn-primary { background:var(--brown); color:white; box-shadow:0 4px 20px rgba(75,60,48,0.25); font-weight:600; }
   .ds-btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 28px rgba(75,60,48,0.30); }
   .ds-note { font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); letter-spacing:var(--type-secondary-track); color:var(--green-dark); background:rgba(168,213,186,0.2); border-left:3px solid var(--green); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:8px 12px; margin-bottom:12px; }
   .ds-join-row { display:flex; gap:10px; margin-top:4px; }
@@ -789,7 +789,7 @@ const styles = `
     z-index:0;
   }
   .sc-idle { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; transition:opacity 260ms ease, transform 300ms ease; }
-  .sc-idle-label { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-transform:uppercase; font-size:34px; font-weight:800; letter-spacing:0.03em; line-height:1; color:rgba(255,255,255,0.99); text-shadow:0 0 6px rgba(255,255,255,0.24), 0 0 16px rgba(196,247,220,0.20); }
+  .sc-idle-label { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-transform:uppercase; font-size:34px; font-weight:400; letter-spacing:0.03em; line-height:1; color:rgba(255,255,255,0.99); text-shadow:0 0 6px rgba(255,255,255,0.24), 0 0 16px rgba(196,247,220,0.20); }
   .sc-idle-label span { display:block; }
   .sc-time { position:absolute; opacity:0; transform:scale(0.95); transition:opacity 300ms ease-in-out, transform 300ms ease-in-out; }
   .sc-time-value { font-size:var(--type-metric-xl-size); line-height:var(--type-metric-xl-line); font-weight:var(--type-metric-xl-weight); color:var(--green-dark); letter-spacing:var(--type-metric-xl-track); font-variant-numeric:tabular-nums; }
@@ -802,14 +802,14 @@ const styles = `
   .session-end-btn:hover, .session-cancel-btn:hover { border-color:var(--green-dark); }
 
   .readiness-hint { margin:12px auto 0; width:min(100%, 320px); padding:8px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surf-soft); display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .readiness-label { font-size:12px; color:var(--text-muted); font-weight:600; }
-  .readiness-value { font-size:12px; font-weight:700; letter-spacing:0.03em; }
+  .readiness-label { font-size:12px; color:var(--text-muted); font-weight:400; }
+  .readiness-value { font-size:12px; font-weight:400; letter-spacing:0.03em; }
 
   .session-feedback { width:min(100%, 420px); margin:0; }
 
   /* ── Status message ── */
   .status-msg { margin:18px auto 0; max-width:340px; font-size:var(--type-body-size); font-weight:var(--type-body-weight); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-align:center; }
-  .ring-sub-btn { margin-top:5px; background:transparent; border:none; padding:0; font-size:var(--type-secondary-size); color:var(--text-muted); font-weight:var(--type-card-title-weight); text-align:center; line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); cursor:pointer; }
+  .ring-sub-btn { margin-top:5px; background:transparent; border:none; padding:0; font-size:var(--type-secondary-size); color:var(--text-muted); font-weight:var(--type-button-weight); text-align:center; line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); cursor:pointer; }
   .ring-sub-btn:hover, .ring-sub-btn:focus-visible { color:var(--green-dark); outline:none; }
   .recommendation-pop { position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:min(360px, 88vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:12px 14px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); font-weight:var(--type-secondary-weight); text-align:left; z-index:20; }
   .recommendation-pop p { margin:0; }
@@ -837,26 +837,26 @@ const styles = `
   .tool-row:last-child { border-bottom:none; }
   .tool-row:hover { background:var(--surf-soft); }
   .tool-row-left  { display:flex; align-items:center; gap:12px; }
-  .tool-row-label { font-size:15px; color:var(--brown); font-weight:500; line-height:1.4; display:flex; align-items:center; gap:6px; }
+  .tool-row-label { font-size:15px; color:var(--brown); font-weight:400; line-height:1.4; display:flex; align-items:center; gap:6px; }
   .tool-row-right { display:flex; align-items:center; gap:8px; }
   .tool-row-meta  { font-size:14px; color:var(--text-muted); }
-  .tool-chevron   { color:var(--border); font-size:15px; font-weight:600; }
-  .tool-badge-warn { background:var(--amber); color:white; font-size:10px; font-weight:700; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; }
+  .tool-chevron   { color:var(--border); font-size:15px; font-weight:400; }
+  .tool-badge-warn { background:var(--amber); color:white; font-size:10px; font-weight:400; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; }
   .tool-expand { background:var(--surf-soft); padding:12px 14px; border-top:1px solid var(--border); }
 
   /* ── Walk timer banner ── */
   .walk-timer-banner { margin:0 20px; padding:10px 14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; display:flex; align-items:center; justify-content:space-between; }
   .walk-type-panel { margin:0 20px; padding:14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; }
-  .walk-type-title { font-size:15px; font-weight:700; color:var(--brown); margin-bottom:6px; }
+  .walk-type-title { font-size:15px; font-weight:var(--type-section-title-weight); color:var(--brown); margin-bottom:6px; }
   .walk-type-sub { font-size:13px; color:var(--text-muted); margin-bottom:10px; }
   .walk-type-grid { display:grid; gap:8px; }
   .walk-type-option { width:100%; text-align:left; border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-size:14px; text-transform:capitalize; color:var(--brown); background:var(--surf); cursor:pointer; }
   .walk-type-option:hover { border-color:var(--green-dark); }
   .walk-type-actions { display:flex; justify-content:flex-end; margin-top:8px; }
-  .walk-timer-left .walk-timer-elapsed { font-size:26px; font-weight:700; color:var(--green-dark); line-height:1.1; }
+  .walk-timer-left .walk-timer-elapsed { font-size:26px; font-weight:400; color:var(--green-dark); line-height:1.1; }
   .walk-timer-left .walk-timer-lbl { font-size:14px; color:var(--text-muted); margin-top:1px; }
   .walk-timer-btns { display:flex; gap:8px; align-items:center; }
-  .walk-end-btn { padding:10px 20px; background:var(--green-dark); color:white; border:none; border-radius:99px; font-size:14px; font-weight:600; cursor:pointer; transition:opacity 0.15s; }
+  .walk-end-btn { padding:10px 20px; background:var(--green-dark); color:white; border:none; border-radius:99px; font-size:14px; font-weight:400; cursor:pointer; transition:opacity 0.15s; }
   .walk-end-btn:hover { opacity:0.88; }
   .walk-cancel-btn { padding:10px 14px; background:transparent; color:var(--text-muted); border:1.5px solid var(--border); border-radius:99px; font-size:14px; cursor:pointer; }
   .walk-cancel-btn:hover { background:var(--surf); }
@@ -864,8 +864,8 @@ const styles = `
   /* ── Daily alone-time card ── */
   .alone-card   { margin:6px 20px 0; background:var(--surf); border-radius:var(--radius-sm); padding:11px 14px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; align-items:center; gap:16px; }
   .alone-left   { flex:1; }
-  .alone-label  { font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:600; margin-bottom:2px; }
-  .alone-total  { font-size:24px; color:var(--brown); font-weight:700; line-height:1.1; }
+  .alone-label  { font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:400; margin-bottom:2px; }
+  .alone-total  { font-size:24px; color:var(--brown); font-weight:400; line-height:1.1; }
   .alone-right  { flex:1; }
   .alone-track  { height:6px; background:var(--border); border-radius:99px; overflow:hidden; display:flex; }
   .alone-fill   { height:100%; transition:width 0.6s; flex-shrink:0; }
@@ -885,12 +885,12 @@ const styles = `
 
   /* ── Protocol warning banner ── */
   .proto-warn-banner { background:rgba(212,129,58,0.12); border:1.5px solid var(--amber); border-radius:var(--radius-sm); padding:12px 16px; margin-bottom:14px; }
-  .proto-warn-title { font-size:var(--type-secondary-size); font-weight:600; line-height:var(--type-secondary-line); color:var(--amber); margin-bottom:4px; }
+  .proto-warn-title { font-size:var(--type-secondary-size); font-weight:400; line-height:var(--type-secondary-line); color:var(--amber); margin-bottom:4px; }
   .proto-warn-body  { font-size:var(--type-body-size); color:var(--brown-mid); line-height:var(--type-body-line); font-weight:var(--type-body-weight); letter-spacing:var(--type-body-track); }
   .proto-field-row  { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); }
   .proto-field-row:last-child { border-bottom:none; }
   .proto-field-label { font-size:var(--type-body-size); color:var(--brown); font-weight:var(--type-body-weight); line-height:var(--type-body-line); }
-  .proto-field-input { width:64px; text-align:right; padding:5px 8px; border:1.5px solid var(--border); border-radius:8px; font-size:var(--type-body-size); font-weight:var(--type-card-title-weight); color:var(--brown); background:var(--surf-soft); outline:none; font-variant-numeric:tabular-nums; }
+  .proto-field-input { width:64px; text-align:right; padding:5px 8px; border:1.5px solid var(--border); border-radius:8px; font-size:var(--type-body-size); font-weight:var(--type-body-weight); color:var(--brown); background:var(--surf-soft); outline:none; font-variant-numeric:tabular-nums; }
   .proto-field-input:focus { border-color:var(--amber); }
 
   /* ── Goal card (kept for stats tab) ── */
@@ -904,7 +904,7 @@ const styles = `
   .goal-meta { margin-top:8px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); color:var(--text-muted); display:flex; justify-content:space-between; }
 
   /* ── Buttons ── */
-  .btn-end { display:block; width:calc(100% - 44px); margin:16px 22px 0; padding:16px; background:var(--green); color:var(--brown); border:none; border-radius:var(--radius); font-size:var(--type-button-lg-size); font-weight:var(--type-button-lg-weight); line-height:var(--type-button-lg-line); cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; box-shadow:0 4px 16px rgba(168,213,186,0.50); letter-spacing:var(--type-button-lg-track); }
+  .btn-end { display:block; width:calc(100% - 44px); margin:16px 22px 0; padding:16px; background:var(--green); color:var(--brown); border:none; border-radius:var(--radius); font-size:var(--type-button-lg-size); font-weight:600; line-height:var(--type-button-lg-line); cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; box-shadow:0 4px 16px rgba(168,213,186,0.50); letter-spacing:var(--type-button-lg-track); }
   .btn-end:hover { transform:translateY(-2px); box-shadow:0 6px 22px rgba(168,213,186,0.60); }
   .btn-end:active { transform:translateY(0); }
   .btn-walk { display:flex; align-items:center; gap:10px; width:calc(100% - 48px); margin:0 24px 14px; padding:14px 18px; background:var(--surf); color:var(--brown); border:1.5px solid var(--border); border-radius:var(--radius); font-size:var(--type-button-size); font-weight:var(--type-button-weight); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); cursor:pointer; transition:border-color 0.2s,background 0.2s,transform 0.15s; box-shadow:var(--shadow); }
@@ -932,7 +932,7 @@ const styles = `
   .btn-severe { background:var(--red); color:white; box-shadow:0 4px 16px rgba(192,57,43,0.30); }
   .btn-result:hover { transform:translateY(-2px); }
   .outcome-details { margin-top:10px; padding:12px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surf-soft); display:flex; flex-direction:column; gap:8px; }
-  .field-label { font-size:var(--type-secondary-size); color:var(--brown); font-weight:var(--type-card-title-weight); line-height:var(--type-secondary-line); }
+  .field-label { font-size:var(--type-secondary-size); color:var(--brown); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); }
   .text-input { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:var(--brown); background:white; }
   .btn-save-outcome { margin-top:4px; border:none; border-radius:10px; padding:11px 12px; font-size:var(--type-button-size); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); font-weight:var(--type-button-weight); background:var(--brown); color:white; cursor:pointer; }
 
@@ -946,13 +946,13 @@ const styles = `
   /* ── Ring timer (legacy small rings) ── */
   .ring-fill { fill:none; stroke:var(--brown); stroke-width:6; stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
   .ring-text { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
-  .ring-time { font-size:20px; font-weight:600; color:var(--brown); }
+  .ring-time { font-size:20px; font-weight:400; color:var(--brown); }
 
   /* ── Pattern Breaking section ── */
   .pat-section { margin:0 24px 16px; }
   .pat-header  { display:flex; align-items:center; gap:0; margin-bottom:6px; }
   .pat-title   { font-size:var(--type-card-title-size); line-height:var(--type-card-title-line); letter-spacing:var(--type-card-title-track); font-weight:var(--type-card-title-weight); color:var(--brown); }
-  .pat-badge   { font-size:10px; font-weight:600; padding:2px 9px; border-radius:99px; background:rgba(168,213,186,0.3); color:var(--green-dark); letter-spacing:0.01em; }
+  .pat-badge   { font-size:10px; font-weight:400; padding:2px 9px; border-radius:99px; background:rgba(168,213,186,0.3); color:var(--green-dark); letter-spacing:0.01em; }
   .pat-reminder { font-size:15px; color:var(--text-muted); line-height:1.6; padding:10px 14px; background:var(--surf); border-radius:var(--radius-sm); margin-bottom:10px; border-left:3px solid var(--green-dark); box-shadow:0 2px 8px rgba(75,60,48,0.06); }
   .pat-reminder.warn { border-left-color:var(--amber); color:var(--brown-mid); }
   .pat-btns { display:flex; flex-direction:column; gap:0; }
@@ -968,7 +968,7 @@ const styles = `
   /* ── Tabs ── */
   .tabs { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:rgba(247,242,231,0.97); backdrop-filter:blur(14px); border-top:1.5px solid var(--border); display:flex; z-index:100; padding-bottom:env(safe-area-inset-bottom,0px); }
   .tab-btn { flex:1; min-height:48px; padding:9px 4px 13px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--color-text-subtle); transition:color 0.18s; font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); }
-  .tab-btn.active { color:var(--green-dark); font-weight:700; }
+  .tab-btn.active { color:var(--green-dark); font-weight:var(--type-button-weight); }
   .tab-btn svg { width:24px; height:24px; }
   .tab-btn:focus-visible { outline:2px solid var(--green-dark); outline-offset:-2px; border-radius:10px; }
 
@@ -983,7 +983,7 @@ const styles = `
 
   /* ── Collapsible how-to ── */
   .howto-wrap { margin:0 24px 12px; border-radius:var(--radius-sm); overflow:hidden; box-shadow:0 2px 8px rgba(75,60,48,0.06); }
-  .howto-toggle { width:100%; display:flex; justify-content:space-between; align-items:center; padding:11px 16px; background:var(--surf); border:none; font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); color:var(--brown); cursor:pointer; border-left:3px solid var(--green-dark); }
+  .howto-toggle { width:100%; display:flex; justify-content:space-between; align-items:center; padding:11px 16px; background:var(--surf); border:none; font-size:var(--type-secondary-size); font-weight:var(--type-button-weight); line-height:var(--type-secondary-line); color:var(--brown); cursor:pointer; border-left:3px solid var(--green-dark); }
   .howto-arrow { font-size:10px; color:var(--text-muted); }
 
   /* ── Protocol details ── */
@@ -1032,7 +1032,7 @@ const styles = `
   .dot-feed   { background:rgba(212,129,58,0.16); color:var(--brown); font-size:18px; }
   .dot-pat    { background:rgba(75,60,48,0.09); }
   .h-info { flex:1; min-width:0; }
-  .h-main { font-size:var(--type-section-title-size); font-weight:var(--type-section-title-weight); line-height:var(--type-section-title-line); letter-spacing:var(--type-section-title-track); color:var(--brown); }
+  .h-main { font-size:var(--type-body-size); font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); color:var(--brown); }
   .h-date { font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); margin-top:6px; }
   .h-badge { font-size:var(--type-overline-size); font-weight:var(--type-overline-weight); line-height:var(--type-overline-line); padding:3px 9px; border-radius:99px; letter-spacing:var(--type-overline-track); white-space:nowrap; flex-shrink:0; text-transform:uppercase; }
   .badge-none   { background:rgba(168,213,186,0.3);  color:var(--green-dark); }
@@ -1049,11 +1049,13 @@ const styles = `
   .chart-wrap  { background:var(--surf); border-radius:var(--radius); padding:16px 8px 12px; box-shadow:var(--shadow); margin-bottom:12px; }
   .chart-title { font-size:var(--type-body-lg-size); line-height:var(--type-body-lg-line); letter-spacing:var(--type-body-lg-track); font-weight:var(--type-body-lg-weight); color:var(--brown); margin-bottom:14px; padding-left:12px; }
   .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:12px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:12px; }
-  .streak-num  { font-size:36px; font-weight:700; line-height:1; }
-  .streak-lbl  { font-size:14px; letter-spacing:0.01em; opacity:0.9; margin-top:6px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:4px; }
+  .streak-num  { font-size:36px; font-weight:400; line-height:1; }
+  .streak-lbl  { font-size:14px; letter-spacing:0.01em; opacity:0.9; margin-top:6px; font-weight:400; display:flex; align-items:center; justify-content:center; gap:4px; }
   .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:8px; }
   .stat-card-span2 { grid-column:span 2; }
   .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
+  .stats-metric-value { font-family:var(--font-ui); font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); text-transform:none; opacity:1; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; margin:0; padding:0; }
+  .stats-metric-label { font-family:var(--font-ui); font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-transform:none; opacity:1; font-feature-settings:normal; margin-bottom:0; padding:0; }
   .stat-val    { font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
   .stat-lbl    { font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
   .stat-wide   { background:var(--surf); border-radius:var(--radius-sm); padding:14px 18px; box-shadow:var(--shadow); grid-column:span 2; display:flex; align-items:center; justify-content:space-between; }
@@ -1079,7 +1081,7 @@ const styles = `
   .share-title { font-size:var(--type-card-title-size); font-weight:var(--type-card-title-weight); line-height:var(--type-card-title-line); letter-spacing:var(--type-card-title-track); color:var(--brown); margin-bottom:8px; }
   .share-sub   { font-size:var(--type-body-size); font-weight:var(--type-body-weight); color:var(--text-muted); margin-bottom:12px; line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
   .share-id-row { display:flex; align-items:center; gap:10px; background:var(--surf-soft); border-radius:var(--radius-sm); padding:12px 16px; margin-bottom:10px; }
-  .share-id-val { font-family:var(--font-ui); font-size:var(--type-section-title-size); line-height:var(--type-section-title-line); font-weight:var(--type-page-title-weight); color:var(--brown); letter-spacing:var(--type-overline-track); text-transform:uppercase; flex:1; font-variant-numeric:tabular-nums; }
+  .share-id-val { font-family:var(--font-ui); font-size:var(--type-section-title-size); line-height:var(--type-section-title-line); font-weight:var(--type-body-weight); color:var(--brown); letter-spacing:var(--type-overline-track); text-transform:uppercase; flex:1; font-variant-numeric:tabular-nums; }
   .copy-btn { background:var(--brown); color:white; border:none; border-radius:8px; padding:8px 14px; font-size:var(--type-button-size); font-weight:var(--type-button-weight); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); cursor:pointer; transition:opacity 0.15s; }
   .copy-btn:hover { opacity:0.85; }
   .share-steps { font-size:var(--type-body-size); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); padding-left:18px; font-family:var(--font-prose); }
@@ -1091,11 +1093,11 @@ const styles = `
 
 
   .diag-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
-  .diag-run-btn { border:1px solid var(--green-dark); background:transparent; color:var(--green-dark); border-radius:999px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; }
+  .diag-run-btn { border:1px solid var(--green-dark); background:transparent; color:var(--green-dark); border-radius:999px; padding:6px 12px; font-size:12px; font-weight:400; cursor:pointer; }
   .diag-run-btn:disabled { opacity:0.6; cursor:not-allowed; }
   .diag-grid { display:grid; gap:6px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); color:var(--text-muted); margin-bottom:10px; }
   .diag-grid code { color:var(--brown); background:var(--surf-soft); padding:2px 6px; border-radius:6px; }
-  .diag-summary { font-size:14px; font-weight:700; margin-bottom:8px; }
+  .diag-summary { font-size:14px; font-weight:400; margin-bottom:8px; }
   .diag-summary.ok { color:var(--green-dark); }
   .diag-summary.err { color:var(--red); }
   .diag-json { font-size:11px; background:#1f1f1f; color:#e7e7e7; border-radius:10px; padding:10px; overflow:auto; max-height:220px; }
@@ -2605,7 +2607,7 @@ ${syncError}`);
                 </div>
                 <div className="tool-row-right">
                   {walkPhase === "timing"
-                    ? <span className="t-helper num-stable" style={{color:"var(--green-dark)",fontWeight:600}}>{fmt(walkElapsed)} ●</span>
+                    ? <span className="t-helper num-stable" style={{color:"var(--green-dark)",fontWeight:400}}>{fmt(walkElapsed)} ●</span>
                     : <span className="tool-row-meta">Today: {todayWalks}</span>
                   }
                   <span className="tool-chevron">›</span>
@@ -2865,31 +2867,31 @@ ${syncError}`);
             </div>
             <div className="stats-row">
               <div className="stat-card">
-                <div className="stat-val" style={{color:"var(--green-dark)"}}>{noneCount}</div>
-                <div className="stat-lbl">Calm sessions</div>
+                <div className="stat-val stats-metric-value" style={{color:"var(--green-dark)"}}>{noneCount}</div>
+                <div className="stat-lbl stats-metric-label">Calm sessions</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{Math.round((noneCount/totalCount)*100)}<span className="t-helper">%</span></div>
-                <div className="stat-lbl">Success rate</div>
+                <div className="stat-val stats-metric-value">{`${Math.round((noneCount/totalCount)*100)}%`}</div>
+                <div className="stat-lbl stats-metric-label">Success rate</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{fmt(bestCalm)}</div>
-                <div className="stat-lbl">Best calm time</div>
+                <div className="stat-val stats-metric-value">{fmt(bestCalm)}</div>
+                <div className="stat-lbl stats-metric-label">Best calm time</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{fmt(target)}</div>
-                <div className="stat-lbl">Next target</div>
+                <div className="stat-val stats-metric-value">{fmt(target)}</div>
+                <div className="stat-lbl stats-metric-label">Next target</div>
               </div>
               <div className="stat-wide">
-                <div><div className="stat-val">{fmt(totalAlone)}</div><div className="stat-lbl">Total time alone</div></div>
+                <div><div className="stat-val stats-metric-value">{fmt(totalAlone)}</div><div className="stat-lbl stats-metric-label">Total time alone</div></div>
                 <div className="stat-icon"><PawIcon size={32}/></div>
               </div>
               <div className="stat-wide">
-                <div><div className="stat-val">{walks.length}</div><div className="stat-lbl">Walks together</div></div>
+                <div><div className="stat-val stats-metric-value">{walks.length}</div><div className="stat-lbl stats-metric-label">Walks together</div></div>
                 <div className="stat-icon"><Img src="walk.png" size={36} alt="walks"/></div>
               </div>
               <div className="stat-wide">
-                <div><div className="stat-val">{patterns.length}</div><div className="stat-lbl">Pattern breaks</div></div>
+                <div><div className="stat-val stats-metric-value">{patterns.length}</div><div className="stat-lbl stats-metric-label">Pattern breaks</div></div>
                 <div className="stat-icon"><Img src="pattern-keys.png" size={36} alt="pattern breaks"/></div>
               </div>
             </div>
@@ -2927,28 +2929,28 @@ ${syncError}`);
             {totalCount > 0 && (
               <div className="insights-grid">
                 <button className="stat-card metric-btn" onClick={() => openMetricHelp("stability")} type="button">
-                  <div className="stat-val" style={{ color: stabilityTone.color }}>
+                  <div className="stat-val stats-metric-value" style={{ color: stabilityTone.color }}>
                     {calmMedian != null ? fmt(calmMedian) : "—"}
                   </div>
-                  <div className="stat-lbl">Stability</div>
+                  <div className="stat-lbl stats-metric-label">Stability</div>
                 </button>
                 <button className="stat-card metric-btn" onClick={() => openMetricHelp("momentum")} type="button">
-                  <div className="stat-val" style={{ color: momentumTone.color }}>
+                  <div className="stat-val stats-metric-value" style={{ color: momentumTone.color }}>
                     {calmRate7 != null ? `${calmRate7}%` : "—"}
                   </div>
-                  <div className="stat-lbl">Momentum</div>
+                  <div className="stat-lbl stats-metric-label">Momentum</div>
                 </button>
                 <button className="stat-card metric-btn" onClick={() => openMetricHelp("adherence")} type="button">
-                  <div className="stat-val" style={{ color: adherenceTone.color }}>
+                  <div className="stat-val stats-metric-value" style={{ color: adherenceTone.color }}>
                     {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
                   </div>
-                  <div className="stat-lbl">Adherence</div>
+                  <div className="stat-lbl stats-metric-label">Adherence</div>
                 </button>
                 <button className="stat-card metric-btn" onClick={() => openMetricHelp("relapseRisk")} type="button">
-                  <div className="stat-val" style={{ color: relapseTone.color }}>
+                  <div className="stat-val stats-metric-value" style={{ color: relapseTone.color }}>
                     {relapseRisk ? "High" : "Low"}
                   </div>
-                  <div className="stat-lbl">Relapse risk</div>
+                  <div className="stat-lbl stats-metric-label">Relapse risk</div>
                 </button>
               </div>
             )}
@@ -2958,10 +2960,10 @@ ${syncError}`);
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
                     <CartesianGrid stroke="var(--surf-soft)" vertical={false}/>
-                    <XAxis dataKey="session" tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:500,fontFamily:"Manrope"}} tickLine={false} axisLine={false}/>
-                    <YAxis tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:500,fontFamily:"Manrope"}} tickLine={false} axisLine={false}/>
-                    <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:13,fontWeight:500,fontFamily:"Manrope"}} labelStyle={{color:"var(--green-light)",fontSize:13,fontWeight:500,fontFamily:"Manrope"}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
-                    <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:13,fill:"var(--green-dark)",fontWeight:500,fontFamily:"Manrope"}}/>
+                    <XAxis dataKey="session" tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"Manrope"}} tickLine={false} axisLine={false}/>
+                    <YAxis tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"Manrope"}} tickLine={false} axisLine={false}/>
+                    <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:13,fontWeight:400,fontFamily:"Manrope"}} labelStyle={{color:"var(--green-light)",fontSize:13,fontWeight:400,fontFamily:"Manrope"}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
+                    <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:13,fill:"var(--green-dark)",fontWeight:400,fontFamily:"Manrope"}}/>
                     <Line type="monotone" dataKey="duration" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
                   </LineChart>
                 </ResponsiveContainer>
@@ -3119,7 +3121,7 @@ ${syncError}`);
                 </div>
               ) : (
                 <div>
-                  <div className="t-helper" style={{ color:"var(--amber)", fontWeight:600, marginBottom:10 }}>⚠️ Advanced — edit with caution</div>
+                  <div className="t-helper" style={{ color:"var(--amber)", fontWeight:400, marginBottom:10 }}>⚠️ Advanced — edit with caution</div>
                   {[
                     { key:"sessionsPerDayMax", label:"Max sessions/day", unit:"" },
                     { key:"maxDailyAloneMinutes", label:"Max alone time/day", unit:"min" },
