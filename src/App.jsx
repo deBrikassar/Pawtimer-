@@ -658,7 +658,34 @@ const styles = `
     max-width: 480px; margin: 0 auto;
     min-height: 100vh; display: flex; flex-direction: column;
     padding-bottom: 80px; overflow-x: hidden;
+    position:relative;
+    isolation:isolate;
   }
+  .app::before,
+  .app::after {
+    content:"";
+    position:absolute;
+    pointer-events:none;
+    z-index:0;
+    width:120px;
+    height:120px;
+    opacity:0.4;
+    background-repeat:no-repeat;
+    background-size:contain;
+  }
+  .app::before {
+    top:110px;
+    left:8px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .app::after {
+    right:10px;
+    bottom:140px;
+    width:96px;
+    height:96px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M40 78c8-9 31-9 40 0M30 64c4-4 10-4 14 0M76 64c4-4 10-4 14 0M48 74c0-6 4-10 12-10s12 4 12 10'/%3E%3Ccircle cx='60' cy='60' r='42'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .app > * { position:relative; z-index:1; }
 
   /* ── Dog Select ── */
   .dog-select { max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); overflow-x:hidden; }
@@ -782,7 +809,17 @@ const styles = `
   .sc-track { fill:none; stroke:rgba(96,142,111,0.2); stroke-width:10; }
   .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
   .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:20px; }
-  .sc-content::before { content:""; position:absolute; inset:20%; border-radius:50%; background:#ffffff; pointer-events:none; z-index:0; }
+    .sc-content::before {
+    content:"";
+    position:absolute;
+    inset:18%;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.14) 45%, rgba(0,0,0,0) 72%);
+    pointer-events:none;
+    z-index:0;
+  }
+  .session-control.is-running .sc-content::before,
+  .session-control.is-complete .sc-content::before { background:#ffffff; }
   .sc-idle { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; transition:opacity 260ms ease, transform 300ms ease; }
   .sc-idle-label { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-transform:uppercase; font-size:34px; font-weight:400; letter-spacing:0.03em; line-height:1; color:rgba(255,255,255,0.99); text-shadow:0 0 6px rgba(255,255,255,0.24), 0 0 16px rgba(196,247,220,0.20); }
   .sc-idle-label span { display:block; }
@@ -827,7 +864,7 @@ const styles = `
   .tool-section-title { margin:0; font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); color:var(--text-muted); font-weight:var(--type-overline-weight); text-transform:uppercase; padding:0 2px; }
 
   /* ── Grouped tool card ── */
-  .tool-group-card { margin:0; background:transparent; border-radius:0; box-shadow:none; overflow:visible; }
+  .tool-group-card { margin:0 8px; background:transparent; border-radius:0; box-shadow:none; overflow:visible; }
   .quick-actions-row { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
   .quick-action-btn { border:1px solid rgba(96,142,111,0.2); border-radius:14px; padding:12px 10px; background:#ffffff; cursor:pointer; display:flex; flex-direction:column; gap:7px; align-items:flex-start; justify-content:center; box-shadow:0 8px 20px rgba(59,90,71,0.08); transition:transform 240ms cubic-bezier(0.22,1,0.36,1), box-shadow 260ms cubic-bezier(0.22,1,0.36,1), border-color 260ms cubic-bezier(0.22,1,0.36,1), background 260ms ease; min-height:92px; }
   .quick-action-btn:hover { transform:translateY(-2px); border-color:rgba(46,129,95,0.45); box-shadow:0 14px 28px rgba(59,90,71,0.14); background:#f8fcf9; }
@@ -838,8 +875,8 @@ const styles = `
   .quick-action-btn.warn .quick-action-meta { color:var(--amber); }
   .tool-badge-warn { background:var(--amber); color:white; font-size:10px; font-weight:400; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; }
   .tool-expand { background:var(--surf-soft); padding:12px 14px; border-top:1px solid var(--border); }
-  .quick-modal-overlay { position:fixed; inset:0; background:rgba(37,34,28,0.42); display:flex; align-items:flex-end; justify-content:center; z-index:80; backdrop-filter:blur(2px); animation:fadeIn 220ms ease; }
-  .quick-modal-card { width:min(460px, 100%); background:#ffffff; border-radius:22px 22px 0 0; padding:20px 20px 24px; box-shadow:0 -20px 48px rgba(45,57,49,0.2); animation:slideUp 320ms cubic-bezier(0.22,1,0.36,1); max-height:82vh; overflow:auto; }
+  .quick-modal-overlay { position:fixed; inset:0; background:rgba(37,34,28,0.42); display:flex; align-items:center; justify-content:center; z-index:80; backdrop-filter:blur(2px); padding:14px; animation:fadeIn 220ms ease; }
+  .quick-modal-card { width:min(430px, calc(100vw - 28px)); background:#ffffff; border-radius:22px; padding:20px 20px 24px; box-shadow:0 16px 42px rgba(45,57,49,0.22); animation:slideUp 320ms cubic-bezier(0.22,1,0.36,1); max-height:min(82vh, 760px); overflow:auto; }
   .quick-modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
   .quick-modal-title { font-size:20px; font-weight:650; color:var(--brown); }
   .quick-modal-close { border:none; background:var(--surf-soft); color:var(--brown-mid); border-radius:999px; width:32px; height:32px; font-size:18px; cursor:pointer; }
@@ -2524,46 +2561,6 @@ export default function PawTimer() {
               </p>
             )}
 
-            {/* 5. Daily alone-time card */}
-            {(() => {
-              const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
-              const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
-              const calmSec   = loggedTodaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const subtleSec = loggedTodaySess.filter(s=>s.distressLevel==="subtle").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const activeSec = loggedTodaySess.filter(s=>s.distressLevel==="active").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const severeSec = loggedTodaySess.filter(s=>s.distressLevel==="severe").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const calmPct   = totalLogged ? (calmSec/totalLogged)*100 : 0;
-              const subtlePct = totalLogged ? (subtleSec/totalLogged)*100 : 0;
-              const activePct = totalLogged ? (activeSec/totalLogged)*100 : 0;
-              const severePct = totalLogged ? (severeSec/totalLogged)*100 : 0;
-              return (
-                <div className="alone-card">
-                  <div className="alone-left">
-                    <div className="alone-label">Today's alone time</div>
-                    <div className="alone-total">{totalLogged === 0 ? "0 mins" : fmt(totalLogged)}</div>
-                  </div>
-                  <div className="alone-right">
-                    <div className="alone-track">
-                      {totalLogged > 0 ? (<>
-                        <div className="alone-fill ok"   style={{width:`${calmPct}%`}}/>
-                        <div className="alone-fill near" style={{width:`${subtlePct}%`}}/>
-                        <div className="alone-fill active" style={{width:`${activePct}%`}}/>
-                        <div className="alone-fill full" style={{width:`${severePct}%`}}/>
-                      </>) : <div style={{width:"100%",height:"100%",background:"var(--border)",borderRadius:99}}/>}
-                    </div>
-                    {totalLogged > 0 && (
-                      <div className="alone-legend">
-                        {calmSec>0   && <span className="t-helper" style={{color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
-                        {subtleSec>0 && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(subtleSec)} subtle</span>}
-                        {activeSec>0 && <span className="t-helper" style={{color:"#d65f3c"}}>{fmt(activeSec)} active</span>}
-                        {severeSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(severeSec)} severe</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
             {/* 6. Other tools — redesigned quick actions */}
             <div className="tool-group-card">
               <div className="tool-section-title">Helpful tools</div>
@@ -2857,6 +2854,44 @@ export default function PawTimer() {
             <p className="t-helper train-coverage" style={{ marginTop: 0, marginBottom: 14 }}>
               Data coverage for smarter recommendations: {recommendationCoveragePct}% ({recommendationCoverageCount}/{totalCount})
             </p>
+            {(() => {
+              const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
+              const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
+              const calmSec   = loggedTodaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const subtleSec = loggedTodaySess.filter(s=>s.distressLevel==="subtle").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const activeSec = loggedTodaySess.filter(s=>s.distressLevel==="active").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const severeSec = loggedTodaySess.filter(s=>s.distressLevel==="severe").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const calmPct   = totalLogged ? (calmSec/totalLogged)*100 : 0;
+              const subtlePct = totalLogged ? (subtleSec/totalLogged)*100 : 0;
+              const activePct = totalLogged ? (activeSec/totalLogged)*100 : 0;
+              const severePct = totalLogged ? (severeSec/totalLogged)*100 : 0;
+              return (
+                <div className="alone-card" style={{ marginBottom:14 }}>
+                  <div className="alone-left">
+                    <div className="alone-label">Today's alone time</div>
+                    <div className="alone-total">{totalLogged === 0 ? "0 mins" : fmt(totalLogged)}</div>
+                  </div>
+                  <div className="alone-right">
+                    <div className="alone-track">
+                      {totalLogged > 0 ? (<>
+                        <div className="alone-fill ok"   style={{width:`${calmPct}%`}}/>
+                        <div className="alone-fill near" style={{width:`${subtlePct}%`}}/>
+                        <div className="alone-fill active" style={{width:`${activePct}%`}}/>
+                        <div className="alone-fill full" style={{width:`${severePct}%`}}/>
+                      </>) : <div style={{width:"100%",height:"100%",background:"var(--border)",borderRadius:99}}/>}
+                    </div>
+                    {totalLogged > 0 && (
+                      <div className="alone-legend">
+                        {calmSec>0   && <span className="t-helper" style={{color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
+                        {subtleSec>0 && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(subtleSec)} subtle</span>}
+                        {activeSec>0 && <span className="t-helper" style={{color:"#d65f3c"}}>{fmt(activeSec)} active</span>}
+                        {severeSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(severeSec)} severe</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
             <div className="goal-card" style={{margin:"0 0 14px"}}>
               <div className="goal-label">
                 <span className="goal-title">Progress toward goal</span>
