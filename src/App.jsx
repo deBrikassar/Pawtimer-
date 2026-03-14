@@ -544,8 +544,8 @@ const styles = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --font-ui: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    --font-prose: 'Golos Text', Georgia, serif;
+    --font-ui: 'Manrope';
+    --font-prose: 'Golos Text';
     --space-1: 8px;
     --space-2: 16px;
     --space-3: 24px;
