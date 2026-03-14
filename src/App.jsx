@@ -2251,7 +2251,6 @@ export default function PawTimer() {
   };
   const momentumTone = statusTone(calmRate7, { good: 75, warn: 55 });
   const stabilityTone = statusTone(durationVariability, { good: 120, warn: 240, invert: true });
-  const designTone = statusTone(recommendationCoveragePct, { good: 85, warn: 65 });
   const adherenceTone = statusTone(adherenceByDay, { good: 85, warn: 65 });
   const relapseTone = relapseRisk
     ? { color: "var(--red)", label: "Elevated" }
@@ -2269,11 +2268,6 @@ export default function PawTimer() {
       title: "Momentum",
       body: "Your short-term trend. It compares calm-session rate over the last 7 days against the last 14 days to show whether progress is improving, holding, or slipping.",
       detail: `7d calm · 14d ${calmRate14 != null ? `${calmRate14}%` : "—"} · ${momentumTone.label}`,
-    },
-    design: {
-      title: "Design",
-      body: "How complete each session log is for recommendation design quality. Higher coverage means smarter, more personalized next-step targets.",
-      detail: `${recommendationCoverageCount}/${totalCount} sessions include all key context signals · ${designTone.label}`,
     },
     relapseRisk: {
       title: "Relapse risk",
@@ -2944,12 +2938,6 @@ ${syncError}`);
                     {calmRate7 != null ? `${calmRate7}%` : "—"}
                   </div>
                   <div className="stat-lbl">Momentum</div>
-                </button>
-                <button className="stat-card metric-btn" onClick={() => openMetricHelp("design")} type="button">
-                  <div className="stat-val" style={{ color: designTone.color }}>
-                    {recommendationCoveragePct}%
-                  </div>
-                  <div className="stat-lbl">Design</div>
                 </button>
                 <button className="stat-card metric-btn" onClick={() => openMetricHelp("relapseRisk")} type="button">
                   <div className="stat-val" style={{ color: relapseTone.color }}>
