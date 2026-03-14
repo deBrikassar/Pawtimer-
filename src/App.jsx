@@ -755,7 +755,7 @@ const styles = `
   /* ── Session control — single morphing button/timer ── */
   .session-control-wrap { margin-top:24px; display:flex; justify-content:center; }
   .session-control {
-    position:relative; width:clamp(180px, 55vw, 212px); aspect-ratio:1/1;
+    position:relative; width:clamp(216px, 66vw, 255px); aspect-ratio:1/1;
     border:none; border-radius:50%; cursor:pointer;
     background:radial-gradient(circle at 38% 30%, #8fd8ab 0%, #63b082 48%, #3f8f63 100%);
     box-shadow:0 14px 34px rgba(61,140,96,0.34), inset 0 1px 0 rgba(255,255,255,0.34);
