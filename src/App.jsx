@@ -687,7 +687,10 @@ const styles = `
   }
   .app-decor { position:absolute; inset:0; pointer-events:none; z-index:0; }
   .app-decor span { position:absolute; opacity:0.3; background-repeat:no-repeat; background-size:contain; }
+  .decor-paw-a { width:64px; height:64px; top:168px; left:22px; transform:rotate(-8deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-paw-b { width:54px; height:54px; top:612px; right:18px; transform:rotate(11deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
   .decor-bone { width:72px; height:72px; top:206px; right:16px; transform:rotate(-12deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M31 74c-8 8-20 8-26 2s-5-18 3-26c8-8 20-9 26-3l29 29c6 6 18 5 26-3 8-8 9-20 3-26s-18-6-26 2L37 20c-8-8-20-9-26-3S2 35 10 43c8 8 20 9 26 3'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-bone-b { width:56px; height:56px; top:520px; right:34px; transform:rotate(15deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M31 74c-8 8-20 8-26 2s-5-18 3-26c8-8 20-9 26-3l29 29c6 6 18 5 26-3 8-8 9-20 3-26s-18-6-26 2L37 20c-8-8-20-9-26-3S2 35 10 43c8 8 20 9 26 3'/%3E%3C/g%3E%3C/svg%3E"); }
   .decor-house { width:84px; height:84px; top:470px; left:10px; transform:rotate(7deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 60 60 24l42 36v36H18z'/%3E%3Cpath d='M47 96V70h26v26M34 54h52'/%3E%3C/g%3E%3C/svg%3E"); }
   .decor-bowl { width:66px; height:66px; top:742px; right:22px; transform:rotate(-5deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 64h84c-4 20-18 34-42 34S22 84 18 64zM26 64c5-11 17-18 34-18s29 7 34 18'/%3E%3C/g%3E%3C/svg%3E"); }
   .app > * { position:relative; z-index:1; }
@@ -2382,9 +2385,12 @@ export default function PawTimer() {
 
       <div className="app">
         <div className="app-decor" aria-hidden="true">
+          <span className="decor-paw-a"/>
           <span className="decor-bone"/>
+          <span className="decor-bone-b"/>
           <span className="decor-house"/>
           <span className="decor-bowl"/>
+          <span className="decor-paw-b"/>
         </div>
 
         {/* Header */}
