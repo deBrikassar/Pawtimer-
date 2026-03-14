@@ -657,8 +657,49 @@ const styles = `
   .app {
     max-width: 480px; margin: 0 auto;
     min-height: 100vh; display: flex; flex-direction: column;
-    padding-bottom: 80px; overflow-x: hidden;
+    padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px)); overflow-x: hidden;
+    position:relative;
+    isolation:isolate;
   }
+  .app::before,
+  .app::after {
+    content:"";
+    position:absolute;
+    pointer-events:none;
+    z-index:0;
+    width:120px;
+    height:120px;
+    opacity:0.4;
+    background-repeat:no-repeat;
+    background-size:contain;
+  }
+  .app::before {
+    top:110px;
+    left:8px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .app::after {
+    right:10px;
+    bottom:140px;
+    width:96px;
+    height:96px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M40 78c8-9 31-9 40 0M30 64c4-4 10-4 14 0M76 64c4-4 10-4 14 0M48 74c0-6 4-10 12-10s12 4 12 10'/%3E%3Ccircle cx='60' cy='60' r='42'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .app-decor { position:absolute; inset:0; pointer-events:none; z-index:0; }
+  .app-decor span { position:absolute; opacity:0.3; background-repeat:no-repeat; background-size:contain; }
+  .decor-paw-a, .decor-paw-b, .decor-paw-c, .decor-paw-d, .decor-paw-e { opacity:0.5; filter:drop-shadow(0 0 1px rgba(126,184,151,0.45)); }
+  .decor-paw-a { width:64px; height:64px; top:168px; left:22px; transform:rotate(-8deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-paw-b { width:54px; height:54px; top:612px; right:18px; transform:rotate(11deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-paw-c { width:58px; height:58px; top:298px; left:18px; transform:rotate(6deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-paw-d { width:62px; height:62px; top:436px; right:10px; transform:rotate(-9deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-paw-e { width:50px; height:50px; top:772px; left:22px; transform:rotate(12deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M42 86c0-10 8-18 18-18s18 8 18 18-8 18-18 18-18-8-18-18z'/%3E%3Cellipse cx='39' cy='54' rx='8' ry='11'/%3E%3Cellipse cx='56' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='74' cy='46' rx='8' ry='11'/%3E%3Cellipse cx='91' cy='54' rx='8' ry='11'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-bone { width:72px; height:72px; top:206px; right:16px; transform:rotate(-12deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M31 74c-8 8-20 8-26 2s-5-18 3-26c8-8 20-9 26-3l29 29c6 6 18 5 26-3 8-8 9-20 3-26s-18-6-26 2L37 20c-8-8-20-9-26-3S2 35 10 43c8 8 20 9 26 3'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-bone-b { width:56px; height:56px; top:520px; right:34px; transform:rotate(15deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M31 74c-8 8-20 8-26 2s-5-18 3-26c8-8 20-9 26-3l29 29c6 6 18 5 26-3 8-8 9-20 3-26s-18-6-26 2L37 20c-8-8-20-9-26-3S2 35 10 43c8 8 20 9 26 3'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-house { width:84px; height:84px; top:470px; left:10px; transform:rotate(7deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 60 60 24l42 36v36H18z'/%3E%3Cpath d='M47 96V70h26v26M34 54h52'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-house-b { width:62px; height:62px; top:266px; left:6px; transform:rotate(-6deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 60 60 24l42 36v36H18z'/%3E%3Cpath d='M47 96V70h26v26M34 54h52'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-bowl-b { width:52px; height:52px; top:340px; right:14px; transform:rotate(8deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 64h84c-4 20-18 34-42 34S22 84 18 64zM26 64c5-11 17-18 34-18s29 7 34 18'/%3E%3C/g%3E%3C/svg%3E"); }
+  .decor-bowl { width:66px; height:66px; top:742px; right:22px; transform:rotate(-5deg); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23A8D5BA' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 64h84c-4 20-18 34-42 34S22 84 18 64zM26 64c5-11 17-18 34-18s29 7 34 18'/%3E%3C/g%3E%3C/svg%3E"); }
+  .app > * { position:relative; z-index:1; }
 
   /* ── Dog Select ── */
   .dog-select { max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); overflow-x:hidden; }
@@ -728,7 +769,7 @@ const styles = `
   .ob-back-btn { background:none; border:none; color:var(--text-muted); font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); cursor:pointer; margin-top:14px; display:block; width:100%; text-align:center; padding:8px; }
 
   /* ── Header ── */
-  .header { padding:8px var(--space-3) 0; background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
+  .header { padding:12px var(--space-3) 2px; background:linear-gradient(170deg,#f2f8f4 0%,#eef5f1 44%,var(--bg) 100%); position:relative; overflow:hidden; border-bottom:1px solid rgba(96,142,111,0.12); }
   .header::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(168,213,186,0.35) 0%,transparent 70%); border-radius:50%; }
   .header-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; gap:8px; }
   .identity-zone { display:flex; align-items:center; gap:8px; flex:1; min-width:0; }
@@ -747,8 +788,8 @@ const styles = `
   .dog-photo-overlay { position:absolute; bottom:2px; right:2px; background:var(--brown); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; pointer-events:none; border:2px solid var(--bg); }
 
   /* ── Progress section ── */
-  .prog-section { margin-top:10px; padding:10px 12px 8px; border-radius:var(--radius-sm); background:rgba(253,251,247,0.78); border:1px solid rgba(96,142,111,0.14); }
-  .train-main { width:min(100%, 460px); margin:0 auto; }
+  .prog-section { margin-top:14px; padding:14px 14px 12px; border-radius:16px; background:#ffffff; border:1px solid rgba(96,142,111,0.15); box-shadow:0 8px 24px rgba(59,90,71,0.08); }
+  .train-main { width:min(100%, 460px); margin:0 auto; display:flex; flex-direction:column; gap:10px; padding-bottom:8px; }
   .prog-track { height:10px; background:linear-gradient(90deg,rgba(96,142,111,0.16),rgba(96,142,111,0.09)); border-radius:99px; position:relative; overflow:visible; }
   .prog-fill  { height:100%; background:linear-gradient(90deg,var(--green-dark),var(--green)); border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
   .prog-thumb { position:absolute; top:50%; transform:translate(-50%,-50%); width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0 30%, #d6f0df 52%, #9dcead 100%); box-shadow:0 5px 13px rgba(61,140,96,0.28), 0 0 0 2px rgba(255,255,255,0.92), 0 0 0 4px rgba(61,140,96,0.22); transition:left 0.8s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; }
@@ -782,7 +823,7 @@ const styles = `
   .sc-track { fill:none; stroke:rgba(96,142,111,0.2); stroke-width:10; }
   .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
   .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:20px; }
-  .sc-content::before {
+    .sc-content::before {
     content:"";
     position:absolute;
     inset:18%;
@@ -791,6 +832,8 @@ const styles = `
     pointer-events:none;
     z-index:0;
   }
+  .session-control.is-running .sc-content::before,
+  .session-control.is-complete .sc-content::before { background:#ffffff; }
   .sc-idle { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; transition:opacity 260ms ease, transform 300ms ease; }
   .sc-idle-label { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-transform:uppercase; font-size:34px; font-weight:400; letter-spacing:0.03em; line-height:1; color:rgba(255,255,255,0.99); text-shadow:0 0 6px rgba(255,255,255,0.24), 0 0 16px rgba(196,247,220,0.20); }
   .sc-idle-label span { display:block; }
@@ -811,7 +854,7 @@ const styles = `
   .session-feedback { width:min(100%, 420px); margin:0; }
 
   /* ── Status message ── */
-  .status-msg { margin:12px auto 0; max-width:340px; font-size:var(--type-body-size); font-weight:var(--type-body-weight); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-align:center; }
+  .status-msg { margin:2px auto 0; max-width:360px; font-size:var(--type-body-size); font-weight:var(--type-body-weight); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-align:center; }
   .ring-sub-btn { margin-top:5px; background:transparent; border:none; padding:0; font-size:var(--type-secondary-size); color:var(--text-muted); font-weight:var(--type-button-weight); text-align:center; line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); cursor:pointer; }
   .ring-sub-btn:hover, .ring-sub-btn:focus-visible { color:var(--green-dark); outline:none; }
   .recommendation-pop { position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:min(360px, 88vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:12px 14px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); font-weight:var(--type-secondary-weight); text-align:left; z-index:20; }
@@ -820,10 +863,10 @@ const styles = `
   .recommendation-pop strong { color:var(--brown); }
 
   /* ── Stats rings card ── */
-  .stats-rings-card { margin:14px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; position:relative; }
+  .stats-rings-card { margin:4px 0 0; background:rgba(255,255,255,0.9); border-radius:14px; padding:4px 3px 4px; box-shadow:0 1px 7px rgba(75,60,48,0.05); border:1px solid rgba(96,142,111,0.08); display:flex; position:relative; }
   .ring-col { flex:1; display:flex; flex-direction:column; align-items:center; }
   .ring-col-sep { width:1px; background:var(--border); align-self:stretch; margin:8px 0; }
-  .ring-wrap { position:relative; width:88px; height:88px; }
+  .ring-wrap { position:relative; width:76px; height:76px; }
   .ring-svg { overflow:visible; }
   .ring-bg   { fill:none; stroke:var(--border); stroke-width:8; }
   .ring-fill-1 { fill:none; stroke:var(--green-dark); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.9s cubic-bezier(0.34,1.56,0.64,1); transform:rotate(-90deg); transform-origin:44px 44px; }
@@ -832,24 +875,31 @@ const styles = `
   .ring-val { font-size:var(--type-metric-lg-size); font-weight:var(--type-metric-lg-weight); color:var(--brown); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
   
   /* ── Tool section title ── */
-  .tool-section-title { margin:8px 24px 8px; font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); color:var(--text-muted); font-weight:var(--type-overline-weight); text-transform:uppercase; }
+  .tool-section-title { margin:0 0 8px; font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); color:var(--green-dark); font-weight:var(--type-overline-weight); text-transform:uppercase; padding:0 2px; }
 
   /* ── Grouped tool card ── */
-  .tool-group-card { margin:0 20px; background:var(--surf); border-radius:var(--radius-sm); box-shadow:0 2px 12px rgba(75,60,48,0.07); overflow:hidden; }
-  .tool-row { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; cursor:pointer; transition:background 0.15s; border-bottom:1px solid var(--border); }
-  .tool-row:last-child { border-bottom:none; }
-  .tool-row:hover { background:var(--surf-soft); }
-  .tool-row-left  { display:flex; align-items:center; gap:12px; }
-  .tool-row-label { font-size:var(--type-body-size); color:var(--brown); font-weight:400; line-height:1.4; display:flex; align-items:center; gap:6px; }
-  .tool-row-right { display:flex; align-items:center; gap:8px; }
-  .tool-row-meta  { font-size:var(--type-secondary-size); color:var(--text-muted); }
-  .tool-chevron   { color:var(--border); font-size:15px; font-weight:400; }
+  .tool-group-card { margin:0 6px 0; background:linear-gradient(160deg,#ffffff 0%, #f8fcf9 100%); border:1px solid rgba(96,142,111,0.2); border-radius:18px; box-shadow:0 12px 30px rgba(59,90,71,0.14); overflow:visible; padding:12px; }
+  .quick-actions-row { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
+  .quick-action-btn { border:1px solid rgba(96,142,111,0.22); border-radius:14px; padding:13px 12px; background:#ffffff; cursor:pointer; display:grid; grid-template-rows:28px 38px 18px; gap:8px; align-content:start; justify-items:center; box-shadow:0 9px 22px rgba(59,90,71,0.09); transition:transform 240ms cubic-bezier(0.22,1,0.36,1), box-shadow 260ms cubic-bezier(0.22,1,0.36,1), border-color 260ms cubic-bezier(0.22,1,0.36,1), background 260ms ease; min-height:100px; text-align:center; font-family:var(--font-ui); }
+  .quick-action-btn:hover { transform:translateY(-2px); border-color:rgba(46,129,95,0.45); box-shadow:0 14px 28px rgba(59,90,71,0.14); background:#f8fcf9; }
+  .quick-action-btn:active { transform:translateY(0) scale(0.99); }
+  .quick-action-icon { width:28px; height:28px; display:flex; align-items:center; justify-content:center; }
+  .quick-action-icon img { width:22px; height:22px; display:block; }
+  .quick-action-icon .qa-glyph { font-size:22px; line-height:1; display:block; width:22px; height:22px; }
+  .quick-action-label { font-size:14px; line-height:1.25; color:var(--brown); font-weight:600; text-align:center; width:100%; display:flex; align-items:center; justify-content:center; }
+  .quick-action-meta  { font-size:12px; color:var(--text-muted); line-height:1.2; text-align:center; width:100%; }
+  
   .tool-badge-warn { background:var(--amber); color:white; font-size:10px; font-weight:400; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; }
   .tool-expand { background:var(--surf-soft); padding:12px 14px; border-top:1px solid var(--border); }
+  .quick-modal-overlay { position:fixed; inset:0; background:rgba(37,34,28,0.42); display:flex; align-items:center; justify-content:center; z-index:80; backdrop-filter:blur(2px); padding:14px; animation:fadeIn 220ms ease; }
+  .quick-modal-card { width:min(430px, calc(100vw - 28px)); background:#ffffff; border-radius:22px; padding:20px 20px 24px; box-shadow:0 16px 42px rgba(45,57,49,0.22); animation:slideUp 320ms cubic-bezier(0.22,1,0.36,1); max-height:min(82vh, 760px); overflow:auto; }
+  .quick-modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .quick-modal-title { font-size:20px; font-weight:650; color:var(--brown); }
+  .quick-modal-close { border:none; background:var(--surf-soft); color:var(--brown-mid); border-radius:999px; width:32px; height:32px; font-size:18px; cursor:pointer; }
 
   /* ── Walk timer banner ── */
-  .walk-timer-banner { margin:0 20px; padding:10px 14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; display:flex; align-items:center; justify-content:space-between; }
-  .walk-type-panel { margin:0 20px; padding:14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; }
+  .walk-timer-banner { margin:0; padding:12px 14px; background:rgba(168,213,186,0.14); border-radius:14px; border:1.5px solid rgba(61,140,96,0.35); display:flex; align-items:center; justify-content:space-between; }
+  .walk-type-panel { margin:0; padding:14px; background:rgba(168,213,186,0.14); border-radius:14px; border:1.5px solid rgba(61,140,96,0.35); }
   .walk-type-title { font-size:var(--type-body-size); font-weight:var(--type-section-title-weight); color:var(--brown); margin-bottom:6px; }
   .walk-type-sub { font-size:13px; color:var(--text-muted); margin-bottom:10px; }
   .walk-type-grid { display:grid; gap:8px; }
@@ -865,7 +915,7 @@ const styles = `
   .walk-cancel-btn:hover { background:var(--surf); }
 
   /* ── Daily alone-time card ── */
-  .alone-card   { margin:4px 20px 0; background:var(--surf); border-radius:var(--radius-sm); padding:11px 14px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; align-items:center; gap:16px; }
+  .alone-card   { margin:0; background:var(--surf); border-radius:16px; padding:13px 14px; box-shadow:0 8px 24px rgba(75,60,48,0.09); display:flex; align-items:center; gap:16px; border:1px solid rgba(96,142,111,0.12); }
   .alone-left   { flex:1; }
   .alone-label  { font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:400; margin-bottom:2px; }
   .alone-total  { font-size:24px; color:var(--brown); font-weight:400; line-height:1.1; }
@@ -969,8 +1019,8 @@ const styles = `
   .p-count { font-size:var(--type-overline-size); color:var(--text-muted); background:var(--surf-soft); padding:2px 9px; border-radius:99px; flex-shrink:0; white-space:nowrap; line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); font-weight:var(--type-overline-weight); text-transform:uppercase; }
 
   /* ── Tabs ── */
-  .tabs { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:rgba(247,242,231,0.97); backdrop-filter:blur(14px); border-top:1.5px solid var(--border); display:flex; z-index:100; padding-bottom:env(safe-area-inset-bottom,0px); }
-  .tab-btn { flex:1; min-height:48px; padding:9px 4px 13px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--color-text-subtle); transition:color 0.18s; font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); }
+  .tabs { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:rgba(247,242,231,0.97); backdrop-filter:blur(14px); border-top:1.5px solid var(--border); display:flex; z-index:100; padding:0 0 env(safe-area-inset-bottom,0px); }
+  .tab-btn { flex:1; min-height:38px; padding:3px 4px 3px; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--color-text-subtle); transition:color 0.18s; font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); }
   .tab-btn.active { color:var(--green-dark); font-weight:var(--type-button-weight); }
   .tab-btn svg { width:24px; height:24px; }
   .tab-btn:focus-visible { outline:2px solid var(--green-dark); outline-offset:-2px; border-radius:10px; }
@@ -2341,6 +2391,19 @@ export default function PawTimer() {
       )}
 
       <div className="app">
+        <div className="app-decor" aria-hidden="true">
+          <span className="decor-paw-a"/>
+          <span className="decor-paw-b"/>
+          <span className="decor-paw-c"/>
+          <span className="decor-paw-d"/>
+          <span className="decor-paw-e"/>
+          <span className="decor-bone"/>
+          <span className="decor-bone-b"/>
+          <span className="decor-house"/>
+          <span className="decor-house-b"/>
+          <span className="decor-bowl"/>
+          <span className="decor-bowl-b"/>
+        </div>
 
         {/* Header */}
         <div className="header">
@@ -2359,21 +2422,7 @@ export default function PawTimer() {
                 <div className="app-subtitle">Separation anxiety training</div>
               </div>
             </div>
-            {SYNC_ENABLED && (
-              <button
-                className={`sync-badge sync-state-${syncStatus}`}
-                type="button"
-                title={syncError || (syncStatus === "ok" ? "Synced" : syncStatus === "syncing" ? "Syncing…" : "Not synced")}
-                onClick={() => {
-                  if (syncError) window.alert(`Sync error:
 
-${syncError}`);
-                }}
-              >
-                <span className={`sync-dot sync-${syncStatus}`} />
-                <span>{syncStatus === "ok" ? "Synced" : syncStatus === "syncing" ? "Syncing" : syncStatus === "err" ? "Sync issue" : "Sync off"}</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -2416,11 +2465,6 @@ ${syncError}`);
               onCancel={cancelSession}
               completed={sessionCompleted}
             />
-
-            <div className="readiness-hint" role="status" aria-live="polite">
-              <span className="readiness-label">Training readiness:</span>
-              <span className="readiness-value" style={{ color: trainingReadiness.color }}>{trainingReadiness.level}</span>
-            </div>
 
             {phase === "rating" && (
               <div className="rating-screen session-feedback">
@@ -2488,20 +2532,7 @@ ${syncError}`);
               </div>
             )}
 
-            {phase !== "running" && (
-              <p className="status-msg">
-                {!sessions.length
-                  ? "First session — starting small and positive."
-                  : !lastSess || lastSess.distressLevel === "none"
-                    ? (lastSess && (lastSess.actualDuration||0) < (lastSess.plannedDuration||0))
-                      ? `Session ended early — holding until ${name} completes the full time.`
-                      : `${name} completed the last session — stepping up.`
-                    : lastSess.distressLevel === "subtle"
-                      ? "Mild signs last time — holding until consistently calm."
-                      : "Rolled back after higher distress — steady progress matters most."}
-              </p>
-            )}
-            {/* 4. Stats rings card */}
+                        {/* 4. Stats rings card */}
             {phase === "idle" && (() => {
               const R = 36; const C = 2*Math.PI*R;
               const goalFrac = Math.min(goalPct/100, 1);
@@ -2510,7 +2541,7 @@ ${syncError}`);
                 <div className="stats-rings-card">
                   <div className="ring-col">
                     <div className="ring-wrap">
-                      <svg className="ring-svg" width={88} height={88} viewBox="0 0 88 88">
+                      <svg className="ring-svg" width={76} height={76} viewBox="0 0 88 88">
                         <circle cx={44} cy={44} r={R} className="ring-bg"/>
                         <circle cx={44} cy={44} r={R} className="ring-fill-1"
                           strokeDasharray={C}
@@ -2525,7 +2556,7 @@ ${syncError}`);
                   <div className="ring-col-sep"/>
                   <div className="ring-col">
                     <div className="ring-wrap">
-                      <svg className="ring-svg" width={88} height={88} viewBox="0 0 88 88">
+                      <svg className="ring-svg" width={76} height={76} viewBox="0 0 88 88">
                         <circle cx={44} cy={44} r={R} className="ring-bg"/>
                         <circle cx={44} cy={44} r={R} className="ring-fill-2"
                           strokeDasharray={C}
@@ -2559,146 +2590,94 @@ ${syncError}`);
               </p>
             )}
 
-            {/* 5. Daily alone-time card */}
-            {(() => {
-              const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
-              const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
-              const calmSec   = loggedTodaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const subtleSec = loggedTodaySess.filter(s=>s.distressLevel==="subtle").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const activeSec = loggedTodaySess.filter(s=>s.distressLevel==="active").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const severeSec = loggedTodaySess.filter(s=>s.distressLevel==="severe").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const calmPct   = totalLogged ? (calmSec/totalLogged)*100 : 0;
-              const subtlePct = totalLogged ? (subtleSec/totalLogged)*100 : 0;
-              const activePct = totalLogged ? (activeSec/totalLogged)*100 : 0;
-              const severePct = totalLogged ? (severeSec/totalLogged)*100 : 0;
-              return (
-                <div className="alone-card">
-                  <div className="alone-left">
-                    <div className="alone-label">Today's alone time</div>
-                    <div className="alone-total">{totalLogged === 0 ? "0 mins" : fmt(totalLogged)}</div>
-                  </div>
-                  <div className="alone-right">
-                    <div className="alone-track">
-                      {totalLogged > 0 ? (<>
-                        <div className="alone-fill ok"   style={{width:`${calmPct}%`}}/>
-                        <div className="alone-fill near" style={{width:`${subtlePct}%`}}/>
-                        <div className="alone-fill active" style={{width:`${activePct}%`}}/>
-                        <div className="alone-fill full" style={{width:`${severePct}%`}}/>
-                      </>) : <div style={{width:"100%",height:"100%",background:"var(--border)",borderRadius:99}}/>}
-                    </div>
-                    {totalLogged > 0 && (
-                      <div className="alone-legend">
-                        {calmSec>0   && <span className="t-helper" style={{color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
-                        {subtleSec>0 && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(subtleSec)} subtle</span>}
-                        {activeSec>0 && <span className="t-helper" style={{color:"#d65f3c"}}>{fmt(activeSec)} active</span>}
-                        {severeSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(severeSec)} severe</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* 6. Other tools — grouped card */}
-            <div className="tool-section-title">Helpful tools</div>
+            {/* 6. Other tools — redesigned quick actions */}
             <div className="tool-group-card">
-
-              {/* Log a walk */}
-              <div className="tool-row" onClick={walkPhase === "idle" ? startWalk : undefined}
-                style={{borderRadius: walkPhase === "timing" ? "var(--radius-sm) var(--radius-sm) 0 0" : undefined}}>
-                <div className="tool-row-left">
-                  <Img src="walk.png" size={24} alt="Walk"/>
-                  <span className="tool-row-label">Log a walk</span>
-                </div>
-                <div className="tool-row-right">
-                  {walkPhase === "timing"
-                    ? <span className="t-helper num-stable" style={{color:"var(--green-dark)",fontWeight:400}}>{fmt(walkElapsed)} ●</span>
-                    : <span className="tool-row-meta">Today: {todayWalks}</span>
-                  }
-                  <span className="tool-chevron">›</span>
-                </div>
-              </div>
-              {walkPhase === "timing" && (
-                <div className="walk-timer-banner">
-                  <div className="walk-timer-left">
-                    <div className="walk-timer-elapsed">{fmt(walkElapsed)}</div>
-                    <div className="walk-timer-lbl">Walk in progress…</div>
-                  </div>
-                  <div className="walk-timer-btns">
-                    <button className="walk-cancel-btn" onClick={cancelWalk}>Cancel</button>
-                    <button className="walk-end-btn" onClick={endWalk}>End Walk</button>
-                  </div>
-                </div>
-              )}
-
-              {walkPhase === "classify" && (
-                <div className="walk-type-panel">
-                  <div className="walk-type-title">Classify this walk</div>
-                  <div className="walk-type-sub">{fmt(walkPendingDuration)} · select a walk type to save.</div>
-                  <div className="walk-type-grid">
-                    {WALK_TYPE_OPTIONS.map((option) => (
-                      <button
-                        key={option.value}
-                        className="walk-type-option"
-                        onClick={() => saveWalkWithType(option.value)}
-                        type="button"
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="walk-type-actions">
-                    <button className="walk-cancel-btn" type="button" onClick={cancelWalk}>Cancel</button>
-                  </div>
-                </div>
-              )}
-
-              {/* Pattern breaking */}
-              <div className="tool-row" onClick={() => setPatOpen(o=>!o)}>
-                <div className="tool-row-left">
-                  <Img src="pattern-keys.png" size={24} alt="Pattern"/>
-                  <span className="tool-row-label">
-                    Pattern breaking
-                    {behind && <span className="tool-badge-warn">!</span>}
+              <div className="quick-actions-row">
+                <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
+                  <span className="quick-action-icon"><Img src="walk.png" size={22} alt="Walk"/></span>
+                  <span className="quick-action-label">Log a walk</span>
+                  <span className="quick-action-meta">
+                    {walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `Today: ${todayWalks}`}
                   </span>
-                </div>
-                <div className="tool-row-right">
-                  <span className="tool-row-meta">Today: {todayPat}</span>
-                  <span className="tool-chevron">{patOpen ? "∨" : "›"}</span>
-                </div>
+                </button>
+                <button className={`quick-action-btn ${behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
+                  <span className="quick-action-icon"><Img src="pattern-keys.png" size={22} alt="Pattern"/></span>
+                  <span className="quick-action-label">Pattern breaking</span>
+                  <span className="quick-action-meta">Today: {todayPat}</span>
+                </button>
+                <button className="quick-action-btn" type="button" onClick={openFeedingForm}>
+                  <span className="quick-action-icon" aria-hidden="true"><span className="qa-glyph">🍽️</span></span>
+                  <span className="quick-action-label">Add feeding</span>
+                  <span className="quick-action-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
+                </button>
               </div>
-              {patOpen && (
-                <div className="tool-expand">
-                  <div className={`pat-reminder ${behind ? "warn" : ""}`} style={{marginBottom:10}}>
-                    {patReminderText}
-                  </div>
-                  <div className="pat-btns">
-                    {PATTERN_TYPES.map(pt => (
-                      <button key={pt.type} className="btn-pat" onClick={e=>{e.stopPropagation();logPattern(pt.type);}}>
-                        <Img src={pt.icon} size={28} alt={pt.label}/>
-                        <div className="p-text">
-                          <div className="p-label">{patLabels[pt.type] || pt.label}</div>
-                          <div className="p-desc">{pt.desc}</div>
-                        </div>
-                        <span className="p-count">Today: {patterns.filter(p=>isToday(p.date)&&p.type===pt.type).length}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="tool-row" onClick={openFeedingForm}>
-                <div className="tool-row-left">
-                  <span aria-hidden="true">🍽️</span>
-                  <span className="tool-row-label">Add Feeding</span>
-                </div>
-                <div className="tool-row-right">
-                  <span className="tool-row-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
-                  <span className="tool-chevron">›</span>
-                </div>
-              </div>
-
             </div>
+
+            {(walkPhase !== "idle" || patOpen) && (
+              <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
+                <div className="quick-modal-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="quick-modal-head">
+                    <div className="quick-modal-title">{walkPhase !== "idle" ? "Log a walk" : "Pattern breaking"}</div>
+                    <button className="quick-modal-close" type="button" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>×</button>
+                  </div>
+
+                  {walkPhase === "timing" && (
+                    <div className="walk-timer-banner">
+                      <div className="walk-timer-left">
+                        <div className="walk-timer-elapsed">{fmt(walkElapsed)}</div>
+                        <div className="walk-timer-lbl">Walk in progress…</div>
+                      </div>
+                      <div className="walk-timer-btns">
+                        <button className="walk-cancel-btn" onClick={cancelWalk}>Cancel</button>
+                        <button className="walk-end-btn" onClick={endWalk}>End Walk</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {walkPhase === "classify" && (
+                    <div className="walk-type-panel">
+                      <div className="walk-type-title">Classify this walk</div>
+                      <div className="walk-type-sub">{fmt(walkPendingDuration)} · select a walk type to save.</div>
+                      <div className="walk-type-grid">
+                        {WALK_TYPE_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            className="walk-type-option"
+                            onClick={() => saveWalkWithType(option.value)}
+                            type="button"
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="walk-type-actions">
+                        <button className="walk-cancel-btn" type="button" onClick={cancelWalk}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {patOpen && (
+                    <div className="tool-expand" style={{borderTop:"none", borderRadius:12}}>
+                      <div className={`pat-reminder ${behind ? "warn" : ""}`} style={{marginBottom:10}}>
+                        {patReminderText}
+                      </div>
+                      <div className="pat-btns">
+                        {PATTERN_TYPES.map(pt => (
+                          <button key={pt.type} className="btn-pat" onClick={e=>{e.stopPropagation();logPattern(pt.type);}}>
+                            <Img src={pt.icon} size={28} alt={pt.label}/>
+                            <div className="p-text">
+                              <div className="p-label">{patLabels[pt.type] || pt.label}</div>
+                              <div className="p-desc">{pt.desc}</div>
+                            </div>
+                            <span className="p-count">Today: {patterns.filter(p=>isToday(p.date)&&p.type===pt.type).length}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {feedingOpen && (
               <div className="feeding-overlay" role="dialog" aria-modal="true" aria-labelledby="feeding-title" onClick={cancelFeedingForm}>
@@ -2903,6 +2882,44 @@ ${syncError}`);
             <p className="t-helper train-coverage" style={{ marginTop: 0, marginBottom: 14 }}>
               Data coverage for smarter recommendations: {recommendationCoveragePct}% ({recommendationCoverageCount}/{totalCount})
             </p>
+            {(() => {
+              const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
+              const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
+              const calmSec   = loggedTodaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const subtleSec = loggedTodaySess.filter(s=>s.distressLevel==="subtle").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const activeSec = loggedTodaySess.filter(s=>s.distressLevel==="active").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const severeSec = loggedTodaySess.filter(s=>s.distressLevel==="severe").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+              const calmPct   = totalLogged ? (calmSec/totalLogged)*100 : 0;
+              const subtlePct = totalLogged ? (subtleSec/totalLogged)*100 : 0;
+              const activePct = totalLogged ? (activeSec/totalLogged)*100 : 0;
+              const severePct = totalLogged ? (severeSec/totalLogged)*100 : 0;
+              return (
+                <div className="alone-card" style={{ marginBottom:14 }}>
+                  <div className="alone-left">
+                    <div className="alone-label">Today's alone time</div>
+                    <div className="alone-total">{totalLogged === 0 ? "0 mins" : fmt(totalLogged)}</div>
+                  </div>
+                  <div className="alone-right">
+                    <div className="alone-track">
+                      {totalLogged > 0 ? (<>
+                        <div className="alone-fill ok"   style={{width:`${calmPct}%`}}/>
+                        <div className="alone-fill near" style={{width:`${subtlePct}%`}}/>
+                        <div className="alone-fill active" style={{width:`${activePct}%`}}/>
+                        <div className="alone-fill full" style={{width:`${severePct}%`}}/>
+                      </>) : <div style={{width:"100%",height:"100%",background:"var(--border)",borderRadius:99}}/>}
+                    </div>
+                    {totalLogged > 0 && (
+                      <div className="alone-legend">
+                        {calmSec>0   && <span className="t-helper" style={{color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
+                        {subtleSec>0 && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(subtleSec)} subtle</span>}
+                        {activeSec>0 && <span className="t-helper" style={{color:"#d65f3c"}}>{fmt(activeSec)} active</span>}
+                        {severeSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(severeSec)} severe</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
             <div className="goal-card" style={{margin:"0 0 14px"}}>
               <div className="goal-label">
                 <span className="goal-title">Progress toward goal</span>
