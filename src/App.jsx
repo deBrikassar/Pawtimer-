@@ -728,7 +728,7 @@ const styles = `
   .ob-back-btn { background:none; border:none; color:var(--text-muted); font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); cursor:pointer; margin-top:14px; display:block; width:100%; text-align:center; padding:8px; }
 
   /* ── Header ── */
-  .header { padding:8px var(--space-3) 0; background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
+  .header { padding:12px var(--space-3) 2px; background:linear-gradient(170deg,#f2f8f4 0%,#eef5f1 44%,var(--bg) 100%); position:relative; overflow:hidden; border-bottom:1px solid rgba(96,142,111,0.12); }
   .header::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(168,213,186,0.35) 0%,transparent 70%); border-radius:50%; }
   .header-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; gap:8px; }
   .identity-zone { display:flex; align-items:center; gap:8px; flex:1; min-width:0; }
@@ -747,8 +747,8 @@ const styles = `
   .dog-photo-overlay { position:absolute; bottom:2px; right:2px; background:var(--brown); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; pointer-events:none; border:2px solid var(--bg); }
 
   /* ── Progress section ── */
-  .prog-section { margin-top:10px; padding:10px 12px 8px; border-radius:var(--radius-sm); background:rgba(253,251,247,0.78); border:1px solid rgba(96,142,111,0.14); }
-  .train-main { width:min(100%, 460px); margin:0 auto; }
+  .prog-section { margin-top:14px; padding:14px 14px 12px; border-radius:16px; background:#ffffff; border:1px solid rgba(96,142,111,0.15); box-shadow:0 8px 24px rgba(59,90,71,0.08); }
+  .train-main { width:min(100%, 460px); margin:0 auto; display:flex; flex-direction:column; gap:14px; padding-bottom:8px; }
   .prog-track { height:10px; background:linear-gradient(90deg,rgba(96,142,111,0.16),rgba(96,142,111,0.09)); border-radius:99px; position:relative; overflow:visible; }
   .prog-fill  { height:100%; background:linear-gradient(90deg,var(--green-dark),var(--green)); border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
   .prog-thumb { position:absolute; top:50%; transform:translate(-50%,-50%); width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0 30%, #d6f0df 52%, #9dcead 100%); box-shadow:0 5px 13px rgba(61,140,96,0.28), 0 0 0 2px rgba(255,255,255,0.92), 0 0 0 4px rgba(61,140,96,0.22); transition:left 0.8s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; }
@@ -782,15 +782,7 @@ const styles = `
   .sc-track { fill:none; stroke:rgba(96,142,111,0.2); stroke-width:10; }
   .sc-progress { fill:none; stroke:var(--green-dark); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1000ms linear, opacity 320ms ease; }
   .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:20px; }
-  .sc-content::before {
-    content:"";
-    position:absolute;
-    inset:18%;
-    border-radius:50%;
-    background:radial-gradient(circle, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.14) 45%, rgba(0,0,0,0) 72%);
-    pointer-events:none;
-    z-index:0;
-  }
+  .sc-content::before { content:""; position:absolute; inset:20%; border-radius:50%; background:#ffffff; pointer-events:none; z-index:0; }
   .sc-idle { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; transition:opacity 260ms ease, transform 300ms ease; }
   .sc-idle-label { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-transform:uppercase; font-size:34px; font-weight:400; letter-spacing:0.03em; line-height:1; color:rgba(255,255,255,0.99); text-shadow:0 0 6px rgba(255,255,255,0.24), 0 0 16px rgba(196,247,220,0.20); }
   .sc-idle-label span { display:block; }
@@ -811,7 +803,7 @@ const styles = `
   .session-feedback { width:min(100%, 420px); margin:0; }
 
   /* ── Status message ── */
-  .status-msg { margin:12px auto 0; max-width:340px; font-size:var(--type-body-size); font-weight:var(--type-body-weight); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-align:center; }
+  .status-msg { margin:2px auto 0; max-width:360px; font-size:var(--type-body-size); font-weight:var(--type-body-weight); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-align:center; }
   .ring-sub-btn { margin-top:5px; background:transparent; border:none; padding:0; font-size:var(--type-secondary-size); color:var(--text-muted); font-weight:var(--type-button-weight); text-align:center; line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); cursor:pointer; }
   .ring-sub-btn:hover, .ring-sub-btn:focus-visible { color:var(--green-dark); outline:none; }
   .recommendation-pop { position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:min(360px, 88vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:12px 14px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); font-weight:var(--type-secondary-weight); text-align:left; z-index:20; }
@@ -832,24 +824,29 @@ const styles = `
   .ring-val { font-size:var(--type-metric-lg-size); font-weight:var(--type-metric-lg-weight); color:var(--brown); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
   
   /* ── Tool section title ── */
-  .tool-section-title { margin:8px 24px 8px; font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); color:var(--text-muted); font-weight:var(--type-overline-weight); text-transform:uppercase; }
+  .tool-section-title { margin:0; font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); color:var(--text-muted); font-weight:var(--type-overline-weight); text-transform:uppercase; padding:0 2px; }
 
   /* ── Grouped tool card ── */
-  .tool-group-card { margin:0 20px; background:var(--surf); border-radius:var(--radius-sm); box-shadow:0 2px 12px rgba(75,60,48,0.07); overflow:hidden; }
-  .tool-row { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; cursor:pointer; transition:background 0.15s; border-bottom:1px solid var(--border); }
-  .tool-row:last-child { border-bottom:none; }
-  .tool-row:hover { background:var(--surf-soft); }
-  .tool-row-left  { display:flex; align-items:center; gap:12px; }
-  .tool-row-label { font-size:var(--type-body-size); color:var(--brown); font-weight:400; line-height:1.4; display:flex; align-items:center; gap:6px; }
-  .tool-row-right { display:flex; align-items:center; gap:8px; }
-  .tool-row-meta  { font-size:var(--type-secondary-size); color:var(--text-muted); }
-  .tool-chevron   { color:var(--border); font-size:15px; font-weight:400; }
+  .tool-group-card { margin:0; background:transparent; border-radius:0; box-shadow:none; overflow:visible; }
+  .quick-actions-row { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+  .quick-action-btn { border:1px solid rgba(96,142,111,0.2); border-radius:14px; padding:12px 10px; background:#ffffff; cursor:pointer; display:flex; flex-direction:column; gap:7px; align-items:flex-start; justify-content:center; box-shadow:0 8px 20px rgba(59,90,71,0.08); transition:transform 240ms cubic-bezier(0.22,1,0.36,1), box-shadow 260ms cubic-bezier(0.22,1,0.36,1), border-color 260ms cubic-bezier(0.22,1,0.36,1), background 260ms ease; min-height:92px; }
+  .quick-action-btn:hover { transform:translateY(-2px); border-color:rgba(46,129,95,0.45); box-shadow:0 14px 28px rgba(59,90,71,0.14); background:#f8fcf9; }
+  .quick-action-btn:active { transform:translateY(0) scale(0.99); }
+  .quick-action-icon { width:28px; height:28px; display:flex; align-items:center; justify-content:center; }
+  .quick-action-label { font-size:14px; line-height:1.25; color:var(--brown); font-weight:600; text-align:left; }
+  .quick-action-meta  { font-size:12px; color:var(--text-muted); line-height:1.2; }
+  .quick-action-btn.warn .quick-action-meta { color:var(--amber); }
   .tool-badge-warn { background:var(--amber); color:white; font-size:10px; font-weight:400; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; }
   .tool-expand { background:var(--surf-soft); padding:12px 14px; border-top:1px solid var(--border); }
+  .quick-modal-overlay { position:fixed; inset:0; background:rgba(37,34,28,0.42); display:flex; align-items:flex-end; justify-content:center; z-index:80; backdrop-filter:blur(2px); animation:fadeIn 220ms ease; }
+  .quick-modal-card { width:min(460px, 100%); background:#ffffff; border-radius:22px 22px 0 0; padding:20px 20px 24px; box-shadow:0 -20px 48px rgba(45,57,49,0.2); animation:slideUp 320ms cubic-bezier(0.22,1,0.36,1); max-height:82vh; overflow:auto; }
+  .quick-modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .quick-modal-title { font-size:20px; font-weight:650; color:var(--brown); }
+  .quick-modal-close { border:none; background:var(--surf-soft); color:var(--brown-mid); border-radius:999px; width:32px; height:32px; font-size:18px; cursor:pointer; }
 
   /* ── Walk timer banner ── */
-  .walk-timer-banner { margin:0 20px; padding:10px 14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; display:flex; align-items:center; justify-content:space-between; }
-  .walk-type-panel { margin:0 20px; padding:14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; }
+  .walk-timer-banner { margin:0; padding:12px 14px; background:rgba(168,213,186,0.14); border-radius:14px; border:1.5px solid rgba(61,140,96,0.35); display:flex; align-items:center; justify-content:space-between; }
+  .walk-type-panel { margin:0; padding:14px; background:rgba(168,213,186,0.14); border-radius:14px; border:1.5px solid rgba(61,140,96,0.35); }
   .walk-type-title { font-size:var(--type-body-size); font-weight:var(--type-section-title-weight); color:var(--brown); margin-bottom:6px; }
   .walk-type-sub { font-size:13px; color:var(--text-muted); margin-bottom:10px; }
   .walk-type-grid { display:grid; gap:8px; }
@@ -865,7 +862,7 @@ const styles = `
   .walk-cancel-btn:hover { background:var(--surf); }
 
   /* ── Daily alone-time card ── */
-  .alone-card   { margin:4px 20px 0; background:var(--surf); border-radius:var(--radius-sm); padding:11px 14px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; align-items:center; gap:16px; }
+  .alone-card   { margin:0; background:var(--surf); border-radius:16px; padding:13px 14px; box-shadow:0 8px 24px rgba(75,60,48,0.09); display:flex; align-items:center; gap:16px; border:1px solid rgba(96,142,111,0.12); }
   .alone-left   { flex:1; }
   .alone-label  { font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:400; margin-bottom:2px; }
   .alone-total  { font-size:24px; color:var(--brown); font-weight:400; line-height:1.1; }
@@ -2359,21 +2356,7 @@ export default function PawTimer() {
                 <div className="app-subtitle">Separation anxiety training</div>
               </div>
             </div>
-            {SYNC_ENABLED && (
-              <button
-                className={`sync-badge sync-state-${syncStatus}`}
-                type="button"
-                title={syncError || (syncStatus === "ok" ? "Synced" : syncStatus === "syncing" ? "Syncing…" : "Not synced")}
-                onClick={() => {
-                  if (syncError) window.alert(`Sync error:
 
-${syncError}`);
-                }}
-              >
-                <span className={`sync-dot sync-${syncStatus}`} />
-                <span>{syncStatus === "ok" ? "Synced" : syncStatus === "syncing" ? "Syncing" : syncStatus === "err" ? "Sync issue" : "Sync off"}</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -2416,11 +2399,6 @@ ${syncError}`);
               onCancel={cancelSession}
               completed={sessionCompleted}
             />
-
-            <div className="readiness-hint" role="status" aria-live="polite">
-              <span className="readiness-label">Training readiness:</span>
-              <span className="readiness-value" style={{ color: trainingReadiness.color }}>{trainingReadiness.level}</span>
-            </div>
 
             {phase === "rating" && (
               <div className="rating-screen session-feedback">
@@ -2488,20 +2466,7 @@ ${syncError}`);
               </div>
             )}
 
-            {phase !== "running" && (
-              <p className="status-msg">
-                {!sessions.length
-                  ? "First session — starting small and positive."
-                  : !lastSess || lastSess.distressLevel === "none"
-                    ? (lastSess && (lastSess.actualDuration||0) < (lastSess.plannedDuration||0))
-                      ? `Session ended early — holding until ${name} completes the full time.`
-                      : `${name} completed the last session — stepping up.`
-                    : lastSess.distressLevel === "subtle"
-                      ? "Mild signs last time — holding until consistently calm."
-                      : "Rolled back after higher distress — steady progress matters most."}
-              </p>
-            )}
-            {/* 4. Stats rings card */}
+                        {/* 4. Stats rings card */}
             {phase === "idle" && (() => {
               const R = 36; const C = 2*Math.PI*R;
               const goalFrac = Math.min(goalPct/100, 1);
@@ -2599,106 +2564,95 @@ ${syncError}`);
               );
             })()}
 
-            {/* 6. Other tools — grouped card */}
-            <div className="tool-section-title">Helpful tools</div>
+            {/* 6. Other tools — redesigned quick actions */}
             <div className="tool-group-card">
-
-              {/* Log a walk */}
-              <div className="tool-row" onClick={walkPhase === "idle" ? startWalk : undefined}
-                style={{borderRadius: walkPhase === "timing" ? "var(--radius-sm) var(--radius-sm) 0 0" : undefined}}>
-                <div className="tool-row-left">
-                  <Img src="walk.png" size={24} alt="Walk"/>
-                  <span className="tool-row-label">Log a walk</span>
-                </div>
-                <div className="tool-row-right">
-                  {walkPhase === "timing"
-                    ? <span className="t-helper num-stable" style={{color:"var(--green-dark)",fontWeight:400}}>{fmt(walkElapsed)} ●</span>
-                    : <span className="tool-row-meta">Today: {todayWalks}</span>
-                  }
-                  <span className="tool-chevron">›</span>
-                </div>
-              </div>
-              {walkPhase === "timing" && (
-                <div className="walk-timer-banner">
-                  <div className="walk-timer-left">
-                    <div className="walk-timer-elapsed">{fmt(walkElapsed)}</div>
-                    <div className="walk-timer-lbl">Walk in progress…</div>
-                  </div>
-                  <div className="walk-timer-btns">
-                    <button className="walk-cancel-btn" onClick={cancelWalk}>Cancel</button>
-                    <button className="walk-end-btn" onClick={endWalk}>End Walk</button>
-                  </div>
-                </div>
-              )}
-
-              {walkPhase === "classify" && (
-                <div className="walk-type-panel">
-                  <div className="walk-type-title">Classify this walk</div>
-                  <div className="walk-type-sub">{fmt(walkPendingDuration)} · select a walk type to save.</div>
-                  <div className="walk-type-grid">
-                    {WALK_TYPE_OPTIONS.map((option) => (
-                      <button
-                        key={option.value}
-                        className="walk-type-option"
-                        onClick={() => saveWalkWithType(option.value)}
-                        type="button"
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="walk-type-actions">
-                    <button className="walk-cancel-btn" type="button" onClick={cancelWalk}>Cancel</button>
-                  </div>
-                </div>
-              )}
-
-              {/* Pattern breaking */}
-              <div className="tool-row" onClick={() => setPatOpen(o=>!o)}>
-                <div className="tool-row-left">
-                  <Img src="pattern-keys.png" size={24} alt="Pattern"/>
-                  <span className="tool-row-label">
-                    Pattern breaking
-                    {behind && <span className="tool-badge-warn">!</span>}
+              <div className="tool-section-title">Helpful tools</div>
+              <div className="quick-actions-row">
+                <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
+                  <span className="quick-action-icon"><Img src="walk.png" size={24} alt="Walk"/></span>
+                  <span className="quick-action-label">Log a walk</span>
+                  <span className="quick-action-meta">
+                    {walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `Today: ${todayWalks}`}
                   </span>
-                </div>
-                <div className="tool-row-right">
-                  <span className="tool-row-meta">Today: {todayPat}</span>
-                  <span className="tool-chevron">{patOpen ? "∨" : "›"}</span>
-                </div>
+                </button>
+                <button className={`quick-action-btn ${behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
+                  <span className="quick-action-icon"><Img src="pattern-keys.png" size={24} alt="Pattern"/></span>
+                  <span className="quick-action-label">Pattern breaking</span>
+                  <span className="quick-action-meta">Today: {todayPat}{behind ? " • behind" : ""}</span>
+                </button>
+                <button className="quick-action-btn" type="button" onClick={openFeedingForm}>
+                  <span className="quick-action-icon" aria-hidden="true">🍽️</span>
+                  <span className="quick-action-label">Add feeding</span>
+                  <span className="quick-action-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
+                </button>
               </div>
-              {patOpen && (
-                <div className="tool-expand">
-                  <div className={`pat-reminder ${behind ? "warn" : ""}`} style={{marginBottom:10}}>
-                    {patReminderText}
-                  </div>
-                  <div className="pat-btns">
-                    {PATTERN_TYPES.map(pt => (
-                      <button key={pt.type} className="btn-pat" onClick={e=>{e.stopPropagation();logPattern(pt.type);}}>
-                        <Img src={pt.icon} size={28} alt={pt.label}/>
-                        <div className="p-text">
-                          <div className="p-label">{patLabels[pt.type] || pt.label}</div>
-                          <div className="p-desc">{pt.desc}</div>
-                        </div>
-                        <span className="p-count">Today: {patterns.filter(p=>isToday(p.date)&&p.type===pt.type).length}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="tool-row" onClick={openFeedingForm}>
-                <div className="tool-row-left">
-                  <span aria-hidden="true">🍽️</span>
-                  <span className="tool-row-label">Add Feeding</span>
-                </div>
-                <div className="tool-row-right">
-                  <span className="tool-row-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
-                  <span className="tool-chevron">›</span>
-                </div>
-              </div>
-
             </div>
+
+            {(walkPhase !== "idle" || patOpen) && (
+              <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
+                <div className="quick-modal-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="quick-modal-head">
+                    <div className="quick-modal-title">{walkPhase !== "idle" ? "Log a walk" : "Pattern breaking"}</div>
+                    <button className="quick-modal-close" type="button" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>×</button>
+                  </div>
+
+                  {walkPhase === "timing" && (
+                    <div className="walk-timer-banner">
+                      <div className="walk-timer-left">
+                        <div className="walk-timer-elapsed">{fmt(walkElapsed)}</div>
+                        <div className="walk-timer-lbl">Walk in progress…</div>
+                      </div>
+                      <div className="walk-timer-btns">
+                        <button className="walk-cancel-btn" onClick={cancelWalk}>Cancel</button>
+                        <button className="walk-end-btn" onClick={endWalk}>End Walk</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {walkPhase === "classify" && (
+                    <div className="walk-type-panel">
+                      <div className="walk-type-title">Classify this walk</div>
+                      <div className="walk-type-sub">{fmt(walkPendingDuration)} · select a walk type to save.</div>
+                      <div className="walk-type-grid">
+                        {WALK_TYPE_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            className="walk-type-option"
+                            onClick={() => saveWalkWithType(option.value)}
+                            type="button"
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="walk-type-actions">
+                        <button className="walk-cancel-btn" type="button" onClick={cancelWalk}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {patOpen && (
+                    <div className="tool-expand" style={{borderTop:"none", borderRadius:12}}>
+                      <div className={`pat-reminder ${behind ? "warn" : ""}`} style={{marginBottom:10}}>
+                        {patReminderText}
+                      </div>
+                      <div className="pat-btns">
+                        {PATTERN_TYPES.map(pt => (
+                          <button key={pt.type} className="btn-pat" onClick={e=>{e.stopPropagation();logPattern(pt.type);}}>
+                            <Img src={pt.icon} size={28} alt={pt.label}/>
+                            <div className="p-text">
+                              <div className="p-label">{patLabels[pt.type] || pt.label}</div>
+                              <div className="p-desc">{pt.desc}</div>
+                            </div>
+                            <span className="p-count">Today: {patterns.filter(p=>isToday(p.date)&&p.type===pt.type).length}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {feedingOpen && (
               <div className="feeding-overlay" role="dialog" aria-modal="true" aria-labelledby="feeding-title" onClick={cancelFeedingForm}>
