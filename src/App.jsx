@@ -728,15 +728,13 @@ const styles = `
   .ob-back-btn { background:none; border:none; color:var(--text-muted); font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); cursor:pointer; margin-top:14px; display:block; width:100%; text-align:center; padding:8px; }
 
   /* ── Header ── */
-  .header { padding:12px var(--space-3) 2px; background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
+  .header { padding:8px var(--space-3) 0; background:linear-gradient(160deg,var(--surf-soft) 0%,var(--bg) 100%); position:relative; overflow:hidden; }
   .header::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle,rgba(168,213,186,0.35) 0%,transparent 70%); border-radius:50%; }
-  .header-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; gap:10px; }
-  .identity-zone { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+  .header-top { display:flex; align-items:center; justify-content:space-between; position:relative; z-index:1; gap:8px; }
+  .identity-zone { display:flex; align-items:center; gap:8px; flex:1; min-width:0; }
   .identity-copy { flex:1; min-width:0; }
   .app-title { font-size:var(--type-page-title-size); font-weight:var(--type-page-title-weight); color:var(--brown); line-height:var(--type-page-title-line); letter-spacing:var(--type-page-title-track); }
-  .app-subtitle { font-size:var(--type-body-size); color:var(--text-muted); margin-top:2px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
-  .app-today-alone { margin-top:2px; font-size:11px; line-height:1.25; color:var(--text-muted); letter-spacing:0.01em; }
-  .app-today-alone strong { color:var(--brown); font-weight:600; }
+  .app-subtitle { font-size:var(--type-body-size); color:var(--text-muted); margin-top:1px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
   .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
   .dog-id-badge { display:flex; align-items:center; gap:6px; background:var(--surf); border-radius:99px; padding:4px 10px 4px 8px; box-shadow:var(--shadow); cursor:pointer; border:1.5px solid var(--border); transition:border-color 0.2s; }
   .dog-id-badge:hover { border-color:var(--green-dark); }
@@ -744,12 +742,12 @@ const styles = `
 
   /* ── Dog photo ── */
   .dog-photo-btn { position:relative; display:inline-block; cursor:pointer; flex-shrink:0; }
-  .dog-photo-img { width:56px; height:56px; border-radius:50%; object-fit:cover; border:2.5px solid var(--green); display:block; box-shadow:0 3px 10px rgba(61,140,96,0.18); }
-  .dog-photo-placeholder { width:56px; height:56px; border-radius:50%; background:var(--surf-soft); border:2px dashed var(--border); display:flex; align-items:center; justify-content:center; }
+  .dog-photo-img { width:52px; height:52px; border-radius:50%; object-fit:cover; border:2.5px solid var(--green); display:block; box-shadow:0 2px 8px rgba(61,140,96,0.16); }
+  .dog-photo-placeholder { width:52px; height:52px; border-radius:50%; background:var(--surf-soft); border:2px dashed var(--border); display:flex; align-items:center; justify-content:center; }
   .dog-photo-overlay { position:absolute; bottom:2px; right:2px; background:var(--brown); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; pointer-events:none; border:2px solid var(--bg); }
 
   /* ── Progress section ── */
-  .prog-section { margin-top:14px; padding:12px 14px 10px; border-radius:var(--radius-sm); background:rgba(253,251,247,0.78); border:1px solid rgba(96,142,111,0.14); }
+  .prog-section { margin-top:10px; padding:10px 12px 8px; border-radius:var(--radius-sm); background:rgba(253,251,247,0.78); border:1px solid rgba(96,142,111,0.14); }
   .train-main { width:min(100%, 460px); margin:0 auto; }
   .prog-track { height:10px; background:linear-gradient(90deg,rgba(96,142,111,0.16),rgba(96,142,111,0.09)); border-radius:99px; position:relative; overflow:visible; }
   .prog-fill  { height:100%; background:linear-gradient(90deg,var(--green-dark),var(--green)); border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
@@ -759,7 +757,7 @@ const styles = `
   .prog-meta strong { color:var(--brown); font-weight:600; }
 
   /* ── Session control — single morphing button/timer ── */
-  .session-control-wrap { margin-top:24px; display:flex; justify-content:center; }
+  .session-control-wrap { margin-top:18px; display:flex; justify-content:center; }
   .session-control {
     position:relative; width:clamp(216px, 66vw, 255px); aspect-ratio:1/1;
     border:none; border-radius:50%; cursor:pointer;
@@ -813,7 +811,7 @@ const styles = `
   .session-feedback { width:min(100%, 420px); margin:0; }
 
   /* ── Status message ── */
-  .status-msg { margin:18px auto 0; max-width:340px; font-size:var(--type-body-size); font-weight:var(--type-body-weight); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-align:center; }
+  .status-msg { margin:12px auto 0; max-width:340px; font-size:var(--type-body-size); font-weight:var(--type-body-weight); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-align:center; }
   .ring-sub-btn { margin-top:5px; background:transparent; border:none; padding:0; font-size:var(--type-secondary-size); color:var(--text-muted); font-weight:var(--type-button-weight); text-align:center; line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); cursor:pointer; }
   .ring-sub-btn:hover, .ring-sub-btn:focus-visible { color:var(--green-dark); outline:none; }
   .recommendation-pop { position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:min(360px, 88vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:12px 14px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); font-weight:var(--type-secondary-weight); text-align:left; z-index:20; }
@@ -822,7 +820,7 @@ const styles = `
   .recommendation-pop strong { color:var(--brown); }
 
   /* ── Stats rings card ── */
-  .stats-rings-card { margin:24px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; position:relative; }
+  .stats-rings-card { margin:14px 0 0; background:var(--surf); border-radius:var(--radius); padding:8px 6px 8px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; position:relative; }
   .ring-col { flex:1; display:flex; flex-direction:column; align-items:center; }
   .ring-col-sep { width:1px; background:var(--border); align-self:stretch; margin:8px 0; }
   .ring-wrap { position:relative; width:88px; height:88px; }
@@ -867,7 +865,7 @@ const styles = `
   .walk-cancel-btn:hover { background:var(--surf); }
 
   /* ── Daily alone-time card ── */
-  .alone-card   { margin:6px 20px 0; background:var(--surf); border-radius:var(--radius-sm); padding:11px 14px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; align-items:center; gap:16px; }
+  .alone-card   { margin:4px 20px 0; background:var(--surf); border-radius:var(--radius-sm); padding:11px 14px; box-shadow:0 2px 12px rgba(75,60,48,0.07); display:flex; align-items:center; gap:16px; }
   .alone-left   { flex:1; }
   .alone-label  { font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:400; margin-bottom:2px; }
   .alone-total  { font-size:24px; color:var(--brown); font-weight:400; line-height:1.1; }
@@ -2359,7 +2357,6 @@ export default function PawTimer() {
               <div className="identity-copy">
                 <div className="app-title">{name}</div>
                 <div className="app-subtitle">Separation anxiety training</div>
-                <div className="app-today-alone">Today's alone time: <strong className="num-stable">{usedSec === 0 ? "0 mins" : fmt(usedSec)}</strong></div>
               </div>
             </div>
             {SYNC_ENABLED && (
