@@ -540,12 +540,11 @@ const walkTypeLabel = (walkType) => (WALK_TYPE_OPTIONS.find((option) => option.v
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Golos+Text:wght@400;500;600;700&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --font-ui: 'Manrope';
-    --font-prose: 'Golos Text';
+    --font-ui: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-prose: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --space-1: 8px;
     --space-2: 16px;
     --space-3: 24px;
@@ -600,12 +599,12 @@ const styles = `
     --type-card-title-line: 24px;
     --type-card-title-weight: 600;
     --type-card-title-track: -0.015em;
-    --type-body-lg-size: 16px;
+    --type-body-lg-size: 17px;
     --type-body-lg-line: 24px;
     --type-body-lg-weight: 400;
     --type-body-lg-track: -0.01em;
-    --type-body-size: 15px;
-    --type-body-line: 22px;
+    --type-body-size: 17px;
+    --type-body-line: 24px;
     --type-body-weight: 400;
     --type-body-track: -0.005em;
     --type-secondary-size: 13px;
@@ -628,8 +627,8 @@ const styles = `
     --type-button-lg-line: 22px;
     --type-button-lg-weight: 500;
     --type-button-lg-track: -0.01em;
-    --type-button-size: 16px;
-    --type-button-line: 20px;
+    --type-button-size: 17px;
+    --type-button-line: 24px;
     --type-button-weight: 500;
     --type-button-track: -0.01em;
   }
@@ -685,7 +684,7 @@ const styles = `
   .ds-join-row { display:flex; gap:10px; margin-top:4px; }
   .ds-join-input { flex:1; padding:14px 16px; background:var(--surf); border:2px solid var(--border); border-radius:var(--radius-sm); font-size:var(--type-body-lg-size); color:var(--brown); outline:none; transition:border-color 0.2s; font-weight:var(--type-body-lg-weight); line-height:var(--type-body-lg-line); letter-spacing:var(--type-overline-track); text-transform:uppercase; }
   .ds-join-input:focus { border-color:var(--green-dark); }
-  .ds-join-input::placeholder { color:var(--brown-muted); text-transform:none; letter-spacing:0; font-weight:300; font-size:14px; }
+  .ds-join-input::placeholder { color:var(--brown-muted); text-transform:none; letter-spacing:0; font-weight:300; font-size:var(--type-body-size); }
   .ds-join-btn { padding:14px 18px; background:var(--green); color:var(--brown); border:none; border-radius:var(--radius-sm); font-size:var(--type-button-size); font-weight:var(--type-button-weight); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); cursor:pointer; white-space:nowrap; transition:transform 0.15s; }
   .ds-join-btn:hover { transform:translateY(-1px); }
   .ds-join-hint { font-size:var(--type-secondary-size); color:var(--text-muted); margin-top:8px; line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); }
@@ -708,7 +707,7 @@ const styles = `
   .ob-note { font-size:var(--type-overline-size); color:var(--green-dark); background:rgba(168,213,186,0.2); border-left:3px solid var(--green); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:8px 12px; margin-bottom:12px; line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); font-weight:var(--type-overline-weight); text-transform:uppercase; }
   .ob-input { width:100%; padding:16px; background:var(--surf); border:2px solid var(--border); border-radius:var(--radius-sm); font-size:var(--type-section-title-size); color:var(--brown); outline:none; transition:border-color 0.2s; font-weight:var(--type-section-title-weight); line-height:var(--type-section-title-line); letter-spacing:var(--type-section-title-track); }
   .ob-input:focus { border-color:var(--green-dark); }
-  .ob-input::placeholder { color:var(--brown-muted); font-weight:300; font-size:15px; text-transform:none; letter-spacing:0; }
+  .ob-input::placeholder { color:var(--brown-muted); font-weight:300; font-size:var(--type-body-size); text-transform:none; letter-spacing:0; }
   .ob-options { display:flex; flex-direction:column; gap:10px; }
   .ob-option { display:flex; align-items:center; gap:14px; padding:14px 18px; background:var(--surf); border:2px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; transition:border-color 0.2s,background 0.2s; text-align:left; }
   .ob-option:hover { border-color:var(--green); }
@@ -837,9 +836,9 @@ const styles = `
   .tool-row:last-child { border-bottom:none; }
   .tool-row:hover { background:var(--surf-soft); }
   .tool-row-left  { display:flex; align-items:center; gap:12px; }
-  .tool-row-label { font-size:15px; color:var(--brown); font-weight:400; line-height:1.4; display:flex; align-items:center; gap:6px; }
+  .tool-row-label { font-size:var(--type-body-size); color:var(--brown); font-weight:400; line-height:1.4; display:flex; align-items:center; gap:6px; }
   .tool-row-right { display:flex; align-items:center; gap:8px; }
-  .tool-row-meta  { font-size:14px; color:var(--text-muted); }
+  .tool-row-meta  { font-size:var(--type-secondary-size); color:var(--text-muted); }
   .tool-chevron   { color:var(--border); font-size:15px; font-weight:400; }
   .tool-badge-warn { background:var(--amber); color:white; font-size:10px; font-weight:400; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; }
   .tool-expand { background:var(--surf-soft); padding:12px 14px; border-top:1px solid var(--border); }
@@ -847,18 +846,18 @@ const styles = `
   /* ── Walk timer banner ── */
   .walk-timer-banner { margin:0 20px; padding:10px 14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; display:flex; align-items:center; justify-content:space-between; }
   .walk-type-panel { margin:0 20px; padding:14px; background:rgba(168,213,186,0.18); border-radius:0 0 var(--radius-sm) var(--radius-sm); border:1.5px solid var(--green); border-top:none; }
-  .walk-type-title { font-size:15px; font-weight:var(--type-section-title-weight); color:var(--brown); margin-bottom:6px; }
+  .walk-type-title { font-size:var(--type-body-size); font-weight:var(--type-section-title-weight); color:var(--brown); margin-bottom:6px; }
   .walk-type-sub { font-size:13px; color:var(--text-muted); margin-bottom:10px; }
   .walk-type-grid { display:grid; gap:8px; }
-  .walk-type-option { width:100%; text-align:left; border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-size:14px; text-transform:capitalize; color:var(--brown); background:var(--surf); cursor:pointer; }
+  .walk-type-option { width:100%; text-align:left; border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-size:var(--type-body-size); text-transform:capitalize; color:var(--brown); background:var(--surf); cursor:pointer; }
   .walk-type-option:hover { border-color:var(--green-dark); }
   .walk-type-actions { display:flex; justify-content:flex-end; margin-top:8px; }
   .walk-timer-left .walk-timer-elapsed { font-size:26px; font-weight:400; color:var(--green-dark); line-height:1.1; }
-  .walk-timer-left .walk-timer-lbl { font-size:14px; color:var(--text-muted); margin-top:1px; }
+  .walk-timer-left .walk-timer-lbl { font-size:var(--type-secondary-size); color:var(--text-muted); margin-top:1px; }
   .walk-timer-btns { display:flex; gap:8px; align-items:center; }
-  .walk-end-btn { padding:10px 20px; background:var(--green-dark); color:white; border:none; border-radius:99px; font-size:14px; font-weight:400; cursor:pointer; transition:opacity 0.15s; }
+  .walk-end-btn { padding:10px 20px; background:var(--green-dark); color:white; border:none; border-radius:99px; font-size:var(--type-body-size); font-weight:400; cursor:pointer; transition:opacity 0.15s; }
   .walk-end-btn:hover { opacity:0.88; }
-  .walk-cancel-btn { padding:10px 14px; background:transparent; color:var(--text-muted); border:1.5px solid var(--border); border-radius:99px; font-size:14px; cursor:pointer; }
+  .walk-cancel-btn { padding:10px 14px; background:transparent; color:var(--text-muted); border:1.5px solid var(--border); border-radius:99px; font-size:var(--type-body-size); cursor:pointer; }
   .walk-cancel-btn:hover { background:var(--surf); }
 
   /* ── Daily alone-time card ── */
@@ -953,16 +952,16 @@ const styles = `
   .pat-header  { display:flex; align-items:center; gap:0; margin-bottom:6px; }
   .pat-title   { font-size:var(--type-card-title-size); line-height:var(--type-card-title-line); letter-spacing:var(--type-card-title-track); font-weight:var(--type-card-title-weight); color:var(--brown); }
   .pat-badge   { font-size:10px; font-weight:400; padding:2px 9px; border-radius:99px; background:rgba(168,213,186,0.3); color:var(--green-dark); letter-spacing:0.01em; }
-  .pat-reminder { font-size:15px; color:var(--text-muted); line-height:1.6; padding:10px 14px; background:var(--surf); border-radius:var(--radius-sm); margin-bottom:10px; border-left:3px solid var(--green-dark); box-shadow:0 2px 8px rgba(75,60,48,0.06); }
+  .pat-reminder { font-size:var(--type-body-size); color:var(--text-muted); line-height:1.6; padding:10px 14px; background:var(--surf); border-radius:var(--radius-sm); margin-bottom:10px; border-left:3px solid var(--green-dark); box-shadow:0 2px 8px rgba(75,60,48,0.06); }
   .pat-reminder.warn { border-left-color:var(--amber); color:var(--brown-mid); }
   .pat-btns { display:flex; flex-direction:column; gap:0; }
-  .btn-pat { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surf); color:var(--brown); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-weight:400; cursor:pointer; transition:border-color 0.2s,transform 0.15s; text-align:left; box-shadow:0 2px 8px rgba(75,60,48,0.05); }
+  .btn-pat { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surf); color:var(--brown); border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:var(--type-body-size); font-weight:400; cursor:pointer; transition:border-color 0.2s,transform 0.15s; text-align:left; box-shadow:0 2px 8px rgba(75,60,48,0.05); }
   .btn-pat:hover { border-color:var(--green-dark); transform:translateX(3px); }
   .btn-pat:active { transform:translateX(0); }
   .p-emoji { font-size:18px; flex-shrink:0; }
   .p-text  { flex:1; }
   .p-label { font-size:var(--type-body-size); color:var(--brown); font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
-  .p-desc  { font-size:14px; color:var(--text-muted); margin-top:1px; font-weight:400; }
+  .p-desc  { font-size:var(--type-secondary-size); color:var(--text-muted); margin-top:1px; font-weight:400; }
   .p-count { font-size:var(--type-overline-size); color:var(--text-muted); background:var(--surf-soft); padding:2px 9px; border-radius:99px; flex-shrink:0; white-space:nowrap; line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); font-weight:var(--type-overline-weight); text-transform:uppercase; }
 
   /* ── Tabs ── */
@@ -977,7 +976,7 @@ const styles = `
   .section-title { font-size:var(--type-section-title-size); font-weight:var(--type-section-title-weight); color:var(--brown); line-height:var(--type-section-title-line); letter-spacing:var(--type-section-title-track); margin-bottom:14px; }
   .empty-state { text-align:center; padding:40px 24px; color:var(--text-muted); }
   .empty-state .big { font-size:48px; margin-bottom:12px; }
-  .empty-state p { font-size:15px; line-height:1.6; }
+  .empty-state p { font-size:var(--type-body-size); line-height:1.6; }
 
 
 
@@ -1015,8 +1014,8 @@ const styles = `
   /* ── Pattern edit row ── */
   .pat-edit-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--surf-soft); }
   .pat-edit-row:last-child { border-bottom:none; }
-  .pat-edit-label { flex:1; font-size:14px; color:var(--brown); }
-  .pat-edit-input { flex:1; padding:7px 10px; border:1.5px solid var(--green-dark); border-radius:var(--radius-sm); font-size:14px; color:var(--brown); background:var(--surf-soft); outline:none; }
+  .pat-edit-label { flex:1; font-size:var(--type-body-size); color:var(--brown); }
+  .pat-edit-input { flex:1; padding:7px 10px; border:1.5px solid var(--green-dark); border-radius:var(--radius-sm); font-size:var(--type-body-size); color:var(--brown); background:var(--surf-soft); outline:none; }
   .pat-edit-btn { background:none; border:none; font-size:16px; color:var(--brown-muted); cursor:pointer; padding:4px; }
   .pat-edit-btn:hover { color:var(--brown); }
   .pat-edit-reset { background:none; border:none; font-size:14px; color:var(--brown-muted); cursor:pointer; padding:4px; }
@@ -1050,7 +1049,7 @@ const styles = `
   .chart-title { font-size:var(--type-body-lg-size); line-height:var(--type-body-lg-line); letter-spacing:var(--type-body-lg-track); font-weight:var(--type-body-lg-weight); color:var(--brown); margin-bottom:14px; padding-left:12px; }
   .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:12px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:12px; }
   .streak-num  { font-size:36px; font-weight:400; line-height:1; }
-  .streak-lbl  { font-size:14px; letter-spacing:0.01em; opacity:0.9; margin-top:6px; font-weight:400; display:flex; align-items:center; justify-content:center; gap:4px; }
+  .streak-lbl  { font-size:var(--type-secondary-size); letter-spacing:0.01em; opacity:0.9; margin-top:6px; font-weight:400; display:flex; align-items:center; justify-content:center; gap:4px; }
   .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:8px; }
   .stat-card-span2 { grid-column:span 2; }
   .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
@@ -1097,7 +1096,7 @@ const styles = `
   .diag-run-btn:disabled { opacity:0.6; cursor:not-allowed; }
   .diag-grid { display:grid; gap:6px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); color:var(--text-muted); margin-bottom:10px; }
   .diag-grid code { color:var(--brown); background:var(--surf-soft); padding:2px 6px; border-radius:6px; }
-  .diag-summary { font-size:14px; font-weight:400; margin-bottom:8px; }
+  .diag-summary { font-size:var(--type-body-size); font-weight:400; margin-bottom:8px; }
   .diag-summary.ok { color:var(--green-dark); }
   .diag-summary.err { color:var(--red); }
   .diag-json { font-size:11px; background:#1f1f1f; color:#e7e7e7; border-radius:10px; padding:10px; overflow:auto; max-height:220px; }
@@ -2960,10 +2959,10 @@ ${syncError}`);
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
                     <CartesianGrid stroke="var(--surf-soft)" vertical={false}/>
-                    <XAxis dataKey="session" tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"Manrope"}} tickLine={false} axisLine={false}/>
-                    <YAxis tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"Manrope"}} tickLine={false} axisLine={false}/>
-                    <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:13,fontWeight:400,fontFamily:"Manrope"}} labelStyle={{color:"var(--green-light)",fontSize:13,fontWeight:400,fontFamily:"Manrope"}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
-                    <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:13,fill:"var(--green-dark)",fontWeight:400,fontFamily:"Manrope"}}/>
+                    <XAxis dataKey="session" tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} tickLine={false} axisLine={false}/>
+                    <YAxis tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} tickLine={false} axisLine={false}/>
+                    <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:13,fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} labelStyle={{color:"var(--green-light)",fontSize:13,fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
+                    <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:13,fill:"var(--green-dark)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}}/>
                     <Line type="monotone" dataKey="duration" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
                   </LineChart>
                 </ResponsiveContainer>
