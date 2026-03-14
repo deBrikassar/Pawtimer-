@@ -880,14 +880,15 @@ const styles = `
   /* ── Grouped tool card ── */
   .tool-group-card { margin:0 6px 0; background:linear-gradient(160deg,#ffffff 0%, #f8fcf9 100%); border:1px solid rgba(96,142,111,0.2); border-radius:18px; box-shadow:0 12px 30px rgba(59,90,71,0.14); overflow:visible; padding:12px; }
   .quick-actions-row { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; }
-  .quick-action-btn { border:1px solid rgba(96,142,111,0.22); border-radius:14px; padding:13px 12px; background:#ffffff; cursor:pointer; display:grid; grid-template-rows:28px auto auto; gap:8px; align-content:center; justify-items:center; box-shadow:0 9px 22px rgba(59,90,71,0.09); transition:transform 240ms cubic-bezier(0.22,1,0.36,1), box-shadow 260ms cubic-bezier(0.22,1,0.36,1), border-color 260ms cubic-bezier(0.22,1,0.36,1), background 260ms ease; min-height:100px; text-align:center; }
+  .quick-action-btn { border:1px solid rgba(96,142,111,0.22); border-radius:14px; padding:13px 12px; background:#ffffff; cursor:pointer; display:grid; grid-template-rows:28px 38px 18px; gap:8px; align-content:start; justify-items:center; box-shadow:0 9px 22px rgba(59,90,71,0.09); transition:transform 240ms cubic-bezier(0.22,1,0.36,1), box-shadow 260ms cubic-bezier(0.22,1,0.36,1), border-color 260ms cubic-bezier(0.22,1,0.36,1), background 260ms ease; min-height:100px; text-align:center; font-family:var(--font-ui); }
   .quick-action-btn:hover { transform:translateY(-2px); border-color:rgba(46,129,95,0.45); box-shadow:0 14px 28px rgba(59,90,71,0.14); background:#f8fcf9; }
   .quick-action-btn:active { transform:translateY(0) scale(0.99); }
   .quick-action-icon { width:28px; height:28px; display:flex; align-items:center; justify-content:center; }
-  .quick-action-icon .qa-glyph { font-size:20px; line-height:1; display:block; }
-  .quick-action-label { font-size:14px; line-height:1.25; color:var(--brown); font-weight:600; text-align:center; }
-  .quick-action-meta  { font-size:12px; color:var(--text-muted); line-height:1.2; text-align:center; }
-  .quick-action-btn.warn .quick-action-meta { color:var(--amber); }
+  .quick-action-icon img { width:22px; height:22px; display:block; }
+  .quick-action-icon .qa-glyph { font-size:22px; line-height:1; display:block; width:22px; height:22px; }
+  .quick-action-label { font-size:14px; line-height:1.25; color:var(--brown); font-weight:600; text-align:center; width:100%; display:flex; align-items:center; justify-content:center; }
+  .quick-action-meta  { font-size:12px; color:var(--text-muted); line-height:1.2; text-align:center; width:100%; }
+  
   .tool-badge-warn { background:var(--amber); color:white; font-size:10px; font-weight:400; border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; }
   .tool-expand { background:var(--surf-soft); padding:12px 14px; border-top:1px solid var(--border); }
   .quick-modal-overlay { position:fixed; inset:0; background:rgba(37,34,28,0.42); display:flex; align-items:center; justify-content:center; z-index:80; backdrop-filter:blur(2px); padding:14px; animation:fadeIn 220ms ease; }
