@@ -1032,7 +1032,7 @@ const styles = `
   .dot-feed   { background:rgba(212,129,58,0.16); color:var(--brown); font-size:18px; }
   .dot-pat    { background:rgba(75,60,48,0.09); }
   .h-info { flex:1; min-width:0; }
-  .h-main { font-size:var(--type-section-title-size); font-weight:var(--type-section-title-weight); line-height:var(--type-section-title-line); letter-spacing:var(--type-section-title-track); color:var(--brown); }
+  .h-main { font-size:var(--type-body-size); font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); color:var(--brown); }
   .h-date { font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); margin-top:6px; }
   .h-badge { font-size:var(--type-overline-size); font-weight:var(--type-overline-weight); line-height:var(--type-overline-line); padding:3px 9px; border-radius:99px; letter-spacing:var(--type-overline-track); white-space:nowrap; flex-shrink:0; text-transform:uppercase; }
   .badge-none   { background:rgba(168,213,186,0.3);  color:var(--green-dark); }
@@ -2869,7 +2869,7 @@ ${syncError}`);
                 <div className="stat-lbl">Calm sessions</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{Math.round((noneCount/totalCount)*100)}<span className="t-helper">%</span></div>
+                <div className="stat-val">{`${Math.round((noneCount/totalCount)*100)}%`}</div>
                 <div className="stat-lbl">Success rate</div>
               </div>
               <div className="stat-card">
