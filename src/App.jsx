@@ -2602,7 +2602,7 @@ export default function PawTimer() {
                 <button className={`quick-action-btn ${behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
                   <span className="quick-action-icon"><Img src="pattern-keys.png" size={22} alt="Pattern"/></span>
                   <span className="quick-action-label">Pattern breaking</span>
-                  <span className="quick-action-meta">Today: {todayPat}{behind ? " • behind" : ""}</span>
+                  <span className="quick-action-meta">Today: {todayPat}</span>
                 </button>
                 <button className="quick-action-btn" type="button" onClick={openFeedingForm}>
                   <span className="quick-action-icon" aria-hidden="true"><span className="qa-glyph">🍽️</span></span>
