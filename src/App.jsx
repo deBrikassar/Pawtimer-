@@ -1054,6 +1054,8 @@ const styles = `
   .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:8px; }
   .stat-card-span2 { grid-column:span 2; }
   .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
+  .stats-metric-value { font-family:var(--font-ui); font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); text-transform:none; opacity:1; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; margin:0; padding:0; }
+  .stats-metric-label { font-family:var(--font-ui); font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-transform:none; opacity:1; font-feature-settings:normal; margin-bottom:0; padding:0; }
   .stat-val    { font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
   .stat-lbl    { font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
   .stat-wide   { background:var(--surf); border-radius:var(--radius-sm); padding:14px 18px; box-shadow:var(--shadow); grid-column:span 2; display:flex; align-items:center; justify-content:space-between; }
@@ -2865,31 +2867,31 @@ ${syncError}`);
             </div>
             <div className="stats-row">
               <div className="stat-card">
-                <div className="stat-val" style={{color:"var(--green-dark)"}}>{noneCount}</div>
-                <div className="stat-lbl">Calm sessions</div>
+                <div className="stat-val stats-metric-value" style={{color:"var(--green-dark)"}}>{noneCount}</div>
+                <div className="stat-lbl stats-metric-label">Calm sessions</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{`${Math.round((noneCount/totalCount)*100)}%`}</div>
-                <div className="stat-lbl">Success rate</div>
+                <div className="stat-val stats-metric-value">{`${Math.round((noneCount/totalCount)*100)}%`}</div>
+                <div className="stat-lbl stats-metric-label">Success rate</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{fmt(bestCalm)}</div>
-                <div className="stat-lbl">Best calm time</div>
+                <div className="stat-val stats-metric-value">{fmt(bestCalm)}</div>
+                <div className="stat-lbl stats-metric-label">Best calm time</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{fmt(target)}</div>
-                <div className="stat-lbl">Next target</div>
+                <div className="stat-val stats-metric-value">{fmt(target)}</div>
+                <div className="stat-lbl stats-metric-label">Next target</div>
               </div>
               <div className="stat-wide">
-                <div><div className="stat-val">{fmt(totalAlone)}</div><div className="stat-lbl">Total time alone</div></div>
+                <div><div className="stat-val stats-metric-value">{fmt(totalAlone)}</div><div className="stat-lbl stats-metric-label">Total time alone</div></div>
                 <div className="stat-icon"><PawIcon size={32}/></div>
               </div>
               <div className="stat-wide">
-                <div><div className="stat-val">{walks.length}</div><div className="stat-lbl">Walks together</div></div>
+                <div><div className="stat-val stats-metric-value">{walks.length}</div><div className="stat-lbl stats-metric-label">Walks together</div></div>
                 <div className="stat-icon"><Img src="walk.png" size={36} alt="walks"/></div>
               </div>
               <div className="stat-wide">
-                <div><div className="stat-val">{patterns.length}</div><div className="stat-lbl">Pattern breaks</div></div>
+                <div><div className="stat-val stats-metric-value">{patterns.length}</div><div className="stat-lbl stats-metric-label">Pattern breaks</div></div>
                 <div className="stat-icon"><Img src="pattern-keys.png" size={36} alt="pattern breaks"/></div>
               </div>
             </div>
@@ -2927,28 +2929,28 @@ ${syncError}`);
             {totalCount > 0 && (
               <div className="insights-grid">
                 <button className="stat-card metric-btn" onClick={() => openMetricHelp("stability")} type="button">
-                  <div className="stat-val" style={{ color: stabilityTone.color }}>
+                  <div className="stat-val stats-metric-value" style={{ color: stabilityTone.color }}>
                     {calmMedian != null ? fmt(calmMedian) : "—"}
                   </div>
-                  <div className="stat-lbl">Stability</div>
+                  <div className="stat-lbl stats-metric-label">Stability</div>
                 </button>
                 <button className="stat-card metric-btn" onClick={() => openMetricHelp("momentum")} type="button">
-                  <div className="stat-val" style={{ color: momentumTone.color }}>
+                  <div className="stat-val stats-metric-value" style={{ color: momentumTone.color }}>
                     {calmRate7 != null ? `${calmRate7}%` : "—"}
                   </div>
-                  <div className="stat-lbl">Momentum</div>
+                  <div className="stat-lbl stats-metric-label">Momentum</div>
                 </button>
                 <button className="stat-card metric-btn" onClick={() => openMetricHelp("adherence")} type="button">
-                  <div className="stat-val" style={{ color: adherenceTone.color }}>
+                  <div className="stat-val stats-metric-value" style={{ color: adherenceTone.color }}>
                     {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
                   </div>
-                  <div className="stat-lbl">Adherence</div>
+                  <div className="stat-lbl stats-metric-label">Adherence</div>
                 </button>
                 <button className="stat-card metric-btn" onClick={() => openMetricHelp("relapseRisk")} type="button">
-                  <div className="stat-val" style={{ color: relapseTone.color }}>
+                  <div className="stat-val stats-metric-value" style={{ color: relapseTone.color }}>
                     {relapseRisk ? "High" : "Low"}
                   </div>
-                  <div className="stat-lbl">Relapse risk</div>
+                  <div className="stat-lbl stats-metric-label">Relapse risk</div>
                 </button>
               </div>
             )}
