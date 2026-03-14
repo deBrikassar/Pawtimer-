@@ -1020,11 +1020,9 @@ const styles = `
   .ratio-legend span { display:flex; align-items:center; gap:5px; }
   .dot12 { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
   .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:10px; }
-  .insight-card { background:var(--surf); border-radius:var(--radius-sm); padding:10px 12px; box-shadow:var(--shadow); border-left:4px solid var(--border); min-height:78px; }
-  .insight-card-btn { width:100%; text-align:left; border:none; cursor:pointer; }
-  .insight-title { font-size:13px; letter-spacing:0.01em; color:var(--text-muted); font-weight:700; margin-bottom:4px; }
-  .insight-value { font-size:22px; font-weight:700; color:var(--brown); line-height:1.1; font-variant-numeric:tabular-nums; }
-  .insight-sub { font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600; }
+  .metric-btn { width:100%; border:none; cursor:pointer; }
+  .metric-btn .stat-lbl { margin-top:6px; }
+  .metric-card-span2 { grid-column:span 2; }
 
   /* ── Settings tab ── */
   .share-card  { background:var(--surf); border-radius:var(--radius); padding:16px; margin-bottom:12px; box-shadow:var(--shadow); }
@@ -2202,6 +2200,7 @@ export default function PawTimer() {
   };
   const momentumTone = statusTone(calmRate7, { good: 75, warn: 55 });
   const stabilityTone = statusTone(durationVariability, { good: 120, warn: 240, invert: true });
+  const designTone = statusTone(recommendationCoveragePct, { good: 85, warn: 65 });
   const adherenceTone = statusTone(adherenceByDay, { good: 85, warn: 65 });
   const relapseTone = relapseRisk
     ? { color: "var(--red)", label: "Elevated" }
@@ -2219,6 +2218,11 @@ export default function PawTimer() {
       title: "Momentum",
       body: "Your short-term trend. It compares calm-session rate over the last 7 days against the last 14 days to show whether progress is improving, holding, or slipping.",
       detail: `7d calm · 14d ${calmRate14 != null ? `${calmRate14}%` : "—"} · ${momentumTone.label}`,
+    },
+    design: {
+      title: "Design",
+      body: "How complete each session log is for recommendation design quality. Higher coverage means smarter, more personalized next-step targets.",
+      detail: `${recommendationCoverageCount}/${totalCount} sessions include all key context signals · ${designTone.label}`,
     },
     relapseRisk: {
       title: "Relapse risk",
@@ -2825,14 +2829,10 @@ ${syncError}`);
                 <div className="stat-lbl">Success rate</div>
               </div>
               <div className="stat-card">
-                <div className="stat-val">{recommendationCoveragePct}<span className="t-helper">%</span></div>
-                <div className="stat-lbl">Recommendation quality</div>
-              </div>
-              <div className="stat-card">
                 <div className="stat-val">{fmt(bestCalm)}</div>
                 <div className="stat-lbl">Best calm time</div>
               </div>
-              <div className="stat-card stat-card-span2">
+              <div className="stat-card">
                 <div className="stat-val">{fmt(target)}</div>
                 <div className="stat-lbl">Next target</div>
               </div>
@@ -2882,29 +2882,35 @@ ${syncError}`);
             )}
             {totalCount > 0 && (
               <div className="insights-grid">
-                <button className="insight-card insight-card-btn" style={{ borderLeftColor: stabilityTone.color }} onClick={() => openMetricHelp("stability")} type="button">
-                  <div className="insight-title">Stability</div>
-                  <div className="insight-value" style={{ color: stabilityTone.color }}>
+                <button className="stat-card metric-btn" onClick={() => openMetricHelp("stability")} type="button">
+                  <div className="stat-val" style={{ color: stabilityTone.color }}>
                     {calmMedian != null ? fmt(calmMedian) : "—"}
                   </div>
+                  <div className="stat-lbl">Stability</div>
                 </button>
-                <button className="insight-card insight-card-btn" style={{ borderLeftColor: momentumTone.color }} onClick={() => openMetricHelp("momentum")} type="button">
-                  <div className="insight-title">Momentum</div>
-                  <div className="insight-value" style={{ color: momentumTone.color }}>
+                <button className="stat-card metric-btn" onClick={() => openMetricHelp("momentum")} type="button">
+                  <div className="stat-val" style={{ color: momentumTone.color }}>
                     {calmRate7 != null ? `${calmRate7}%` : "—"}
                   </div>
+                  <div className="stat-lbl">Momentum</div>
                 </button>
-                <button className="insight-card insight-card-btn" style={{ borderLeftColor: relapseTone.color }} onClick={() => openMetricHelp("relapseRisk")} type="button">
-                  <div className="insight-title">Relapse risk</div>
-                  <div className="insight-value" style={{ color: relapseTone.color }}>
+                <button className="stat-card metric-btn" onClick={() => openMetricHelp("design")} type="button">
+                  <div className="stat-val" style={{ color: designTone.color }}>
+                    {recommendationCoveragePct}%
+                  </div>
+                  <div className="stat-lbl">Design</div>
+                </button>
+                <button className="stat-card metric-btn" onClick={() => openMetricHelp("relapseRisk")} type="button">
+                  <div className="stat-val" style={{ color: relapseTone.color }}>
                     {relapseRisk ? "High" : "Low"}
                   </div>
+                  <div className="stat-lbl">Relapse risk</div>
                 </button>
-                <button className="insight-card insight-card-btn" style={{ borderLeftColor: adherenceTone.color }} onClick={() => openMetricHelp("adherence")} type="button">
-                  <div className="insight-title">Adherence</div>
-                  <div className="insight-value" style={{ color: adherenceTone.color }}>
+                <button className="stat-card metric-btn metric-card-span2" onClick={() => openMetricHelp("adherence")} type="button">
+                  <div className="stat-val" style={{ color: adherenceTone.color }}>
                     {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
                   </div>
+                  <div className="stat-lbl">Adherence</div>
                 </button>
               </div>
             )}
