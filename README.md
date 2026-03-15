@@ -170,6 +170,5 @@ MIT — free to use, modify, and share.
 
 ## App icon workflow
 
-If a PR tool cannot handle binary diffs ("binary files are not supported"), avoid committing regenerated PNGs.
-Update `public/icons/app-logo.svg` and run `npm run icons:generate` locally when you need to rebuild icon files.
+`public/icons/app-logo.svg` is the canonical app logo source. Keep this file as the only app logo asset.
 
