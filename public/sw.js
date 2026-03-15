@@ -69,8 +69,8 @@ async function checkAlarm() {
           await saveAlarm({ ...alarm, lastFired: today });
           self.registration.showNotification("PawTimer", {
             body: `Time for ${alarm.dogName}'s training session! Tap to start.`,
-            icon: "/icons/icon-192.png",
-            badge: "/icons/icon-192.png",
+            icon: "/icons/app-logo.svg",
+            badge: "/icons/app-logo.svg",
             tag: "pawtimer-daily",
             renotify: true,
           });
