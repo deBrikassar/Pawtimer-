@@ -2051,6 +2051,27 @@ export default function PawTimer() {
     showToast(`🚶 Walk updated to ${fmt(parsedDuration)}`);
   };
 
+  const editWalkTime = (walkId) => {
+    const currentWalk = walks.find((w) => w.id === walkId);
+    if (!currentWalk) return;
+    const input = window.prompt(
+      "Edit walk date/time (YYYY-MM-DDTHH:MM)",
+      toDateTimeLocalValue(currentWalk.date)
+    );
+    if (input === null) return;
+    const parsedDate = new Date(input);
+    if (Number.isNaN(parsedDate.getTime())) {
+      showToast("⚠️ Invalid date/time. Use YYYY-MM-DDTHH:MM");
+      return;
+    }
+    const updatedWalk = { ...currentWalk, date: parsedDate.toISOString() };
+    setWalks((prev) => prev.map((w) => (w.id === walkId ? updatedWalk : w)));
+    pushWithSyncStatus("walk", updatedWalk).then((ok) => {
+      if (!ok) showToast("⚠️ Sync failed — check console");
+    });
+    showToast(`🕒 Walk time updated to ${fmtDate(updatedWalk.date)}`);
+  };
+
   const logWalk = () => startWalk();
 
   const logPattern = (type) => {
@@ -2789,6 +2810,7 @@ export default function PawTimer() {
                     </div>
                     <span className="h-badge badge-walk">{walkTypeLabel(w.type)}</span>
                     <div className="h-actions">
+                      <button className="h-edit" onClick={() => editWalkTime(w.id)} title="Edit time">🕒</button>
                       <button className="h-edit" onClick={() => editWalkDuration(w.id)} title="Edit duration">✎</button>
                       <button className="h-del" onClick={() => { setWalks(prev => prev.filter(x => x.id !== w.id)); syncDelete("walk", w.id); }} title="Delete">✕</button>
                     </div>
