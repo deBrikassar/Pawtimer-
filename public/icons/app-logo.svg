@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="PawTimer logo">
+  <rect x="20" y="20" width="984" height="984" rx="140" fill="#F4F0E6"/>
+
+  <!-- Closed circular ring -->
+  <circle cx="512" cy="512" r="330" fill="none" stroke="#6FA486" stroke-width="34"/>
+
+  <!-- Paw print -->
+  <ellipse cx="400" cy="400" rx="62" ry="82" fill="#5E9A78" transform="rotate(-20 400 400)"/>
+  <ellipse cx="510" cy="372" rx="62" ry="82" fill="#5E9A78"/>
+  <ellipse cx="622" cy="400" rx="62" ry="82" fill="#5E9A78" transform="rotate(20 622 400)"/>
+  <ellipse cx="305" cy="496" rx="58" ry="76" fill="#5E9A78" transform="rotate(-20 305 496)"/>
+  <ellipse cx="719" cy="496" rx="58" ry="76" fill="#5E9A78" transform="rotate(20 719 496)"/>
+  <path d="M428 520
+           C346 520 274 586 274 670
+           C274 740 331 792 408 792
+           C449 792 476 770 513 770
+           C550 770 577 792 618 792
+           C695 792 752 740 752 670
+           C752 586 680 520 598 520
+           Z"
+        fill="#5E9A78"/>
+</svg>

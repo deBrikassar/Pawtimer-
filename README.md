@@ -167,3 +167,9 @@ This app is based on the gradual desensitisation method for separation anxiety:
 ## License
 
 MIT — free to use, modify, and share.
+
+## App icon workflow
+
+If a PR tool cannot handle binary diffs ("binary files are not supported"), avoid committing regenerated PNGs.
+Update `public/icons/app-logo.svg` and run `npm run icons:generate` locally when you need to rebuild icon files.
+
