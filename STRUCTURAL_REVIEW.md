@@ -1,200 +1,209 @@
-# Structural Review (Codebase Maintainability)
+# Structural Review (Maintainability + Technical Cleanliness)
 
-## 1) High-level assessment
+## 1) High-level structural assessment
 
-The app is functional, but the structure has become **monolithic and tightly coupled**.
+PawTimer is functional and shows clear product intent, but the current implementation is **highly centralized** and increasingly fragile around Train/Stats evolution.
 
-- `src/App.jsx` currently mixes:
-  - storage adapters,
-  - sync transport,
-  - domain normalization,
-  - recommendation/statistics derivation,
-  - multiple tab UIs,
-  - and per-tab interaction state.
-- Styling is split across `theme.css`, `shared.css`, and `app.css`, but many patterns are still duplicated or overridden ad-hoc.
-- The Train and Stats tabs are where structural complexity is highest and where future changes are most likely to create regressions.
+- `src/App.jsx` combines domain logic, sync/storage integration, state orchestration, and full-screen rendering in one file.
+- The styling system has the right primitives (`theme.css` and `shared.css`), but ownership boundaries are blurred by many overlapping rules in `app.css`.
+- Train and Stats have useful extracted child components, but orchestration remains in `App`, so behavior and presentation are still tightly coupled.
+
+Net: strong feature coverage, but weak module boundaries.
 
 ---
 
 ## 2) Main structural problems
 
-### Problem A — `App.jsx` is an oversized "god file"
+### A. `App.jsx` is a god component (scope + size)
 
 **What is wrong**
-- One file handles persistence, syncing, data transforms, recommendation UX, and all major screens.
-- It has a very large state surface and many effects/handlers that are not feature-scoped.
+- `src/App.jsx` is ~2.7k lines and mixes data layer + domain layer + UI layer.
+- It holds a large number of independent state slices and effect blocks in one scope.
 
 **Why this is a problem**
-- High cognitive load, hard to test in isolation, and high merge-conflict risk.
-- Small UI changes can accidentally impact storage/sync behavior.
+- High cognitive load and difficult change isolation.
+- Higher regression risk when touching Train/Stats/settings because all concerns share one render/effect context.
 
-**Seriousness**
-- **High**
+**Severity**: **High**
 
-**What should be refactored**
-- Extract by concern, minimally:
-  - `features/train/*` (session timer + rating UI)
-  - `features/stats/*` (metrics/cards/chart)
-  - `features/history/*`
-  - `features/settings/*`
-  - `hooks/useDogData` (hydration + persistence)
-  - `services/syncClient` and `services/localStore`
+**Refactor direction**
+- Keep `App` as shell/router + top-level context only.
+- Extract feature containers (`TrainTab`, `StatsTab`, `HistoryTab`, `SettingsTab`) and move related state/effects with each feature.
 
 ---
 
-### Problem B — Data-flow fragility in sync/hydration logic
+### B. Sync/hydration data flow is tightly coupled and race-prone
 
 **What is wrong**
-- Polling sync effect captures and mutates multiple sources (`dogs`, local feedings, remote feedings) from a broad closure.
-- Sync fallback/repair logic is embedded directly in UI component effects.
+- Sync polling does fetch, reconciliation, write-back to local storage, local-to-remote feeding patching, and UI status updates inside one `useEffect`.
+- The poll effect reads from outer closure state (`dogs`, `feedings`) while only depending on `activeDogId`.
 
 **Why this is a problem**
-- Hard to reason about source-of-truth precedence.
-- Easy to create stale-closure bugs or race conditions when adding features.
+- Behavior is hard to reason about and hard to test.
+- Closure drift can create stale reads during long-lived polling intervals.
+- Conflict rules (local vs remote precedence) are implicit and scattered.
 
-**Seriousness**
-- **High**
+**Severity**: **High**
 
-**What should be refactored**
-- Move sync polling and reconciliation into a dedicated hook/service with explicit conflict strategy.
-- Keep `App` as consumer of a derived data model, not the reconciliation owner.
+**Refactor direction**
+- Move sync orchestration to `useDogSync(activeDogId)` or `services/sync/*`.
+- Define explicit merge policy per entity (`sessions`, `walks`, `patterns`, `feedings`) and keep UI effects read-only.
 
 ---
 
-### Problem C — Stats logic is duplicated between UI and protocol/domain layer
+### C. Stats domain logic is duplicated between protocol layer and App
 
 **What is wrong**
-- `src/lib/protocol.js` already computes stability/momentum/adherence/relapse signals, while `App.jsx` recomputes several overlapping metrics and risk heuristics.
+- `src/lib/protocol.js` already computes core stats (`stability`, `momentum`, `relapseRisk`, `adherence`) via `calculateTrainingStats`.
+- `src/App.jsx` recomputes overlapping heuristics and tones for stats cards.
 
 **Why this is a problem**
-- Divergent formulas over time; inconsistent values between recommendation engine and stats UI.
+- Formula drift risk: recommendations and Stats UI can disagree over time.
+- Adds maintenance overhead and duplicate bug-fix surface.
 
-**Seriousness**
-- **High**
+**Severity**: **High**
 
-**What should be refactored**
-- Create one stats selector/domain adapter layer used by both Train and Stats tab.
-- Keep UI purely presentational for metrics.
+**Refactor direction**
+- Introduce a single selector adapter (e.g., `selectStatsViewModel`) using protocol outputs.
+- Keep Stats tab presentational: formatting + display only.
 
 ---
 
-### Problem D — Styling system is partially centralized, partially duplicated
+### D. Styling ownership is inconsistent; primitives are redefined
 
 **What is wrong**
-- `shared.css` introduces shared primitives, but `app.css` redefines several of the same patterns.
-- Duplicate class definitions exist (e.g., notification toggle rules appear twice), and many inline style literals remain in JSX.
+- `src/styles/shared.css` defines shared card/heading/button primitives.
+- `src/styles/app.css` redefines several of the same classes and includes duplicate selectors (e.g., `.notif-toggle`, `.btn-pat:active`).
 
 **Why this is a problem**
-- Hard to predict which rule wins.
-- Increases visual drift and makes global restyling expensive.
+- Cascade order becomes the de-facto API.
+- Increases visual regressions when changing one section.
+- Makes true design-system migration harder.
 
-**Seriousness**
-- **Medium-High**
+**Severity**: **Medium-High**
 
-**What should be refactored**
-- Introduce `ui-primitives.css` ownership rules (buttons/cards/section headers/metric text).
-- Migrate inline style usage for repeated values into utility classes or tokens.
-- Remove duplicate selector definitions.
+**Refactor direction**
+- Establish strict ownership:
+  - `theme.css` = tokens only
+  - `shared.css` = reusable primitives
+  - `app.css` = screen-specific layouts only
+- Remove duplicate selectors and merge to canonical definitions.
 
 ---
 
-### Problem E — Repeated UI patterns not extracted (cards/metric buttons/section blocks)
+### E. Repeated inline style literals bypass typography/spacing tokens
 
 **What is wrong**
-- Stats cards, section headers, empty states, and action buttons are repeatedly hand-authored in JSX.
+- Frequent inline object styles in JSX for typography, spacing, and color (especially chart labels, legends, small layout blocks).
 
 **Why this is a problem**
-- Increases duplication and inconsistency risk.
-- Slows feature changes; every tab edits similar markup separately.
+- Hard to enforce consistent spacing/type rules.
+- Prevents centralized theme changes and creates small visual drifts.
 
-**Seriousness**
-- **Medium**
+**Severity**: **Medium**
 
-**What should be refactored**
-- Extract low-risk shared components first:
-  - `SectionBlock`
-  - `MetricCard`
-  - `EmptyState`
-  - `ActionButtonRow`
+**Refactor direction**
+- Convert repeated inline patterns into utility classes (e.g., muted helper text rows, legend rows, tokenized spacing helpers).
+- Keep inline styles only for genuinely dynamic numeric values.
 
 ---
 
-### Problem F — Naming inconsistency and intent drift
+### F. Tab naming and feature intent are inconsistent
 
 **What is wrong**
-- Tab IDs and labels are inconsistent with semantic purpose (e.g., `tips` tab renders Settings).
-- Legacy/migration artifacts and compatibility comments remain mixed with current behavior in core files.
+- Tab id `tips` renders the Settings screen.
+- Internal naming no longer matches UI purpose.
 
 **Why this is a problem**
-- Makes navigation and ownership unclear for future contributors.
+- Reduces readability and increases onboarding friction.
+- Encourages future mismatches when code gets split.
 
-**Seriousness**
-- **Medium**
+**Severity**: **Medium**
 
-**What should be refactored**
-- Normalize tab IDs to intent (`settings`, `stats`, etc.) while preserving behavior.
-- Move migration utilities to a clearly named module (`migrations/localSchema.ts/js`).
+**Refactor direction**
+- Rename semantic IDs to match behavior (`settings`, `stats`, etc.) during feature extraction.
 
 ---
 
-### Problem G — Dead/legacy styling and compatibility leftovers
+### G. Train + Stats sections still hold too many responsibilities in App render
 
 **What is wrong**
-- Some style blocks are marked legacy or appear unused by current JSX paths.
+- Train contains timer control, rating flow, recommendation messaging, rings, quick actions, and context/tool overlays inside one render branch.
+- Stats combines KPI derivation + card rendering + chart config + explanatory modal wiring.
 
 **Why this is a problem**
-- CSS bloat and uncertainty during refactors.
+- Local changes in one subsection can accidentally affect unrelated branches.
+- Hard to write focused tests for each section.
 
-**Seriousness**
-- **Low-Medium**
+**Severity**: **Medium-High**
 
-**What should be refactored**
-- Run a class usage audit and prune unused rules in small batches.
-- Keep legacy code only if tied to explicit migration windows.
+**Refactor direction**
+- Extract section-level composites (`TrainSummaryRings`, `StatsOverviewCard`, `OutcomeBreakdownCard`, `StatsHelpModal`).
+- Keep parent tab as orchestrator of section props only.
+
+---
+
+### H. Test coverage is strong for protocol logic but thin for integration/UI structure
+
+**What is wrong**
+- Tests currently focus on `src/lib/protocol.js` behavior.
+- There is no equivalent coverage for App-level data orchestration and tab interactions.
+
+**Why this is a problem**
+- High-risk areas (sync + state wiring + render branching) are unguarded.
+- Structural refactors become risky without integration confidence.
+
+**Severity**: **Medium**
+
+**Refactor direction**
+- Add focused integration tests for tab-level flows and sync state transitions after extracting feature modules.
 
 ---
 
 ## 3) Prioritized action plan
 
-### Fix now (highest ROI / risk reduction)
-1. Split `App.jsx` into feature slices (Train, Stats first).
-2. Extract sync/hydration into dedicated hook/service.
-3. Unify stats derivation to one domain source (protocol selectors).
+### Fix now (highest ROI)
+1. Extract sync/hydration from `App.jsx` into dedicated hook/service with explicit merge policy.
+2. Unify Stats calculations behind one domain selector using `calculateTrainingStats`.
+3. Remove duplicated CSS selectors and define style ownership boundaries.
 
 ### Fix soon
-1. Consolidate typography/card/button/section primitives and remove duplicate CSS selector definitions.
-2. Replace repeated stats/train card markup with shared components.
-3. Reduce inline styles used for repeated spacing/typography/color patterns.
+1. Split Train and Stats into feature-level containers/components.
+2. Replace repeated inline style literals with shared tokenized utility classes.
+3. Normalize tab and feature naming (`tips` -> `settings`) while preserving behavior.
 
 ### Later / optional
-1. Finish dead CSS and legacy migration cleanup.
-2. Rename intent-drifted identifiers (like `tips`) once feature extraction lands.
+1. Add structural integration tests around tab flows and sync edge cases.
+2. Continue pruning legacy/compatibility artifacts after module boundaries stabilize.
 
 ---
 
-## 4) Files/areas to clean up first
+## 4) Files/areas to clean first
 
-1. `src/App.jsx` — split by feature + move data orchestration out.
-2. `src/styles/app.css` + `src/styles/shared.css` — remove duplicate ownership and centralize primitives.
-3. `src/lib/protocol.js` + Stats tab usage in `App.jsx` — create shared selectors to avoid duplicate calculations.
-
----
-
-## 5) What is currently fine and should mostly stay
-
-- Token definitions in `src/styles/theme.css` are a good foundation and should remain the design source-of-truth.
-- Protocol/recommendation domain logic in `src/lib/protocol.js` is relatively well-contained and should be extended rather than duplicated in UI files.
-- Existing normalization helpers are valuable, but should be moved into dedicated modules/services to reduce `App` coupling.
+1. `src/App.jsx` — first target for feature extraction and sync isolation.
+2. `src/styles/app.css` + `src/styles/shared.css` — consolidate duplicate class ownership.
+3. `src/lib/protocol.js` + Stats-related App derivations — remove duplicated metrics logic.
+4. `tests/` — add integration coverage after extraction.
 
 ---
 
-## 6) What to centralize vs keep local
+## 5) What is currently fine and should stay
+
+- `src/styles/theme.css` token foundation is solid and should remain the source-of-truth for theme values.
+- `src/lib/protocol.js` is a good domain core and should be reused, not bypassed.
+- Existing small presentational components (`EmptyState`, `TrainProgressBar`, `StatsInsightsGrid`, `StatsChartSection`) are good extraction seeds.
+
+---
+
+## 6) Centralize vs keep local
 
 ### Centralize
-- Typography, spacing scales, button/card/section primitives.
-- Stats/recommendation selectors.
-- Sync + local persistence orchestration.
+- Sync + persistence orchestration
+- Stats/recommendation selectors
+- Reusable UI primitives (cards, section headings, button variants)
+- Typography/spacing helper classes mapped to tokens
 
 ### Keep local
-- Truly screen-specific microcopy.
-- One-off visual states that do not repeat (single-purpose banners/modals), provided they consume shared primitives.
+- Screen-specific copy
+- One-off micro-interactions that are not repeated
+- Truly context-specific layout wrappers
