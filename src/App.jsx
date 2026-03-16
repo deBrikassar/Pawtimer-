@@ -823,6 +823,206 @@ function DogSelect({ dogs, onSelect, onCreateNew }) {
   );
 }
 
+function EmptyState({ icon, title, body, ctaLabel, onCta }) {
+  return (
+    <div className="empty-state">
+      <div className="es-icon">{icon}</div>
+      <div className="es-title">{title}</div>
+      <div className="es-body">{body}</div>
+      <button className="es-cta" onClick={onCta}>{ctaLabel}</button>
+    </div>
+  );
+}
+
+function WelcomeBackBanner({ sessions, name, target, onDismiss }) {
+  if (!sessions.length) return null;
+  const last = sessions[sessions.length - 1];
+  const days = Math.floor((Date.now() - new Date(last.date)) / 86400000);
+  return (
+    <div className="welcome-back">
+      <div className="welcome-back-text">
+        Welcome back — last session was <strong>{days} day{days !== 1 ? "s" : ""} ago</strong>. {name}'s target is still {fmt(target)}.
+      </div>
+      <button className="welcome-back-dismiss" onClick={onDismiss} aria-label="Dismiss">×</button>
+    </div>
+  );
+}
+
+function TrainProgressBar({ goalPct, target, goalSec }) {
+  return (
+    <div className="prog-section">
+      <div className="prog-track">
+        <div className="prog-fill" style={{ width:`${goalPct}%` }}/>
+        <div className="prog-thumb" style={{ left:`${Math.max(Math.min(goalPct,98),2)}%` }}/>
+      </div>
+      <div className="prog-meta">
+        <span>Threshold <strong className="num-stable">{fmt(target)}</strong></span>
+        <span>Goal <strong className="num-stable">{fmt(goalSec)}</strong></span>
+      </div>
+    </div>
+  );
+}
+
+function SessionRatingPanel({
+  phase,
+  finalElapsed,
+  name,
+  sessionOutcome,
+  setSessionOutcome,
+  recordResult,
+  latencyDraft,
+  setLatencyDraft,
+  distressTypeDraft,
+  setDistressTypeDraft,
+  onCancel,
+}) {
+  if (phase !== "rating") return null;
+
+  return (
+    <div className="rating-screen session-feedback">
+      <div className="rating-title">Was there any stress?</div>
+      <div className="rating-sub">
+        {fmt(finalElapsed)} session — how did {name} handle it?
+      </div>
+      <div className="result-grid">
+        <button className="btn-result btn-none" onClick={() => { setSessionOutcome("none"); recordResult("none"); }}>
+          <Img src="result-calm.png" size={36} alt="No distress"/>
+          <div><div>No distress</div><div className="result-desc">{name} was completely calm</div></div>
+        </button>
+        <button className="btn-result btn-mild" onClick={() => setSessionOutcome("subtle")}>
+          <Img src="result-mild.png" size={36} alt="Subtle stress"/>
+          <div><div>Subtle stress</div><div className="result-desc">Mild/passive signs (restless, lip licking, etc.)</div></div>
+        </button>
+        <button className="btn-result btn-strong" onClick={() => setSessionOutcome("active")}>
+          <Img src="result-strong.png" size={36} alt="Active distress"/>
+          <div><div>Active distress</div><div className="result-desc">Barking, pacing, unable to settle</div></div>
+        </button>
+        <button className="btn-result btn-severe" onClick={() => setSessionOutcome("severe")}>
+          <Img src="result-strong.png" size={36} alt="Severe distress"/>
+          <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
+        </button>
+      </div>
+      {sessionOutcome && sessionOutcome !== "none" && (
+        <div className="outcome-details">
+          <label className="field-label" htmlFor="latency-input">Latency to first stress (seconds)</label>
+          <input
+            id="latency-input"
+            className="text-input"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="Optional"
+            value={latencyDraft}
+            onChange={(e) => setLatencyDraft(e.target.value)}
+          />
+          <label className="field-label" htmlFor="distress-type">Distress type (optional)</label>
+          <select
+            id="distress-type"
+            className="text-input"
+            value={distressTypeDraft}
+            onChange={(e) => setDistressTypeDraft(e.target.value)}
+          >
+            <option value="">Select distress type</option>
+            {DISTRESS_TYPES.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+          <button
+            className="btn-save-outcome"
+            onClick={() => recordResult(sessionOutcome, {
+              latencyToFirstDistress: latencyDraft,
+              distressType: distressTypeDraft || null,
+            })}
+          >
+            Save session
+          </button>
+        </div>
+      )}
+      <button className="btn-cancel" onClick={onCancel}>
+        Discard this session
+      </button>
+    </div>
+  );
+}
+
+function StatsInsightsGrid({
+  totalCount,
+  openMetricHelp,
+  stabilityTone,
+  momentumTone,
+  adherenceTone,
+  relapseTone,
+  calmMedian,
+  calmRate7,
+  adherenceByDay,
+  relapseRisk,
+}) {
+  if (totalCount <= 0) return null;
+  return (
+    <div className="insights-grid">
+      <button className="stat-card metric-btn" onClick={() => openMetricHelp("stability")} type="button">
+        <div className="stat-val stats-metric-value" style={{ color: stabilityTone.color }}>
+          {calmMedian != null ? fmt(calmMedian) : "—"}
+        </div>
+        <div className="stat-lbl stats-metric-label">Stability</div>
+      </button>
+      <button className="stat-card metric-btn" onClick={() => openMetricHelp("momentum")} type="button">
+        <div className="stat-val stats-metric-value" style={{ color: momentumTone.color }}>
+          {calmRate7 != null ? `${calmRate7}%` : "—"}
+        </div>
+        <div className="stat-lbl stats-metric-label">Momentum</div>
+      </button>
+      <button className="stat-card metric-btn" onClick={() => openMetricHelp("adherence")} type="button">
+        <div className="stat-val stats-metric-value" style={{ color: adherenceTone.color }}>
+          {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
+        </div>
+        <div className="stat-lbl stats-metric-label">Adherence</div>
+      </button>
+      <button className="stat-card metric-btn" onClick={() => openMetricHelp("relapseRisk")} type="button">
+        <div className="stat-val stats-metric-value" style={{ color: relapseTone.color }}>
+          {relapseRisk ? "High" : "Low"}
+        </div>
+        <div className="stat-lbl stats-metric-label">Relapse risk</div>
+      </button>
+    </div>
+  );
+}
+
+function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name }) {
+  if (chartData.length <= 1) {
+    return (
+      <EmptyState
+        icon="📈"
+        title="Almost there"
+        body={`Complete 2 more sessions to see ${name}'s progress chart and trends.`}
+        ctaLabel="Start training →"
+        onCta={() => setTab("home")}
+      />
+    );
+  }
+
+  return (
+    <div className="chart-wrap">
+      <div className="chart-title">Session duration over time (min)</div>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
+          <CartesianGrid stroke="var(--surf-soft)" vertical={false}/>
+          <XAxis dataKey="session" tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} tickLine={false} axisLine={false}/>
+          <YAxis tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} tickLine={false} axisLine={false}/>
+          <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:13,fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} labelStyle={{color:"var(--green-light)",fontSize:13,fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
+          <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:13,fill:"var(--green-dark)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}}/>
+          <Line type="monotone" dataKey="duration" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
+        </LineChart>
+      </ResponsiveContainer>
+      <div className="t-helper" style={{display:"flex",gap:14,justifyContent:"center",marginTop:10,flexWrap:"wrap"}}>
+        <span><span style={{color:"var(--green-dark)"}}>●</span> Calm</span>
+        <span><span style={{color:"var(--orange)"}}>●</span> Mild</span>
+        <span><span style={{color:"var(--red)"}}>●</span> Strong</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function PawTimer() {
   const [dogs,        setDogs]        = useState(() => ensureArray(load(DOGS_KEY, [])));
@@ -1766,31 +1966,18 @@ export default function PawTimer() {
         {tab === "home" && (<div className="tab-content">
 
           {/* Welcome-back banner */}
-          {showWelcomeBack && (() => {
-            const last = sessions[sessions.length - 1];
-            const days = Math.floor((Date.now() - new Date(last.date)) / 86400000);
-            return (
-              <div className="welcome-back">
-                <div className="welcome-back-text">
-                  Welcome back — last session was <strong>{days} day{days !== 1 ? "s" : ""} ago</strong>. {name}'s target is still {fmt(target)}.
-                </div>
-                <button className="welcome-back-dismiss" onClick={() => setShowWelcomeBack(false)} aria-label="Dismiss">×</button>
-              </div>
-            );
-          })()}
+          {showWelcomeBack && (
+            <WelcomeBackBanner
+              sessions={sessions}
+              name={name}
+              target={target}
+              onDismiss={() => setShowWelcomeBack(false)}
+            />
+          )}
 
           <div className="train-main">
             {/* 1. Progress bar with thumb */}
-            <div className="prog-section">
-              <div className="prog-track">
-                <div className="prog-fill" style={{ width:`${goalPct}%` }}/>
-                <div className="prog-thumb" style={{ left:`${Math.max(Math.min(goalPct,98),2)}%` }}/>
-              </div>
-              <div className="prog-meta">
-                <span>Threshold <strong className="num-stable">{fmt(target)}</strong></span>
-                <span>Goal <strong className="num-stable">{fmt(goalSec)}</strong></span>
-              </div>
-            </div>
+            <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} />
 
             <SessionControl
               phase={phase}
@@ -1802,71 +1989,19 @@ export default function PawTimer() {
               completed={sessionCompleted}
             />
 
-            {phase === "rating" && (
-              <div className="rating-screen session-feedback">
-                <div className="rating-title">Was there any stress?</div>
-                <div className="rating-sub">
-                  {fmt(finalElapsed)} session — how did {name} handle it?
-                </div>
-                <div className="result-grid">
-                  <button className="btn-result btn-none" onClick={() => { setSessionOutcome("none"); recordResult("none"); }}>
-                    <Img src="result-calm.png" size={36} alt="No distress"/>
-                    <div><div>No distress</div><div className="result-desc">{name} was completely calm</div></div>
-                  </button>
-                  <button className="btn-result btn-mild" onClick={() => setSessionOutcome("subtle")}>
-                    <Img src="result-mild.png" size={36} alt="Subtle stress"/>
-                    <div><div>Subtle stress</div><div className="result-desc">Mild/passive signs (restless, lip licking, etc.)</div></div>
-                  </button>
-                  <button className="btn-result btn-strong" onClick={() => setSessionOutcome("active")}>
-                    <Img src="result-strong.png" size={36} alt="Active distress"/>
-                    <div><div>Active distress</div><div className="result-desc">Barking, pacing, unable to settle</div></div>
-                  </button>
-                  <button className="btn-result btn-severe" onClick={() => setSessionOutcome("severe")}>
-                    <Img src="result-strong.png" size={36} alt="Severe distress"/>
-                    <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
-                  </button>
-                </div>
-                {sessionOutcome && sessionOutcome !== "none" && (
-                  <div className="outcome-details">
-                    <label className="field-label" htmlFor="latency-input">Latency to first stress (seconds)</label>
-                    <input
-                      id="latency-input"
-                      className="text-input"
-                      type="number"
-                      min="0"
-                      step="1"
-                      placeholder="Optional"
-                      value={latencyDraft}
-                      onChange={(e) => setLatencyDraft(e.target.value)}
-                    />
-                    <label className="field-label" htmlFor="distress-type">Distress type (optional)</label>
-                    <select
-                      id="distress-type"
-                      className="text-input"
-                      value={distressTypeDraft}
-                      onChange={(e) => setDistressTypeDraft(e.target.value)}
-                    >
-                      <option value="">Select distress type</option>
-                      {DISTRESS_TYPES.map((type) => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                    <button
-                      className="btn-save-outcome"
-                      onClick={() => recordResult(sessionOutcome, {
-                        latencyToFirstDistress: latencyDraft,
-                        distressType: distressTypeDraft || null,
-                      })}
-                    >
-                      Save session
-                    </button>
-                  </div>
-                )}
-                <button className="btn-cancel" onClick={() => { setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft(""); }}>
-                  Discard this session
-                </button>
-              </div>
-            )}
+            <SessionRatingPanel
+              phase={phase}
+              finalElapsed={finalElapsed}
+              name={name}
+              sessionOutcome={sessionOutcome}
+              setSessionOutcome={setSessionOutcome}
+              recordResult={recordResult}
+              latencyDraft={latencyDraft}
+              setLatencyDraft={setLatencyDraft}
+              distressTypeDraft={distressTypeDraft}
+              setDistressTypeDraft={setDistressTypeDraft}
+              onCancel={() => { setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft(""); }}
+            />
 
                         {/* 4. Stats rings card */}
             {phase === "idle" && (() => {
@@ -2083,12 +2218,13 @@ export default function PawTimer() {
             </div>
 
             {timeline.length === 0 ? (
-              <div className="empty-state">
-                <div className="es-icon">🐾</div>
-                <div className="es-title">No activity yet</div>
-                <div className="es-body">Start {name}'s first session and your training history will appear here.</div>
-                <button className="es-cta" onClick={() => setTab("home")}>Go to Train →</button>
-              </div>
+              <EmptyState
+                icon="🐾"
+                title="No activity yet"
+                body={`Start ${name}'s first session and your training history will appear here.`}
+                ctaLabel="Go to Train →"
+                onCta={() => setTab("home")}
+              />
             ) : timeline.map(item => {
               if (item.kind === "session") {
                 const s = item.data;
@@ -2171,12 +2307,13 @@ export default function PawTimer() {
           <div className="section">
             <div className="section-title">{name}'s Progress</div>
             {totalCount === 0 ? (
-              <div className="empty-state">
-                <div className="es-icon">🌱</div>
-                <div className="es-title">Progress starts here</div>
-                <div className="es-body">Complete your first session and {name}'s stats, streak, and progress chart will appear here.</div>
-                <button className="es-cta" onClick={() => setTab("home")}>Start first session →</button>
-              </div>
+              <EmptyState
+                icon="🌱"
+                title="Progress starts here"
+                body={`Complete your first session and ${name}'s stats, streak, and progress chart will appear here.`}
+                ctaLabel="Start first session →"
+                onCta={() => setTab("home")}
+              />
             ) : (<>
 
             <div className="streak-card">
@@ -2306,61 +2443,25 @@ export default function PawTimer() {
                 </div>
               </div>
             )}
-            {totalCount > 0 && (
-              <div className="insights-grid">
-                <button className="stat-card metric-btn" onClick={() => openMetricHelp("stability")} type="button">
-                  <div className="stat-val stats-metric-value" style={{ color: stabilityTone.color }}>
-                    {calmMedian != null ? fmt(calmMedian) : "—"}
-                  </div>
-                  <div className="stat-lbl stats-metric-label">Stability</div>
-                </button>
-                <button className="stat-card metric-btn" onClick={() => openMetricHelp("momentum")} type="button">
-                  <div className="stat-val stats-metric-value" style={{ color: momentumTone.color }}>
-                    {calmRate7 != null ? `${calmRate7}%` : "—"}
-                  </div>
-                  <div className="stat-lbl stats-metric-label">Momentum</div>
-                </button>
-                <button className="stat-card metric-btn" onClick={() => openMetricHelp("adherence")} type="button">
-                  <div className="stat-val stats-metric-value" style={{ color: adherenceTone.color }}>
-                    {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
-                  </div>
-                  <div className="stat-lbl stats-metric-label">Adherence</div>
-                </button>
-                <button className="stat-card metric-btn" onClick={() => openMetricHelp("relapseRisk")} type="button">
-                  <div className="stat-val stats-metric-value" style={{ color: relapseTone.color }}>
-                    {relapseRisk ? "High" : "Low"}
-                  </div>
-                  <div className="stat-lbl stats-metric-label">Relapse risk</div>
-                </button>
-              </div>
-            )}
-            {chartData.length > 1 ? (
-              <div className="chart-wrap">
-                <div className="chart-title">Session duration over time (min)</div>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
-                    <CartesianGrid stroke="var(--surf-soft)" vertical={false}/>
-                    <XAxis dataKey="session" tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} tickLine={false} axisLine={false}/>
-                    <YAxis tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} tickLine={false} axisLine={false}/>
-                    <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:13,fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} labelStyle={{color:"var(--green-light)",fontSize:13,fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
-                    <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:13,fill:"var(--green-dark)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}}/>
-                    <Line type="monotone" dataKey="duration" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
-                  </LineChart>
-                </ResponsiveContainer>
-                <div className="t-helper" style={{display:"flex",gap:14,justifyContent:"center",marginTop:10,flexWrap:"wrap"}}>
-                  <span><span style={{color:"var(--green-dark)"}}>●</span> Calm</span>
-                  <span><span style={{color:"var(--orange)"}}>●</span> Mild</span>
-                  <span><span style={{color:"var(--red)"}}>●</span> Strong</span>
-                </div>
-              </div>
-            ) : (
-              <div className="empty-state">
-                <div className="es-icon">📈</div>
-                <div className="es-title">Almost there</div>
-                <div className="es-body">Complete 2 more sessions to see {name}'s progress chart and trends.</div>
-                <button className="es-cta" onClick={() => setTab("home")}>Start training →</button>
-              </div>
-            )}
+            <StatsInsightsGrid
+              totalCount={totalCount}
+              openMetricHelp={openMetricHelp}
+              stabilityTone={stabilityTone}
+              momentumTone={momentumTone}
+              adherenceTone={adherenceTone}
+              relapseTone={relapseTone}
+              calmMedian={calmMedian}
+              calmRate7={calmRate7}
+              adherenceByDay={adherenceByDay}
+              relapseRisk={relapseRisk}
+            />
+            <StatsChartSection
+              chartData={chartData}
+              goalSec={goalSec}
+              CustomDot={CustomDot}
+              setTab={setTab}
+              name={name}
+            />
             </>)}
           </div>
         </div>)}
