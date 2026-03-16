@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { PROTOCOL, getNextDurationSeconds, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
+import { PROTOCOL, getNextDurationSeconds, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { SessionControl, WelcomeBackBanner, TrainProgressBar, SessionRatingPanel } from "./features/train/TrainComponents";
 import { StatsInsightsGrid, StatsChartSection } from "./features/stats/StatsComponents";
 import EmptyState from "./components/EmptyState";
@@ -1399,10 +1399,7 @@ export default function PawTimer() {
   })();
 
   // Stats
-  const noneCount   = sessions.filter(s => s.distressLevel === "none").length;
-  const subtleCount = sessions.filter(s => s.distressLevel === "subtle").length;
-  const activeCount = sessions.filter(s => s.distressLevel === "active").length;
-  const severeCount = sessions.filter(s => s.distressLevel === "severe").length;
+  const { none: noneCount, subtle: subtleCount, active: activeCount, severe: severeCount } = getDistressCounts(sessions);
   const totalCount  = sessions.length;
   const bestCalm    = sessions.filter(s => s.distressLevel === "none")
     .reduce((m, s) => Math.max(m, s.actualDuration), 0);
@@ -1419,12 +1416,7 @@ export default function PawTimer() {
     if (!Number.isFinite(ts) || ts < recentWeekCutoff) return sum;
     return sum + (Number.isFinite(s.actualDuration) ? s.actualDuration : 0);
   }, 0);
-  const streak = (() => {
-    let n = 0;
-    for (let i = sessions.length - 1; i >= 0; i--) {
-      if (sessions[i].distressLevel === "none") n++; else break;
-    } return n;
-  })();
+  const streak = getCalmStreak(sessions);
   const lastSess = sessions[sessions.length - 1];
 
   const recommendationCoverageCount = sessions.filter(s =>
@@ -1495,11 +1487,13 @@ export default function PawTimer() {
     return Math.round(Math.sqrt(variance));
   })();
 
-  const relapseWindow = 6;
-  const recentSessions = sessions.slice(-relapseWindow);
-  const recentSevereCount = recentSessions.filter((s) => s.distressLevel === "severe").length;
-  const recentHighDistressCount = recentSessions.filter((s) => ["active", "severe"].includes(s.distressLevel)).length;
-  const relapseRisk = recentHighDistressCount >= 2;
+  const {
+    window: relapseWindow,
+    recentSessions,
+    severeCount: recentSevereCount,
+    highDistressCount: recentHighDistressCount,
+    relapseRisk,
+  } = getRecentHighDistressSummary(sessions);
 
   const trainingReadiness = (() => {
     const now = Date.now();

@@ -126,6 +126,39 @@ function countStreak(items, predicate) {
   return streak;
 }
 
+export function getDistressCounts(sessions = []) {
+  return sessions.reduce((counts, session) => {
+    const level = normalizeDistressLevel(session?.distressLevel);
+    if (level === DISTRESS_LEVELS.SUBTLE) counts.subtle += 1;
+    else if (level === DISTRESS_LEVELS.ACTIVE) counts.active += 1;
+    else if (level === DISTRESS_LEVELS.SEVERE) counts.severe += 1;
+    else counts.none += 1;
+    return counts;
+  }, {
+    none: 0,
+    subtle: 0,
+    active: 0,
+    severe: 0,
+  });
+}
+
+export function getCalmStreak(sessions = []) {
+  return countStreak(sessions, (session) => normalizeDistressLevel(session?.distressLevel) === DISTRESS_LEVELS.NONE);
+}
+
+export function getRecentHighDistressSummary(sessions = [], window = PROTOCOL.stabilizationWindow) {
+  const recentSessions = getLatestSessions(sessions, window).map(toRichSession);
+  const severeCount = recentSessions.filter((session) => session.distressLevel === DISTRESS_LEVELS.SEVERE).length;
+  const highDistressCount = recentSessions.filter((session) => [DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(session.distressLevel)).length;
+  return {
+    window,
+    recentSessions,
+    severeCount,
+    highDistressCount,
+    relapseRisk: highDistressCount >= 2,
+  };
+}
+
 function gapPenalty(sessions = [], now = new Date()) {
   if (!sessions.length) return 0.4;
   const last = sessions[sessions.length - 1];
