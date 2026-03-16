@@ -1203,7 +1203,6 @@ const styles = `
   .feeding-field input, .feeding-field select { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 11px; background:var(--surf-soft); color:var(--brown); font-size:var(--type-body-size); line-height:var(--type-body-line); font-weight:var(--type-body-weight); letter-spacing:var(--type-body-track); }
   .feeding-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
 
-  .train-coverage { text-align:center; }
 
   /* ── Welcome-back banner ── */
   .welcome-back { margin:0 24px 16px; background:var(--surf); border-radius:var(--radius-sm); padding:16px; border-left:3px solid var(--green-dark); box-shadow:0 1px 4px rgba(75,60,48,0.06); display:flex; justify-content:space-between; align-items:center; gap:10px; }
@@ -2204,14 +2203,6 @@ export default function PawTimer() {
   })();
   const lastSess = sessions[sessions.length - 1];
 
-  const recommendationCoverageCount = sessions.filter(s =>
-    (hasValue(s.context?.timeOfDay) || hasValue(s.context?.departureType) || (Array.isArray(s.context?.cuesUsed) && s.context.cuesUsed.length > 0))
-    && ["barking","pacing","destructive","salivation"].some(k => hasValue(s.symptoms?.[k]))
-    && hasValue(s.recoverySeconds)
-    && (hasValue(s.preSession?.walkDuration) || hasValue(s.preSession?.enrichmentGiven))
-    && hasValue(s.environment?.noiseEvent)
-  ).length;
-  const recommendationCoveragePct = totalCount ? Math.round((recommendationCoverageCount / totalCount) * 100) : 0;
   const toDayKey = (iso) => {
     const d = new Date(iso);
     if (isNaN(d)) return "";
@@ -2940,9 +2931,6 @@ export default function PawTimer() {
                 </div>
               </div>
             </div>
-            <p className="t-helper train-coverage" style={{ marginTop: 0, marginBottom: 14 }}>
-              Data coverage for smarter recommendations: {recommendationCoveragePct}% ({recommendationCoverageCount}/{totalCount})
-            </p>
             {(() => {
               const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
               const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
