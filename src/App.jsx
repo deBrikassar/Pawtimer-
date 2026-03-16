@@ -401,6 +401,11 @@ const fmtDate = (iso) => {
   const time = d.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit" });
   return `${date} · ${time}`;
 };
+const toDayKey = (iso) => {
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 const isToday = (iso) => new Date(iso).toDateString() === new Date().toDateString();
 
 /**
@@ -1104,14 +1109,17 @@ const styles = `
   .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:12px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:12px; }
   .streak-num  { font-size:36px; font-weight:400; line-height:1; }
   .streak-lbl  { font-size:var(--type-secondary-size); letter-spacing:0.01em; opacity:0.9; margin-top:6px; font-weight:400; display:flex; align-items:center; justify-content:center; gap:4px; }
-  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:8px; }
+  .stats-section { margin-bottom:12px; }
+  .stats-section:last-of-type { margin-bottom:10px; }
+  .stats-section-title { font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); font-weight:var(--type-overline-weight); color:var(--green-dark); text-transform:uppercase; margin:0 0 8px; padding-left:2px; }
+  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:0; }
   .stat-card-span2 { grid-column:span 2; }
-  .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
+  .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); min-height:96px; display:flex; flex-direction:column; justify-content:center; }
   .stats-metric-value { font-family:var(--font-ui); font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); text-transform:none; opacity:1; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; margin:0; padding:0; }
   .stats-metric-label { font-family:var(--font-ui); font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-transform:none; opacity:1; font-feature-settings:normal; margin-bottom:0; padding:0; }
   .stat-val    { font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
   .stat-lbl    { font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
-  .stat-wide   { background:var(--surf); border-radius:var(--radius-sm); padding:14px 18px; box-shadow:var(--shadow); grid-column:span 2; display:flex; align-items:center; justify-content:space-between; }
+  .stat-wide   { background:var(--surf); border-radius:var(--radius-sm); padding:14px 18px; box-shadow:var(--shadow); grid-column:span 2; display:flex; align-items:center; justify-content:space-between; min-height:96px; }
   .stat-wide .stat-val { font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
   .stat-wide .stat-lbl { font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
   .stat-icon   { font-size:28px; opacity:1; display:flex; align-items:center; }
@@ -2172,9 +2180,21 @@ export default function PawTimer() {
   const activeCount = sessions.filter(s => s.distressLevel === "active").length;
   const severeCount = sessions.filter(s => s.distressLevel === "severe").length;
   const totalCount  = sessions.length;
-  const totalAlone  = sessions.reduce((sum, s) => sum + (s.actualDuration || 0), 0);
   const bestCalm    = sessions.filter(s => s.distressLevel === "none")
     .reduce((m, s) => Math.max(m, s.actualDuration), 0);
+  const avgWalkDuration = walks.length
+    ? walks.reduce((sum, w) => sum + (Number.isFinite(w.duration) ? w.duration : 0), 0) / walks.length
+    : null;
+  const uniqueSessionDays = new Set(sessions.map((s) => toDayKey(s.date)).filter(Boolean));
+  const uniqueWalkDays = new Set(walks.map((w) => toDayKey(w.date)).filter(Boolean));
+  const avgSessionsPerDay = uniqueSessionDays.size ? totalCount / uniqueSessionDays.size : null;
+  const avgWalksPerDay = uniqueWalkDays.size ? walks.length / uniqueWalkDays.size : null;
+  const recentWeekCutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  const aloneLastWeek = sessions.reduce((sum, s) => {
+    const ts = new Date(s.date).getTime();
+    if (!Number.isFinite(ts) || ts < recentWeekCutoff) return sum;
+    return sum + (Number.isFinite(s.actualDuration) ? s.actualDuration : 0);
+  }, 0);
   const streak = (() => {
     let n = 0;
     for (let i = sessions.length - 1; i >= 0; i--) {
@@ -2191,11 +2211,6 @@ export default function PawTimer() {
     && hasValue(s.environment?.noiseEvent)
   ).length;
   const recommendationCoveragePct = totalCount ? Math.round((recommendationCoverageCount / totalCount) * 100) : 0;
-  const toDayKey = (iso) => {
-    const d = new Date(iso);
-    if (isNaN(d)) return "";
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
   const calcWindowCalmRate = (days) => {
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
@@ -2871,34 +2886,58 @@ export default function PawTimer() {
                 <span>Calm session streak</span>
               </div>
             </div>
-            <div className="stats-row">
-              <div className="stat-card">
-                <div className="stat-val stats-metric-value" style={{color:"var(--green-dark)"}}>{noneCount}</div>
-                <div className="stat-lbl stats-metric-label">Calm sessions</div>
+
+            <div className="stats-section">
+              <p className="stats-section-title">Training overview</p>
+              <div className="stats-row">
+                <div className="stat-card">
+                  <div className="stat-val stats-metric-value" style={{color:"var(--green-dark)"}}>{noneCount}</div>
+                  <div className="stat-lbl stats-metric-label">Calm sessions</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-val stats-metric-value">{`${Math.round((noneCount/totalCount)*100)}%`}</div>
+                  <div className="stat-lbl stats-metric-label">Success rate</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-val stats-metric-value">{fmt(bestCalm)}</div>
+                  <div className="stat-lbl stats-metric-label">Best calm time</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-val stats-metric-value">{fmt(target)}</div>
+                  <div className="stat-lbl stats-metric-label">Next target</div>
+                </div>
               </div>
-              <div className="stat-card">
-                <div className="stat-val stats-metric-value">{`${Math.round((noneCount/totalCount)*100)}%`}</div>
-                <div className="stat-lbl stats-metric-label">Success rate</div>
+            </div>
+
+            <div className="stats-section">
+              <p className="stats-section-title">Averages</p>
+              <div className="stats-row">
+                <div className="stat-card">
+                  <div className="stat-val stats-metric-value">{avgWalksPerDay != null ? avgWalksPerDay.toFixed(1) : "—"}</div>
+                  <div className="stat-lbl stats-metric-label">Average walks/day</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-val stats-metric-value">{avgWalkDuration != null ? fmt(avgWalkDuration) : "—"}</div>
+                  <div className="stat-lbl stats-metric-label">Average walk duration</div>
+                </div>
+                <div className="stat-card stat-card-span2">
+                  <div className="stat-val stats-metric-value">{avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"}</div>
+                  <div className="stat-lbl stats-metric-label">Average sessions/day</div>
+                </div>
               </div>
-              <div className="stat-card">
-                <div className="stat-val stats-metric-value">{fmt(bestCalm)}</div>
-                <div className="stat-lbl stats-metric-label">Best calm time</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-val stats-metric-value">{fmt(target)}</div>
-                <div className="stat-lbl stats-metric-label">Next target</div>
-              </div>
-              <div className="stat-wide">
-                <div><div className="stat-val stats-metric-value">{fmt(totalAlone)}</div><div className="stat-lbl stats-metric-label">Total time alone</div></div>
-                <div className="stat-icon"><PawIcon size={32}/></div>
-              </div>
-              <div className="stat-wide">
-                <div><div className="stat-val stats-metric-value">{walks.length}</div><div className="stat-lbl stats-metric-label">Walks together</div></div>
-                <div className="stat-icon"><Img src="walk.png" size={36} alt="walks"/></div>
-              </div>
-              <div className="stat-wide">
-                <div><div className="stat-val stats-metric-value">{patterns.length}</div><div className="stat-lbl stats-metric-label">Pattern breaks</div></div>
-                <div className="stat-icon"><Img src="pattern-keys.png" size={36} alt="pattern breaks"/></div>
+            </div>
+
+            <div className="stats-section">
+              <p className="stats-section-title">Daily life</p>
+              <div className="stats-row">
+                <div className="stat-wide">
+                  <div><div className="stat-val stats-metric-value">{fmt(aloneLastWeek)}</div><div className="stat-lbl stats-metric-label">Alone time per week</div></div>
+                  <div className="stat-icon"><PawIcon size={32}/></div>
+                </div>
+                <div className="stat-wide">
+                  <div><div className="stat-val stats-metric-value">{patterns.length}</div><div className="stat-lbl stats-metric-label">Pattern breaks</div></div>
+                  <div className="stat-icon"><Img src="pattern-keys.png" size={36} alt="pattern breaks"/></div>
+                </div>
               </div>
             </div>
             <p className="t-helper train-coverage" style={{ marginTop: 0, marginBottom: 14 }}>
