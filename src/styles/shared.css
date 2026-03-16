@@ -1,0 +1,51 @@
+/* Shared reusable patterns used across screens */
+.shared-card,
+.tool-group-card,
+.quick-modal-card,
+.metric-help-card,
+.feeding-card,
+.share-card {
+  background: var(--surf);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+}
+
+.shared-pill,
+.pat-badge,
+.h-badge-mini,
+.sync-badge {
+  border-radius: 999px;
+  font-size: var(--type-overline-size);
+  line-height: var(--type-overline-line);
+  font-weight: var(--type-overline-weight);
+}
+
+.shared-section-heading,
+.section-title,
+.stats-section-title,
+.tool-section-title,
+.settings-section-label {
+  color: var(--brown);
+  font-weight: var(--type-section-title-weight);
+  letter-spacing: var(--type-section-title-track);
+}
+
+.shared-stat-tile,
+.stat-card,
+.ratio-card,
+.streak-card {
+  background: var(--surf);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+}
+
+.shared-button,
+.ds-btn,
+.ob-btn-next,
+.metric-help-close,
+.coach-btn {
+  cursor: pointer;
+  border: none;
+  font-weight: var(--type-button-weight);
+  letter-spacing: var(--type-button-track);
+}
