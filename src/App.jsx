@@ -1104,16 +1104,16 @@ const styles = `
   .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:12px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:12px; }
   .streak-num  { font-size:36px; font-weight:400; line-height:1; }
   .streak-lbl  { font-size:var(--type-secondary-size); letter-spacing:0.01em; opacity:0.9; margin-top:6px; font-weight:400; display:flex; align-items:center; justify-content:center; gap:4px; }
-  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:8px; }
+  .stats-groups { display:grid; gap:12px; margin-bottom:8px; }
+  .stats-group { background:var(--surf-soft); border-radius:var(--radius-sm); padding:12px; }
+  .stats-group-title { font-family:var(--font-ui); font-size:var(--type-overline-size); font-weight:var(--type-overline-weight); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); color:var(--brown-muted); text-transform:uppercase; margin-bottom:8px; }
+  .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:0; }
   .stat-card-span2 { grid-column:span 2; }
-  .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); }
+  .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:12px; text-align:center; box-shadow:var(--shadow); min-height:88px; display:flex; flex-direction:column; justify-content:center; }
   .stats-metric-value { font-family:var(--font-ui); font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); text-transform:none; opacity:1; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; margin:0; padding:0; }
   .stats-metric-label { font-family:var(--font-ui); font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); text-transform:none; opacity:1; font-feature-settings:normal; margin-bottom:0; padding:0; }
   .stat-val    { font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
   .stat-lbl    { font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
-  .stat-wide   { background:var(--surf); border-radius:var(--radius-sm); padding:14px 18px; box-shadow:var(--shadow); grid-column:span 2; display:flex; align-items:center; justify-content:space-between; }
-  .stat-wide .stat-val { font-size:var(--type-metric-lg-size); color:var(--brown); font-weight:var(--type-metric-lg-weight); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
-  .stat-wide .stat-lbl { font-size:var(--type-body-size); color:var(--text-muted); margin-top:6px; font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); }
   .stat-icon   { font-size:28px; opacity:1; display:flex; align-items:center; }
   .ratio-card  { background:var(--surf); border-radius:var(--radius-sm); padding:14px; box-shadow:var(--shadow); margin-bottom:10px; }
   .ratio-title { font-size:var(--type-card-title-size); font-weight:var(--type-card-title-weight); line-height:var(--type-card-title-line); letter-spacing:var(--type-card-title-track); color:var(--brown); margin-bottom:12px; }
@@ -1125,9 +1125,13 @@ const styles = `
   .ratio-legend { display:flex; gap:14px; margin-top:6px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); color:var(--text-muted); flex-wrap:wrap; }
   .ratio-legend span { display:flex; align-items:center; gap:5px; }
   .dot12 { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; margin-bottom:10px; }
+  .insights-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
   .metric-btn { width:100%; border:none; cursor:pointer; }
   .metric-btn .stat-lbl { margin-top:6px; }
+
+  @media (max-width:420px) {
+    .stats-row, .insights-grid { grid-template-columns:1fr; }
+  }
 
   /* ── Settings tab ── */
   .share-card  { background:var(--surf); border-radius:var(--radius); padding:16px; margin-bottom:12px; box-shadow:var(--shadow); }
@@ -1199,7 +1203,6 @@ const styles = `
   .feeding-field input, .feeding-field select { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 11px; background:var(--surf-soft); color:var(--brown); font-size:var(--type-body-size); line-height:var(--type-body-line); font-weight:var(--type-body-weight); letter-spacing:var(--type-body-track); }
   .feeding-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
 
-  .train-coverage { text-align:center; }
 
   /* ── Welcome-back banner ── */
   .welcome-back { margin:0 24px 16px; background:var(--surf); border-radius:var(--radius-sm); padding:16px; border-left:3px solid var(--green-dark); box-shadow:0 1px 4px rgba(75,60,48,0.06); display:flex; justify-content:space-between; align-items:center; gap:10px; }
@@ -2173,6 +2176,23 @@ export default function PawTimer() {
   const severeCount = sessions.filter(s => s.distressLevel === "severe").length;
   const totalCount  = sessions.length;
   const totalAlone  = sessions.reduce((sum, s) => sum + (s.actualDuration || 0), 0);
+  const timelineDates = [...sessions.map((s) => s.date), ...walks.map((w) => w.date)]
+    .map((iso) => new Date(iso))
+    .filter((d) => !Number.isNaN(d.getTime()));
+  const trackedDayCount = (() => {
+    if (!timelineDates.length) return 1;
+    const minTs = Math.min(...timelineDates.map((d) => d.getTime()));
+    const maxTs = Math.max(...timelineDates.map((d) => d.getTime()));
+    return Math.max(1, Math.floor((maxTs - minTs) / (24 * 60 * 60 * 1000)) + 1);
+  })();
+  const averageWalksPerDay = walks.length / trackedDayCount;
+  const averageWalkDuration = (() => {
+    const walkDurations = walks.map((w) => w.duration).filter((n) => Number.isFinite(n));
+    if (!walkDurations.length) return null;
+    return Math.round(walkDurations.reduce((sum, n) => sum + n, 0) / walkDurations.length);
+  })();
+  const averageSessionsPerDay = totalCount / trackedDayCount;
+  const aloneTimePerWeek = Math.round((totalAlone / trackedDayCount) * 7);
   const bestCalm    = sessions.filter(s => s.distressLevel === "none")
     .reduce((m, s) => Math.max(m, s.actualDuration), 0);
   const streak = (() => {
@@ -2183,14 +2203,6 @@ export default function PawTimer() {
   })();
   const lastSess = sessions[sessions.length - 1];
 
-  const recommendationCoverageCount = sessions.filter(s =>
-    (hasValue(s.context?.timeOfDay) || hasValue(s.context?.departureType) || (Array.isArray(s.context?.cuesUsed) && s.context.cuesUsed.length > 0))
-    && ["barking","pacing","destructive","salivation"].some(k => hasValue(s.symptoms?.[k]))
-    && hasValue(s.recoverySeconds)
-    && (hasValue(s.preSession?.walkDuration) || hasValue(s.preSession?.enrichmentGiven))
-    && hasValue(s.environment?.noiseEvent)
-  ).length;
-  const recommendationCoveragePct = totalCount ? Math.round((recommendationCoverageCount / totalCount) * 100) : 0;
   const toDayKey = (iso) => {
     const d = new Date(iso);
     if (isNaN(d)) return "";
@@ -2351,7 +2363,7 @@ export default function PawTimer() {
     },
     adherence: {
       title: "Adherence",
-      body: "How well daily pattern breaks keep pace with real departures (walks together). Better adherence means cues are practiced enough to support training progress.",
+      body: "How well daily pattern breaks keep pace with real departures (walks). Better adherence means cues are practiced enough to support training progress.",
       detail: `Pattern breaks vs walks by day · ${adherenceTone.label}`,
     },
   };
@@ -2871,39 +2883,54 @@ export default function PawTimer() {
                 <span>Calm session streak</span>
               </div>
             </div>
-            <div className="stats-row">
-              <div className="stat-card">
-                <div className="stat-val stats-metric-value" style={{color:"var(--green-dark)"}}>{noneCount}</div>
-                <div className="stat-lbl stats-metric-label">Calm sessions</div>
+            <div className="stats-groups">
+              <div className="stats-group">
+                <div className="stats-group-title">Training outcomes</div>
+                <div className="stats-row">
+                  <div className="stat-card">
+                    <div className="stat-val stats-metric-value" style={{color:"var(--green-dark)"}}>{noneCount}</div>
+                    <div className="stat-lbl stats-metric-label">Calm sessions</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-val stats-metric-value">{`${Math.round((noneCount/totalCount)*100)}%`}</div>
+                    <div className="stat-lbl stats-metric-label">Success rate</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-val stats-metric-value">{fmt(bestCalm)}</div>
+                    <div className="stat-lbl stats-metric-label">Best calm time</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-val stats-metric-value">{fmt(target)}</div>
+                    <div className="stat-lbl stats-metric-label">Next target</div>
+                  </div>
+                </div>
               </div>
-              <div className="stat-card">
-                <div className="stat-val stats-metric-value">{`${Math.round((noneCount/totalCount)*100)}%`}</div>
-                <div className="stat-lbl stats-metric-label">Success rate</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-val stats-metric-value">{fmt(bestCalm)}</div>
-                <div className="stat-lbl stats-metric-label">Best calm time</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-val stats-metric-value">{fmt(target)}</div>
-                <div className="stat-lbl stats-metric-label">Next target</div>
-              </div>
-              <div className="stat-wide">
-                <div><div className="stat-val stats-metric-value">{fmt(totalAlone)}</div><div className="stat-lbl stats-metric-label">Total time alone</div></div>
-                <div className="stat-icon"><PawIcon size={32}/></div>
-              </div>
-              <div className="stat-wide">
-                <div><div className="stat-val stats-metric-value">{walks.length}</div><div className="stat-lbl stats-metric-label">Walks together</div></div>
-                <div className="stat-icon"><Img src="walk.png" size={36} alt="walks"/></div>
-              </div>
-              <div className="stat-wide">
-                <div><div className="stat-val stats-metric-value">{patterns.length}</div><div className="stat-lbl stats-metric-label">Pattern breaks</div></div>
-                <div className="stat-icon"><Img src="pattern-keys.png" size={36} alt="pattern breaks"/></div>
+              <div className="stats-group">
+                <div className="stats-group-title">Routine averages</div>
+                <div className="stats-row">
+                  <div className="stat-card">
+                    <div className="stat-val stats-metric-value">{fmt(aloneTimePerWeek)}</div>
+                    <div className="stat-lbl stats-metric-label">Alone time per week</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-val stats-metric-value">{averageWalkDuration != null ? fmt(averageWalkDuration) : "—"}</div>
+                    <div className="stat-lbl stats-metric-label">Average walk duration</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-val stats-metric-value">{averageWalksPerDay.toFixed(1)}</div>
+                    <div className="stat-lbl stats-metric-label">Average walks per day</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-val stats-metric-value">{averageSessionsPerDay.toFixed(1)}</div>
+                    <div className="stat-lbl stats-metric-label">Average sessions per day</div>
+                  </div>
+                  <div className="stat-card stat-card-span2">
+                    <div className="stat-val stats-metric-value">{patterns.length}</div>
+                    <div className="stat-lbl stats-metric-label">Pattern breaks</div>
+                  </div>
+                </div>
               </div>
             </div>
-            <p className="t-helper train-coverage" style={{ marginTop: 0, marginBottom: 14 }}>
-              Data coverage for smarter recommendations: {recommendationCoveragePct}% ({recommendationCoverageCount}/{totalCount})
-            </p>
             {(() => {
               const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
               const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
