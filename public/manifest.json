@@ -1,18 +1,18 @@
 {
-  "name": "PawTimer – Dog Training",
   "short_name": "PawTimer",
+  "name": "PawTimer – Dog Training",
   "description": "Separation anxiety training tracker for dogs",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F7F2E7",
-  "theme_color": "#A8D5BA",
+  "background_color": "#000000",
+  "theme_color": "#067B78",
   "icons": [
     {
       "src": "/icons/app-logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
