@@ -2940,9 +2940,6 @@ export default function PawTimer() {
                 </div>
               </div>
             </div>
-            <p className="t-helper train-coverage" style={{ marginTop: 0, marginBottom: 14 }}>
-              Data coverage for smarter recommendations: {recommendationCoveragePct}% ({recommendationCoverageCount}/{totalCount})
-            </p>
             {(() => {
               const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
               const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
