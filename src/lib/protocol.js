@@ -380,6 +380,21 @@ function chooseRecommendationType(last, stats, recent) {
   return "keep_same_duration";
 }
 
+function getCalmProgressionBase(trainingSessions = []) {
+  const recent = getLatestSessions(trainingSessions, 5);
+  if (!recent.length) return null;
+
+  const allRecentCalm = recent.every((session) => session.distressLevel === DISTRESS_LEVELS.NONE);
+  if (!allRecentCalm) return null;
+
+  const latestCalm = recent[recent.length - 1];
+  const baseDuration = Number(latestCalm.actualDuration) > 0
+    ? Number(latestCalm.actualDuration)
+    : Number(latestCalm.plannedDuration);
+
+  return Number.isFinite(baseDuration) && baseDuration > 0 ? baseDuration : null;
+}
+
 export function buildRecommendation(sessions = [], options = {}) {
   const rich = sortByDateAsc(sessions).map(toRichSession);
   const training = rich.filter((s) => s.departureType !== "real_life");
@@ -387,11 +402,14 @@ export function buildRecommendation(sessions = [], options = {}) {
   const last = training[training.length - 1] || null;
   const stats = calculateTrainingStats(training, options);
   const safeAlone = stats.safeAloneTime || PROTOCOL.startDurationSeconds;
+  const calmProgressionBase = getCalmProgressionBase(training);
 
   let recommendedDuration = safeAlone;
   const recommendationType = chooseRecommendationType(last, stats, recent);
 
-  if (recommendationType === "reduce_duration") {
+  if (calmProgressionBase != null) {
+    recommendedDuration = Math.round(calmProgressionBase * 1.15);
+  } else if (recommendationType === "reduce_duration") {
     recommendedDuration = Math.round(safeAlone * 0.75);
   } else if (recommendationType === "stabilization_block") {
     recommendedDuration = Math.round(safeAlone * 0.6);

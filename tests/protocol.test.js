@@ -87,12 +87,33 @@ describe("recommendation engine", () => {
   });
 
 
+
+  it("uses latest calm success +15% when last 5 sessions are all calm", () => {
+    const sessions = [
+      { date: daysAgo(1), plannedDuration: 70, actualDuration: 70, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 72, actualDuration: 72, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(83);
+  });
+
+  it("applies +15% only when all of the last 5 sessions are calm", () => {
+    const sessions = [
+      { date: daysAgo(4), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(3), plannedDuration: 62, actualDuration: 62, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(2), plannedDuration: 64, actualDuration: 40, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 66, actualDuration: 66, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 72, actualDuration: 72, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).not.toBe(83);
+  });
   it("steps up by about 20% after calm sessions before first stress event", () => {
     const sessions = [
       { date: daysAgo(0), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendedDuration).toBe(60);
+    expect(rec.recommendedDuration).toBe(57);
   });
 
   it("does not let older short sessions drag recommendation near minimum", () => {
