@@ -311,33 +311,44 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           amount: data.amount,
         };
 
-  let res = await sbReq(table, {
+  const postRow = (payload) => sbReq(table, {
     method: "POST",
-    body: JSON.stringify(row),
+    body: JSON.stringify(payload),
     prefer: "resolution=merge-duplicates,return=minimal",
   });
 
-  if (!res.ok && kind === "session" && /(latency_to_first_distress|distress_type)/i.test(String(res.error || ""))) {
-    const fallbackRow = { ...row };
-    delete fallbackRow.latency_to_first_distress;
-    delete fallbackRow.distress_type;
-    res = await sbReq(table, {
-      method: "POST",
-      body: JSON.stringify(fallbackRow),
-      prefer: "resolution=merge-duplicates,return=minimal",
-    });
-  }
+  let sessionPayload = { ...row };
+  let res = await postRow(sessionPayload);
 
-  if (!res.ok && kind === "session" && /(distress_level|sessions_distress_level_check|check constraint)/i.test(String(res.error || ""))) {
-    const fallbackRow = {
-      ...row,
-      distress_level: mapDistressForLegacySupabase(data.distressLevel),
-    };
-    res = await sbReq(table, {
-      method: "POST",
-      body: JSON.stringify(fallbackRow),
-      prefer: "resolution=merge-duplicates,return=minimal",
-    });
+  if (!res.ok && kind === "session") {
+    const maxAttempts = 8;
+    for (let attempt = 0; attempt < maxAttempts && !res.ok; attempt += 1) {
+      const errorText = String(res.error || "");
+      const missingColumn = errorText.match(/Could not find the '([^']+)' column/i)?.[1];
+      if (missingColumn && missingColumn in sessionPayload) {
+        delete sessionPayload[missingColumn];
+        res = await postRow(sessionPayload);
+        continue;
+      }
+
+      if (/(latency_to_first_distress|distress_type)/i.test(errorText)) {
+        delete sessionPayload.latency_to_first_distress;
+        delete sessionPayload.distress_type;
+        res = await postRow(sessionPayload);
+        continue;
+      }
+
+      if (/(distress_level|sessions_distress_level_check|check constraint)/i.test(errorText)) {
+        const mappedDistressLevel = mapDistressForLegacySupabase(data.distressLevel);
+        if (sessionPayload.distress_level !== mappedDistressLevel) {
+          sessionPayload.distress_level = mappedDistressLevel;
+          res = await postRow(sessionPayload);
+          continue;
+        }
+      }
+
+      break;
+    }
   }
 
   if (res.ok) return { ok: true, error: null };
