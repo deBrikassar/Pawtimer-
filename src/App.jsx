@@ -1304,6 +1304,48 @@ export default function PawTimer() {
     showToast(`🕒 Walk time updated to ${fmtDate(updatedWalk.date)}`);
   };
 
+  const editSessionDuration = (sessionId) => {
+    const currentSession = sessions.find((s) => s.id === sessionId);
+    if (!currentSession) return;
+    const input = window.prompt(
+      "Edit session duration (seconds or mm:ss)",
+      Number.isFinite(currentSession.actualDuration) ? String(currentSession.actualDuration) : ""
+    );
+    if (input === null) return;
+    const parsedDuration = parseDurationInput(input);
+    if (!Number.isFinite(parsedDuration) || parsedDuration <= 0) {
+      showToast("⚠️ Invalid duration. Use a positive value (seconds or mm:ss)");
+      return;
+    }
+    const updatedSession = normalizeSession({ ...currentSession, actualDuration: parsedDuration });
+    setSessions((prev) => prev.map((s) => (s.id === sessionId ? updatedSession : s)));
+    pushWithSyncStatus("session", updatedSession).then((ok) => {
+      if (!ok) showToast("⚠️ Sync failed — check console");
+    });
+    showToast(`⏱️ Session updated to ${fmt(parsedDuration)}`);
+  };
+
+  const editSessionTime = (sessionId) => {
+    const currentSession = sessions.find((s) => s.id === sessionId);
+    if (!currentSession) return;
+    const input = window.prompt(
+      "Edit session date/time (YYYY-MM-DDTHH:MM)",
+      toDateTimeLocalValue(currentSession.date)
+    );
+    if (input === null) return;
+    const parsedDate = new Date(input);
+    if (Number.isNaN(parsedDate.getTime())) {
+      showToast("⚠️ Invalid date/time. Use YYYY-MM-DDTHH:MM");
+      return;
+    }
+    const updatedSession = normalizeSession({ ...currentSession, date: parsedDate.toISOString() });
+    setSessions((prev) => prev.map((s) => (s.id === sessionId ? updatedSession : s)));
+    pushWithSyncStatus("session", updatedSession).then((ok) => {
+      if (!ok) showToast("⚠️ Sync failed — check console");
+    });
+    showToast(`🕒 Session time updated to ${fmtDate(updatedSession.date)}`);
+  };
+
   const logWalk = () => startWalk();
 
   const logPattern = (type) => {
@@ -1968,7 +2010,11 @@ export default function PawTimer() {
                       )}
                     </div>
                     <span className={`h-badge badge-${lv}`}>{distressLabel(lv)}</span>
-                    <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete("session", s.id); }} title="Delete">✕</button>
+                    <div className="h-actions">
+                      <button className="h-edit" onClick={() => editSessionTime(s.id)} title="Edit time">🕒</button>
+                      <button className="h-edit" onClick={() => editSessionDuration(s.id)} title="Edit duration">✎</button>
+                      <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete("session", s.id); }} title="Delete">✕</button>
+                    </div>
                   </div>
                 );
               }
