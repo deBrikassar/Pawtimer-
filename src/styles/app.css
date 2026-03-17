@@ -419,7 +419,7 @@
   /* ── History delete button ── */
   .h-del { background:none; border:none; color:var(--brown-muted); font-size:var(--text-sm); cursor:pointer; padding:4px 6px; border-radius:6px; flex-shrink:0; opacity:0.5; transition:opacity 0.15s,color 0.15s; }
   .h-del:hover { opacity:1; color:var(--red); }
-  .h-actions { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+  .h-actions { display:flex; align-items:center; justify-content:flex-end; gap:4px; flex-shrink:0; }
   .h-edit { background:none; border:none; color:var(--brown-muted); font-size:var(--text-sm); cursor:pointer; padding:4px 6px; border-radius:6px; opacity:0.7; }
   .h-edit:hover { opacity:1; color:var(--green-dark); }
 
@@ -432,7 +432,7 @@
   .pat-edit-btn:hover { color:var(--brown); }
   .pat-edit-reset { background:none; border:none; font-size:var(--text-sm); color:var(--brown-muted); cursor:pointer; padding:4px; }
   .pat-edit-reset:hover { color:var(--red); }
-  .h-item { background:var(--surf); border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:6px; box-shadow:0 2px 12px rgba(75,60,48,0.06); display:flex; align-items:center; gap:12px; animation:fadeIn 0.3s ease; }
+  .h-item { background:var(--surf); border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:8px; box-shadow:0 2px 12px rgba(75,60,48,0.06); display:flex; align-items:flex-start; gap:12px; animation:fadeIn 0.3s ease; }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
   .h-dot { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:var(--text-md); flex-shrink:0; }
   .dot-none   { background:rgba(168,213,186,0.3); }
@@ -442,9 +442,12 @@
   .dot-walk   { background:rgba(74,158,110,0.15); }
   .dot-feed   { background:rgba(212,129,58,0.16); color:var(--brown); font-size:var(--text-lg); }
   .dot-pat    { background:rgba(75,60,48,0.09); }
-  .h-info { flex:1; min-width:0; }
-  .h-main { font-size:var(--type-body-size); font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); color:var(--brown); }
-  .h-date { font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); margin-top:6px; }
+  .h-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; padding-top:1px; }
+  .h-main { font-size:var(--type-body-size); font-weight:600; line-height:var(--type-body-line); letter-spacing:var(--type-body-track); color:var(--brown); }
+  .h-meta-row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-width:0; }
+  .h-date { font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); margin-top:0; min-width:0; }
+  .h-value { font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--brown-mid); text-align:right; white-space:nowrap; }
+  .h-trailing { display:flex; flex-direction:column; align-items:flex-end; gap:8px; margin-left:8px; flex-shrink:0; padding-top:1px; }
   .h-badge { font-size:var(--type-overline-size); font-weight:var(--type-overline-weight); line-height:var(--type-overline-line); padding:3px 9px; border-radius:99px; letter-spacing:var(--type-overline-track); white-space:nowrap; flex-shrink:0; text-transform:uppercase; }
   .badge-none   { background:rgba(168,213,186,0.3);  color:var(--green-dark); }
   .badge-subtle { background:rgba(230,126,34,0.12); color:var(--orange); }
@@ -453,7 +456,7 @@
   .badge-walk   { background:rgba(74,158,110,0.15);  color:var(--green-dark); }
   .badge-feed   { background:rgba(212,129,58,0.16); color:#8a4c19; }
   .badge-pat    { background:rgba(75,60,48,0.09);    color:var(--brown-mid); }
-  .h-extra-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .h-extra-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
   .h-badge-mini { font-size:var(--type-overline-size); font-weight:var(--type-overline-weight); line-height:var(--type-overline-line); padding:2px 7px; border-radius:99px; background:rgba(75,60,48,0.08); color:var(--brown-mid); letter-spacing:var(--type-overline-track); text-transform:uppercase; }
 
   /* ── Stats ── */

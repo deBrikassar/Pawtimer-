@@ -2031,8 +2031,11 @@ export default function PawTimer() {
                   <div className="h-item" key={`s-${s.id}`}>
                     <div className={`h-dot dot-${lv}`}><Img src={icon} size={22}/></div>
                     <div className="h-info">
-                      <div className="h-main">{fmt(s.actualDuration)} <span className="t-helper">of {fmt(s.plannedDuration)}</span></div>
-                      <div className="h-date">{fmtDate(s.date)}</div>
+                      <div className="h-main">Training session</div>
+                      <div className="h-meta-row">
+                        <div className="h-date">{fmtDate(s.date)}</div>
+                        <div className="h-value">{fmt(s.actualDuration)} <span className="t-helper">of {fmt(s.plannedDuration)}</span></div>
+                      </div>
                       {detailBadges.length > 0 && (
                         <div className="h-extra-badges">
                           {detailBadges.slice(0, 4).map((badge, idx) => (
@@ -2041,11 +2044,13 @@ export default function PawTimer() {
                         </div>
                       )}
                     </div>
-                    <span className={`h-badge badge-${lv}`}>{distressLabel(lv)}</span>
-                    <div className="h-actions">
-                      <button className="h-edit" onClick={() => editSessionTime(s.id)} title="Edit time">🕒</button>
-                      <button className="h-edit" onClick={() => editSessionDuration(s.id)} title="Edit duration">✎</button>
-                      <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete("session", s.id); }} title="Delete">✕</button>
+                    <div className="h-trailing">
+                      <span className={`h-badge badge-${lv}`}>{distressLabel(lv)}</span>
+                      <div className="h-actions">
+                        <button className="h-edit" onClick={() => editSessionTime(s.id)} title="Edit time">🕒</button>
+                        <button className="h-edit" onClick={() => editSessionDuration(s.id)} title="Edit duration">✎</button>
+                        <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete("session", s.id); }} title="Delete">✕</button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -2056,14 +2061,19 @@ export default function PawTimer() {
                   <div className="h-item" key={`w-${w.id}`}>
                     <div className="h-dot dot-walk"><Img src="walk.png" size={22}/></div>
                     <div className="h-info">
-                      <div className="h-main">{walkTypeLabel(w.type)} with {name}{w.duration ? ` · ${fmt(w.duration)}` : ""}</div>
-                      <div className="h-date">{fmtDate(w.date)}</div>
+                      <div className="h-main">{walkTypeLabel(w.type)} with {name}</div>
+                      <div className="h-meta-row">
+                        <div className="h-date">{fmtDate(w.date)}</div>
+                        <div className="h-value">{w.duration ? fmt(w.duration) : "—"}</div>
+                      </div>
                     </div>
-                    <span className="h-badge badge-walk">{walkTypeLabel(w.type)}</span>
-                    <div className="h-actions">
-                      <button className="h-edit" onClick={() => editWalkTime(w.id)} title="Edit time">🕒</button>
-                      <button className="h-edit" onClick={() => editWalkDuration(w.id)} title="Edit duration">✎</button>
-                      <button className="h-del" onClick={() => { setWalks(prev => prev.filter(x => x.id !== w.id)); syncDelete("walk", w.id); }} title="Delete">✕</button>
+                    <div className="h-trailing">
+                      <span className="h-badge badge-walk">{walkTypeLabel(w.type)}</span>
+                      <div className="h-actions">
+                        <button className="h-edit" onClick={() => editWalkTime(w.id)} title="Edit time">🕒</button>
+                        <button className="h-edit" onClick={() => editWalkDuration(w.id)} title="Edit duration">✎</button>
+                        <button className="h-del" onClick={() => { setWalks(prev => prev.filter(x => x.id !== w.id)); syncDelete("walk", w.id); }} title="Delete">✕</button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -2076,10 +2086,16 @@ export default function PawTimer() {
                     <div className="h-dot dot-pat"><Img src={pt.icon} size={22}/></div>
                     <div className="h-info">
                       <div className="h-main">{patLabels[pt.type] || pt.label}</div>
-                      <div className="h-date">{fmtDate(p.date)}</div>
+                      <div className="h-meta-row">
+                        <div className="h-date">{fmtDate(p.date)}</div>
+                      </div>
                     </div>
-                    <span className="h-badge badge-pat">Pattern break</span>
-                    <button className="h-del" onClick={() => { setPatterns(prev => prev.filter(x => x.id !== p.id)); syncDelete("pattern", p.id); }} title="Delete">✕</button>
+                    <div className="h-trailing">
+                      <span className="h-badge badge-pat">Pattern break</span>
+                      <div className="h-actions">
+                        <button className="h-del" onClick={() => { setPatterns(prev => prev.filter(x => x.id !== p.id)); syncDelete("pattern", p.id); }} title="Delete">✕</button>
+                      </div>
+                    </div>
                   </div>
                 );
               }
@@ -2089,11 +2105,18 @@ export default function PawTimer() {
                   <div className="h-item" key={`f-${f.id}`}>
                     <div className="h-dot dot-feed">🍽️</div>
                     <div className="h-info">
-                      <div className="h-main" style={{ textTransform: "capitalize" }}>{f.foodType} · {f.amount}</div>
-                      <div className="h-date">{fmtDate(f.date)}</div>
+                      <div className="h-main" style={{ textTransform: "capitalize" }}>{f.foodType}</div>
+                      <div className="h-meta-row">
+                        <div className="h-date">{fmtDate(f.date)}</div>
+                        <div className="h-value" style={{ textTransform: "capitalize" }}>{f.amount}</div>
+                      </div>
                     </div>
-                    <span className="h-badge badge-feed">Feeding</span>
-                    <button className="h-del" onClick={() => { setFeedings(prev => prev.filter(x => x.id !== f.id)); syncDelete("feeding", f.id); }} title="Delete">✕</button>
+                    <div className="h-trailing">
+                      <span className="h-badge badge-feed">Feeding</span>
+                      <div className="h-actions">
+                        <button className="h-del" onClick={() => { setFeedings(prev => prev.filter(x => x.id !== f.id)); syncDelete("feeding", f.id); }} title="Delete">✕</button>
+                      </div>
+                    </div>
                   </div>
                 );
               }
