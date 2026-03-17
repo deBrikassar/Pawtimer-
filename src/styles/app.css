@@ -231,7 +231,7 @@
   .quick-action-icon { width:28px; height:28px; display:flex; align-items:center; justify-content:center; }
   .quick-action-icon img { width:22px; height:22px; display:block; }
   .quick-action-icon .qa-glyph { font-size:var(--text-xl); line-height:1; display:block; width:22px; height:22px; }
-  .quick-action-label { font-size:var(--text-sm); line-height:var(--type-secondary-line); color:var(--brown); font-weight:var(--type-button-lg-weight); text-align:center; width:100%; display:flex; align-items:center; justify-content:center; letter-spacing:var(--type-secondary-track); }
+  .quick-action-label { font-size:var(--type-button-lg-size); line-height:var(--type-button-lg-line); color:var(--brown); font-weight:var(--type-button-lg-weight); text-align:center; width:100%; display:flex; align-items:center; justify-content:center; letter-spacing:var(--type-button-lg-track); }
   .quick-action-meta  { font-size:var(--text-xs); color:var(--brown-mid); line-height:var(--type-overline-line); text-align:center; width:100%; font-weight:var(--type-secondary-weight); }
   
   .tool-badge-warn { background:var(--amber); color:white; font-size:var(--text-xs); font-weight:var(--type-secondary-weight); border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; }
