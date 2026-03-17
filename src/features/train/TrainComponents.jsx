@@ -22,11 +22,14 @@ export function SessionControl({
   const [pressing, setPressing] = useState(false);
   const remaining = Math.max(target - elapsed, 0);
   const remainingSeconds = Math.max(Math.ceil(remaining), 0);
+  const overTargetSeconds = Math.max(elapsed - target, 0);
   const radius = 103;
   const circumference = 2 * Math.PI * radius;
   const frac = Math.min(elapsed / Math.max(target, 1), 1);
   const isRunning = phase === "running";
   const isIdle = phase === "idle";
+  const isPastTarget = elapsed > target;
+  const timerValue = isRunning ? elapsed : remainingSeconds;
 
   const startWithFeedback = () => {
     if (!onStart) return;
@@ -41,10 +44,12 @@ export function SessionControl({
     <>
       {phase !== "rating" && (<div className="session-control-wrap">
         <button
-          className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""}`}
+          className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""} ${isPastTarget ? "is-over-target" : ""}`}
           onClick={isIdle ? startWithFeedback : undefined}
           aria-label={isRunning
-            ? `${fmt(remainingSeconds)} remaining in current session`
+            ? (isPastTarget
+              ? `${fmt(overTargetSeconds)} over target in current session`
+              : `${fmt(remainingSeconds)} remaining in current session`)
             : `Start ${fmt(target)} session`}
           aria-live={isRunning ? "polite" : undefined}
         >
@@ -70,7 +75,8 @@ export function SessionControl({
             </div>
 
             <div className="sc-time">
-              <div className="sc-time-value">{fmt(remainingSeconds)}</div>
+              <div className="sc-time-value">{fmt(timerValue)}</div>
+              {isPastTarget && <div className="sc-over-target">+{fmt(overTargetSeconds)} over target</div>}
             </div>
           </div>
         </button>
