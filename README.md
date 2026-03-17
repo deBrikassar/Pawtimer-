@@ -170,5 +170,5 @@ MIT — free to use, modify, and share.
 
 ## App icon workflow
 
-`public/icons/app-logo.svg` is the canonical app logo source. Keep this file as the only app logo asset.
+`public/icons/app-logo.png` is the canonical app logo source. Keep this file as the only app logo asset.
 
