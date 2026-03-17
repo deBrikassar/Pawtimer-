@@ -4,6 +4,47 @@ import {
 } from "recharts";
 import EmptyState from "../../components/EmptyState";
 
+export function StatsSection({ title, children }) {
+  return (
+    <div className="stats-section">
+      <p className="stats-section-title">{title}</p>
+      {children}
+    </div>
+  );
+}
+
+export function StatsMetricCard({ value, label, className = "", valueStyle }) {
+  return (
+    <div className={`stat-card ${className}`.trim()}>
+      <div className="stat-val stats-metric-value" style={valueStyle}>{value}</div>
+      <div className="stat-lbl stats-metric-label">{label}</div>
+    </div>
+  );
+}
+
+function StatsMetricButton({ onClick, value, label, color }) {
+  return (
+    <button className="stat-card metric-btn" onClick={onClick} type="button">
+      <div className="stat-val stats-metric-value" style={{ color }}>
+        {value}
+      </div>
+      <div className="stat-lbl stats-metric-label">{label}</div>
+    </button>
+  );
+}
+
+export function StatsWideInfoCard({ value, label, icon }) {
+  return (
+    <div className="stat-wide">
+      <div>
+        <div className="stat-val stats-metric-value">{value}</div>
+        <div className="stat-lbl stats-metric-label">{label}</div>
+      </div>
+      <div className="stat-icon">{icon}</div>
+    </div>
+  );
+}
+
 export function StatsInsightsGrid({
   totalCount,
   openMetricHelp,
@@ -20,30 +61,10 @@ export function StatsInsightsGrid({
   if (totalCount <= 0) return null;
   return (
     <div className="insights-grid">
-      <button className="stat-card metric-btn" onClick={() => openMetricHelp("stability")} type="button">
-        <div className="stat-val stats-metric-value" style={{ color: stabilityTone.color }}>
-          {calmMedian != null ? fmt(calmMedian) : "—"}
-        </div>
-        <div className="stat-lbl stats-metric-label">Stability</div>
-      </button>
-      <button className="stat-card metric-btn" onClick={() => openMetricHelp("momentum")} type="button">
-        <div className="stat-val stats-metric-value" style={{ color: momentumTone.color }}>
-          {calmRate7 != null ? `${calmRate7}%` : "—"}
-        </div>
-        <div className="stat-lbl stats-metric-label">Momentum</div>
-      </button>
-      <button className="stat-card metric-btn" onClick={() => openMetricHelp("adherence")} type="button">
-        <div className="stat-val stats-metric-value" style={{ color: adherenceTone.color }}>
-          {adherenceByDay != null ? `${adherenceByDay}%` : "—"}
-        </div>
-        <div className="stat-lbl stats-metric-label">Adherence</div>
-      </button>
-      <button className="stat-card metric-btn" onClick={() => openMetricHelp("relapseRisk")} type="button">
-        <div className="stat-val stats-metric-value" style={{ color: relapseTone.color }}>
-          {relapseRisk ? "High" : "Low"}
-        </div>
-        <div className="stat-lbl stats-metric-label">Relapse risk</div>
-      </button>
+      <StatsMetricButton onClick={() => openMetricHelp("stability")} value={calmMedian != null ? fmt(calmMedian) : "—"} label="Stability" color={stabilityTone.color} />
+      <StatsMetricButton onClick={() => openMetricHelp("momentum")} value={calmRate7 != null ? `${calmRate7}%` : "—"} label="Momentum" color={momentumTone.color} />
+      <StatsMetricButton onClick={() => openMetricHelp("adherence")} value={adherenceByDay != null ? `${adherenceByDay}%` : "—"} label="Adherence" color={adherenceTone.color} />
+      <StatsMetricButton onClick={() => openMetricHelp("relapseRisk")} value={relapseRisk ? "High" : "Low"} label="Relapse risk" color={relapseTone.color} />
     </div>
   );
 }
