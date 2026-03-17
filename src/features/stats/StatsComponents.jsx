@@ -4,9 +4,9 @@ import {
 } from "recharts";
 import EmptyState from "../../components/EmptyState";
 
-export function StatsSection({ title, children }) {
+export function StatsSection({ title, children, className = "" }) {
   return (
-    <div className="stats-section">
+    <div className={`stats-section ${className}`.trim()}>
       <p className="stats-section-title">{title}</p>
       {children}
     </div>

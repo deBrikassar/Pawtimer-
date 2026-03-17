@@ -2195,103 +2195,104 @@ export default function PawTimer() {
               />
             ) : (<>
 
-            <div className="streak-card">
-              <div className="streak-num">{streak}</div>
-              <div className="streak-lbl">
-                <span className="streak-fire">🔥</span>
-                <span>Calm session streak</span>
+            <StatsSection title="Progress & training performance" className="stats-section-priority">
+              <div className="streak-card stats-priority-card">
+                <div className="streak-num">{streak}</div>
+                <div className="streak-lbl">
+                  <span className="streak-fire">🔥</span>
+                  <span>Calm session streak</span>
+                </div>
               </div>
-            </div>
-
-            <StatsSection title="Training overview">
-              <div className="stats-row">
-                <StatsMetricCard value={noneCount} label="Calm sessions" valueStyle={{ color:"var(--green-dark)" }} />
-                <StatsMetricCard value={`${Math.round((noneCount/totalCount)*100)}%`} label="Success rate" />
+              <div className="goal-card stats-priority-card" style={{margin:"0 0 12px"}}>
+                <div className="goal-label">
+                  <span className="goal-title">Progress toward goal</span>
+                  <span className="goal-pct">{Math.round(goalPct)}%</span>
+                </div>
+                <div className="progress-track"><div className="progress-fill" style={{width:`${goalPct}%`}}/></div>
+                <div className="goal-meta">
+                  <span>Current threshold: {fmt(target)}</span>
+                  <span>Goal: {fmt(goalSec)}</span>
+                </div>
+              </div>
+              <div className="stats-row stats-row-main">
+                <StatsMetricCard value={`${Math.round((noneCount/totalCount)*100)}%`} label="Success rate" className="stat-card-emphasis" />
+                <StatsMetricCard value={noneCount} label="Calm sessions" valueStyle={{ color:"var(--green-dark)" }} className="stat-card-emphasis" />
                 <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" />
                 <StatsMetricCard value={fmt(target)} label="Next target" />
               </div>
+              {totalCount > 0 && (
+                <div className="ratio-card">
+                  <div className="ratio-title">Outcome breakdown — {totalCount} sessions</div>
+                  <div className="ratio-bar">
+                    <div className="ratio-good" style={{width:`${(noneCount/totalCount)*100}%`}}/>
+                    <div className="ratio-mild" style={{width:`${(subtleCount/totalCount)*100}%`}}/>
+                    <div className="ratio-active" style={{width:`${(activeCount/totalCount)*100}%`}}/>
+                    <div className="ratio-bad"  style={{width:`${(severeCount/totalCount)*100}%`}}/>
+                  </div>
+                  <div className="ratio-legend">
+                    <span><div className="dot12" style={{background:"var(--green-dark)"}}/>{noneCount} calm</span>
+                    <span><div className="dot12" style={{background:"var(--orange)"}}/>{subtleCount} subtle</span>
+                    <span><div className="dot12" style={{background:"#d65f3c"}}/>{activeCount} active</span>
+                    <span><div className="dot12" style={{background:"var(--red)"}}/>{severeCount} severe</span>
+                  </div>
+                </div>
+              )}
             </StatsSection>
 
-            <StatsSection title="Averages">
+            <StatsSection title="Time-related stats">
+              {(() => {
+                const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
+                const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
+                const calmSec   = loggedTodaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+                const subtleSec = loggedTodaySess.filter(s=>s.distressLevel==="subtle").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+                const activeSec = loggedTodaySess.filter(s=>s.distressLevel==="active").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+                const severeSec = loggedTodaySess.filter(s=>s.distressLevel==="severe").reduce((sum,s)=>sum+(s.actualDuration||0),0);
+                const calmPct   = totalLogged ? (calmSec/totalLogged)*100 : 0;
+                const subtlePct = totalLogged ? (subtleSec/totalLogged)*100 : 0;
+                const activePct = totalLogged ? (activeSec/totalLogged)*100 : 0;
+                const severePct = totalLogged ? (severeSec/totalLogged)*100 : 0;
+                return (
+                  <div className="alone-card" style={{ marginBottom:12 }}>
+                    <div className="alone-left">
+                      <div className="alone-label">Today's alone time</div>
+                      <div className="alone-total">{totalLogged === 0 ? "0 mins" : fmt(totalLogged)}</div>
+                    </div>
+                    <div className="alone-right">
+                      <div className="alone-track">
+                        {totalLogged > 0 ? (<>
+                          <div className="alone-fill ok"   style={{width:`${calmPct}%`}}/>
+                          <div className="alone-fill near" style={{width:`${subtlePct}%`}}/>
+                          <div className="alone-fill active" style={{width:`${activePct}%`}}/>
+                          <div className="alone-fill full" style={{width:`${severePct}%`}}/>
+                        </>) : <div style={{width:"100%",height:"100%",background:"var(--border)",borderRadius:99}}/>}
+                      </div>
+                      {totalLogged > 0 && (
+                        <div className="alone-legend">
+                          {calmSec>0   && <span className="t-helper" style={{color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
+                          {subtleSec>0 && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(subtleSec)} subtle</span>}
+                          {activeSec>0 && <span className="t-helper" style={{color:"#d65f3c"}}>{fmt(activeSec)} active</span>}
+                          {severeSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(severeSec)} severe</span>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
               <div className="stats-row">
-                <StatsMetricCard value={avgWalksPerDay != null ? avgWalksPerDay.toFixed(1) : "—"} label="Average walks/day" />
+                <StatsWideInfoCard value={fmt(aloneLastWeek)} label="Alone time per week" icon={<PawIcon size={32}/>} />
                 <StatsMetricCard value={avgWalkDuration != null ? fmt(avgWalkDuration) : "—"} label="Average walk duration" />
-                <StatsMetricCard value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"} label="Average sessions/day" className="stat-card-span2" />
               </div>
             </StatsSection>
 
-            <StatsSection title="Daily life">
+            <StatsSection title="Daily / weekly behavior">
               <div className="stats-row">
-                <StatsWideInfoCard value={fmt(aloneLastWeek)} label="Alone time per week" icon={<PawIcon size={32}/>} />
+                <StatsMetricCard value={avgWalksPerDay != null ? avgWalksPerDay.toFixed(1) : "—"} label="Average walks/day" />
+                <StatsMetricCard value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"} label="Average sessions/day" />
                 <StatsWideInfoCard value={patterns.length} label="Pattern breaks" icon={<Img src="pattern-keys.png" size={36} alt="pattern breaks"/>} />
               </div>
             </StatsSection>
-            {(() => {
-              const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
-              const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
-              const calmSec   = loggedTodaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const subtleSec = loggedTodaySess.filter(s=>s.distressLevel==="subtle").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const activeSec = loggedTodaySess.filter(s=>s.distressLevel==="active").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const severeSec = loggedTodaySess.filter(s=>s.distressLevel==="severe").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-              const calmPct   = totalLogged ? (calmSec/totalLogged)*100 : 0;
-              const subtlePct = totalLogged ? (subtleSec/totalLogged)*100 : 0;
-              const activePct = totalLogged ? (activeSec/totalLogged)*100 : 0;
-              const severePct = totalLogged ? (severeSec/totalLogged)*100 : 0;
-              return (
-                <div className="alone-card" style={{ marginBottom:14 }}>
-                  <div className="alone-left">
-                    <div className="alone-label">Today's alone time</div>
-                    <div className="alone-total">{totalLogged === 0 ? "0 mins" : fmt(totalLogged)}</div>
-                  </div>
-                  <div className="alone-right">
-                    <div className="alone-track">
-                      {totalLogged > 0 ? (<>
-                        <div className="alone-fill ok"   style={{width:`${calmPct}%`}}/>
-                        <div className="alone-fill near" style={{width:`${subtlePct}%`}}/>
-                        <div className="alone-fill active" style={{width:`${activePct}%`}}/>
-                        <div className="alone-fill full" style={{width:`${severePct}%`}}/>
-                      </>) : <div style={{width:"100%",height:"100%",background:"var(--border)",borderRadius:99}}/>}
-                    </div>
-                    {totalLogged > 0 && (
-                      <div className="alone-legend">
-                        {calmSec>0   && <span className="t-helper" style={{color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
-                        {subtleSec>0 && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(subtleSec)} subtle</span>}
-                        {activeSec>0 && <span className="t-helper" style={{color:"#d65f3c"}}>{fmt(activeSec)} active</span>}
-                        {severeSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(severeSec)} severe</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-            <div className="goal-card" style={{margin:"0 0 14px"}}>
-              <div className="goal-label">
-                <span className="goal-title">Progress toward goal</span>
-                <span className="goal-pct">{Math.round(goalPct)}%</span>
-              </div>
-              <div className="progress-track"><div className="progress-fill" style={{width:`${goalPct}%`}}/></div>
-              <div className="goal-meta">
-                <span>Current threshold: {fmt(target)}</span>
-                <span>Goal: {fmt(goalSec)}</span>
-              </div>
-            </div>
-            {totalCount > 0 && (
-              <div className="ratio-card">
-                <div className="ratio-title">Outcome breakdown — {totalCount} sessions</div>
-                <div className="ratio-bar">
-                  <div className="ratio-good" style={{width:`${(noneCount/totalCount)*100}%`}}/>
-                  <div className="ratio-mild" style={{width:`${(subtleCount/totalCount)*100}%`}}/>
-                  <div className="ratio-active" style={{width:`${(activeCount/totalCount)*100}%`}}/>
-                  <div className="ratio-bad"  style={{width:`${(severeCount/totalCount)*100}%`}}/>
-                </div>
-                <div className="ratio-legend">
-                  <span><div className="dot12" style={{background:"var(--green-dark)"}}/>{noneCount} calm</span>
-                  <span><div className="dot12" style={{background:"var(--orange)"}}/>{subtleCount} subtle</span>
-                  <span><div className="dot12" style={{background:"#d65f3c"}}/>{activeCount} active</span>
-                  <span><div className="dot12" style={{background:"var(--red)"}}/>{severeCount} severe</span>
-                </div>
-              </div>
-            )}
+
+            <StatsSection title="Supporting metrics" className="stats-section-supporting">
             <StatsInsightsGrid
               totalCount={totalCount}
               openMetricHelp={openMetricHelp}
@@ -2314,6 +2315,7 @@ export default function PawTimer() {
               distressLabel={distressLabel}
               fmt={fmt}
             />
+            </StatsSection>
             </>)}
           </div>
         </div>)}
