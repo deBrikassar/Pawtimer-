@@ -88,10 +88,10 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
           <CartesianGrid stroke="var(--surf-soft)" vertical={false}/>
-          <XAxis dataKey="session" tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} tickLine={false} axisLine={false}/>
-          <YAxis tick={{fontSize:13,fill:"var(--text-muted)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} tickLine={false} axisLine={false}/>
-          <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:13,fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} labelStyle={{color:"var(--green-light)",fontSize:13,fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
-          <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:13,fill:"var(--green-dark)",fontWeight:400,fontFamily:"SF Pro Text, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"}}/>
+          <XAxis dataKey="session" tick={{fontSize:14,fill:"var(--text-muted)",fontWeight:400,fontFamily:"var(--font-main)"}} tickLine={false} axisLine={false}/>
+          <YAxis tick={{fontSize:14,fill:"var(--text-muted)",fontWeight:400,fontFamily:"var(--font-main)"}} tickLine={false} axisLine={false}/>
+          <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:14,fontWeight:400,fontFamily:"var(--font-main)"}} labelStyle={{color:"var(--green-light)",fontSize:14,fontWeight:400,fontFamily:"var(--font-main)"}} formatter={(v,n,p)=>[`${v}m — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
+          <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:14,fill:"var(--green-dark)",fontWeight:400,fontFamily:"var(--font-main)"}}/>
           <Line type="monotone" dataKey="duration" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
         </LineChart>
       </ResponsiveContainer>

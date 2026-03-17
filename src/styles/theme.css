@@ -1,8 +1,22 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --font-ui: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-prose: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-main: "Manrope", "Golos Text", sans-serif;
+    --font-ui: var(--font-main);
+    --font-prose: var(--font-main);
+
+    --text-xs: 12px;
+    --text-sm: 14px;
+    --text-md: 16px;
+    --text-lg: 18px;
+    --text-xl: 22px;
+    --text-2xl: 28px;
+    --text-3xl: 34px;
+
+    --font-regular: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
     --space-1: 8px;
     --space-2: 16px;
     --space-3: 24px;
@@ -41,53 +55,53 @@
     --radius:    var(--radius-lg);
 
     /* Typography tokens */
-    --type-display-size: 44px;
+    --type-display-size: var(--text-3xl);
     --type-display-line: 48px;
     --type-display-weight: 700;
     --type-display-track: -0.03em;
-    --type-page-title-size: 34px;
+    --type-page-title-size: var(--text-3xl);
     --type-page-title-line: 40px;
-    --type-page-title-weight: 700;
+    --type-page-title-weight: var(--font-bold);
     --type-page-title-track: -0.025em;
-    --type-section-title-size: 22px;
+    --type-section-title-size: var(--text-xl);
     --type-section-title-line: 28px;
-    --type-section-title-weight: 600;
+    --type-section-title-weight: var(--font-semibold);
     --type-section-title-track: -0.02em;
-    --type-card-title-size: 18px;
+    --type-card-title-size: var(--text-lg);
     --type-card-title-line: 24px;
-    --type-card-title-weight: 600;
+    --type-card-title-weight: var(--font-semibold);
     --type-card-title-track: -0.015em;
-    --type-body-lg-size: 17px;
+    --type-body-lg-size: var(--text-md);
     --type-body-lg-line: 24px;
-    --type-body-lg-weight: 400;
+    --type-body-lg-weight: var(--font-regular);
     --type-body-lg-track: -0.01em;
-    --type-body-size: 17px;
+    --type-body-size: var(--text-md);
     --type-body-line: 24px;
-    --type-body-weight: 400;
+    --type-body-weight: var(--font-regular);
     --type-body-track: -0.005em;
-    --type-secondary-size: 13px;
+    --type-secondary-size: var(--text-sm);
     --type-secondary-line: 18px;
-    --type-secondary-weight: 400;
+    --type-secondary-weight: var(--font-regular);
     --type-secondary-track: 0;
-    --type-overline-size: 11px;
+    --type-overline-size: var(--text-xs);
     --type-overline-line: 14px;
-    --type-overline-weight: 400;
+    --type-overline-weight: var(--font-regular);
     --type-overline-track: 0.04em;
-    --type-metric-xl-size: 40px;
+    --type-metric-xl-size: var(--text-3xl);
     --type-metric-xl-line: 42px;
-    --type-metric-xl-weight: 700;
+    --type-metric-xl-weight: var(--font-bold);
     --type-metric-xl-track: -0.03em;
-    --type-metric-lg-size: 30px;
+    --type-metric-lg-size: var(--text-2xl);
     --type-metric-lg-line: 34px;
-    --type-metric-lg-weight: 700;
+    --type-metric-lg-weight: var(--font-bold);
     --type-metric-lg-track: -0.025em;
-    --type-button-lg-size: 18px;
+    --type-button-lg-size: var(--text-lg);
     --type-button-lg-line: 22px;
-    --type-button-lg-weight: 500;
+    --type-button-lg-weight: var(--font-medium);
     --type-button-lg-track: -0.01em;
-    --type-button-size: 17px;
+    --type-button-size: var(--text-md);
     --type-button-line: 24px;
-    --type-button-weight: 500;
+    --type-button-weight: var(--font-medium);
     --type-button-track: -0.01em;
   }
 
@@ -96,8 +110,9 @@
     height: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: var(--font-ui);
-    font-weight: var(--type-body-weight);
+    font-family: var(--font-main);
+    font-size: var(--text-md);
+    font-weight: var(--font-regular);
     line-height: calc(var(--type-body-line) / var(--type-body-size));
     letter-spacing: var(--type-body-track);
     min-height: 100vh; min-height: 100dvh;
@@ -105,6 +120,15 @@
     overscroll-behavior-y: none;
     overflow-x: hidden;
   }
+
+
+  h1, h2, h3, h4, h5, h6, p, small, label, button, input, select, textarea {
+    font: inherit;
+    letter-spacing: inherit;
+  }
+
+  small { font-size: var(--text-xs); }
+
   button:focus-visible,
   input:focus-visible,
   select:focus-visible {
