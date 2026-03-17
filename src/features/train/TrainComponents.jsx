@@ -129,68 +129,70 @@ export function SessionRatingPanel({
   if (phase !== "rating") return null;
 
   return (
-    <div className="rating-screen session-feedback">
-      <div className="rating-title">Was there any stress?</div>
-      <div className="rating-sub">
-        {fmt(finalElapsed)} session — how did {name} handle it?
-      </div>
-      <div className="result-grid">
-        <button className="btn-result btn-none" onClick={() => { setSessionOutcome("none"); recordResult("none"); }}>
-          <Img src="result-calm.png" size={36} alt="No distress"/>
-          <div><div>No distress</div><div className="result-desc">{name} was completely calm</div></div>
-        </button>
-        <button className="btn-result btn-mild" onClick={() => setSessionOutcome("subtle")}>
-          <Img src="result-mild.png" size={36} alt="Subtle stress"/>
-          <div><div>Subtle stress</div><div className="result-desc">Mild/passive signs (restless, lip licking, etc.)</div></div>
-        </button>
-        <button className="btn-result btn-strong" onClick={() => setSessionOutcome("active")}>
-          <Img src="result-strong.png" size={36} alt="Active distress"/>
-          <div><div>Active distress</div><div className="result-desc">Barking, pacing, unable to settle</div></div>
-        </button>
-        <button className="btn-result btn-severe" onClick={() => setSessionOutcome("severe")}>
-          <Img src="result-strong.png" size={36} alt="Severe distress"/>
-          <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
-        </button>
-      </div>
-      {sessionOutcome && sessionOutcome !== "none" && (
-        <div className="outcome-details">
-          <label className="field-label" htmlFor="latency-input">Latency to first stress (seconds)</label>
-          <input
-            id="latency-input"
-            className="text-input"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="Optional"
-            value={latencyDraft}
-            onChange={(e) => setLatencyDraft(e.target.value)}
-          />
-          <label className="field-label" htmlFor="distress-type">Distress type (optional)</label>
-          <select
-            id="distress-type"
-            className="text-input"
-            value={distressTypeDraft}
-            onChange={(e) => setDistressTypeDraft(e.target.value)}
-          >
-            <option value="">Select distress type</option>
-            {distressTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-          <button
-            className="btn-save-outcome"
-            onClick={() => recordResult(sessionOutcome, {
-              latencyToFirstDistress: latencyDraft,
-              distressType: distressTypeDraft || null,
-            })}
-          >
-            Save session
+    <div className="rating-overlay" role="presentation">
+      <div className="rating-screen session-feedback" role="dialog" aria-modal="true" aria-labelledby="session-rating-title">
+        <div className="rating-title" id="session-rating-title">Was there any stress?</div>
+        <div className="rating-sub">
+          {fmt(finalElapsed)} session — how did {name} handle it?
+        </div>
+        <div className="result-grid">
+          <button className="btn-result btn-none" onClick={() => { setSessionOutcome("none"); recordResult("none"); }}>
+            <Img src="result-calm.png" size={36} alt="No distress"/>
+            <div><div>No distress</div><div className="result-desc">{name} was completely calm</div></div>
+          </button>
+          <button className="btn-result btn-mild" onClick={() => setSessionOutcome("subtle")}>
+            <Img src="result-mild.png" size={36} alt="Subtle stress"/>
+            <div><div>Subtle stress</div><div className="result-desc">Mild/passive signs (restless, lip licking, etc.)</div></div>
+          </button>
+          <button className="btn-result btn-strong" onClick={() => setSessionOutcome("active")}>
+            <Img src="result-strong.png" size={36} alt="Active distress"/>
+            <div><div>Active distress</div><div className="result-desc">Barking, pacing, unable to settle</div></div>
+          </button>
+          <button className="btn-result btn-severe" onClick={() => setSessionOutcome("severe")}>
+            <Img src="result-strong.png" size={36} alt="Severe distress"/>
+            <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
           </button>
         </div>
-      )}
-      <button className="btn-cancel" onClick={onCancel}>
-        Discard this session
-      </button>
+        {sessionOutcome && sessionOutcome !== "none" && (
+          <div className="outcome-details">
+            <label className="field-label" htmlFor="latency-input">Latency to first stress (seconds)</label>
+            <input
+              id="latency-input"
+              className="text-input"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="Optional"
+              value={latencyDraft}
+              onChange={(e) => setLatencyDraft(e.target.value)}
+            />
+            <label className="field-label" htmlFor="distress-type">Distress type (optional)</label>
+            <select
+              id="distress-type"
+              className="text-input"
+              value={distressTypeDraft}
+              onChange={(e) => setDistressTypeDraft(e.target.value)}
+            >
+              <option value="">Select distress type</option>
+              {distressTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+            <button
+              className="btn-save-outcome"
+              onClick={() => recordResult(sessionOutcome, {
+                latencyToFirstDistress: latencyDraft,
+                distressType: distressTypeDraft || null,
+              })}
+            >
+              Save session
+            </button>
+          </div>
+        )}
+        <button className="btn-cancel" onClick={onCancel}>
+          Discard this session
+        </button>
+      </div>
     </div>
   );
 }
