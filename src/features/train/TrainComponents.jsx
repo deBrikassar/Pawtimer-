@@ -44,7 +44,7 @@ export function SessionControl({
           className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""}`}
           onClick={isIdle ? startWithFeedback : undefined}
           aria-label={isRunning
-            ? `${remainingSeconds}s remaining in current session`
+            ? `${fmt(remainingSeconds)} remaining in current session`
             : `Start ${fmt(target)} session`}
           aria-live={isRunning ? "polite" : undefined}
         >
@@ -70,7 +70,7 @@ export function SessionControl({
             </div>
 
             <div className="sc-time">
-              <div className="sc-time-value">{remainingSeconds}s</div>
+              <div className="sc-time-value">{fmt(remainingSeconds)}</div>
             </div>
           </div>
         </button>
