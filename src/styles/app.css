@@ -472,7 +472,8 @@
   .chart-title { font-size:var(--type-body-lg-size); line-height:var(--type-body-lg-line); letter-spacing:var(--type-body-lg-track); font-weight:var(--type-body-lg-weight); color:var(--brown); margin-bottom:14px; padding-left:12px; }
   .streak-card { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); border-radius:var(--radius); padding:12px 20px; color:white; text-align:center; box-shadow:0 4px 20px rgba(61,140,96,0.30); margin-bottom:10px; }
   .streak-num  { font-size:var(--text-3xl); font-weight:var(--type-metric-xl-weight); line-height:var(--type-metric-xl-line); letter-spacing:var(--type-metric-xl-track); }
-  .streak-lbl  { font-size:var(--type-secondary-size); letter-spacing:var(--type-secondary-track); opacity:0.9; margin-top:6px; font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); display:flex; align-items:center; justify-content:center; gap:4px; }
+  .streak-lbl  { opacity:0.9; margin-top:6px; display:flex; align-items:center; justify-content:center; gap:4px; }
+  .streak-lbl-text { font-size:var(--type-section-title-size); font-weight:var(--type-section-title-weight); line-height:var(--type-section-title-line); letter-spacing:var(--type-section-title-track); }
   .stats-section { margin-bottom:16px; }
   .stats-section:last-of-type { margin-bottom:10px; }
   .stats-section-title { font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); font-weight:var(--type-overline-weight); color:var(--green-dark); text-transform:uppercase; margin:0 0 10px; padding-left:2px; }
