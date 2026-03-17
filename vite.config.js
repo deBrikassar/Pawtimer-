@@ -20,14 +20,17 @@ export default defineConfig({
         icons: [
           {
             src: "/icons/paw.png",
-            sizes: "2048x2048",
-            type: "image/jpeg",
+            sizes: "192x192",
             purpose: "any"
           },
           {
             src: "/icons/paw.png",
-            sizes: "2048x2048",
-            type: "image/jpeg",
+            sizes: "512x512",
+            purpose: "any"
+          },
+          {
+            src: "/icons/paw.png",
+            sizes: "512x512",
             purpose: "maskable"
           }
         ]
