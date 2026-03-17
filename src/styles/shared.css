@@ -1,49 +1,32 @@
-/* Shared reusable patterns used across screens */
-.shared-card,
-.tool-group-card,
-.quick-modal-card,
-.metric-help-card,
-.feeding-card,
-.share-card {
+/* Shared reusable primitives used across screens.
+   Screen/component-specific class ownership stays in app.css. */
+
+.shared-card {
   background: var(--surf);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
 }
 
-.shared-pill,
-.pat-badge,
-.h-badge-mini,
-.sync-badge {
+.shared-pill {
   border-radius: 999px;
   font-size: var(--type-overline-size);
   line-height: var(--type-overline-line);
   font-weight: var(--type-overline-weight);
 }
 
-.shared-section-heading,
-.section-title,
-.stats-section-title,
-.tool-section-title,
-.settings-section-label {
+.shared-section-heading {
   color: var(--brown);
   font-weight: var(--type-section-title-weight);
   letter-spacing: var(--type-section-title-track);
 }
 
-.shared-stat-tile,
-.stat-card,
-.ratio-card,
-.streak-card {
+.shared-stat-tile {
   background: var(--surf);
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--border);
 }
 
-.shared-button,
-.ds-btn,
-.ob-btn-next,
-.metric-help-close,
-.coach-btn {
+.shared-button {
   cursor: pointer;
   border: none;
   font-weight: var(--type-button-weight);
