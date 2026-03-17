@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { PROTOCOL, getNextDurationSeconds, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { SessionControl, WelcomeBackBanner, TrainProgressBar, SessionRatingPanel } from "./features/train/TrainComponents";
-import { StatsInsightsGrid, StatsChartSection } from "./features/stats/StatsComponents";
+import { StatsInsightsGrid, StatsChartSection, StatsSection, StatsMetricCard, StatsWideInfoCard } from "./features/stats/StatsComponents";
 import EmptyState from "./components/EmptyState";
 import "./styles/theme.css";
 import "./styles/shared.css";
@@ -2046,59 +2046,29 @@ export default function PawTimer() {
               </div>
             </div>
 
-            <div className="stats-section">
-              <p className="stats-section-title">Training overview</p>
+            <StatsSection title="Training overview">
               <div className="stats-row">
-                <div className="stat-card">
-                  <div className="stat-val stats-metric-value" style={{color:"var(--green-dark)"}}>{noneCount}</div>
-                  <div className="stat-lbl stats-metric-label">Calm sessions</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-val stats-metric-value">{`${Math.round((noneCount/totalCount)*100)}%`}</div>
-                  <div className="stat-lbl stats-metric-label">Success rate</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-val stats-metric-value">{fmt(bestCalm)}</div>
-                  <div className="stat-lbl stats-metric-label">Best calm time</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-val stats-metric-value">{fmt(target)}</div>
-                  <div className="stat-lbl stats-metric-label">Next target</div>
-                </div>
+                <StatsMetricCard value={noneCount} label="Calm sessions" valueStyle={{ color:"var(--green-dark)" }} />
+                <StatsMetricCard value={`${Math.round((noneCount/totalCount)*100)}%`} label="Success rate" />
+                <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" />
+                <StatsMetricCard value={fmt(target)} label="Next target" />
               </div>
-            </div>
+            </StatsSection>
 
-            <div className="stats-section">
-              <p className="stats-section-title">Averages</p>
+            <StatsSection title="Averages">
               <div className="stats-row">
-                <div className="stat-card">
-                  <div className="stat-val stats-metric-value">{avgWalksPerDay != null ? avgWalksPerDay.toFixed(1) : "—"}</div>
-                  <div className="stat-lbl stats-metric-label">Average walks/day</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-val stats-metric-value">{avgWalkDuration != null ? fmt(avgWalkDuration) : "—"}</div>
-                  <div className="stat-lbl stats-metric-label">Average walk duration</div>
-                </div>
-                <div className="stat-card stat-card-span2">
-                  <div className="stat-val stats-metric-value">{avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"}</div>
-                  <div className="stat-lbl stats-metric-label">Average sessions/day</div>
-                </div>
+                <StatsMetricCard value={avgWalksPerDay != null ? avgWalksPerDay.toFixed(1) : "—"} label="Average walks/day" />
+                <StatsMetricCard value={avgWalkDuration != null ? fmt(avgWalkDuration) : "—"} label="Average walk duration" />
+                <StatsMetricCard value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"} label="Average sessions/day" className="stat-card-span2" />
               </div>
-            </div>
+            </StatsSection>
 
-            <div className="stats-section">
-              <p className="stats-section-title">Daily life</p>
+            <StatsSection title="Daily life">
               <div className="stats-row">
-                <div className="stat-wide">
-                  <div><div className="stat-val stats-metric-value">{fmt(aloneLastWeek)}</div><div className="stat-lbl stats-metric-label">Alone time per week</div></div>
-                  <div className="stat-icon"><PawIcon size={32}/></div>
-                </div>
-                <div className="stat-wide">
-                  <div><div className="stat-val stats-metric-value">{patterns.length}</div><div className="stat-lbl stats-metric-label">Pattern breaks</div></div>
-                  <div className="stat-icon"><Img src="pattern-keys.png" size={36} alt="pattern breaks"/></div>
-                </div>
+                <StatsWideInfoCard value={fmt(aloneLastWeek)} label="Alone time per week" icon={<PawIcon size={32}/>} />
+                <StatsWideInfoCard value={patterns.length} label="Pattern breaks" icon={<Img src="pattern-keys.png" size={36} alt="pattern breaks"/>} />
               </div>
-            </div>
+            </StatsSection>
             {(() => {
               const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
               const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);

@@ -1,5 +1,14 @@
 import { useState } from "react";
 
+function SessionActionRow({ onEnd, onCancel }) {
+  return (
+    <div className="session-actions">
+      <button className="session-end-btn" onClick={onEnd}>End Session</button>
+      <button className="session-cancel-btn" onClick={onCancel}>Cancel (don't save)</button>
+    </div>
+  );
+}
+
 export function SessionControl({
   phase,
   elapsed,
@@ -67,12 +76,7 @@ export function SessionControl({
         </button>
       </div>)}
 
-      {isRunning && (
-        <div className="session-actions">
-          <button className="session-end-btn" onClick={onEnd}>End Session</button>
-          <button className="session-cancel-btn" onClick={onCancel}>Cancel (don't save)</button>
-        </div>
-      )}
+      {isRunning && <SessionActionRow onEnd={onEnd} onCancel={onCancel} />}
     </>
   );
 }
