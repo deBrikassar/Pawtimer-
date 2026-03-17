@@ -1776,7 +1776,7 @@ export default function PawTimer() {
                 <div className="stats-rings-card">
                   <div className="ring-col">
                     <div className="ring-wrap">
-                      <svg className="ring-svg" width={76} height={76} viewBox="0 0 88 88">
+                      <svg className="ring-svg" width={84} height={84} viewBox="0 0 88 88">
                         <circle cx={44} cy={44} r={R} className="ring-bg"/>
                         <circle cx={44} cy={44} r={R} className="ring-fill-1"
                           strokeDasharray={C}
@@ -1791,7 +1791,7 @@ export default function PawTimer() {
                   <div className="ring-col-sep"/>
                   <div className="ring-col">
                     <div className="ring-wrap">
-                      <svg className="ring-svg" width={76} height={76} viewBox="0 0 88 88">
+                      <svg className="ring-svg" width={84} height={84} viewBox="0 0 88 88">
                         <circle cx={44} cy={44} r={R} className="ring-bg"/>
                         <circle cx={44} cy={44} r={R} className="ring-fill-2"
                           strokeDasharray={C}
