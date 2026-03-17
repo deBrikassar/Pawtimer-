@@ -2280,7 +2280,10 @@ export default function PawTimer() {
               })()}
               <div className="stats-row">
                 <StatsWideInfoCard value={fmt(aloneLastWeek)} label="Alone time per week" icon={<PawIcon size={32}/>} />
-                <StatsMetricCard value={avgWalkDuration != null ? fmt(avgWalkDuration) : "—"} label="Average walk duration" />
+                <StatsMetricCard
+                  value={avgWalkDuration != null ? fmt(avgWalkDuration, { hoursMinutesOnly: true }) : "—"}
+                  label="Average walk duration"
+                />
               </div>
             </StatsSection>
 
