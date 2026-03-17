@@ -562,6 +562,10 @@
   .feeding-field { display:flex; flex-direction:column; gap:6px; }
   .feeding-field input, .feeding-field select { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 11px; background:var(--surf-soft); color:var(--brown); font-size:var(--type-body-size); line-height:var(--type-body-line); font-weight:var(--type-body-weight); letter-spacing:var(--type-body-track); }
   .feeding-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
+  .activity-time-overlay { position:fixed; inset:0; background:rgba(75,60,48,0.3); display:flex; align-items:center; justify-content:center; padding:16px; z-index:230; }
+  .activity-time-card { width:min(100%, 360px); background:var(--surf); border:1.5px solid var(--border); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .activity-time-field { display:flex; flex-direction:column; gap:6px; }
+  .activity-time-field input { width:100%; border:1.5px solid var(--border); border-radius:999px; padding:12px 14px; background:var(--surf-soft); color:var(--brown); font-size:var(--text-lg); line-height:1.2; font-weight:600; letter-spacing:0.02em; }
 
   .train-coverage { text-align:center; }
 

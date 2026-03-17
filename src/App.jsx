@@ -817,6 +817,7 @@ export default function PawTimer() {
   const [walkPendingDuration, setWalkPendingDuration] = useState(0);
   const [feedingOpen, setFeedingOpen] = useState(false);
   const [feedingDraft, setFeedingDraft] = useState(() => ({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }));
+  const [activityTimeEdit, setActivityTimeEdit] = useState(null);
   const walkTimerRef = useRef(null);
   const walkStartRef = useRef(null);
 
@@ -1318,22 +1319,68 @@ export default function PawTimer() {
   const editWalkTime = (walkId) => {
     const currentWalk = walks.find((w) => w.id === walkId);
     if (!currentWalk) return;
-    const input = window.prompt(
-      "Edit walk date/time (YYYY-MM-DDTHH:MM)",
-      toDateTimeLocalValue(currentWalk.date)
-    );
-    if (input === null) return;
-    const parsedDate = new Date(input);
-    if (Number.isNaN(parsedDate.getTime())) {
-      showToast("⚠️ Invalid date/time. Use YYYY-MM-DDTHH:MM");
+    const initialDate = new Date(currentWalk.date);
+    const initialTime = Number.isNaN(initialDate.getTime())
+      ? ""
+      : `${String(initialDate.getHours()).padStart(2, "0")}:${String(initialDate.getMinutes()).padStart(2, "0")}`;
+    setActivityTimeEdit({ kind: "walk", id: walkId, time: initialTime });
+  };
+
+  const editSessionTime = (sessionId) => {
+    const currentSession = sessions.find((s) => s.id === sessionId);
+    if (!currentSession) return;
+    const initialDate = new Date(currentSession.date);
+    const initialTime = Number.isNaN(initialDate.getTime())
+      ? ""
+      : `${String(initialDate.getHours()).padStart(2, "0")}:${String(initialDate.getMinutes()).padStart(2, "0")}`;
+    setActivityTimeEdit({ kind: "session", id: sessionId, time: initialTime });
+  };
+
+  const saveEditedActivityTime = () => {
+    if (!activityTimeEdit?.time) {
+      showToast("⚠️ Please choose a valid time");
       return;
     }
-    const updatedWalk = { ...currentWalk, date: parsedDate.toISOString() };
-    setWalks((prev) => prev.map((w) => (w.id === walkId ? updatedWalk : w)));
-    pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
+    const [hours, minutes] = activityTimeEdit.time.split(":").map(Number);
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+      showToast("⚠️ Please choose a valid time");
+      return;
+    }
+
+    if (activityTimeEdit.kind === "walk") {
+      const currentWalk = walks.find((w) => w.id === activityTimeEdit.id);
+      if (!currentWalk) return;
+      const nextDate = new Date(currentWalk.date);
+      if (Number.isNaN(nextDate.getTime())) {
+        showToast("⚠️ Invalid saved walk date");
+        return;
+      }
+      nextDate.setHours(hours, minutes, 0, 0);
+      const updatedWalk = { ...currentWalk, date: nextDate.toISOString() };
+      setWalks((prev) => prev.map((w) => (w.id === activityTimeEdit.id ? updatedWalk : w)));
+      pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
+        if (!ok) showToast(`⚠️ Sync failed: ${error}`);
+      });
+      showToast(`🕒 Walk time updated to ${fmtDate(updatedWalk.date)}`);
+      setActivityTimeEdit(null);
+      return;
+    }
+
+    const currentSession = sessions.find((s) => s.id === activityTimeEdit.id);
+    if (!currentSession) return;
+    const nextDate = new Date(currentSession.date);
+    if (Number.isNaN(nextDate.getTime())) {
+      showToast("⚠️ Invalid saved session date");
+      return;
+    }
+    nextDate.setHours(hours, minutes, 0, 0);
+    const updatedSession = normalizeSession({ ...currentSession, date: nextDate.toISOString() });
+    setSessions((prev) => prev.map((s) => (s.id === activityTimeEdit.id ? updatedSession : s)));
+    pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
       if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
-    showToast(`🕒 Walk time updated to ${fmtDate(updatedWalk.date)}`);
+    showToast(`🕒 Session time updated to ${fmtDate(updatedSession.date)}`);
+    setActivityTimeEdit(null);
   };
 
   const editSessionDuration = (sessionId) => {
@@ -1355,27 +1402,6 @@ export default function PawTimer() {
       if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`⏱️ Session updated to ${fmt(parsedDuration)}`);
-  };
-
-  const editSessionTime = (sessionId) => {
-    const currentSession = sessions.find((s) => s.id === sessionId);
-    if (!currentSession) return;
-    const input = window.prompt(
-      "Edit session date/time (YYYY-MM-DDTHH:MM)",
-      toDateTimeLocalValue(currentSession.date)
-    );
-    if (input === null) return;
-    const parsedDate = new Date(input);
-    if (Number.isNaN(parsedDate.getTime())) {
-      showToast("⚠️ Invalid date/time. Use YYYY-MM-DDTHH:MM");
-      return;
-    }
-    const updatedSession = normalizeSession({ ...currentSession, date: parsedDate.toISOString() });
-    setSessions((prev) => prev.map((s) => (s.id === sessionId ? updatedSession : s)));
-    pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
-      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
-    });
-    showToast(`🕒 Session time updated to ${fmtDate(updatedSession.date)}`);
   };
 
   const logWalk = () => startWalk();
@@ -2124,6 +2150,38 @@ export default function PawTimer() {
             })}
           </div>
         </div>)}
+
+        {activityTimeEdit && (
+          <div
+            className="activity-time-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="activity-time-title"
+            onClick={() => setActivityTimeEdit(null)}
+          >
+            <div className="activity-time-card" onClick={(e) => e.stopPropagation()}>
+              <div className="section-title" id="activity-time-title" style={{ marginBottom: 6 }}>
+                Edit {activityTimeEdit.kind === "walk" ? "walk" : "session"} time
+              </div>
+              <div className="t-helper" style={{ marginBottom: 10 }}>
+                Choose a time of day. Duration is edited separately.
+              </div>
+              <label className="activity-time-field">
+                <span className="t-helper">Time of day</span>
+                <input
+                  type="time"
+                  step="60"
+                  value={activityTimeEdit.time}
+                  onChange={(e) => setActivityTimeEdit((prev) => (prev ? { ...prev, time: e.target.value } : prev))}
+                />
+              </label>
+              <div className="feeding-actions">
+                <button className="walk-cancel-btn" type="button" onClick={() => setActivityTimeEdit(null)}>Cancel</button>
+                <button className="walk-end-btn" type="button" onClick={saveEditedActivityTime}>Save</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ═══ STATS ═══ */}
         {tab === "progress" && (<div className="tab-content">
