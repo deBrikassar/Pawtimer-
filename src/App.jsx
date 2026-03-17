@@ -1116,7 +1116,7 @@ export default function PawTimer() {
   };
 
   const pushWithSyncStatus = async (kind, data) => {
-    if (!SYNC_ENABLED || !activeDogId) return false;
+    if (!SYNC_ENABLED || !activeDogId) return { ok: false, error: "Sync is disabled" };
     const currentDog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
     const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
     setSyncStatus("syncing");
@@ -1124,11 +1124,12 @@ export default function PawTimer() {
     if (ok) {
       setSyncError("");
       setSyncStatus("ok");
-    } else {
-      setSyncError(error || "Push failed");
-      setSyncStatus("err");
+      return { ok: true, error: null };
     }
-    return ok;
+    const message = error || "Push failed";
+    setSyncError(message);
+    setSyncStatus("err");
+    return { ok: false, error: message };
   };
 
   const runSyncDiagnostics = async () => {
@@ -1221,8 +1222,8 @@ export default function PawTimer() {
     });
     const updated = [...sessions, session];
     setSessions(updated);
-    pushWithSyncStatus("session", session).then(ok => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("session", session).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
     setTarget(next);
@@ -1265,8 +1266,8 @@ export default function PawTimer() {
     const duration = walkPendingDuration;
     const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration, type: normalizeWalkType(walkType) };
     setWalks((prev) => [...prev, entry]);
-    pushWithSyncStatus("walk", entry).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("walk", entry).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     const n = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName ?? "your dog";
     showToast(`🚶 ${walkTypeLabel(normalizeWalkType(walkType))} with ${n} logged — ${fmt(duration)}!`);
@@ -1297,8 +1298,8 @@ export default function PawTimer() {
     }
     const updatedWalk = { ...currentWalk, duration: parsedDuration };
     setWalks((prev) => prev.map((w) => (w.id === walkId ? updatedWalk : w)));
-    pushWithSyncStatus("walk", updatedWalk).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`🚶 Walk updated to ${fmt(parsedDuration)}`);
   };
@@ -1318,8 +1319,8 @@ export default function PawTimer() {
     }
     const updatedWalk = { ...currentWalk, date: parsedDate.toISOString() };
     setWalks((prev) => prev.map((w) => (w.id === walkId ? updatedWalk : w)));
-    pushWithSyncStatus("walk", updatedWalk).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`🕒 Walk time updated to ${fmtDate(updatedWalk.date)}`);
   };
@@ -1339,8 +1340,8 @@ export default function PawTimer() {
     }
     const updatedSession = normalizeSession({ ...currentSession, actualDuration: parsedDuration });
     setSessions((prev) => prev.map((s) => (s.id === sessionId ? updatedSession : s)));
-    pushWithSyncStatus("session", updatedSession).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`⏱️ Session updated to ${fmt(parsedDuration)}`);
   };
@@ -1360,8 +1361,8 @@ export default function PawTimer() {
     }
     const updatedSession = normalizeSession({ ...currentSession, date: parsedDate.toISOString() });
     setSessions((prev) => prev.map((s) => (s.id === sessionId ? updatedSession : s)));
-    pushWithSyncStatus("session", updatedSession).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`🕒 Session time updated to ${fmtDate(updatedSession.date)}`);
   };
@@ -1371,8 +1372,8 @@ export default function PawTimer() {
   const logPattern = (type) => {
     const entry = { id: makeEntryId("pat", activeDogId), date: new Date().toISOString(), type };
     setPatterns(prev => [...prev, entry]);
-    pushWithSyncStatus("pattern", entry).then(ok => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("pattern", entry).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`✓ Pattern break logged!`);
   };
@@ -1400,8 +1401,8 @@ export default function PawTimer() {
       amount: feedingDraft.amount,
     };
     setFeedings((prev) => normalizeFeedings([...prev, entry]));
-    pushWithSyncStatus("feeding", entry).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("feeding", entry).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     setFeedingOpen(false);
     showToast("🍽️ Feeding logged");
