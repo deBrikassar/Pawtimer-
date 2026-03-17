@@ -154,6 +154,14 @@ const normalizeSession = (row = {}) => {
   return normalized;
 };
 
+const LEGACY_DISTRESS_LEVEL_MAP = {
+  subtle: "mild",
+  active: "strong",
+  severe: "strong",
+};
+
+const mapDistressForLegacySupabase = (level) => LEGACY_DISTRESS_LEVEL_MAP[normalizeDistressLevel(level)] ?? "none";
+
 const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
 const normalizeFeedings = (rows = []) => ensureArray(rows)
   .map((row) => ({
@@ -303,21 +311,44 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
           amount: data.amount,
         };
 
-  let res = await sbReq(table, {
+  const postRow = (payload) => sbReq(table, {
     method: "POST",
-    body: JSON.stringify(row),
+    body: JSON.stringify(payload),
     prefer: "resolution=merge-duplicates,return=minimal",
   });
 
-  if (!res.ok && kind === "session" && /(latency_to_first_distress|distress_type)/i.test(String(res.error || ""))) {
-    const fallbackRow = { ...row };
-    delete fallbackRow.latency_to_first_distress;
-    delete fallbackRow.distress_type;
-    res = await sbReq(table, {
-      method: "POST",
-      body: JSON.stringify(fallbackRow),
-      prefer: "resolution=merge-duplicates,return=minimal",
-    });
+  let sessionPayload = { ...row };
+  let res = await postRow(sessionPayload);
+
+  if (!res.ok && kind === "session") {
+    const maxAttempts = 8;
+    for (let attempt = 0; attempt < maxAttempts && !res.ok; attempt += 1) {
+      const errorText = String(res.error || "");
+      const missingColumn = errorText.match(/Could not find the '([^']+)' column/i)?.[1];
+      if (missingColumn && missingColumn in sessionPayload) {
+        delete sessionPayload[missingColumn];
+        res = await postRow(sessionPayload);
+        continue;
+      }
+
+      if (/(latency_to_first_distress|distress_type)/i.test(errorText)) {
+        delete sessionPayload.latency_to_first_distress;
+        delete sessionPayload.distress_type;
+        res = await postRow(sessionPayload);
+        continue;
+      }
+
+      if (/(distress_level|sessions_distress_level_check|check constraint)/i.test(errorText)) {
+        const mappedDistressLevel = mapDistressForLegacySupabase(data.distressLevel);
+        if (sessionPayload.distress_level !== mappedDistressLevel) {
+          sessionPayload.distress_level = mappedDistressLevel;
+          res = await postRow(sessionPayload);
+          continue;
+        }
+      }
+
+      break;
+    }
   }
 
   if (res.ok) return { ok: true, error: null };
@@ -1096,7 +1127,7 @@ export default function PawTimer() {
   };
 
   const pushWithSyncStatus = async (kind, data) => {
-    if (!SYNC_ENABLED || !activeDogId) return false;
+    if (!SYNC_ENABLED || !activeDogId) return { ok: false, error: "Sync is disabled" };
     const currentDog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
     const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
     setSyncStatus("syncing");
@@ -1104,11 +1135,12 @@ export default function PawTimer() {
     if (ok) {
       setSyncError("");
       setSyncStatus("ok");
-    } else {
-      setSyncError(error || "Push failed");
-      setSyncStatus("err");
+      return { ok: true, error: null };
     }
-    return ok;
+    const message = error || "Push failed";
+    setSyncError(message);
+    setSyncStatus("err");
+    return { ok: false, error: message };
   };
 
   const runSyncDiagnostics = async () => {
@@ -1201,8 +1233,8 @@ export default function PawTimer() {
     });
     const updated = [...sessions, session];
     setSessions(updated);
-    pushWithSyncStatus("session", session).then(ok => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("session", session).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
     setTarget(next);
@@ -1245,8 +1277,8 @@ export default function PawTimer() {
     const duration = walkPendingDuration;
     const entry = { id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration, type: normalizeWalkType(walkType) };
     setWalks((prev) => [...prev, entry]);
-    pushWithSyncStatus("walk", entry).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("walk", entry).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     const n = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName ?? "your dog";
     showToast(`🚶 ${walkTypeLabel(normalizeWalkType(walkType))} with ${n} logged — ${fmt(duration)}!`);
@@ -1277,8 +1309,8 @@ export default function PawTimer() {
     }
     const updatedWalk = { ...currentWalk, duration: parsedDuration };
     setWalks((prev) => prev.map((w) => (w.id === walkId ? updatedWalk : w)));
-    pushWithSyncStatus("walk", updatedWalk).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`🚶 Walk updated to ${fmt(parsedDuration)}`);
   };
@@ -1298,8 +1330,8 @@ export default function PawTimer() {
     }
     const updatedWalk = { ...currentWalk, date: parsedDate.toISOString() };
     setWalks((prev) => prev.map((w) => (w.id === walkId ? updatedWalk : w)));
-    pushWithSyncStatus("walk", updatedWalk).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`🕒 Walk time updated to ${fmtDate(updatedWalk.date)}`);
   };
@@ -1319,8 +1351,8 @@ export default function PawTimer() {
     }
     const updatedSession = normalizeSession({ ...currentSession, actualDuration: parsedDuration });
     setSessions((prev) => prev.map((s) => (s.id === sessionId ? updatedSession : s)));
-    pushWithSyncStatus("session", updatedSession).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`⏱️ Session updated to ${fmt(parsedDuration)}`);
   };
@@ -1340,8 +1372,8 @@ export default function PawTimer() {
     }
     const updatedSession = normalizeSession({ ...currentSession, date: parsedDate.toISOString() });
     setSessions((prev) => prev.map((s) => (s.id === sessionId ? updatedSession : s)));
-    pushWithSyncStatus("session", updatedSession).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`🕒 Session time updated to ${fmtDate(updatedSession.date)}`);
   };
@@ -1351,8 +1383,8 @@ export default function PawTimer() {
   const logPattern = (type) => {
     const entry = { id: makeEntryId("pat", activeDogId), date: new Date().toISOString(), type };
     setPatterns(prev => [...prev, entry]);
-    pushWithSyncStatus("pattern", entry).then(ok => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("pattern", entry).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`✓ Pattern break logged!`);
   };
@@ -1380,8 +1412,8 @@ export default function PawTimer() {
       amount: feedingDraft.amount,
     };
     setFeedings((prev) => normalizeFeedings([...prev, entry]));
-    pushWithSyncStatus("feeding", entry).then((ok) => {
-      if (!ok) showToast("⚠️ Sync failed — check console");
+    pushWithSyncStatus("feeding", entry).then(({ ok, error }) => {
+      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     setFeedingOpen(false);
     showToast("🍽️ Feeding logged");
