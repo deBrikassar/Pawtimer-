@@ -2322,7 +2322,7 @@ export default function PawTimer() {
             </div>
             <div className="share-card">
               <div className="share-title">Training Protocol</div>
-              <div className="t-helper" style={{ lineHeight:1.6, marginBottom:14 }}>
+              <div className="t-helper" style={{ lineHeight:"var(--type-body-line)", letterSpacing:"var(--type-body-track)", marginBottom:14 }}>
                 <div><strong style={{ color:"var(--brown)" }}>Sessions:</strong> max {activeProto.sessionsPerDayMax}/day · max {activeProto.maxDailyAloneMinutes} min alone/day</div>
                 <div><strong style={{ color:"var(--brown)" }}>Step up:</strong> +{activeProto.incrementPercentDefault}% after each calm session, then +5 min fixed</div>
                 <div><strong style={{ color:"var(--brown)" }}>Pattern breaks:</strong> {recMin}–{recMax}/day recommended for ~{normalizedLeaves} leaves/day</div>
@@ -2342,7 +2342,7 @@ export default function PawTimer() {
                 </div>
               ) : (
                 <div>
-                  <div className="t-helper" style={{ color:"var(--amber)", fontWeight:400, marginBottom:10 }}>⚠️ Advanced — edit with caution</div>
+                  <div className="t-helper" style={{ color:"var(--amber)", fontWeight:"var(--type-secondary-weight)", lineHeight:"var(--type-secondary-line)", letterSpacing:"var(--type-secondary-track)", marginBottom:10 }}>⚠️ Advanced — edit with caution</div>
                   {[
                     { key:"sessionsPerDayMax", label:"Max sessions/day", unit:"" },
                     { key:"maxDailyAloneMinutes", label:"Max alone time/day", unit:"min" },
