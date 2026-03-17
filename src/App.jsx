@@ -154,6 +154,14 @@ const normalizeSession = (row = {}) => {
   return normalized;
 };
 
+const LEGACY_DISTRESS_LEVEL_MAP = {
+  subtle: "mild",
+  active: "strong",
+  severe: "strong",
+};
+
+const mapDistressForLegacySupabase = (level) => LEGACY_DISTRESS_LEVEL_MAP[normalizeDistressLevel(level)] ?? "none";
+
 const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
 const normalizeFeedings = (rows = []) => ensureArray(rows)
   .map((row) => ({
@@ -313,6 +321,18 @@ const syncPush = async (dogId, kind, data, dogSettings = null) => {
     const fallbackRow = { ...row };
     delete fallbackRow.latency_to_first_distress;
     delete fallbackRow.distress_type;
+    res = await sbReq(table, {
+      method: "POST",
+      body: JSON.stringify(fallbackRow),
+      prefer: "resolution=merge-duplicates,return=minimal",
+    });
+  }
+
+  if (!res.ok && kind === "session" && /(distress_level|sessions_distress_level_check|check constraint)/i.test(String(res.error || ""))) {
+    const fallbackRow = {
+      ...row,
+      distress_level: mapDistressForLegacySupabase(data.distressLevel),
+    };
     res = await sbReq(table, {
       method: "POST",
       body: JSON.stringify(fallbackRow),
