@@ -1887,14 +1887,14 @@ export default function PawTimer() {
             <div className="tool-group-card">
               <div className="quick-actions-row">
                 <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
-                  <span className="quick-action-icon"><Img src="walk.png" size={22} alt="Walk"/></span>
+                  <span className="quick-action-icon"><Img src="walk.png" alt="Walk"/></span>
                   <span className="quick-action-label">Log a walk</span>
                   <span className="quick-action-meta">
                     {walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `Today: ${todayWalks}`}
                   </span>
                 </button>
                 <button className={`quick-action-btn ${behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
-                  <span className="quick-action-icon"><Img src="pattern-keys.png" size={22} alt="Pattern"/></span>
+                  <span className="quick-action-icon"><Img src="pattern-keys.png" alt="Pattern"/></span>
                   <span className="quick-action-label">Pattern breaking</span>
                   <span className="quick-action-meta">Today: {todayPat}</span>
                 </button>

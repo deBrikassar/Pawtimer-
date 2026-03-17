@@ -228,9 +228,9 @@
   .quick-action-btn:hover { transform:translateY(-2px); border-color:color-mix(in srgb, var(--green-dark) 52%, var(--border)); box-shadow:0 14px 28px rgba(59,90,71,0.16); background:linear-gradient(180deg, #ffffff 0%, var(--surf-soft) 100%); }
   .quick-action-btn:focus-visible { outline:none; border-color:var(--green-dark); box-shadow:0 0 0 3px color-mix(in srgb, var(--green) 36%, transparent), 0 12px 24px rgba(59,90,71,0.16); }
   .quick-action-btn:active { transform:translateY(0) scale(0.99); }
-  .quick-action-icon { width:28px; height:28px; display:flex; align-items:center; justify-content:center; }
-  .quick-action-icon img { width:22px; height:22px; display:block; }
-  .quick-action-icon .qa-glyph { font-size:var(--text-xl); line-height:1; display:block; width:22px; height:22px; }
+  .quick-action-icon { width:var(--icon-size-md); height:var(--icon-size-md); display:flex; align-items:center; justify-content:center; }
+  .quick-action-icon img { width:var(--icon-size-md); height:var(--icon-size-md); display:block; }
+  .quick-action-icon .qa-glyph { font-size:var(--icon-size-md); line-height:1; display:block; width:var(--icon-size-md); height:var(--icon-size-md); }
   .quick-action-label { font-size:var(--type-button-lg-size); line-height:var(--type-button-lg-line); color:var(--brown); font-weight:var(--type-button-lg-weight); text-align:center; width:100%; display:flex; align-items:center; justify-content:center; letter-spacing:var(--type-button-lg-track); }
   .quick-action-meta  { font-size:var(--text-xs); color:var(--brown-mid); line-height:var(--type-overline-line); text-align:center; width:100%; font-weight:var(--type-secondary-weight); }
   
