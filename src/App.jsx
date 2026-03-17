@@ -2200,7 +2200,7 @@ export default function PawTimer() {
                 <div className="streak-num">{streak}</div>
                 <div className="streak-lbl">
                   <span className="streak-fire">🔥</span>
-                  <span>Calm session streak</span>
+                  <span className="streak-lbl-text">Calm session streak</span>
                 </div>
               </div>
               <div className="goal-card stats-priority-card" style={{margin:"0 0 12px"}}>
