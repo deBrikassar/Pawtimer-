@@ -9,17 +9,17 @@
   "theme_color": "#067B78",
   "icons": [
     {
-      "src": "/icons/paw.png",
+      "src": "/icons/paw.png?v=20260317",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "/icons/paw.png",
+      "src": "/icons/paw.png?v=20260317",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "/icons/paw.png",
+      "src": "/icons/paw.png?v=20260317",
       "sizes": "512x512",
       "purpose": "maskable"
     }
