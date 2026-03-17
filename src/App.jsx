@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { PROTOCOL, getNextDurationSeconds, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
+import { formatDuration } from "./lib/time";
 import { SessionControl, WelcomeBackBanner, TrainProgressBar, SessionRatingPanel } from "./features/train/TrainComponents";
 import { StatsInsightsGrid, StatsChartSection, StatsSection, StatsMetricCard, StatsWideInfoCard } from "./features/stats/StatsComponents";
 import EmptyState from "./components/EmptyState";
@@ -411,11 +412,7 @@ const generateId = (name) => {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const fmt = (s) => {
-  if (s == null || isNaN(s)) return "—";
-  const t = Math.round(s), m = Math.floor(t / 60), sec = t % 60;
-  return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
-};
+const fmt = formatDuration;
 const parseDurationInput = (value) => {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
@@ -1696,7 +1693,8 @@ export default function PawTimer() {
 
   const chartData = sessions.slice(-25).map((s, i) => ({
     session: i + 1,
-    duration: Math.round(s.actualDuration / 60 * 10) / 10,
+    durationSeconds: s.actualDuration,
+    durationMinutes: Math.round(s.actualDuration / 60 * 10) / 10,
     distressLevel: s.distressLevel,
   }));
   const CustomDot = ({ cx, cy, payload }) => {
@@ -2314,6 +2312,7 @@ export default function PawTimer() {
               setTab={setTab}
               name={name}
               distressLabel={distressLabel}
+              fmt={fmt}
             />
             </>)}
           </div>
