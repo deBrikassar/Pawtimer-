@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icons/paw.png"],
+      includeAssets: ["icons/paw.jpg"],
       manifest: {
         name: "PawTimer — Dog Training",
         short_name: "PawTimer",
@@ -19,18 +19,21 @@ export default defineConfig({
         theme_color: "#d4813a",
         icons: [
           {
-            src: "/icons/paw.png?v=20260317",
-            sizes: "192x192",
+            src: "/icons/paw.jpg?v=20260317c",
+            sizes: "2048x2048",
+            type: "image/jpeg",
             purpose: "any"
           },
           {
-            src: "/icons/paw.png?v=20260317",
-            sizes: "512x512",
+            src: "/icons/paw.jpg?v=20260317c",
+            sizes: "2048x2048",
+            type: "image/jpeg",
             purpose: "any"
           },
           {
-            src: "/icons/paw.png?v=20260317",
-            sizes: "512x512",
+            src: "/icons/paw.jpg?v=20260317c",
+            sizes: "2048x2048",
+            type: "image/jpeg",
             purpose: "maskable"
           }
         ]
