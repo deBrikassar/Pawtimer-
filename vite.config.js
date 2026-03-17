@@ -20,7 +20,13 @@ export default defineConfig({
         icons: [
           {
             src: "/icons/app-logo.png",
-            sizes: "1024x1024",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any"
+          },
+          {
+            src: "/icons/app-logo.png",
+            sizes: "512x512",
             type: "image/png",
             purpose: "any"
           },
