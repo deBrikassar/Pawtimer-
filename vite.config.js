@@ -20,15 +20,15 @@ export default defineConfig({
         icons: [
           {
             src: "/icons/app-logo.png",
-            sizes: "192x192",
+            sizes: "1024x1024",
             type: "image/png",
-            purpose: "any maskable"
+            purpose: "any"
           },
           {
             src: "/icons/app-logo.png",
-            sizes: "512x512",
+            sizes: "1024x1024",
             type: "image/png",
-            purpose: "any maskable"
+            purpose: "maskable"
           }
         ]
       },
