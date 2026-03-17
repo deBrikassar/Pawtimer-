@@ -456,8 +456,16 @@
   .badge-walk   { background:rgba(74,158,110,0.15);  color:var(--green-dark); }
   .badge-feed   { background:rgba(212,129,58,0.16); color:#8a4c19; }
   .badge-pat    { background:rgba(75,60,48,0.09);    color:var(--brown-mid); }
-  .h-extra-badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
-  .h-badge-mini { font-size:var(--type-overline-size); font-weight:var(--type-overline-weight); line-height:var(--type-overline-line); padding:2px 7px; border-radius:99px; background:rgba(75,60,48,0.08); color:var(--brown-mid); letter-spacing:var(--type-overline-track); text-transform:uppercase; }
+  .h-extra-badges {
+    display:flex;
+    flex-direction:row;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+    align-items:flex-start;
+    gap:6px;
+    margin-top:2px;
+  }
+  .h-badge-mini { font-size:var(--type-overline-size); font-weight:var(--type-overline-weight); line-height:var(--type-overline-line); padding:2px 7px; border-radius:99px; background:rgba(75,60,48,0.08); color:var(--brown-mid); letter-spacing:var(--type-overline-track); text-transform:uppercase; display:inline-flex; width:auto; flex:0 0 auto; }
 
   /* ── Stats ── */
   .chart-wrap  { background:var(--surf); border-radius:var(--radius); padding:16px 8px 12px; box-shadow:var(--shadow); margin-bottom:12px; }
