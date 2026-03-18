@@ -805,6 +805,8 @@ export default function PawTimer() {
   const [notifEnabled, setNotifEnabled] = useState(() => load("pawtimer_notif_on", false));
   const [protoWarnAck, setProtoWarnAck] = useState(false);
   const [protoOverride,setProtoOverride]= useState(() => ensureObject(load("pawtimer_proto_override", {})));
+  const [settingsDisclosure, setSettingsDisclosure] = useState(null);
+  const [trainingSettingsOpen, setTrainingSettingsOpen] = useState(false);
   const [showCoach,    setShowCoach]    = useState(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const [openTip,      setOpenTip]      = useState(null);
@@ -2329,82 +2331,58 @@ export default function PawTimer() {
           <div className="section">
             <div className="section-title">Settings</div>
 
-            <div className="settings-section-label">Dog profile</div>
+            <div className="settings-section-label">Dog &amp; sync</div>
 
             {/* Dog ID */}
             <div className="share-card">
               <div className="share-title" style={{ display:"flex", alignItems:"center", gap:8 }}><PawIcon size={20}/> {name}'s Dog ID</div>
-              <div className="share-sub">Share this ID with your partner so both phones log to the same dog.</div>
+              <div className="share-sub">Share this ID to sync devices.</div>
               <div className="share-id-row">
                 <div className="share-id-val" aria-label="Dog ID">{activeDogId}</div>
                 <button className="copy-btn" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
               </div>
-              <ol className="share-steps">
-                <li>Copy the ID and send it to your partner</li>
-                <li>On their phone: open PawTimer → "Join with a dog ID"</li>
-                <li>Enter the ID — they're in immediately, no extra setup</li>
-              </ol>
             </div>
 
-            <div className="settings-section-label">Training protocol</div>
-            <div className="share-card">
-              <div className="share-title">How to run a session</div>
-              <div className="proto-section" style={{ marginTop:0 }}>
-                <div className="proto-row prose">1. Tap Start and leave calmly, without a big goodbye.</div>
-                <div className="proto-row prose">2. Come back whenever you need to and tap End Session.</div>
-                <div className="proto-row prose">3. Rate how {name} did, and we'll set a gentle next target.</div>
-              </div>
-              <div className="proto-title" style={{ marginTop:8 }}>Progress rules</div>
-              <div className="proto-row prose">✅ <strong>Calm (completed):</strong> Add +15% next session (below 40 min), then +5 min.</div>
-              <div className="proto-row prose">⚠️ <strong>Subtle stress:</strong> Hold the same duration next time.</div>
-              <div className="proto-row prose">❌ <strong>Active/Severe distress:</strong> Roll back by 1–2 sessions.</div>
-              <div className="proto-title" style={{ marginTop:10 }}>Daily rhythm</div>
-              <div className="proto-row prose">📅 Up to {activeProto.sessionsPerDayMax} sessions · up to {activeProto.maxDailyAloneMinutes} min alone/day.</div>
-              <div className="proto-row prose">🔁 Pattern breaks: {recMin}–{recMax}/day for ~{normalizedLeaves} departures/day · at least walks + {walkBuffer} buffer.</div>
-              <div className="proto-row prose">😴 Rest days: {activeProto.restDaysPerWeekRecommended}/week is recommended.</div>
-            </div>
-
-            <div className="settings-section-label">Notifications</div>
+            <div className="settings-section-label">Reminders</div>
             <div className="share-card">
               <div className="share-title">Daily training reminder</div>
               <div className="share-sub">Set a gentle daily prompt so sessions stay consistent.</div>
-              <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, flexWrap:"wrap"}}>
-                {notifEnabled ? (
-                  <input type="time" value={notifTime}
-                    onChange={e=>{ setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName??"your dog"); }}
-                    className="notif-time-input"/>
-                ) : <span className="t-helper">Turn reminders on to choose a time.</span>}
+              <div className="settings-inline-row">
                 <button className={`notif-toggle ${notifEnabled?"on":""}`} onClick={handleToggleNotif}>
                   {notifEnabled ? "On" : "Off"}
                 </button>
+                {notifEnabled && (
+                  <input type="time" value={notifTime}
+                    onChange={e=>{ setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId))?.dogName??"your dog"); }}
+                    className="notif-time-input"/>
+                )}
               </div>
             </div>
 
-            <div className="settings-section-label">App preferences</div>
+            <div className="settings-section-label">Training settings</div>
             <div className="share-card">
-              <div className="diag-head">
-                <div className="share-title" style={{ marginBottom:0 }}>Sync diagnostics</div>
-                <button className="diag-run-btn" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>
-                  {syncDiagRunning ? "Running…" : "Run connection test"}
-                </button>
+              <div className="share-title">Training settings</div>
+              <div className="settings-summary-list">
+                <div className="settings-summary-row">
+                  <span className="settings-summary-label">Sessions per day</span>
+                  <span className="settings-summary-value">Up to {activeProto.sessionsPerDayMax}/day</span>
+                </div>
+                <div className="settings-summary-row">
+                  <span className="settings-summary-label">Max alone time</span>
+                  <span className="settings-summary-value">{activeProto.maxDailyAloneMinutes} min/day</span>
+                </div>
+                <div className="settings-summary-row">
+                  <span className="settings-summary-label">Step rule</span>
+                  <span className="settings-summary-value">+{activeProto.incrementPercentDefault}% then +5 min</span>
+                </div>
+                <div className="settings-summary-row">
+                  <span className="settings-summary-label">Pattern breaks</span>
+                  <span className="settings-summary-value">{recMin}–{recMax}/day</span>
+                </div>
               </div>
-              <div className="share-sub" style={{ marginBottom:10 }}>
-                Use this if sync turns red. It checks env setup, read access, and write/delete permissions.
-              </div>
-              <div className="diag-grid">
-                <div>Sync enabled: <strong>{SYNC_ENABLED ? "Yes" : "No"}</strong></div>
-                <div>VITE_SUPABASE_URL: <strong>{SB_URL ? "Set" : "Missing"}</strong></div>
-                <div>VITE_SUPABASE_ANON_KEY: <strong>{SB_KEY ? "Set" : "Missing"}</strong></div>
-                <div>Supabase base URL: <code>{SB_BASE_URL || "(missing)"}</code></div>
-              </div>
-              {syncDiagResult && (
-                <>
-                  <div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>
-                    {syncDiagResult.checks?.summary?.ok ? "✓ All checks passed" : "✕ Some checks failed"}
-                  </div>
-                  <pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre>
-                </>
-              )}
+              <button className="settings-inline-btn" type="button" onClick={() => setTrainingSettingsOpen(true)}>
+                Edit settings
+              </button>
             </div>
 
             {/* Pattern label customisation */}
@@ -2438,57 +2416,82 @@ export default function PawTimer() {
                 </div>
               ))}
             </div>
-            <div className="share-card">
-              <div className="share-title">Training Protocol</div>
-              <div className="t-helper" style={{ lineHeight:"var(--type-body-line)", letterSpacing:"var(--type-body-track)", marginBottom:14 }}>
-                <div><strong style={{ color:"var(--brown)" }}>Sessions:</strong> max {activeProto.sessionsPerDayMax}/day · max {activeProto.maxDailyAloneMinutes} min alone/day</div>
-                <div><strong style={{ color:"var(--brown)" }}>Step up:</strong> +{activeProto.incrementPercentDefault}% after each calm session, then +5 min fixed</div>
-                <div><strong style={{ color:"var(--brown)" }}>Pattern breaks:</strong> {recMin}–{recMax}/day recommended for ~{normalizedLeaves} leaves/day</div>
-              </div>
 
-              {!protoWarnAck ? (
-                <div className="proto-warn-banner">
-                  <div className="proto-warn-title">⚠️ Modifying this is strongly not recommended</div>
-                  <div className="proto-warn-body">
-                    These values are based on clinical separation anxiety protocols. Changing them may slow your dog's progress or cause regression. Only proceed if advised by a certified trainer.
+            <div className="settings-section-label">Advanced</div>
+            <div className="share-card settings-collapsible-card">
+              <button
+                className="settings-collapsible-toggle"
+                type="button"
+                aria-expanded={settingsDisclosure === "advanced"}
+                onClick={() => setSettingsDisclosure(prev => prev === "advanced" ? null : "advanced")}
+              >
+                <span className="share-title" style={{ marginBottom:0 }}>Advanced</span>
+                <span className="settings-collapsible-arrow">{settingsDisclosure === "advanced" ? "−" : "+"}</span>
+              </button>
+              <div className={`collapsible-body ${settingsDisclosure === "advanced" ? "open" : "closed"}`}>
+                <div className="settings-collapsible-inner">
+                  <div className="diag-head">
+                    <div className="share-title" style={{ marginBottom:0 }}>Sync diagnostics</div>
+                    <button className="diag-run-btn" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>
+                      {syncDiagRunning ? "Running…" : "Run connection test"}
+                    </button>
                   </div>
-                  <button onClick={() => setProtoWarnAck(true)}
-                    className="t-btn"
-                    style={{ marginTop:10, padding:"8px 16px", minHeight:44, borderRadius:99, border:"1.5px solid var(--amber)", background:"transparent", color:"var(--amber)", cursor:"pointer" }}>
-                    I understand — let me edit
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <div className="t-helper" style={{ color:"var(--amber)", fontWeight:"var(--type-secondary-weight)", lineHeight:"var(--type-secondary-line)", letterSpacing:"var(--type-secondary-track)", marginBottom:10 }}>⚠️ Advanced — edit with caution</div>
-                  {[
-                    { key:"sessionsPerDayMax", label:"Max sessions/day", unit:"" },
-                    { key:"maxDailyAloneMinutes", label:"Max alone time/day", unit:"min" },
-                    { key:"incrementPercentDefault", label:"Step-up increment", unit:"%" },
-                    { key:"desensitizationBlocksPerDayRecommendedMin", label:"Pattern breaks min/day", unit:"" },
-                    { key:"desensitizationBlocksPerDayRecommendedMax", label:"Pattern breaks max/day", unit:"" },
-                  ].map(({ key, label, unit }) => (
-                    <div key={key} className="proto-field-row">
-                      <span className="proto-field-label">{label}</span>
-                      <div style={{ display:"flex", alignItems:"center", gap:4 }}>
-                        <input type="number" className="proto-field-input"
-                          aria-label={label}
-                          value={protoOverride[key] ?? PROTOCOL[key]}
-                          onChange={e => {
-                            const v = Number(e.target.value);
-                            if (!isNaN(v) && v > 0) setProtoOverride(prev => ({ ...prev, [key]: v }));
-                          }}/>
-                        {unit && <span className="t-helper">{unit}</span>}
+                  <div className="share-sub" style={{ marginBottom:10 }}>
+                    Use this if sync turns red. It checks env setup, read access, and write/delete permissions.
+                  </div>
+                  <div className="diag-grid">
+                    <div>Sync enabled: <strong>{SYNC_ENABLED ? "Yes" : "No"}</strong></div>
+                    <div>VITE_SUPABASE_URL: <strong>{SB_URL ? "Set" : "Missing"}</strong></div>
+                    <div>VITE_SUPABASE_ANON_KEY: <strong>{SB_KEY ? "Set" : "Missing"}</strong></div>
+                    <div>Supabase base URL: <code>{SB_BASE_URL || "(missing)"}</code></div>
+                  </div>
+                  {syncDiagResult && (
+                    <>
+                      <div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>
+                        {syncDiagResult.checks?.summary?.ok ? "✓ All checks passed" : "✕ Some checks failed"}
                       </div>
-                    </div>
-                  ))}
-                  <button onClick={() => { setProtoOverride({}); setProtoWarnAck(false); }}
-                    className="t-helper"
-                    style={{ marginTop:12, background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}>
-                    Reset to defaults
-                  </button>
+                      <pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre>
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
+            </div>
+
+            <div className="settings-section-label">Help</div>
+            <div className="share-card settings-collapsible-card">
+              <button
+                className="settings-collapsible-toggle"
+                type="button"
+                aria-expanded={settingsDisclosure === "help"}
+                onClick={() => setSettingsDisclosure(prev => prev === "help" ? null : "help")}
+              >
+                <span className="share-title" style={{ marginBottom:0 }}>Help</span>
+                <span className="settings-collapsible-arrow">{settingsDisclosure === "help" ? "−" : "+"}</span>
+              </button>
+              <div className={`collapsible-body ${settingsDisclosure === "help" ? "open" : "closed"}`}>
+                <div className="settings-collapsible-inner">
+                  <div className="proto-section" style={{ marginTop:0 }}>
+                    <div className="proto-title">Sync devices</div>
+                    <div className="proto-row">Copy the Dog ID, send it to your partner, then have them join with that ID in PawTimer.</div>
+                  </div>
+                  <div className="proto-section">
+                    <div className="proto-title">How to run a session</div>
+                    <div className="proto-row">Tap Start, leave calmly, come back when needed, then rate how {name} did so PawTimer can set the next target.</div>
+                  </div>
+                  <div className="proto-section">
+                    <div className="proto-title">Progress rules</div>
+                    <div className="proto-row">Calm: add +{activeProto.incrementPercentDefault}% next session below 40 min, then +5 min. Subtle stress: hold the same duration. Active or severe distress: roll back by 1–2 sessions.</div>
+                  </div>
+                  <div className="proto-section">
+                    <div className="proto-title">Daily rhythm</div>
+                    <div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions and {activeProto.maxDailyAloneMinutes} min alone/day, with {recMin}–{recMax} pattern breaks for about {normalizedLeaves} departures/day and {activeProto.restDaysPerWeekRecommended} rest days/week.</div>
+                  </div>
+                  <div className="proto-section">
+                    <div className="proto-title">Walk buffer</div>
+                    <div className="proto-row">Use walks plus a {walkBuffer}-minute buffer before counting a departure toward pattern-break practice.</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="settings-section-label">Account</div>
@@ -2515,6 +2518,62 @@ export default function PawTimer() {
             }}>✕ Remove {name} from this device</button>
           </div>
         </div>)}
+
+        {trainingSettingsOpen && (
+          <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="training-settings-title" onClick={() => setTrainingSettingsOpen(false)}>
+            <div className="quick-modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="quick-modal-head">
+                <div className="quick-modal-title" id="training-settings-title">Training settings</div>
+                <button className="quick-modal-close" type="button" onClick={() => setTrainingSettingsOpen(false)}>×</button>
+              </div>
+              <div className="share-sub">Adjust protocol values only if a trainer has advised you to. Full guidance is kept in Help.</div>
+              {!protoWarnAck ? (
+                <div className="proto-warn-banner">
+                  <div className="proto-warn-title">Editing is usually not recommended</div>
+                  <div className="proto-warn-body">
+                    These values are based on clinical separation anxiety protocols. Changing them may slow your dog's progress or cause regression.
+                  </div>
+                  <button onClick={() => setProtoWarnAck(true)}
+                    className="settings-inline-btn"
+                    type="button">
+                    I understand — let me edit
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="t-helper" style={{ color:"var(--amber)", marginBottom:10 }}>Edit with caution.</div>
+                  {[
+                    { key:"sessionsPerDayMax", label:"Max sessions/day", unit:"" },
+                    { key:"maxDailyAloneMinutes", label:"Max alone time/day", unit:"min" },
+                    { key:"incrementPercentDefault", label:"Step-up increment", unit:"%" },
+                    { key:"desensitizationBlocksPerDayRecommendedMin", label:"Pattern breaks min/day", unit:"" },
+                    { key:"desensitizationBlocksPerDayRecommendedMax", label:"Pattern breaks max/day", unit:"" },
+                  ].map(({ key, label, unit }) => (
+                    <div key={key} className="proto-field-row">
+                      <span className="proto-field-label">{label}</span>
+                      <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                        <input type="number" className="proto-field-input"
+                          aria-label={label}
+                          value={protoOverride[key] ?? PROTOCOL[key]}
+                          onChange={e => {
+                            const v = Number(e.target.value);
+                            if (!isNaN(v) && v > 0) setProtoOverride(prev => ({ ...prev, [key]: v }));
+                          }}/>
+                        {unit && <span className="t-helper">{unit}</span>}
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => { setProtoOverride({}); setProtoWarnAck(false); }}
+                    className="t-helper"
+                    style={{ marginTop:12, background:"none", border:"none", cursor:"pointer", textDecoration:"underline" }}
+                    type="button">
+                    Reset to defaults
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
 

@@ -469,7 +469,7 @@
   .h-edit:hover { opacity:1; color:var(--green-dark); }
 
   /* ── Pattern edit row ── */
-  .pat-edit-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--surf-soft); }
+  .pat-edit-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--surf-soft); }
   .pat-edit-row:last-child { border-bottom:none; }
   .pat-edit-label { flex:1; font-size:var(--type-body-size); color:var(--brown); }
   .pat-edit-input { flex:1; padding:7px 10px; border:1.5px solid var(--green-dark); border-radius:var(--radius-sm); font-size:var(--type-body-size); color:var(--brown); background:var(--surf-soft); outline:none; }
@@ -561,6 +561,18 @@
   .settings-btn:hover { border-color:var(--green-dark); background:var(--surf-soft); }
   .settings-btn.danger { color:var(--red); }
   .settings-btn.danger:hover { border-color:var(--red); }
+  .settings-inline-row { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .settings-summary-list { display:grid; gap:10px; margin-bottom:14px; }
+  .settings-summary-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:10px; border-bottom:1px solid var(--surf-soft); }
+  .settings-summary-row:last-child { padding-bottom:0; border-bottom:none; }
+  .settings-summary-label { font-size:var(--type-body-size); font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); color:var(--brown); }
+  .settings-summary-value { font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); text-align:right; }
+  .settings-inline-btn { min-height:44px; padding:10px 16px; border-radius:99px; border:1.5px solid var(--border); background:var(--surf-soft); color:var(--brown); font-size:var(--type-button-size); font-weight:var(--type-button-weight); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); cursor:pointer; transition:border-color 0.2s, background 0.2s; }
+  .settings-inline-btn:hover { border-color:var(--green-dark); background:var(--surf); }
+  .settings-collapsible-card { padding-bottom:0; }
+  .settings-collapsible-toggle { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; border:none; background:transparent; padding:0; cursor:pointer; text-align:left; }
+  .settings-collapsible-arrow { font-size:var(--type-card-title-size); line-height:1; color:var(--text-muted); min-width:18px; text-align:center; }
+  .settings-collapsible-inner { padding:12px 0 16px; }
 
 
   .diag-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
