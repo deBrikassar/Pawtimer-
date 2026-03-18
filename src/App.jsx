@@ -1828,6 +1828,7 @@ export default function PawTimer() {
               const R = 36; const C = 2*Math.PI*R;
               const goalFrac = Math.min(goalPct/100, 1);
               const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(countToday/activeProto.sessionsPerDayMax, 1) : 0;
+              const nextSessionLabel = fmt(target);
               return (
                 <div className="stats-rings-card">
                   <div className="ring-col">
@@ -1839,7 +1840,9 @@ export default function PawTimer() {
                           strokeDashoffset={C * (1 - goalFrac)}/>
                       </svg>
                       <div className="ring-inner">
-                        <div className="ring-val">{fmt(target)}</div>
+                        <div className="ring-val">
+                          <span className="ring-val-primary">{nextSessionLabel}</span>
+                        </div>
                       </div>
                     </div>
                     <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Next session</button>
@@ -1854,7 +1857,10 @@ export default function PawTimer() {
                           strokeDashoffset={C * (1 - sessFrac)}/>
                       </svg>
                       <div className="ring-inner">
-                        <div className="ring-val">{countToday}<span className="t-helper num-stable">/{activeProto.sessionsPerDayMax}</span></div>
+                        <div className="ring-val">
+                          <span className="ring-val-primary">{countToday}</span>
+                          <span className="ring-val-secondary num-stable">/{activeProto.sessionsPerDayMax}</span>
+                        </div>
                       </div>
                     </div>
                     <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Sessions today</button>
