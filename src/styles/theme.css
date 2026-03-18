@@ -83,6 +83,10 @@
     --type-secondary-line: 18px;
     --type-secondary-weight: var(--font-regular);
     --type-secondary-track: 0;
+    --type-ring-metric-size: var(--text-sm);
+    --type-ring-metric-line: 18px;
+    --type-ring-metric-weight: var(--font-semibold);
+    --type-ring-metric-track: -0.01em;
     --type-overline-size: var(--text-xs);
     --type-overline-line: 14px;
     --type-overline-weight: var(--font-regular);
