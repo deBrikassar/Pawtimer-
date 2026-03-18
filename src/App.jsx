@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { PROTOCOL, getNextDurationSeconds, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { formatDuration } from "./lib/time";
 import { SessionControl, WelcomeBackBanner, TrainProgressBar, SessionRatingPanel } from "./features/train/TrainComponents";
-import { StatsInsightsGrid, StatsChartSection, StatsSection, StatsMetricCard, StatsWideInfoCard } from "./features/stats/StatsComponents";
+import { StatsChartSection, StatsSection, StatsMetricCard, StatsWideInfoCard } from "./features/stats/StatsComponents";
 import EmptyState from "./components/EmptyState";
 import "./styles/theme.css";
 import "./styles/shared.css";
@@ -2291,24 +2291,15 @@ export default function PawTimer() {
               <div className="stats-row">
                 <StatsMetricCard value={avgWalksPerDay != null ? avgWalksPerDay.toFixed(1) : "—"} label="Average walks/day" />
                 <StatsMetricCard value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"} label="Average sessions/day" />
-                <StatsWideInfoCard value={patterns.length} label="Pattern breaks" icon={<Img src="pattern-keys.png" size={36} alt="pattern breaks"/>} />
+                <StatsMetricCard
+                  value={relapseRisk ? "High" : "Low"}
+                  label="Relapse risk"
+                  valueStyle={{ color: relapseTone.color }}
+                />
               </div>
             </StatsSection>
 
-            <StatsSection title="Supporting metrics" className="stats-section-supporting">
-            <StatsInsightsGrid
-              totalCount={totalCount}
-              openMetricHelp={openMetricHelp}
-              stabilityTone={stabilityTone}
-              momentumTone={momentumTone}
-              adherenceTone={adherenceTone}
-              relapseTone={relapseTone}
-              calmMedian={calmMedian}
-              calmRate7={calmRate7}
-              adherenceByDay={adherenceByDay}
-              relapseRisk={relapseRisk}
-              fmt={fmt}
-            />
+            <StatsSection title="Session trends">
             <StatsChartSection
               chartData={chartData}
               goalSec={goalSec}

@@ -22,17 +22,6 @@ export function StatsMetricCard({ value, label, className = "", valueStyle }) {
   );
 }
 
-function StatsMetricButton({ onClick, value, label, color }) {
-  return (
-    <button className="stat-card metric-btn" onClick={onClick} type="button">
-      <div className="stat-val stats-metric-value" style={{ color }}>
-        {value}
-      </div>
-      <div className="stat-lbl stats-metric-label">{label}</div>
-    </button>
-  );
-}
-
 export function StatsWideInfoCard({ value, label, icon }) {
   return (
     <div className="stat-wide">
@@ -41,30 +30,6 @@ export function StatsWideInfoCard({ value, label, icon }) {
         <div className="stat-lbl stats-metric-label">{label}</div>
       </div>
       <div className="stat-icon">{icon}</div>
-    </div>
-  );
-}
-
-export function StatsInsightsGrid({
-  totalCount,
-  openMetricHelp,
-  stabilityTone,
-  momentumTone,
-  adherenceTone,
-  relapseTone,
-  calmMedian,
-  calmRate7,
-  adherenceByDay,
-  relapseRisk,
-  fmt,
-}) {
-  if (totalCount <= 0) return null;
-  return (
-    <div className="insights-grid">
-      <StatsMetricButton onClick={() => openMetricHelp("stability")} value={calmMedian != null ? fmt(calmMedian) : "—"} label="Stability" color={stabilityTone.color} />
-      <StatsMetricButton onClick={() => openMetricHelp("momentum")} value={calmRate7 != null ? `${calmRate7}%` : "—"} label="Momentum" color={momentumTone.color} />
-      <StatsMetricButton onClick={() => openMetricHelp("adherence")} value={adherenceByDay != null ? `${adherenceByDay}%` : "—"} label="Adherence" color={adherenceTone.color} />
-      <StatsMetricButton onClick={() => openMetricHelp("relapseRisk")} value={relapseRisk ? "High" : "Low"} label="Relapse risk" color={relapseTone.color} />
     </div>
   );
 }
