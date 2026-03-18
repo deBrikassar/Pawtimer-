@@ -2054,11 +2054,23 @@ export default function PawTimer() {
                 return (
                   <div className="h-item" key={`s-${s.id}`}>
                     <div className={`h-dot dot-${lv}`}><Img src={icon} size={22}/></div>
-                    <div className="h-info">
-                      <div className="h-main">Training session</div>
-                      <div className="h-meta-row">
-                        <div className="h-date">{fmtDate(s.date)}</div>
-                        <div className="h-value">{fmt(s.actualDuration)} <span className="t-helper">of {fmt(s.plannedDuration)}</span></div>
+                    <div className="h-session-body">
+                      <div className="h-session-top">
+                        <div className="h-info">
+                          <div className="h-main">Training session</div>
+                          <div className="h-meta-row">
+                            <div className="h-date">{fmtDate(s.date)}</div>
+                            <div className="h-value">{fmt(s.actualDuration)} <span className="t-helper">of {fmt(s.plannedDuration)}</span></div>
+                          </div>
+                        </div>
+                        <div className="h-trailing">
+                          <span className={`h-badge badge-${lv}`}>{distressLabel(lv)}</span>
+                          <div className="h-actions">
+                            <button className="h-edit" onClick={() => editSessionTime(s.id)} title="Edit time">🕒</button>
+                            <button className="h-edit" onClick={() => editSessionDuration(s.id)} title="Edit duration">✎</button>
+                            <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete("session", s.id); }} title="Delete">✕</button>
+                          </div>
+                        </div>
                       </div>
                       {detailBadges.length > 0 && (
                         <div className="h-extra-badges">
@@ -2067,14 +2079,6 @@ export default function PawTimer() {
                           ))}
                         </div>
                       )}
-                    </div>
-                    <div className="h-trailing">
-                      <span className={`h-badge badge-${lv}`}>{distressLabel(lv)}</span>
-                      <div className="h-actions">
-                        <button className="h-edit" onClick={() => editSessionTime(s.id)} title="Edit time">🕒</button>
-                        <button className="h-edit" onClick={() => editSessionDuration(s.id)} title="Edit duration">✎</button>
-                        <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete("session", s.id); }} title="Delete">✕</button>
-                      </div>
                     </div>
                   </div>
                 );
