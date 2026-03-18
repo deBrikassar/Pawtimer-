@@ -413,14 +413,6 @@ const generateId = (name) => {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = formatDuration;
-
-const getRingContentSizeClass = (value) => {
-  const contentLength = String(value ?? "").replace(/\s+/g, "").length;
-  if (contentLength >= 9) return "ring-wrap--xl";
-  if (contentLength >= 7) return "ring-wrap--lg";
-  if (contentLength >= 5) return "ring-wrap--md";
-  return "ring-wrap--base";
-};
 const parseDurationInput = (value) => {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
@@ -1837,13 +1829,10 @@ export default function PawTimer() {
               const goalFrac = Math.min(goalPct/100, 1);
               const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(countToday/activeProto.sessionsPerDayMax, 1) : 0;
               const nextSessionLabel = fmt(target);
-              const sessionsTodayLabel = `${countToday}/${activeProto.sessionsPerDayMax}`;
-              const nextSessionRingClass = getRingContentSizeClass(nextSessionLabel);
-              const sessionsTodayRingClass = getRingContentSizeClass(sessionsTodayLabel);
               return (
                 <div className="stats-rings-card">
                   <div className="ring-col">
-                    <div className={`ring-wrap ${nextSessionRingClass}`}>
+                    <div className="ring-wrap">
                       <svg className="ring-svg" width={84} height={84} viewBox="0 0 88 88">
                         <circle cx={44} cy={44} r={R} className="ring-bg"/>
                         <circle cx={44} cy={44} r={R} className="ring-fill-1"
@@ -1860,7 +1849,7 @@ export default function PawTimer() {
                   </div>
                   <div className="ring-col-sep"/>
                   <div className="ring-col">
-                    <div className={`ring-wrap ${sessionsTodayRingClass}`}>
+                    <div className="ring-wrap">
                       <svg className="ring-svg" width={84} height={84} viewBox="0 0 88 88">
                         <circle cx={44} cy={44} r={R} className="ring-bg"/>
                         <circle cx={44} cy={44} r={R} className="ring-fill-2"
@@ -1870,7 +1859,7 @@ export default function PawTimer() {
                       <div className="ring-inner">
                         <div className="ring-val">
                           <span className="ring-val-primary">{countToday}</span>
-                          <span className="ring-val-secondary t-helper num-stable">/{activeProto.sessionsPerDayMax}</span>
+                          <span className="ring-val-secondary num-stable">/{activeProto.sessionsPerDayMax}</span>
                         </div>
                       </div>
                     </div>
