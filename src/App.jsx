@@ -413,6 +413,14 @@ const generateId = (name) => {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = formatDuration;
+
+const getRingContentSizeClass = (value) => {
+  const contentLength = String(value ?? "").replace(/\s+/g, "").length;
+  if (contentLength >= 9) return "ring-wrap--xl";
+  if (contentLength >= 7) return "ring-wrap--lg";
+  if (contentLength >= 5) return "ring-wrap--md";
+  return "ring-wrap--base";
+};
 const parseDurationInput = (value) => {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
@@ -1828,10 +1836,14 @@ export default function PawTimer() {
               const R = 36; const C = 2*Math.PI*R;
               const goalFrac = Math.min(goalPct/100, 1);
               const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(countToday/activeProto.sessionsPerDayMax, 1) : 0;
+              const nextSessionLabel = fmt(target);
+              const sessionsTodayLabel = `${countToday}/${activeProto.sessionsPerDayMax}`;
+              const nextSessionRingClass = getRingContentSizeClass(nextSessionLabel);
+              const sessionsTodayRingClass = getRingContentSizeClass(sessionsTodayLabel);
               return (
                 <div className="stats-rings-card">
                   <div className="ring-col">
-                    <div className="ring-wrap">
+                    <div className={`ring-wrap ${nextSessionRingClass}`}>
                       <svg className="ring-svg" width={84} height={84} viewBox="0 0 88 88">
                         <circle cx={44} cy={44} r={R} className="ring-bg"/>
                         <circle cx={44} cy={44} r={R} className="ring-fill-1"
@@ -1839,14 +1851,16 @@ export default function PawTimer() {
                           strokeDashoffset={C * (1 - goalFrac)}/>
                       </svg>
                       <div className="ring-inner">
-                        <div className="ring-val">{fmt(target)}</div>
+                        <div className="ring-val">
+                          <span className="ring-val-primary">{nextSessionLabel}</span>
+                        </div>
                       </div>
                     </div>
                     <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Next session</button>
                   </div>
                   <div className="ring-col-sep"/>
                   <div className="ring-col">
-                    <div className="ring-wrap">
+                    <div className={`ring-wrap ${sessionsTodayRingClass}`}>
                       <svg className="ring-svg" width={84} height={84} viewBox="0 0 88 88">
                         <circle cx={44} cy={44} r={R} className="ring-bg"/>
                         <circle cx={44} cy={44} r={R} className="ring-fill-2"
@@ -1854,7 +1868,10 @@ export default function PawTimer() {
                           strokeDashoffset={C * (1 - sessFrac)}/>
                       </svg>
                       <div className="ring-inner">
-                        <div className="ring-val">{countToday}<span className="t-helper num-stable">/{activeProto.sessionsPerDayMax}</span></div>
+                        <div className="ring-val">
+                          <span className="ring-val-primary">{countToday}</span>
+                          <span className="ring-val-secondary t-helper num-stable">/{activeProto.sessionsPerDayMax}</span>
+                        </div>
                       </div>
                     </div>
                     <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Sessions today</button>
