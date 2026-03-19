@@ -28,6 +28,7 @@ export default function SettingsScreen(props) {
     SB_KEY,
     SB_BASE_URL,
     syncDiagResult,
+    syncSummary,
     nextTargetInfo,
     trainingSettingsOpen,
     setProtoWarnAck,
@@ -55,6 +56,14 @@ export default function SettingsScreen(props) {
             <div className="share-id-row">
               <div className="share-id-val" aria-label="Dog ID">{activeDogId}</div>
               <button className="copy-btn" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
+            </div>
+            <div className="settings-sync-summary" aria-live="polite">
+              <div className="share-sub" style={{ marginBottom: 8 }}>Current sync status</div>
+              <div className={`sync-badge sync-state-${syncSummary.badgeState}`} title={syncSummary.detail}>
+                <span className={`sync-dot sync-${syncSummary.badgeState}`} />
+                <span>{syncSummary.label}</span>
+              </div>
+              <div className="settings-sync-copy">{syncSummary.detail}</div>
             </div>
           </div>
 
