@@ -21,6 +21,7 @@ export function useHistoryEditing({
   setFeedings,
   recomputeTarget,
   activeDogId,
+  stampLocalEntry,
 }) {
   const openHistoryDurationEditor = (kind, entry, setHistoryModal) => {
     if (!entry) return;
@@ -66,7 +67,7 @@ export function useHistoryEditing({
       if (historyModal.kind === "walk") {
         const currentWalk = walks.find((w) => w.id === historyModal.id);
         if (!currentWalk) return;
-        const updatedWalk = { ...currentWalk, date: updatedIso };
+        const updatedWalk = stampLocalEntry({ ...currentWalk, date: updatedIso }, currentWalk);
         setWalks((prev) => sortByDateAsc(prev.map((w) => (w.id === historyModal.id ? updatedWalk : w))));
         pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
           if (!ok) showToast(`⚠️ Sync failed: ${error}`);
@@ -77,7 +78,7 @@ export function useHistoryEditing({
       }
       const currentSession = sessions.find((s) => s.id === historyModal.id);
       if (!currentSession) return;
-      const updatedSession = normalizeSession({ ...currentSession, date: updatedIso });
+      const updatedSession = stampLocalEntry(normalizeSession({ ...currentSession, date: updatedIso }), currentSession);
       commitSessions(sortByDateAsc(sessions.map((s) => (s.id === historyModal.id ? updatedSession : s))));
       pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
         if (!ok) showToast(`⚠️ Sync failed: ${error}`);
@@ -96,7 +97,7 @@ export function useHistoryEditing({
       if (historyModal.kind === "walk") {
         const currentWalk = walks.find((w) => w.id === historyModal.id);
         if (!currentWalk) return;
-        const updatedWalk = { ...currentWalk, duration: parsedDuration };
+        const updatedWalk = stampLocalEntry({ ...currentWalk, duration: parsedDuration }, currentWalk);
         setWalks((prev) => prev.map((w) => (w.id === historyModal.id ? updatedWalk : w)));
         pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
           if (!ok) showToast(`⚠️ Sync failed: ${error}`);
@@ -107,7 +108,7 @@ export function useHistoryEditing({
       }
       const currentSession = sessions.find((s) => s.id === historyModal.id);
       if (!currentSession) return;
-      const updatedSession = mergeSessionWithDerivedFields(currentSession, { actualDuration: parsedDuration });
+      const updatedSession = stampLocalEntry(mergeSessionWithDerivedFields(currentSession, { actualDuration: parsedDuration }), currentSession);
       commitSessions(sessions.map((s) => (s.id === historyModal.id ? updatedSession : s)));
       pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
         if (!ok) showToast(`⚠️ Sync failed: ${error}`);
@@ -158,6 +159,13 @@ export function useHistoryEditing({
   };
 }
 
+const renderSyncBadge = (entry) => {
+  const state = entry?.syncState ?? (entry?.pendingSync ? "local" : "synced");
+  if (state === "synced") return null;
+  const label = state === "error" ? "Sync failed" : state === "syncing" ? "Syncing" : "Local only";
+  return <span className={`h-sync-pill h-sync-${state}`}>{label}</span>;
+};
+
 export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
   return (
     <>
@@ -186,6 +194,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                         <div className="h-session-meta">
                           <div className="h-date h-session-date">{fmtDate(s.date)}</div>
                           <div className="h-session-duration">{fmt(s.actualDuration)}</div>
+                          {renderSyncBadge(s)}
                         </div>
                       </div>
                       <div className="h-trailing">
@@ -210,7 +219,10 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   <div className="h-info">
                     <div className="h-main">{walkTypeLabel(w.type)} with {name}</div>
                     <div className="h-meta-row">
-                      <div className="h-date">{fmtDate(w.date)}</div>
+                      <div>
+                        <div className="h-date">{fmtDate(w.date)}</div>
+                        {renderSyncBadge(w)}
+                      </div>
                       <div className="h-value">{w.duration ? fmt(w.duration) : "—"}</div>
                     </div>
                   </div>
@@ -233,7 +245,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   <div className="h-dot dot-pat"><Img src={pt.icon} size={22} /></div>
                   <div className="h-info">
                     <div className="h-main">{patLabels[pt.type] || pt.label}</div>
-                    <div className="h-meta-row"><div className="h-date">{fmtDate(p.date)}</div></div>
+                    <div className="h-meta-row"><div><div className="h-date">{fmtDate(p.date)}</div>{renderSyncBadge(p)}</div></div>
                   </div>
                   <div className="h-trailing">
                     <span className="h-badge badge-pat">Pattern break</span>
@@ -252,7 +264,10 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   <div className="h-info">
                     <div className="h-main" style={{ textTransform: "capitalize" }}>{f.foodType}</div>
                     <div className="h-meta-row">
-                      <div className="h-date">{fmtDate(f.date)}</div>
+                      <div>
+                        <div className="h-date">{fmtDate(f.date)}</div>
+                        {renderSyncBadge(f)}
+                      </div>
                       <div className="h-value" style={{ textTransform: "capitalize" }}>{f.amount}</div>
                     </div>
                   </div>

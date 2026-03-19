@@ -80,11 +80,53 @@ const sbReq = async (path, opts = {}) => {
   }
 };
 
-// Merge two arrays by id — newer item wins, preserves chronological order
-const mergeById = (a = [], b = []) => {
-  const m = {};
-  [...a, ...b].forEach(x => { if (x?.id) m[x.id] = x; });
-  return sortByDateAsc(Object.values(m));
+const toTimestamp = (value) => {
+  const parsed = new Date(value ?? 0).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const getRecordRevision = (item = {}) => {
+  const revision = item.revision ?? item.rev ?? item.version ?? item.recordVersion ?? item.record_version ?? null;
+  return Number.isFinite(revision) ? Number(revision) : null;
+};
+
+const getRecordUpdatedAt = (item = {}) => item.updatedAt ?? item.updated_at ?? item.localUpdatedAt ?? item.local_updated_at ?? null;
+
+export const resolveSyncConflict = (left = {}, right = {}) => {
+  const leftRevision = getRecordRevision(left);
+  const rightRevision = getRecordRevision(right);
+  if (leftRevision !== null && rightRevision !== null && leftRevision !== rightRevision) {
+    return leftRevision > rightRevision ? left : right;
+  }
+
+  const leftUpdatedAt = toTimestamp(getRecordUpdatedAt(left));
+  const rightUpdatedAt = toTimestamp(getRecordUpdatedAt(right));
+  if (leftUpdatedAt !== rightUpdatedAt) return leftUpdatedAt > rightUpdatedAt ? left : right;
+
+  const leftDate = toTimestamp(left?.date);
+  const rightDate = toTimestamp(right?.date);
+  if (leftDate !== rightDate) return leftDate > rightDate ? left : right;
+
+  if (Boolean(left?.pendingSync) !== Boolean(right?.pendingSync)) {
+    return left?.pendingSync ? left : right;
+  }
+
+  if ((left?.syncState || "synced") !== (right?.syncState || "synced")) {
+    return (left?.syncState === "local" || left?.syncState === "syncing") ? left : right;
+  }
+
+  return right;
+};
+
+// Merge two arrays by id using sync-aware conflict resolution and preserves chronological order
+export const mergeById = (a = [], b = [], pickWinner = resolveSyncConflict) => {
+  const merged = new Map();
+  [...ensureArray(a), ...ensureArray(b)].forEach((item) => {
+    if (!item?.id) return;
+    const previous = merged.get(item.id);
+    merged.set(item.id, previous ? pickWinner(previous, item) : item);
+  });
+  return sortByDateAsc(Array.from(merged.values()));
 };
 
 const asBool = (value) => value === true || value === 1;
