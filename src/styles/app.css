@@ -550,7 +550,6 @@
   .stats-support-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid rgba(75,60,48,0.08); }
   .stats-support-row:last-child { border-bottom:none; }
   .stats-support-label-wrap { display:flex; align-items:center; gap:8px; min-width:0; }
-  .stats-support-icon { display:flex; align-items:center; color:var(--green-dark); }
   .stats-support-label { font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:var(--text-muted); }
   .stats-support-value { font-size:var(--type-body-lg-size); line-height:var(--type-body-lg-line); letter-spacing:var(--type-body-lg-track); font-weight:var(--type-body-lg-weight); color:var(--brown); font-variant-numeric:tabular-nums; text-align:right; }
   /* ── Settings tab ── */
