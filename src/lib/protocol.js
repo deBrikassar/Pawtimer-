@@ -390,6 +390,12 @@ export function calculateTrainingStats(sessions = [], options = {}) {
   };
 }
 
+function labelRelapseRisk(risk = 0) {
+  if (risk >= 0.72) return "high";
+  if (risk >= 0.58) return "medium";
+  return "low";
+}
+
 function getStepMultiplier(stats, latestSessions = [], allSessions = []) {
   const calmStreak = countStreak(latestSessions, (s) => s.belowThreshold);
 
@@ -485,6 +491,112 @@ export function buildRecommendation(sessions = [], options = {}) {
   };
 }
 
+function buildCueSessions(patterns = []) {
+  return patterns.map((p) => ({
+    cue: p.type,
+    date: p.date,
+    reactionLevel: p.reactionLevel || "none",
+  }));
+}
+
+function describeRecommendationType(type) {
+  switch (type) {
+    case "repeat_current_duration":
+      return "Recent subtle stress keeps the next target at the current level.";
+    case "reduce_duration":
+      return "Recent active distress triggers a shorter next target.";
+    case "stabilization_block":
+      return "Recent severe distress triggers a deeper step back to stabilize.";
+    case "insert_easy_sessions":
+      return "The plan inserts an easier confidence-building session before pushing higher.";
+    case "departure_cues_first":
+      return "Pattern-break logs suggest cue practice should come first before stretching duration.";
+    default:
+      return "The next target is adjusted from the current safe-alone estimate.";
+  }
+}
+
+export function explainNextTarget(sessions = [], walks = [], patterns = [], dog = {}) {
+  const sortedSessions = sortByDateAsc(sessions).map(toRichSession);
+  const trainingSessions = sortedSessions.filter((s) => s.departureType !== "real_life");
+  const cueSessions = buildCueSessions(patterns);
+  const lastTraining = trainingSessions[trainingSessions.length - 1] || null;
+
+  if (!trainingSessions.length) {
+    const baseline = Number(dog?.currentMaxCalm || 0);
+    const recommendedDuration = baseline > 0
+      ? Math.max(PROTOCOL.startDurationSeconds, Math.round(baseline * 0.8))
+      : PROTOCOL.startDurationSeconds;
+
+    return {
+      recommendedDuration,
+      recommendationType: "baseline_start",
+      summary: baseline > 0
+        ? "The first target starts at about 80% of your dog's current calm-alone estimate so the opening sessions stay easy."
+        : "With no history yet, PawTimer starts with the default 30-second confidence-building target.",
+      factors: [
+        baseline > 0
+          ? `Current calm-alone estimate: ${Math.round(baseline)} sec.`
+          : "No calm-alone baseline logged yet.",
+        "Opening sessions stay conservative before the app has enough history to adapt.",
+      ],
+      stats: null,
+      warnings: [],
+      walkAdjustmentApplied: false,
+    };
+  }
+
+  const recommendation = buildRecommendation(sortedSessions, {
+    goalSeconds: dog?.goalSeconds,
+    plannedRealAbsenceSeconds: dog?.plannedRealAbsenceSeconds,
+    cueSessions,
+    plan: {
+      recommendedDuration: lastTraining?.plannedDuration || null,
+      targetCadenceDays: 1,
+    },
+  });
+
+  let recommendedDuration = recommendation.recommendedDuration;
+  let walkAdjustmentApplied = false;
+
+  if (walks.length) {
+    const recentWalks = walks.slice(-8);
+    const avgWalkDuration = recentWalks.reduce((sum, w) => sum + (Number(w.duration) || 0), 0) / recentWalks.length;
+    const walkTypePenalty = recentWalks.filter((w) => (w.type || "regular") === "intense_exercise").length / recentWalks.length;
+
+    if (avgWalkDuration > 0 && walkTypePenalty > 0.65 && recommendation.stats.stabilityScore < 0.6) {
+      recommendedDuration = Math.max(PROTOCOL.minDurationSeconds, Math.round(recommendation.recommendedDuration * 0.95));
+      walkAdjustmentApplied = true;
+    }
+  }
+
+  const calmStreak = countStreak(trainingSessions, (session) => session.belowThreshold);
+  const factors = [
+    `Safe-alone estimate: ${Math.round(recommendation.stats.safeAloneTime)} sec, weighted toward recent calm sessions.`,
+    `Last training result: ${lastTraining ? normalizeDistressLevel(lastTraining.distressLevel) : "none"}.`,
+    `Calm streak: ${calmStreak} session${calmStreak === 1 ? "" : "s"}; stability ${(recommendation.stats.stabilityScore * 100).toFixed(0)}%.`,
+    `Relapse risk: ${labelRelapseRisk(recommendation.stats.relapseRisk)} (${(recommendation.stats.relapseRisk * 100).toFixed(0)}%).`,
+  ];
+
+  if (recommendation.recommendationType === "departure_cues_first") {
+    factors.push("Pattern-break logs show cue sensitivity, so cue practice is prioritized before duration growth.");
+  }
+
+  if (walkAdjustmentApplied) {
+    factors.push("Recent intense walks plus low stability trimmed the target by 5% for caution.");
+  }
+
+  return {
+    recommendedDuration,
+    recommendationType: recommendation.recommendationType,
+    summary: describeRecommendationType(recommendation.recommendationType),
+    factors,
+    stats: recommendation.stats,
+    warnings: recommendation.warnings,
+    walkAdjustmentApplied,
+  };
+}
+
 export function getNextDurationSeconds(lastSuccessfulDurationSec, options = {}) {
   const fallbackSafe = Number(lastSuccessfulDurationSec) > 0
     ? Number(lastSuccessfulDurationSec)
@@ -507,35 +619,7 @@ export function suggestNext(sessions = [], dog = {}) {
 }
 
 export function suggestNextWithContext(sessions = [], walks = [], patterns = [], dog = {}) {
-  const normalizedSessions = sessions.map(toRichSession);
-
-  const cueSessions = patterns.map((p) => ({
-    cue: p.type,
-    date: p.date,
-    reactionLevel: p.reactionLevel || "none",
-  }));
-
-  const recommendation = buildRecommendation(normalizedSessions, {
-    goalSeconds: dog?.goalSeconds,
-    plannedRealAbsenceSeconds: dog?.plannedRealAbsenceSeconds,
-    cueSessions,
-    plan: {
-      recommendedDuration: normalizedSessions[normalizedSessions.length - 1]?.plannedDuration || null,
-      targetCadenceDays: 1,
-    },
-  });
-
-  if (!walks.length) return recommendation.recommendedDuration;
-
-  const recentWalks = walks.slice(-8);
-  const avgWalkDuration = recentWalks.reduce((sum, w) => sum + (Number(w.duration) || 0), 0) / recentWalks.length;
-  const walkTypePenalty = recentWalks.filter((w) => (w.type || "regular") === "intense_exercise").length / recentWalks.length;
-
-  if (avgWalkDuration > 0 && walkTypePenalty > 0.65 && recommendation.stats.stabilityScore < 0.6) {
-    return Math.max(PROTOCOL.minDurationSeconds, Math.round(recommendation.recommendedDuration * 0.95));
-  }
-
-  return recommendation.recommendedDuration;
+  return explainNextTarget(sessions, walks, patterns, dog).recommendedDuration;
 }
 
 export function mapLegacySession(session = {}) {

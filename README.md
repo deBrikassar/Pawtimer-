@@ -20,7 +20,7 @@ PawTimer guides you through a science-based separation anxiety training method:
 - 🐶 **Personalised onboarding** — enter your dog's name, how often you leave, current calm threshold, and your final goal
 - ⏱️ **Session timer** — visual ring timer with a target duration
 - ✅ **Three-level outcome logging** — No / Mild / Strong distress
-- 📈 **Smart progression engine** — increases time on success, holds on mild distress, reverts on strong distress
+- 📈 **Adaptive progression engine** — starts conservatively, weights recent calm sessions most heavily, slows down after distress, and inserts easier reps when risk rises
 - 📊 **Statistics** — total sessions, distress breakdown, best time, streak counter, progress chart
 - 💡 **Training tips** — evidence-based guidance personalised with your dog's name
 - 💾 **Works offline with localStorage**
@@ -148,11 +148,19 @@ This app is based on the gradual desensitisation method for separation anxiety:
 
 ## Progression logic
 
-| Outcome | Next session |
-|---------|-------------|
-| ✅ No distress | +15% duration (minimum +5s) |
-| ⚠️ Mild distress | Hold — same duration |
-| ❌ Strong distress | Revert to last fully calm duration |
+PawTimer uses the progression engine in `src/lib/protocol.js` as the source of truth.
+
+1. **First session starts conservatively** — with no history yet, the app starts at about **80% of the dog's current calm-alone estimate** from onboarding, with a 30-second minimum.
+2. **Safe-alone time is recalculated from recent calm sessions** — calm sessions are weighted by recency and confidence so newer successful reps matter most.
+3. **All-calm streaks unlock the clearest increase** — when the latest 5 training sessions are fully calm, the next target is usually **+15%** from the latest calm duration.
+4. **Distress slows or reverses progression**:
+   - **Subtle stress** → usually repeat the same duration.
+   - **Active distress** → shorten the next target by about **25%**.
+   - **Severe distress / panic** → move into a deeper stabilization step at about **60%** of the safe-alone estimate.
+5. **Risk management can insert easier sessions** — higher relapse risk or regular “easy session” checkpoints can temporarily drop the target to **80%** of the safe-alone estimate instead of pushing forward.
+6. **Context can trim the target further** — if recent walks are mostly intense and stability is still low, the final recommendation can be reduced by another **5%**.
+
+In short: the next target is based on the current safe-alone estimate, recent calm streaks, distress severity, relapse risk, and a small amount of walk/cue context — not on one fixed step rule every time.
 
 ---
 
@@ -171,4 +179,3 @@ MIT — free to use, modify, and share.
 ## App icon workflow
 
 `public/icons/app-logo.png` is the canonical app logo source. Keep this file as the only app logo asset.
-
