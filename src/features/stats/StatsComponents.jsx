@@ -13,23 +13,24 @@ export function StatsSection({ title, children, className = "" }) {
   );
 }
 
-export function StatsMetricCard({ value, label, className = "", valueStyle }) {
+export function StatsMetricCard({ value, label, className = "", valueStyle, detail = null }) {
   return (
     <div className={`stat-card ${className}`.trim()}>
       <div className="stat-val stats-metric-value" style={valueStyle}>{value}</div>
       <div className="stat-lbl stats-metric-label">{label}</div>
+      {detail ? <div className="stats-metric-detail">{detail}</div> : null}
     </div>
   );
 }
 
-export function StatsWideInfoCard({ value, label, icon }) {
+export function StatsSupportRow({ label, value, icon = null }) {
   return (
-    <div className="stat-wide">
-      <div>
-        <div className="stat-val stats-metric-value">{value}</div>
-        <div className="stat-lbl stats-metric-label">{label}</div>
+    <div className="stats-support-row">
+      <div className="stats-support-label-wrap">
+        {icon ? <span className="stats-support-icon" aria-hidden="true">{icon}</span> : null}
+        <span className="stats-support-label">{label}</span>
       </div>
-      <div className="stat-icon">{icon}</div>
+      <span className="stats-support-value">{value}</span>
     </div>
   );
 }
@@ -64,7 +65,7 @@ export function StatsProgressRing({ value, label, progress, fillClassName, onLab
   );
 }
 
-export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name, distressLabel, fmt }) {
+export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name, distressLabel, fmt, insightLabel }) {
   if (chartData.length <= 1) {
     return (
       <EmptyState
@@ -78,11 +79,12 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
   }
 
   return (
-    <div className="chart-wrap">
+    <div className="chart-wrap chart-wrap-full">
+      {insightLabel ? <div className="chart-insight">{insightLabel}</div> : null}
       <div className="chart-title">Session duration over time (min)</div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
-          <CartesianGrid stroke="var(--surf-soft)" vertical={false}/>
+          <CartesianGrid stroke="rgba(75,60,48,0.08)" vertical={false}/>
           <XAxis dataKey="session" tick={{fontSize:"var(--text-sm)",fill:"var(--text-muted)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} tickLine={false} axisLine={false}/>
           <YAxis tick={{fontSize:"var(--text-sm)",fill:"var(--text-muted)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} tickLine={false} axisLine={false}/>
           <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:"var(--text-sm)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} labelStyle={{color:"var(--green-light)",fontSize:"var(--text-sm)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} formatter={(_v,_n,p)=>[`${fmt(p.payload.durationSeconds)} — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
@@ -90,11 +92,6 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
           <Line type="monotone" dataKey="durationMinutes" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
         </LineChart>
       </ResponsiveContainer>
-      <div className="t-helper" style={{display:"flex",gap:14,justifyContent:"center",marginTop:10,flexWrap:"wrap"}}>
-        <span><span style={{color:"var(--green-dark)"}}>●</span> Calm</span>
-        <span><span style={{color:"var(--orange)"}}>●</span> Mild</span>
-        <span><span style={{color:"var(--red)"}}>●</span> Strong</span>
-      </div>
     </div>
   );
 }

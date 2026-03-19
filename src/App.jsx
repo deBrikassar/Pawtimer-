@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { PROTOCOL, getNextDurationSeconds, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { formatDuration } from "./lib/time";
 import { SessionControl, WelcomeBackBanner, TrainProgressBar, SessionRatingPanel } from "./features/train/TrainComponents";
-import { StatsChartSection, StatsSection, StatsMetricCard, StatsProgressRing, StatsWideInfoCard } from "./features/stats/StatsComponents";
+import { StatsChartSection, StatsSection, StatsMetricCard, StatsProgressRing, StatsSupportRow } from "./features/stats/StatsComponents";
 import EmptyState from "./components/EmptyState";
 import "./styles/theme.css";
 import "./styles/shared.css";
@@ -1699,6 +1699,29 @@ export default function PawTimer() {
     durationMinutes: Math.round(s.actualDuration / 60 * 10) / 10,
     distressLevel: s.distressLevel,
   }));
+  const currentThreshold = Number.isFinite(lastSess?.plannedDuration) ? lastSess.plannedDuration : target;
+  const headlineStatus = (() => {
+    if (relapseRisk || recentSevereCount > 0 || momentumTone.label === "Watch closely") return "Needs attention";
+    if ((calmRate7 != null && calmRate14 != null && calmRate7 > calmRate14) || streak >= 3 || bestCalm >= currentThreshold) return "Improving";
+    return "Stable";
+  })();
+  const headlineStatusColor = headlineStatus === "Improving"
+    ? "var(--green-dark)"
+    : headlineStatus === "Stable"
+      ? "var(--orange)"
+      : "var(--red)";
+  const chartTrendLabel = (() => {
+    const recentDurations = chartData.map((item) => item.durationSeconds).filter((value) => Number.isFinite(value));
+    if (recentDurations.length < 4) return "Trend: Plateau";
+    const recentSlice = recentDurations.slice(-4);
+    const previousSlice = recentDurations.slice(-8, -4);
+    if (!previousSlice.length) return "Trend: Plateau";
+    const recentAvg = recentSlice.reduce((sum, value) => sum + value, 0) / recentSlice.length;
+    const previousAvg = previousSlice.reduce((sum, value) => sum + value, 0) / previousSlice.length;
+    if (recentAvg > previousAvg * 1.08) return "Trend: Improving";
+    if (recentAvg < previousAvg * 0.92) return "Trend: Declining";
+    return "Trend: Plateau";
+  })();
   const CustomDot = ({ cx, cy, payload }) => {
     const c = payload.distressLevel === "none" ? "var(--green-dark)"
             : payload.distressLevel === "subtle" ? "var(--orange)" : payload.distressLevel === "active" ? "#d65f3c" : "var(--red)";
@@ -2188,111 +2211,45 @@ export default function PawTimer() {
               />
             ) : (<>
 
-            <StatsSection title="Progress & training performance" className="stats-section-priority">
-              <div className="streak-card stats-priority-card">
-                <div className="streak-num">{streak}</div>
-                <div className="streak-lbl">
-                  <span className="streak-fire">🔥</span>
-                  <span className="streak-lbl-text">Calm session streak</span>
+            <StatsSection title="Overview" className="stats-section-priority">
+              <div className="stats-headline-card">
+                <div className="stats-headline-main">
+                  <div className="stats-headline-current">
+                    <span className="stats-headline-label">Current threshold</span>
+                    <span className="stats-headline-value">{fmt(currentThreshold)}</span>
+                  </div>
+                  <div className="stats-headline-status" style={{ color: headlineStatusColor }}>
+                    {headlineStatus}
+                  </div>
+                </div>
+                <div className="stats-headline-sub">
+                  <div className="stats-headline-target">
+                    <span className="stats-headline-label">Next target</span>
+                    <span className="stats-headline-target-value">{fmt(target)}</span>
+                  </div>
+                  <div className="stats-headline-streak">
+                    <span className="stats-headline-streak-label">🔥 Calm streak</span>
+                    <span className="stats-headline-streak-value">{streak} sessions</span>
+                  </div>
                 </div>
               </div>
-              <div className="goal-card stats-priority-card" style={{margin:"0 0 12px"}}>
-                <div className="goal-label">
-                  <span className="goal-title">Progress toward goal</span>
-                  <span className="goal-pct">{Math.round(goalPct)}%</span>
-                </div>
-                <div className="progress-track"><div className="progress-fill" style={{width:`${goalPct}%`}}/></div>
-                <div className="goal-meta">
-                  <span>Current threshold: {fmt(target)}</span>
-                  <span>Goal: {fmt(goalSec)}</span>
-                </div>
-              </div>
-              <div className="stats-row stats-row-main">
-                <StatsMetricCard value={`${Math.round((noneCount/totalCount)*100)}%`} label="Success rate" className="stat-card-emphasis" />
-                <StatsMetricCard value={noneCount} label="Calm sessions" valueStyle={{ color:"var(--green-dark)" }} className="stat-card-emphasis" />
+            </StatsSection>
+
+            <StatsSection title="Core metrics">
+              <div className="stats-row stats-row-core">
+                <StatsMetricCard value={streak} label="Calm streak" valueStyle={{ color:"var(--green-dark)" }} />
                 <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" />
                 <StatsMetricCard value={fmt(target)} label="Next target" />
-              </div>
-              {totalCount > 0 && (
-                <div className="ratio-card">
-                  <div className="ratio-title">Outcome breakdown — {totalCount} sessions</div>
-                  <div className="ratio-bar">
-                    <div className="ratio-good" style={{width:`${(noneCount/totalCount)*100}%`}}/>
-                    <div className="ratio-mild" style={{width:`${(subtleCount/totalCount)*100}%`}}/>
-                    <div className="ratio-active" style={{width:`${(activeCount/totalCount)*100}%`}}/>
-                    <div className="ratio-bad"  style={{width:`${(severeCount/totalCount)*100}%`}}/>
-                  </div>
-                  <div className="ratio-legend">
-                    <span><div className="dot12" style={{background:"var(--green-dark)"}}/>{noneCount} calm</span>
-                    <span><div className="dot12" style={{background:"var(--orange)"}}/>{subtleCount} subtle</span>
-                    <span><div className="dot12" style={{background:"#d65f3c"}}/>{activeCount} active</span>
-                    <span><div className="dot12" style={{background:"var(--red)"}}/>{severeCount} severe</span>
-                  </div>
-                </div>
-              )}
-            </StatsSection>
-
-            <StatsSection title="Time-related stats">
-              {(() => {
-                const loggedTodaySess = sessions.filter(s => isToday(s.date) && typeof s.actualDuration === "number");
-                const totalLogged = loggedTodaySess.reduce((sum,s) => sum+(s.actualDuration||0),0);
-                const calmSec   = loggedTodaySess.filter(s=>s.distressLevel==="none").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-                const subtleSec = loggedTodaySess.filter(s=>s.distressLevel==="subtle").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-                const activeSec = loggedTodaySess.filter(s=>s.distressLevel==="active").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-                const severeSec = loggedTodaySess.filter(s=>s.distressLevel==="severe").reduce((sum,s)=>sum+(s.actualDuration||0),0);
-                const calmPct   = totalLogged ? (calmSec/totalLogged)*100 : 0;
-                const subtlePct = totalLogged ? (subtleSec/totalLogged)*100 : 0;
-                const activePct = totalLogged ? (activeSec/totalLogged)*100 : 0;
-                const severePct = totalLogged ? (severeSec/totalLogged)*100 : 0;
-                return (
-                  <div className="alone-card" style={{ marginBottom:12 }}>
-                    <div className="alone-left">
-                      <div className="alone-label">Today's alone time</div>
-                      <div className="alone-total">{totalLogged === 0 ? "0 mins" : fmt(totalLogged)}</div>
-                    </div>
-                    <div className="alone-right">
-                      <div className="alone-track">
-                        {totalLogged > 0 ? (<>
-                          <div className="alone-fill ok"   style={{width:`${calmPct}%`}}/>
-                          <div className="alone-fill near" style={{width:`${subtlePct}%`}}/>
-                          <div className="alone-fill active" style={{width:`${activePct}%`}}/>
-                          <div className="alone-fill full" style={{width:`${severePct}%`}}/>
-                        </>) : <div style={{width:"100%",height:"100%",background:"var(--border)",borderRadius:99}}/>}
-                      </div>
-                      {totalLogged > 0 && (
-                        <div className="alone-legend">
-                          {calmSec>0   && <span className="t-helper" style={{color:"var(--green-dark)"}}>{fmt(calmSec)} calm</span>}
-                          {subtleSec>0 && <span className="t-helper" style={{color:"var(--orange)"}}>{fmt(subtleSec)} subtle</span>}
-                          {activeSec>0 && <span className="t-helper" style={{color:"#d65f3c"}}>{fmt(activeSec)} active</span>}
-                          {severeSec>0 && <span className="t-helper" style={{color:"var(--red)"}}>{fmt(severeSec)} severe</span>}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-              <div className="stats-row">
-                <StatsWideInfoCard value={fmt(aloneLastWeek)} label="Alone time per week" icon={<PawIcon size={32}/>} />
-                <StatsMetricCard
-                  value={avgWalkDuration != null ? fmt(avgWalkDuration, { hoursMinutesOnly: true }) : "—"}
-                  label="Average walk duration"
-                />
-              </div>
-            </StatsSection>
-
-            <StatsSection title="Daily / weekly behavior">
-              <div className="stats-row">
-                <StatsMetricCard value={avgWalksPerDay != null ? avgWalksPerDay.toFixed(1) : "—"} label="Average walks/day" />
-                <StatsMetricCard value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"} label="Average sessions/day" />
                 <StatsMetricCard
                   value={relapseRisk ? "High" : "Low"}
                   label="Relapse risk"
                   valueStyle={{ color: relapseTone.color }}
+                  detail={relapseTone.label}
                 />
               </div>
             </StatsSection>
 
-            <StatsSection title="Session trends">
+            <StatsSection title="Progression">
             <StatsChartSection
               chartData={chartData}
               goalSec={goalSec}
@@ -2301,7 +2258,26 @@ export default function PawTimer() {
               name={name}
               distressLabel={distressLabel}
               fmt={fmt}
+              insightLabel={chartTrendLabel}
             />
+            </StatsSection>
+
+            <StatsSection title="Supporting metrics" className="stats-section-supporting">
+              <div className="stats-support-list">
+                <StatsSupportRow label="Alone time per week" value={fmt(aloneLastWeek)} icon={<PawIcon size={20} />} />
+                <StatsSupportRow
+                  label="Average walk duration"
+                  value={avgWalkDuration != null ? fmt(avgWalkDuration, { hoursMinutesOnly: true }) : "—"}
+                />
+                <StatsSupportRow
+                  label="Average sessions/day"
+                  value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"}
+                />
+                <StatsSupportRow
+                  label="Average walks/day"
+                  value={avgWalksPerDay != null ? avgWalksPerDay.toFixed(1) : "—"}
+                />
+              </div>
             </StatsSection>
             </>)}
           </div>
