@@ -466,6 +466,8 @@
   .sync-badge.sync-state-syncing { background:rgba(245,183,80,0.18); color:var(--brown); }
   .sync-badge.sync-state-ok { background:rgba(168,213,186,0.35); color:var(--green-dark); }
   .sync-badge.sync-state-err { background:rgba(192,57,43,0.12); color:var(--red); }
+  .header-sync { display:flex; flex-direction:column; align-items:flex-end; gap:6px; max-width:180px; }
+  .sync-caption { font-size:var(--text-xs); color:var(--text-muted); text-align:right; line-height:1.4; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
   /* ── History action buttons ── */
@@ -516,6 +518,10 @@
   .badge-walk   { background:rgba(74,158,110,0.15);  color:var(--green-dark); }
   .badge-feed   { background:rgba(212,129,58,0.16); color:#8a4c19; }
   .badge-pat    { background:rgba(75,60,48,0.09);    color:var(--brown-mid); }
+  .h-sync-pill { display:inline-flex; align-items:center; width:max-content; border-radius:999px; padding:2px 8px; margin-top:4px; font-size:var(--type-overline-size); font-weight:var(--type-overline-weight); letter-spacing:var(--type-overline-track); text-transform:uppercase; }
+  .h-sync-local { background:rgba(245,183,80,0.18); color:var(--brown); }
+  .h-sync-syncing { background:rgba(74,158,110,0.12); color:var(--green-dark); }
+  .h-sync-error { background:rgba(192,57,43,0.12); color:var(--red); }
   .h-extra-badges {
     display:flex;
     flex-flow:row wrap;
