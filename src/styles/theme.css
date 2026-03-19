@@ -111,6 +111,32 @@
     --type-button-line: 24px;
     --type-button-weight: var(--font-medium);
     --type-button-track: -0.01em;
+
+    /* Semantic typography roles */
+    --type-modal-title-size: var(--type-card-title-size);
+    --type-modal-title-line: var(--type-card-title-line);
+    --type-modal-title-weight: var(--type-card-title-weight);
+    --type-modal-title-track: var(--type-card-title-track);
+    --type-panel-title-size: var(--type-card-title-size);
+    --type-panel-title-line: var(--type-card-title-line);
+    --type-panel-title-weight: var(--type-card-title-weight);
+    --type-panel-title-track: var(--type-card-title-track);
+    --type-field-value-size: var(--type-card-title-size);
+    --type-field-value-line: var(--type-card-title-line);
+    --type-field-value-weight: var(--type-card-title-weight);
+    --type-field-value-track: var(--type-card-title-track);
+    --type-list-title-size: var(--type-body-lg-size);
+    --type-list-title-line: var(--type-body-lg-line);
+    --type-list-title-weight: var(--font-medium);
+    --type-list-title-track: -0.01em;
+    --type-metric-card-value-size: clamp(1.35rem, 4.4vw, var(--type-metric-lg-size));
+    --type-metric-card-value-line: 1.08;
+    --type-metric-card-value-weight: var(--font-semibold);
+    --type-metric-card-value-track: -0.02em;
+    --type-metric-headline-size: clamp(1.65rem, 6vw, 2.15rem);
+    --type-metric-headline-line: 1.05;
+    --type-metric-headline-weight: var(--font-semibold);
+    --type-metric-headline-track: -0.03em;
   }
 
   html { overflow-x: hidden; width: 100%; max-width: 100vw; }
