@@ -2217,12 +2217,10 @@ export default function PawTimer() {
                 <div className="stats-headline-main">
                   <div className="stats-headline-current">
                     <span className="stats-headline-label">Current threshold</span>
-                    <div className="stats-headline-current-row">
-                      <div className="stats-headline-status" style={{ color: headlineStatusColor }}>
-                        {headlineStatus}
-                      </div>
-                      <span className="stats-headline-value">{fmt(currentThreshold)}</span>
-                    </div>
+                    <span className="stats-headline-value">{fmt(currentThreshold)}</span>
+                  </div>
+                  <div className="stats-headline-status" style={{ color: headlineStatusColor }}>
+                    {headlineStatus}
                   </div>
                 </div>
                 <div className="stats-headline-sub">
