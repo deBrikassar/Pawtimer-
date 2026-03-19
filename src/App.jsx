@@ -2063,9 +2063,9 @@ export default function PawTimer() {
                       <div className="h-session-top">
                         <div className="h-info">
                           <div className="h-main">Training session</div>
-                          <div className="h-meta-row">
-                            <div className="h-date">{fmtDate(s.date)}</div>
-                            <div className="h-value">{fmt(s.actualDuration)} <span className="t-helper">of {fmt(s.plannedDuration)}</span></div>
+                          <div className="h-session-meta">
+                            <div className="h-date h-session-date">{fmtDate(s.date)}</div>
+                            <div className="h-session-duration">{fmt(s.actualDuration)}</div>
                           </div>
                         </div>
                         <div className="h-trailing">
