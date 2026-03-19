@@ -817,7 +817,7 @@ export default function PawTimer() {
   const [walkPendingDuration, setWalkPendingDuration] = useState(0);
   const [feedingOpen, setFeedingOpen] = useState(false);
   const [feedingDraft, setFeedingDraft] = useState(() => ({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }));
-  const [activityTimeEdit, setActivityTimeEdit] = useState(null);
+  const [historyModal, setHistoryModal] = useState(null);
   const walkTimerRef = useRef(null);
   const walkStartRef = useRef(null);
 
@@ -1295,103 +1295,162 @@ export default function PawTimer() {
     setWalkPendingDuration(0);
   };
 
+  const openHistoryDurationEditor = (kind, entry) => {
+    if (!entry) return;
+    const value = kind === "session" ? entry.actualDuration : entry.duration;
+    setHistoryModal({
+      mode: "duration",
+      kind,
+      id: entry.id,
+      value: Number.isFinite(value) ? String(value) : "",
+    });
+  };
+
+  const openHistoryTimeEditor = (kind, entry) => {
+    if (!entry) return;
+    setHistoryModal({
+      mode: "datetime",
+      kind,
+      id: entry.id,
+      date: toDateInputValue(entry.date),
+      time: toTimeInputValue(entry.date),
+    });
+  };
+
   const editWalkDuration = (walkId) => {
     const currentWalk = walks.find((w) => w.id === walkId);
-    if (!currentWalk) return;
-    const input = window.prompt(
-      "Edit walk duration (seconds or mm:ss)",
-      Number.isFinite(currentWalk.duration) ? String(currentWalk.duration) : ""
-    );
-    if (input === null) return;
-    const parsedDuration = parseDurationInput(input);
-    if (!Number.isFinite(parsedDuration)) {
-      showToast("⚠️ Invalid duration. Use seconds or mm:ss");
-      return;
-    }
-    const updatedWalk = { ...currentWalk, duration: parsedDuration };
-    setWalks((prev) => prev.map((w) => (w.id === walkId ? updatedWalk : w)));
-    pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
-      if (!ok) showToast(`⚠️ Sync failed: ${error}`);
-    });
-    showToast(`🚶 Walk updated to ${fmt(parsedDuration)}`);
+    openHistoryDurationEditor("walk", currentWalk);
   };
 
   const editWalkTime = (walkId) => {
     const currentWalk = walks.find((w) => w.id === walkId);
-    if (!currentWalk) return;
-    setActivityTimeEdit({
-      kind: "walk",
-      id: walkId,
-      date: toDateInputValue(currentWalk.date),
-      time: toTimeInputValue(currentWalk.date),
-    });
+    openHistoryTimeEditor("walk", currentWalk);
   };
 
   const editSessionTime = (sessionId) => {
     const currentSession = sessions.find((s) => s.id === sessionId);
-    if (!currentSession) return;
-    setActivityTimeEdit({
-      kind: "session",
-      id: sessionId,
-      date: toDateInputValue(currentSession.date),
-      time: toTimeInputValue(currentSession.date),
-    });
+    openHistoryTimeEditor("session", currentSession);
   };
 
   const saveEditedActivityTime = () => {
-    if (!activityTimeEdit?.date || !activityTimeEdit?.time) {
+    if (!historyModal?.date || !historyModal?.time) {
       showToast("⚠️ Please choose a valid date and time");
       return;
     }
-    const updatedIso = buildEditedActivityIso(activityTimeEdit.date, activityTimeEdit.time);
+    const updatedIso = buildEditedActivityIso(historyModal.date, historyModal.time);
     if (!updatedIso) {
       showToast("⚠️ Please choose a valid date and time");
       return;
     }
 
-    if (activityTimeEdit.kind === "walk") {
-      const currentWalk = walks.find((w) => w.id === activityTimeEdit.id);
+    if (historyModal.kind === "walk") {
+      const currentWalk = walks.find((w) => w.id === historyModal.id);
       if (!currentWalk) return;
       const updatedWalk = { ...currentWalk, date: updatedIso };
-      setWalks((prev) => sortByDateAsc(prev.map((w) => (w.id === activityTimeEdit.id ? updatedWalk : w))));
+      setWalks((prev) => sortByDateAsc(prev.map((w) => (w.id === historyModal.id ? updatedWalk : w))));
       pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
         if (!ok) showToast(`⚠️ Sync failed: ${error}`);
       });
       showToast(`🕒 Walk date and time updated to ${fmtDate(updatedWalk.date)}`);
-      setActivityTimeEdit(null);
+      setHistoryModal(null);
       return;
     }
 
-    const currentSession = sessions.find((s) => s.id === activityTimeEdit.id);
+    const currentSession = sessions.find((s) => s.id === historyModal.id);
     if (!currentSession) return;
     const updatedSession = normalizeSession({ ...currentSession, date: updatedIso });
-    setSessions((prev) => sortByDateAsc(prev.map((s) => (s.id === activityTimeEdit.id ? updatedSession : s))));
+    setSessions((prev) => sortByDateAsc(prev.map((s) => (s.id === historyModal.id ? updatedSession : s))));
     pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
       if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`🕒 Session date and time updated to ${fmtDate(updatedSession.date)}`);
-    setActivityTimeEdit(null);
+    setHistoryModal(null);
   };
 
-  const editSessionDuration = (sessionId) => {
-    const currentSession = sessions.find((s) => s.id === sessionId);
-    if (!currentSession) return;
-    const input = window.prompt(
-      "Edit session duration (seconds or mm:ss)",
-      Number.isFinite(currentSession.actualDuration) ? String(currentSession.actualDuration) : ""
-    );
-    if (input === null) return;
-    const parsedDuration = parseDurationInput(input);
-    if (!Number.isFinite(parsedDuration) || parsedDuration <= 0) {
-      showToast("⚠️ Invalid duration. Use a positive value (seconds or mm:ss)");
+  const saveEditedActivityDuration = () => {
+    if (!historyModal) return;
+    const parsedDuration = parseDurationInput(historyModal.value);
+    const requiresPositive = historyModal.kind === "session";
+    if (!Number.isFinite(parsedDuration) || (requiresPositive ? parsedDuration <= 0 : parsedDuration < 0)) {
+      showToast(requiresPositive
+        ? "⚠️ Invalid duration. Use a positive value (seconds or mm:ss)"
+        : "⚠️ Invalid duration. Use seconds or mm:ss");
       return;
     }
+
+    if (historyModal.kind === "walk") {
+      const currentWalk = walks.find((w) => w.id === historyModal.id);
+      if (!currentWalk) return;
+      const updatedWalk = { ...currentWalk, duration: parsedDuration };
+      setWalks((prev) => prev.map((w) => (w.id === historyModal.id ? updatedWalk : w)));
+      pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
+        if (!ok) showToast(`⚠️ Sync failed: ${error}`);
+      });
+      showToast(`🚶 Walk updated to ${fmt(parsedDuration)}`);
+      setHistoryModal(null);
+      return;
+    }
+
+    const currentSession = sessions.find((s) => s.id === historyModal.id);
+    if (!currentSession) return;
     const updatedSession = normalizeSession({ ...currentSession, actualDuration: parsedDuration });
-    setSessions((prev) => prev.map((s) => (s.id === sessionId ? updatedSession : s)));
+    setSessions((prev) => prev.map((s) => (s.id === historyModal.id ? updatedSession : s)));
     pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
       if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
     showToast(`⏱️ Session updated to ${fmt(parsedDuration)}`);
+    setHistoryModal(null);
+  };
+
+  const editSessionDuration = (sessionId) => {
+    const currentSession = sessions.find((s) => s.id === sessionId);
+    openHistoryDurationEditor("session", currentSession);
+  };
+
+  const requestHistoryDelete = (kind, entry) => {
+    if (!entry) return;
+    setHistoryModal({
+      mode: "delete",
+      kind,
+      id: entry.id,
+      label: kind === "session"
+        ? `Training session · ${fmtDate(entry.date)}`
+        : kind === "walk"
+          ? `${walkTypeLabel(entry.type)} · ${fmtDate(entry.date)}`
+          : kind === "pattern"
+            ? `${patLabels[entry.type] || (PATTERN_TYPES.find((item) => item.type === entry.type)?.label ?? "Pattern break")} · ${fmtDate(entry.date)}`
+            : `${entry.foodType} feeding · ${fmtDate(entry.date)}`,
+    });
+  };
+
+  const confirmHistoryDelete = () => {
+    if (!historyModal || historyModal.mode !== "delete") return;
+
+    if (historyModal.kind === "session") {
+      setSessions((prev) => prev.filter((item) => item.id !== historyModal.id));
+      syncDelete("session", historyModal.id).then((ok) => {
+        if (!ok) showToast("⚠️ Session removed locally — remote delete failed");
+      });
+      setTarget((prevTarget) => suggestNext(sessions.filter((item) => item.id !== historyModal.id), dog) ?? prevTarget);
+    } else if (historyModal.kind === "walk") {
+      setWalks((prev) => prev.filter((item) => item.id !== historyModal.id));
+      syncDelete("walk", historyModal.id).then((ok) => {
+        if (!ok) showToast("⚠️ Walk removed locally — remote delete failed");
+      });
+    } else if (historyModal.kind === "pattern") {
+      setPatterns((prev) => prev.filter((item) => item.id !== historyModal.id));
+      syncDelete("pattern", historyModal.id).then((ok) => {
+        if (!ok) showToast("⚠️ Pattern break removed locally — remote delete failed");
+      });
+    } else if (historyModal.kind === "feeding") {
+      setFeedings((prev) => prev.filter((item) => item.id !== historyModal.id));
+      syncDelete("feeding", historyModal.id).then((ok) => {
+        if (!ok) showToast("⚠️ Feeding removed locally — remote delete failed");
+      });
+    }
+
+    showToast(`🗑️ ${historyModal.label} deleted`);
+    setHistoryModal(null);
   };
 
   const logWalk = () => startWalk();
@@ -2077,9 +2136,9 @@ export default function PawTimer() {
                         <div className="h-trailing">
                           <span className={`h-badge badge-${lv}`}>{distressLabel(lv)}</span>
                           <div className="h-actions">
-                            <button className="h-edit" onClick={() => editSessionTime(s.id)} title="Edit time">🕒</button>
-                            <button className="h-edit" onClick={() => editSessionDuration(s.id)} title="Edit duration">✎</button>
-                            <button className="h-del" onClick={() => { setSessions(prev => prev.filter(x => x.id !== s.id)); syncDelete("session", s.id); }} title="Delete">✕</button>
+                            <button className="h-action-btn h-edit" type="button" onClick={() => editSessionTime(s.id)} title="Edit time" aria-label="Edit session time">🕒</button>
+                            <button className="h-action-btn h-edit" type="button" onClick={() => editSessionDuration(s.id)} title="Edit duration" aria-label="Edit session duration">✎</button>
+                            <button className="h-action-btn h-del" type="button" onClick={() => requestHistoryDelete("session", s)} title="Delete" aria-label="Delete session">✕</button>
                           </div>
                         </div>
                       </div>
@@ -2109,9 +2168,9 @@ export default function PawTimer() {
                     <div className="h-trailing">
                       <span className="h-badge badge-walk">{walkTypeLabel(w.type)}</span>
                       <div className="h-actions">
-                        <button className="h-edit" onClick={() => editWalkTime(w.id)} title="Edit time">🕒</button>
-                        <button className="h-edit" onClick={() => editWalkDuration(w.id)} title="Edit duration">✎</button>
-                        <button className="h-del" onClick={() => { setWalks(prev => prev.filter(x => x.id !== w.id)); syncDelete("walk", w.id); }} title="Delete">✕</button>
+                        <button className="h-action-btn h-edit" type="button" onClick={() => editWalkTime(w.id)} title="Edit time" aria-label="Edit walk time">🕒</button>
+                        <button className="h-action-btn h-edit" type="button" onClick={() => editWalkDuration(w.id)} title="Edit duration" aria-label="Edit walk duration">✎</button>
+                        <button className="h-action-btn h-del" type="button" onClick={() => requestHistoryDelete("walk", w)} title="Delete" aria-label="Delete walk">✕</button>
                       </div>
                     </div>
                   </div>
@@ -2132,7 +2191,7 @@ export default function PawTimer() {
                     <div className="h-trailing">
                       <span className="h-badge badge-pat">Pattern break</span>
                       <div className="h-actions">
-                        <button className="h-del" onClick={() => { setPatterns(prev => prev.filter(x => x.id !== p.id)); syncDelete("pattern", p.id); }} title="Delete">✕</button>
+                        <button className="h-action-btn h-del" type="button" onClick={() => requestHistoryDelete("pattern", p)} title="Delete" aria-label="Delete pattern break">✕</button>
                       </div>
                     </div>
                   </div>
@@ -2153,7 +2212,7 @@ export default function PawTimer() {
                     <div className="h-trailing">
                       <span className="h-badge badge-feed">Feeding</span>
                       <div className="h-actions">
-                        <button className="h-del" onClick={() => { setFeedings(prev => prev.filter(x => x.id !== f.id)); syncDelete("feeding", f.id); }} title="Delete">✕</button>
+                        <button className="h-action-btn h-del" type="button" onClick={() => requestHistoryDelete("feeding", f)} title="Delete" aria-label="Delete feeding">✕</button>
                       </div>
                     </div>
                   </div>
@@ -2164,42 +2223,87 @@ export default function PawTimer() {
           </div>
         </div>)}
 
-        {activityTimeEdit && (
+        {historyModal && (
           <div
             className="activity-time-overlay"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="activity-time-title"
-            onClick={() => setActivityTimeEdit(null)}
+            aria-labelledby="history-modal-title"
+            onClick={() => setHistoryModal(null)}
           >
-            <div className="activity-time-card" onClick={(e) => e.stopPropagation()}>
-              <div className="section-title" id="activity-time-title" style={{ marginBottom: 6 }}>
-                Edit {activityTimeEdit.kind === "walk" ? "walk" : "session"} date & time
+            <div className="activity-time-card history-modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="quick-modal-head">
+                <div className="section-title" id="history-modal-title" style={{ marginBottom: 0 }}>
+                  {historyModal.mode === "delete"
+                    ? `Delete ${historyModal.kind === "pattern" ? "pattern break" : historyModal.kind}`
+                    : `Edit ${historyModal.kind} ${historyModal.mode === "datetime" ? "date & time" : "duration"}`}
+                </div>
+                <button className="quick-modal-close" type="button" onClick={() => setHistoryModal(null)} aria-label="Close">×</button>
               </div>
-              <div className="t-helper" style={{ marginBottom: 10 }}>
-                Choose a date and time. Duration is edited separately.
-              </div>
-              <label className="activity-time-field">
-                <span className="t-helper">Date</span>
-                <input
-                  type="date"
-                  value={activityTimeEdit.date}
-                  onChange={(e) => setActivityTimeEdit((prev) => (prev ? { ...prev, date: e.target.value } : prev))}
-                />
-              </label>
-              <label className="activity-time-field">
-                <span className="t-helper">Time of day</span>
-                <input
-                  type="time"
-                  step="60"
-                  value={activityTimeEdit.time}
-                  onChange={(e) => setActivityTimeEdit((prev) => (prev ? { ...prev, time: e.target.value } : prev))}
-                />
-              </label>
-              <div className="feeding-actions">
-                <button className="walk-cancel-btn" type="button" onClick={() => setActivityTimeEdit(null)}>Cancel</button>
-                <button className="walk-end-btn" type="button" onClick={saveEditedActivityTime}>Save</button>
-              </div>
+
+              {historyModal.mode === "datetime" && (
+                <>
+                  <div className="t-helper" style={{ marginBottom: 10 }}>
+                    Choose a date and time. Duration is edited separately.
+                  </div>
+                  <label className="activity-time-field">
+                    <span className="t-helper">Date</span>
+                    <input
+                      type="date"
+                      value={historyModal.date}
+                      onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, date: e.target.value } : prev))}
+                    />
+                  </label>
+                  <label className="activity-time-field">
+                    <span className="t-helper">Time of day</span>
+                    <input
+                      type="time"
+                      step="60"
+                      value={historyModal.time}
+                      onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, time: e.target.value } : prev))}
+                    />
+                  </label>
+                  <div className="feeding-actions">
+                    <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
+                    <button className="walk-end-btn" type="button" onClick={saveEditedActivityTime}>Save</button>
+                  </div>
+                </>
+              )}
+
+              {historyModal.mode === "duration" && (
+                <>
+                  <div className="t-helper" style={{ marginBottom: 10 }}>
+                    Enter seconds or <code>mm:ss</code>.
+                  </div>
+                  <label className="activity-time-field">
+                    <span className="t-helper">Duration</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="e.g. 90 or 1:30"
+                      value={historyModal.value}
+                      onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, value: e.target.value } : prev))}
+                    />
+                  </label>
+                  <div className="feeding-actions">
+                    <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
+                    <button className="walk-end-btn" type="button" onClick={saveEditedActivityDuration}>Save</button>
+                  </div>
+                </>
+              )}
+
+              {historyModal.mode === "delete" && (
+                <>
+                  <div className="history-delete-copy">
+                    <div className="history-delete-label">{historyModal.label}</div>
+                    <p>This action removes the item from the timeline for this dog. You can’t undo it after confirmation.</p>
+                  </div>
+                  <div className="feeding-actions">
+                    <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Keep item</button>
+                    <button className="history-delete-confirm" type="button" onClick={confirmHistoryDelete}>Delete</button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
