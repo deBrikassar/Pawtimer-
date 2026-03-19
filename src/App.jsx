@@ -2228,10 +2228,6 @@ export default function PawTimer() {
                     <span className="stats-headline-label">Next target</span>
                     <span className="stats-headline-target-value">{fmt(target)}</span>
                   </div>
-                  <div className="stats-headline-streak">
-                    <span className="stats-headline-streak-label">🔥 Calm streak</span>
-                    <span className="stats-headline-streak-value">{streak} sessions</span>
-                  </div>
                 </div>
               </div>
             </StatsSection>
