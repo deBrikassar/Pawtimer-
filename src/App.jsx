@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { PROTOCOL, getNextDurationSeconds, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { formatDuration } from "./lib/time";
+import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "./lib/activityDateTime";
 import { SessionControl, WelcomeBackBanner, TrainProgressBar, SessionRatingPanel } from "./features/train/TrainComponents";
 import { StatsChartSection, StatsSection, StatsMetricCard, StatsProgressRing, StatsSupportRow } from "./features/stats/StatsComponents";
 import EmptyState from "./components/EmptyState";
@@ -90,7 +91,7 @@ const sbReq = async (path, opts = {}) => {
 const mergeById = (a = [], b = []) => {
   const m = {};
   [...a, ...b].forEach(x => { if (x?.id) m[x.id] = x; });
-  return Object.values(m).sort((x, y) => new Date(x.date) - new Date(y.date));
+  return sortByDateAsc(Object.values(m));
 };
 
 const asBool = (value) => value === true || value === 1;
@@ -1318,67 +1319,57 @@ export default function PawTimer() {
   const editWalkTime = (walkId) => {
     const currentWalk = walks.find((w) => w.id === walkId);
     if (!currentWalk) return;
-    const initialDate = new Date(currentWalk.date);
-    const initialTime = Number.isNaN(initialDate.getTime())
-      ? ""
-      : `${String(initialDate.getHours()).padStart(2, "0")}:${String(initialDate.getMinutes()).padStart(2, "0")}`;
-    setActivityTimeEdit({ kind: "walk", id: walkId, time: initialTime });
+    setActivityTimeEdit({
+      kind: "walk",
+      id: walkId,
+      date: toDateInputValue(currentWalk.date),
+      time: toTimeInputValue(currentWalk.date),
+    });
   };
 
   const editSessionTime = (sessionId) => {
     const currentSession = sessions.find((s) => s.id === sessionId);
     if (!currentSession) return;
-    const initialDate = new Date(currentSession.date);
-    const initialTime = Number.isNaN(initialDate.getTime())
-      ? ""
-      : `${String(initialDate.getHours()).padStart(2, "0")}:${String(initialDate.getMinutes()).padStart(2, "0")}`;
-    setActivityTimeEdit({ kind: "session", id: sessionId, time: initialTime });
+    setActivityTimeEdit({
+      kind: "session",
+      id: sessionId,
+      date: toDateInputValue(currentSession.date),
+      time: toTimeInputValue(currentSession.date),
+    });
   };
 
   const saveEditedActivityTime = () => {
-    if (!activityTimeEdit?.time) {
-      showToast("⚠️ Please choose a valid time");
+    if (!activityTimeEdit?.date || !activityTimeEdit?.time) {
+      showToast("⚠️ Please choose a valid date and time");
       return;
     }
-    const [hours, minutes] = activityTimeEdit.time.split(":").map(Number);
-    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
-      showToast("⚠️ Please choose a valid time");
+    const updatedIso = buildEditedActivityIso(activityTimeEdit.date, activityTimeEdit.time);
+    if (!updatedIso) {
+      showToast("⚠️ Please choose a valid date and time");
       return;
     }
 
     if (activityTimeEdit.kind === "walk") {
       const currentWalk = walks.find((w) => w.id === activityTimeEdit.id);
       if (!currentWalk) return;
-      const nextDate = new Date(currentWalk.date);
-      if (Number.isNaN(nextDate.getTime())) {
-        showToast("⚠️ Invalid saved walk date");
-        return;
-      }
-      nextDate.setHours(hours, minutes, 0, 0);
-      const updatedWalk = { ...currentWalk, date: nextDate.toISOString() };
-      setWalks((prev) => prev.map((w) => (w.id === activityTimeEdit.id ? updatedWalk : w)));
+      const updatedWalk = { ...currentWalk, date: updatedIso };
+      setWalks((prev) => sortByDateAsc(prev.map((w) => (w.id === activityTimeEdit.id ? updatedWalk : w))));
       pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
         if (!ok) showToast(`⚠️ Sync failed: ${error}`);
       });
-      showToast(`🕒 Walk time updated to ${fmtDate(updatedWalk.date)}`);
+      showToast(`🕒 Walk date and time updated to ${fmtDate(updatedWalk.date)}`);
       setActivityTimeEdit(null);
       return;
     }
 
     const currentSession = sessions.find((s) => s.id === activityTimeEdit.id);
     if (!currentSession) return;
-    const nextDate = new Date(currentSession.date);
-    if (Number.isNaN(nextDate.getTime())) {
-      showToast("⚠️ Invalid saved session date");
-      return;
-    }
-    nextDate.setHours(hours, minutes, 0, 0);
-    const updatedSession = normalizeSession({ ...currentSession, date: nextDate.toISOString() });
-    setSessions((prev) => prev.map((s) => (s.id === activityTimeEdit.id ? updatedSession : s)));
+    const updatedSession = normalizeSession({ ...currentSession, date: updatedIso });
+    setSessions((prev) => sortByDateAsc(prev.map((s) => (s.id === activityTimeEdit.id ? updatedSession : s))));
     pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
       if (!ok) showToast(`⚠️ Sync failed: ${error}`);
     });
-    showToast(`🕒 Session time updated to ${fmtDate(updatedSession.date)}`);
+    showToast(`🕒 Session date and time updated to ${fmtDate(updatedSession.date)}`);
     setActivityTimeEdit(null);
   };
 
@@ -2175,11 +2166,19 @@ export default function PawTimer() {
           >
             <div className="activity-time-card" onClick={(e) => e.stopPropagation()}>
               <div className="section-title" id="activity-time-title" style={{ marginBottom: 6 }}>
-                Edit {activityTimeEdit.kind === "walk" ? "walk" : "session"} time
+                Edit {activityTimeEdit.kind === "walk" ? "walk" : "session"} date & time
               </div>
               <div className="t-helper" style={{ marginBottom: 10 }}>
-                Choose a time of day. Duration is edited separately.
+                Choose a date and time. Duration is edited separately.
               </div>
+              <label className="activity-time-field">
+                <span className="t-helper">Date</span>
+                <input
+                  type="date"
+                  value={activityTimeEdit.date}
+                  onChange={(e) => setActivityTimeEdit((prev) => (prev ? { ...prev, date: e.target.value } : prev))}
+                />
+              </label>
               <label className="activity-time-field">
                 <span className="t-helper">Time of day</span>
                 <input
