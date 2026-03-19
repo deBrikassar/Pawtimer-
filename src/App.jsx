@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { PROTOCOL, getNextDurationSeconds, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
+import { PROTOCOL, getNextDurationSeconds, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel, suggestNext, suggestNextWithContext, explainNextTarget } from "./lib/protocol";
 import { formatDuration } from "./lib/time";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "./lib/activityDateTime";
 import { SessionControl, WelcomeBackBanner, TrainProgressBar, SessionRatingPanel } from "./features/train/TrainComponents";
@@ -679,7 +679,7 @@ function Onboarding({ onComplete, onBack }) {
         </>)}
         {step === 2 && (<>
           <div className="ob-question">How long can {displayName} stay calm alone now?</div>
-          <div className="ob-hint">Sessions start just below this — easy and confidence-building.</div>
+          <div className="ob-hint">The first target starts around 80% of this, then adapts using calm streaks, distress, and relapse risk.</div>
           <div className="ob-duration-grid">
             {CALM_DURATIONS.map(d => (
               <button key={d.value} className={`ob-dur-btn ${calm === d.value ? "selected" : ""}`} onClick={() => setCalm(d.value)}>
@@ -852,7 +852,7 @@ export default function PawTimer() {
     setFeedings(normalizeFeedings(local.feedings));
     setPatLabels(local.patLabels);
     setDogPhoto(local.photo);
-    setTarget(suggestNext(local.sessions, dog));
+    setTarget(suggestNextWithContext(local.sessions, local.walks, local.patterns, dog) ?? suggestNext(local.sessions, dog));
     setScreen("app");
   }, [activeDogId, dogs]);
 
@@ -1472,6 +1472,7 @@ export default function PawTimer() {
   // Protocol: pattern-break status
   const leaveProfile = getLeaveProfile(dog?.leavesPerDay);
   const { todayPat, todayWalks, recMin, recMax, needed, behind, walkBuffer, normalizedLeaves } = patternInfo(patterns, walks, dog?.leavesPerDay, activeProto);
+  const nextTargetInfo = explainNextTarget(sessions, walks, patterns, dog || {});
 
   // Pattern reminder text
   // IMPORTANT: Pattern breaks must be done SEPARATELY from walks —
@@ -1659,6 +1660,11 @@ export default function PawTimer() {
   })();
 
   const metricExplainers = {
+    nextTarget: {
+      title: "Next target",
+      body: `${nextTargetInfo.summary} PawTimer starts from your dog's current safe-alone estimate and then adapts from recent session outcomes rather than following one fixed percentage step every time.`,
+      detail: nextTargetInfo.factors.join(" · "),
+    },
     stability: {
       title: "Stability",
       body: "How consistent calm-session durations are. Higher stability means your calm sessions are predictable; big swings suggest your dog may still need more repetition at easier levels.",
@@ -1867,7 +1873,7 @@ export default function PawTimer() {
                   {openTip === "recommendations" && (
                     <div className="recommendation-pop" role="tooltip">
                       <p>
-                        Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)}.
+                        Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)} built from recent calm history, distress, and stability.
                       </p>
                       <p>
                         Leave frequency profile: ~{normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.
@@ -2227,7 +2233,13 @@ export default function PawTimer() {
             <StatsSection title="Core metrics">
               <div className="stats-row stats-row-core stats-row-core-trimmed">
                 <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" />
-                <StatsMetricCard value={fmt(target)} label="Next target" />
+                <StatsMetricCard
+                  value={fmt(target)}
+                  label="Next target"
+                  detail="Tap for factors"
+                  onClick={() => openMetricHelp("nextTarget")}
+                  buttonLabel="Open Next target explanation"
+                />
                 <StatsMetricCard
                   value={relapseTone.label}
                   label="Risk"
@@ -2316,8 +2328,8 @@ export default function PawTimer() {
                   <span className="settings-summary-value">{activeProto.maxDailyAloneMinutes} min/day</span>
                 </div>
                 <div className="settings-summary-row">
-                  <span className="settings-summary-label">Step rule</span>
-                  <span className="settings-summary-value">+{activeProto.incrementPercentDefault}% then +5 min</span>
+                  <span className="settings-summary-label">Next-target logic</span>
+                  <span className="settings-summary-value">Adaptive from calm history, distress, and risk</span>
                 </div>
                 <div className="settings-summary-row">
                   <span className="settings-summary-label">Pattern breaks</span>
@@ -2424,7 +2436,11 @@ export default function PawTimer() {
                   </div>
                   <div className="proto-section">
                     <div className="proto-title">Progress rules</div>
-                    <div className="proto-row">Calm: add +{activeProto.incrementPercentDefault}% next session below 40 min, then +5 min. Subtle stress: hold the same duration. Active or severe distress: roll back by 1–2 sessions.</div>
+                    <div className="proto-row">PawTimer starts from a weighted safe-alone estimate built from recent calm sessions. Five calm sessions in a row usually earn a +15% step. Subtle stress usually repeats the same duration, active distress shortens the next target, and severe distress triggers a deeper stabilization step.</div>
+                  </div>
+                  <div className="proto-section">
+                    <div className="proto-title">Next target factors</div>
+                    <div className="proto-row">{nextTargetInfo.summary} Right now it uses {nextTargetInfo.factors.join(" ")}</div>
                   </div>
                   <div className="proto-section">
                     <div className="proto-title">Daily rhythm</div>
@@ -2489,7 +2505,6 @@ export default function PawTimer() {
                   {[
                     { key:"sessionsPerDayMax", label:"Max sessions/day", unit:"" },
                     { key:"maxDailyAloneMinutes", label:"Max alone time/day", unit:"min" },
-                    { key:"incrementPercentDefault", label:"Step-up increment", unit:"%" },
                     { key:"desensitizationBlocksPerDayRecommendedMin", label:"Pattern breaks min/day", unit:"" },
                     { key:"desensitizationBlocksPerDayRecommendedMax", label:"Pattern breaks max/day", unit:"" },
                   ].map(({ key, label, unit }) => (

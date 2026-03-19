@@ -13,13 +13,19 @@ export function StatsSection({ title, children, className = "" }) {
   );
 }
 
-export function StatsMetricCard({ value, label, className = "", valueStyle, detail = null }) {
+export function StatsMetricCard({ value, label, className = "", valueStyle, detail = null, onClick = null, buttonLabel = null }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div className={`stat-card ${className}`.trim()}>
+    <Tag
+      className={`stat-card ${className}`.trim()}
+      onClick={onClick || undefined}
+      type={onClick ? "button" : undefined}
+      aria-label={buttonLabel || label}
+    >
       <div className="stat-val stats-metric-value" style={valueStyle}>{value}</div>
       <div className="stat-lbl stats-metric-label">{label}</div>
       {detail ? <div className="stats-metric-detail">{detail}</div> : null}
-    </div>
+    </Tag>
   );
 }
 

@@ -534,7 +534,9 @@
   .stats-row-core { gap:12px; }
   .stats-row-core-trimmed { grid-template-columns:repeat(3, minmax(0, 1fr)); }
   .stat-card-span2 { grid-column:span 2; }
-  .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:14px 14px 12px; text-align:left; box-shadow:var(--shadow); min-height:94px; display:grid; grid-template-rows:minmax(2.4rem, auto) auto auto; align-content:start; justify-items:start; row-gap:6px; }
+  .stat-card   { background:var(--surf); border-radius:var(--radius-sm); padding:14px 14px 12px; text-align:left; box-shadow:var(--shadow); min-height:94px; display:grid; grid-template-rows:minmax(2.4rem, auto) auto auto; align-content:start; justify-items:start; row-gap:6px; border:0; width:100%; font:inherit; color:inherit; }
+  button.stat-card { appearance:none; cursor:pointer; }
+  button.stat-card:focus-visible { outline:2px solid var(--green-dark); outline-offset:2px; }
   .stat-card-emphasis { min-height:98px; }
   .stat-card .stats-metric-value,
   .stat-card .stat-val { font-family:var(--font-ui); font-size:clamp(1.35rem, 4.4vw, var(--type-metric-lg-size)); color:var(--brown); font-weight:600; line-height:1.08; letter-spacing:-0.02em; text-transform:none; opacity:1; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; margin:0; padding:0; align-self:end; }
