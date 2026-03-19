@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PROTOCOL, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { selectAppData } from "./features/app/selectors";
-import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, normalizeFeedings, normalizeSession, normalizeSessions, photoKey, save, sessKey, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncUpsertDog, toDateTimeLocalValue, walkKey, patKey, patLblKey } from "./features/app/storage";
+import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeSessionWithDerivedFields, normalizeFeedings, normalizeSessions, photoKey, save, sessKey, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncUpsertDog, toDateTimeLocalValue, walkKey, patKey, patLblKey } from "./features/app/storage";
 import { DISTRESS_TYPES, fmt, isToday, normalizeWalkType, PATTERN_TYPES, walkTypeLabel } from "./features/app/helpers";
 import { ChartIcon, HistoryIcon, HomeIcon, Img, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
 import { DogSelect, Onboarding } from "./features/setup/SetupScreens";
@@ -123,6 +123,9 @@ export default function PawTimer() {
         const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
         for (const entry of missingRemoteFeedings) await syncPush(canonicalDogId(activeDogId), "feeding", entry, dogSettings);
       }
+      const syncDog = remote.dog
+        ? { ...remote.dog, id: canonicalDogId(remote.dog.id || activeDogId) }
+        : dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
       setSessions(remoteSessions);
       setWalks(remoteWalks);
       setPatterns(remotePatterns);
@@ -131,6 +134,7 @@ export default function PawTimer() {
       save(walkKey(activeDogId), remoteWalks);
       save(patKey(activeDogId), remotePatterns);
       save(feedingKey(activeDogId), remoteFeedings);
+      setTarget(suggestNextWithContext(remoteSessions, remoteWalks, remotePatterns, syncDog) ?? suggestNext(remoteSessions, syncDog));
       setSyncError("");
       setSyncStatus("ok");
     };
@@ -190,6 +194,18 @@ export default function PawTimer() {
   }, []);
 
   const appData = selectAppData({ dogs, activeDogId, sessions, walks, patterns, feedings, target, protoOverride });
+  const recomputeTarget = useCallback((nextSessions, nextWalks = walks, nextPatterns = patterns, nextDog = appData.dog) => {
+    const nextTarget = suggestNextWithContext(nextSessions, nextWalks, nextPatterns, nextDog) ?? suggestNext(nextSessions, nextDog);
+    setTarget(nextTarget);
+    return nextTarget;
+  }, [appData.dog, patterns, walks]);
+  const commitSessions = useCallback((nextSessions) => {
+    const normalized = normalizeSessions(nextSessions);
+    setSessions(normalized);
+    if (activeDogId) save(sessKey(activeDogId), normalized);
+    recomputeTarget(normalized);
+    return normalized;
+  }, [activeDogId, recomputeTarget]);
 
   const scheduleNotif = useCallback(async (time, dogName) => {
     if (!("Notification" in window) || !("serviceWorker" in navigator)) return false;
@@ -276,12 +292,10 @@ export default function PawTimer() {
     const latencyInput = Number(options.latencyToFirstDistress);
     const latencyToFirstDistress = Number.isFinite(latencyInput) && latencyInput >= 0 ? Math.round(latencyInput) : distressLevel === "none" ? finalElapsed : null;
     const distressType = options.distressType || (distressLevel === "none" ? "none" : null);
-    const session = normalizeSession({ id: makeEntryId("sess", activeDogId), date: now.toISOString(), plannedDuration: target, actualDuration: finalElapsed, distressLevel, result: distressLevel === "none" ? "success" : "distress", belowThreshold: distressLevel === "none" && finalElapsed >= target, latencyToFirstDistress, distressType, distressSeverity: distressLevel, context: { timeOfDay, departureType: "training", cuesUsed: [], location: null, barrierUsed: null, enrichmentPresent: null, mediaOn: null, whoLeft: null, anotherPersonStayed: null }, symptoms: { barking: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, pacing: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, destructive: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0, salivation: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0 }, videoReview: { recorded: false, firstSubtleDistressTs: null, firstActiveDistressTs: null, eventTags: [], notes: null, ratingConfidence: null }, recoverySeconds: distressLevel === "none" ? 0 : null, preSession: { walkDuration: null, enrichmentGiven: null }, environment: { noiseEvent: false } });
-    const updated = [...sessions, session];
-    setSessions(updated);
+    const session = mergeSessionWithDerivedFields({}, { id: makeEntryId("sess", activeDogId), date: now.toISOString(), plannedDuration: target, actualDuration: finalElapsed, distressLevel, result: distressLevel === "none" ? "success" : "distress", belowThreshold: distressLevel === "none" && finalElapsed >= target, latencyToFirstDistress, distressType, distressSeverity: distressLevel, context: { timeOfDay, departureType: "training", cuesUsed: [], location: null, barrierUsed: null, enrichmentPresent: null, mediaOn: null, whoLeft: null, anotherPersonStayed: null }, symptoms: { barking: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, pacing: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, destructive: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0, salivation: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0 }, videoReview: { recorded: false, firstSubtleDistressTs: null, firstActiveDistressTs: null, eventTags: [], notes: null, ratingConfidence: null }, recoverySeconds: distressLevel === "none" ? 0 : null, preSession: { walkDuration: null, enrichmentGiven: null }, environment: { noiseEvent: false } });
+    const updated = commitSessions([...sessions, session]);
     pushWithSyncStatus("session", session).then(({ ok, error }) => { if (!ok) showToast(`⚠️ Sync failed: ${error}`); });
     const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
-    setTarget(next);
     cancelSession();
     const n = dog?.dogName ?? "your dog";
     if (distressLevel === "none") showToast(`✅ ${n} was calm! Next: ${fmt(next)}`);
@@ -318,7 +332,7 @@ export default function PawTimer() {
   const copyDogId = () => { navigator.clipboard?.writeText(activeDogId).catch(() => {}); showToast(`📋 ID copied: ${activeDogId}`); };
   const handlePhotoUpload = (e) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => setDogPhoto(ev.target.result); reader.readAsDataURL(file); };
 
-  const historyActions = useHistoryEditing({ sessions, walks, patterns, feedings, patLabels, showToast, pushWithSyncStatus, syncDelete, syncDeleteSessionsForDog, setSessions, setWalks, setPatterns, setFeedings, setTarget, dog: appData.dog, activeDogId });
+  const historyActions = useHistoryEditing({ sessions, walks, patterns, feedings, patLabels, showToast, pushWithSyncStatus, syncDelete, syncDeleteSessionsForDog, commitSessions, setWalks, setPatterns, setFeedings, recomputeTarget, activeDogId });
 
   const openMetricHelp = (metricKey) => { if (appData.metricExplainers[metricKey]) setMetricHelp(metricKey); };
   const CustomDot = ({ cx, cy, payload }) => {

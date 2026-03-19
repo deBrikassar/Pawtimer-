@@ -1,4 +1,4 @@
-import { normalizeDistressLevel } from "../../lib/protocol";
+import { PROTOCOL, normalizeDistressLevel } from "../../lib/protocol";
 import { sortByDateAsc } from "../../lib/activityDateTime";
 import { normalizeWalkType } from "./helpers";
 
@@ -147,6 +147,47 @@ export const normalizeSession = (row = {}) => {
     },
   };
   return normalized;
+};
+
+export const mergeSessionWithDerivedFields = (session = {}, updates = {}) => {
+  const merged = normalizeSession({ ...session, ...updates });
+  const actualDuration = Number.isFinite(merged.actualDuration)
+    ? Math.max(0, Math.round(Number(merged.actualDuration)))
+    : 0;
+  const plannedDuration = Number.isFinite(merged.plannedDuration)
+    ? Math.max(PROTOCOL.minDurationSeconds, Math.round(Number(merged.plannedDuration)))
+    : PROTOCOL.startDurationSeconds;
+  const inferredDistress = updates.distressLevel
+    ?? updates.distressSeverity
+    ?? merged.distressLevel
+    ?? merged.distressSeverity
+    ?? (updates.result === "success" ? "none" : null);
+  const distressLevel = normalizeDistressLevel(inferredDistress);
+  const existingLatency = Number.isFinite(merged.latencyToFirstDistress)
+    ? Math.max(0, Math.round(Number(merged.latencyToFirstDistress)))
+    : null;
+  const latencyToFirstDistress = distressLevel === "none"
+    ? actualDuration
+    : existingLatency == null
+      ? null
+      : Math.min(existingLatency, actualDuration);
+
+  return normalizeSession({
+    ...merged,
+    actualDuration,
+    plannedDuration,
+    distressLevel,
+    distressSeverity: distressLevel,
+    distressType: distressLevel === "none"
+      ? "none"
+      : merged.distressType || null,
+    result: distressLevel === "none" ? "success" : "distress",
+    belowThreshold: distressLevel === "none" && actualDuration >= plannedDuration,
+    latencyToFirstDistress,
+    recoverySeconds: distressLevel === "none"
+      ? 0
+      : (Number.isFinite(merged.recoverySeconds) ? merged.recoverySeconds : null),
+  });
 };
 
 const LEGACY_DISTRESS_LEVEL_MAP = {
@@ -404,4 +445,3 @@ export const generateId = (name) => {
   const n = Math.floor(1000 + Math.random() * 9000);
   return `${prefix}-${n}`;
 };
-
