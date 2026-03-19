@@ -23,11 +23,10 @@ export function StatsMetricCard({ value, label, className = "", valueStyle, deta
   );
 }
 
-export function StatsSupportRow({ label, value, icon = null }) {
+export function StatsSupportRow({ label, value }) {
   return (
     <div className="stats-support-row">
       <div className="stats-support-label-wrap">
-        {icon ? <span className="stats-support-icon" aria-hidden="true">{icon}</span> : null}
         <span className="stats-support-label">{label}</span>
       </div>
       <span className="stats-support-value">{value}</span>
