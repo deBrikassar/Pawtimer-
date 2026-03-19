@@ -87,6 +87,10 @@
     --type-ring-metric-line: 18px;
     --type-ring-metric-weight: var(--font-semibold);
     --type-ring-metric-track: -0.01em;
+    --type-session-ring-value-size: var(--type-ring-metric-size);
+    --type-session-ring-value-line: var(--type-ring-metric-line);
+    --type-session-ring-value-weight: var(--type-ring-metric-weight);
+    --type-session-ring-value-track: var(--type-ring-metric-track);
     --type-overline-size: var(--text-xs);
     --type-overline-line: 14px;
     --type-overline-weight: var(--font-regular);
