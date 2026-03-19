@@ -6,17 +6,23 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.js",
+      registerType: "prompt",
+      injectRegister: false,
       includeAssets: ["icons/app-logo.png"],
       manifest: {
         name: "PawTimer — Dog Training",
         short_name: "PawTimer",
         description: "Separation anxiety training tracker for your dog",
+        id: "/",
+        scope: "/",
         start_url: "/",
         display: "standalone",
         orientation: "portrait",
-        background_color: "#faf6ef",
-        theme_color: "#d4813a",
+        background_color: "#F7F2E7",
+        theme_color: "#067B78",
         icons: [
           {
             src: "/icons/app-logo.png",
@@ -38,28 +44,8 @@ export default defineConfig({
           }
         ]
       },
-      workbox: {
-        // Cache app shell + assets for offline use
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        runtimeCaching: [
-          {
-            // Cache Google Fonts
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "gstatic-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }
-            }
-          }
-        ]
       }
     })
   ]

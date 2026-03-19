@@ -596,6 +596,11 @@
   @keyframes toastIn  { from{opacity:0;transform:translateX(-50%) translateY(14px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
   @keyframes toastOut { to{opacity:0;transform:translateX(-50%) translateY(14px)} }
 
+  .update-banner { position:fixed; top:calc(14px + env(safe-area-inset-top,0px)); left:50%; transform:translateX(-50%); width:min(calc(100vw - 24px), 420px); background:var(--brown); color:var(--bg); border-radius:18px; padding:14px 14px 14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; z-index:1000; box-shadow:0 12px 36px rgba(0,0,0,0.2); }
+  .update-banner-copy { font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); letter-spacing:var(--type-secondary-track); }
+  .update-banner-copy strong { display:block; margin-bottom:2px; color:var(--bg); }
+  .update-banner-btn { border:none; border-radius:999px; padding:10px 14px; background:var(--green); color:var(--brown); font-size:var(--type-button-size); font-weight:var(--type-button-weight); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); cursor:pointer; white-space:nowrap; flex-shrink:0; }
+
   /* ── Tab content transition ── */
   .tab-content { animation:tabFade 0.2s ease; }
   @keyframes tabFade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }

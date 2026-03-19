@@ -794,6 +794,7 @@ export default function PawTimer() {
   const [distressTypeDraft, setDistressTypeDraft] = useState("");
   const [target,       setTarget]       = useState(PROTOCOL.startDurationSeconds);
   const [toast,        setToast]        = useState(null);
+  const [updateReady,  setUpdateReady]  = useState(false);
   const [patOpen,      setPatOpen]      = useState(false);  // collapsible pattern breaking
   const [patLabels,    setPatLabels]    = useState({});     // custom pattern labels
   const [editingPat,   setEditingPat]   = useState(null);   // type being renamed
@@ -1012,6 +1013,23 @@ export default function PawTimer() {
 
   const showToast = useCallback((msg) => {
     setToast(msg); setTimeout(() => setToast(null), 3200);
+  }, []);
+
+  useEffect(() => {
+    const handleUpdateReady = () => setUpdateReady(true);
+    const handleOfflineReady = () => showToast("✅ App ready for offline use");
+
+    window.addEventListener("pawtimer:pwa-update", handleUpdateReady);
+    window.addEventListener("pawtimer:pwa-offline-ready", handleOfflineReady);
+
+    return () => {
+      window.removeEventListener("pawtimer:pwa-update", handleUpdateReady);
+      window.removeEventListener("pawtimer:pwa-offline-ready", handleOfflineReady);
+    };
+  }, [showToast]);
+
+  const applyAppUpdate = useCallback(() => {
+    window.dispatchEvent(new CustomEvent("pawtimer:pwa-apply-update"));
   }, []);
 
   // ── Timer ────────────────────────────────────────────────────────────────
@@ -1733,6 +1751,16 @@ export default function PawTimer() {
   return (
     <>
       {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
+      {updateReady && (
+        <div className="update-banner" role="status" aria-live="polite">
+          <div className="update-banner-copy">
+            <strong>Update available.</strong> Refresh to load the latest PawTimer version.
+          </div>
+          <button className="update-banner-btn" type="button" onClick={applyAppUpdate}>
+            Refresh
+          </button>
+        </div>
+      )}
       {metricHelp && (
         <div className="metric-help-overlay" role="dialog" aria-modal="true" aria-labelledby="metric-help-title" onClick={() => setMetricHelp(null)}>
           <div className="metric-help-card" onClick={(e) => e.stopPropagation()}>
