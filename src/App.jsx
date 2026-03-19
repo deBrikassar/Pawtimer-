@@ -1650,11 +1650,13 @@ export default function PawTimer() {
   const momentumTone = statusTone(calmRate7, { good: 75, warn: 55 });
   const stabilityTone = statusTone(durationVariability, { good: 120, warn: 240, invert: true });
   const adherenceTone = statusTone(adherenceByDay, { good: 85, warn: 65 });
-  const relapseTone = relapseRisk
-    ? { color: "var(--red)", label: "Elevated" }
-    : recentSessions.length < relapseWindow
-      ? { color: "var(--brown-muted)", label: "Gathering data" }
-      : { color: "var(--green-dark)", label: "Low" };
+  const relapseTone = (() => {
+    if (relapseRisk) return { color: "var(--red)", label: "High" };
+    if (recentHighDistressCount === 1 || recentSessions.length < relapseWindow) {
+      return { color: "var(--orange)", label: "Medium" };
+    }
+    return { color: "var(--green-dark)", label: "Low" };
+  })();
 
   const metricExplainers = {
     stability: {
@@ -2235,15 +2237,13 @@ export default function PawTimer() {
             </StatsSection>
 
             <StatsSection title="Core metrics">
-              <div className="stats-row stats-row-core">
-                <StatsMetricCard value={streak} label="Calm streak" valueStyle={{ color:"var(--green-dark)" }} />
+              <div className="stats-row stats-row-core stats-row-core-trimmed">
                 <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" />
                 <StatsMetricCard value={fmt(target)} label="Next target" />
                 <StatsMetricCard
-                  value={relapseRisk ? "High" : "Low"}
-                  label="Relapse risk"
+                  value={relapseTone.label}
+                  label="Risk"
                   valueStyle={{ color: relapseTone.color }}
-                  detail={relapseTone.label}
                 />
               </div>
             </StatsSection>
