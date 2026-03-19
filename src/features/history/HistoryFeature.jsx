@@ -1,3 +1,4 @@
+import { useState } from "react";
 import EmptyState from "../../components/EmptyState";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
@@ -167,6 +168,13 @@ const renderSyncBadge = (entry) => {
 };
 
 export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
+  const [expandedActivityKey, setExpandedActivityKey] = useState(null);
+
+  const toggleActivityDetails = (activityKey, hasDetails) => {
+    if (!hasDetails) return;
+    setExpandedActivityKey((prev) => (prev === activityKey ? null : activityKey));
+  };
+
   return (
     <>
       <div className="tab-content">
@@ -184,8 +192,24 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               const lv = normalizeDistressLevel(s.distressLevel ?? (s.result === "success" ? "none" : "strong"));
               const icon = lv === "none" ? "result-calm.png" : lv === "subtle" ? "result-mild.png" : "result-strong.png";
               const detailBadges = sessionDetailBadges(s);
+              const activityKey = `session-${s.id}`;
+              const isExpanded = expandedActivityKey === activityKey;
               return (
-                <div className="h-item" key={`s-${s.id}`}>
+                <div
+                  className={`h-item h-item-clickable ${isExpanded ? "is-expanded" : ""}`}
+                  key={`s-${s.id}`}
+                  role={detailBadges.length > 0 ? "button" : undefined}
+                  tabIndex={detailBadges.length > 0 ? 0 : undefined}
+                  aria-expanded={detailBadges.length > 0 ? isExpanded : undefined}
+                  onClick={() => toggleActivityDetails(activityKey, detailBadges.length > 0)}
+                  onKeyDown={(e) => {
+                    if (!detailBadges.length) return;
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleActivityDetails(activityKey, true);
+                    }
+                  }}
+                >
                   <div className={`h-dot dot-${lv}`}><Img src={icon} size={22} /></div>
                   <div className="h-session-body">
                     <div className="h-session-top">
@@ -200,13 +224,21 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                       <div className="h-trailing">
                         <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>
                         <div className="h-actions">
-                          <button className="h-action-btn h-edit" type="button" onClick={() => actions.editSessionTime(s.id, setHistoryModal)} title="Edit time" aria-label="Edit session time">🕒</button>
-                          <button className="h-action-btn h-edit" type="button" onClick={() => actions.editSessionDuration(s.id, setHistoryModal)} title="Edit duration" aria-label="Edit session duration">✎</button>
-                          <button className="h-action-btn h-del" type="button" onClick={() => actions.requestHistoryDelete("session", s, setHistoryModal)} title="Delete" aria-label="Delete session">✕</button>
+                          <button className="h-action-btn h-edit" type="button" onClick={(e) => { e.stopPropagation(); actions.editSessionTime(s.id, setHistoryModal); }} title="Edit time" aria-label="Edit session time">🕒</button>
+                          <button className="h-action-btn h-edit" type="button" onClick={(e) => { e.stopPropagation(); actions.editSessionDuration(s.id, setHistoryModal); }} title="Edit duration" aria-label="Edit session duration">✎</button>
+                          <button className="h-action-btn h-del" type="button" onClick={(e) => { e.stopPropagation(); actions.requestHistoryDelete("session", s, setHistoryModal); }} title="Delete" aria-label="Delete session">✕</button>
                         </div>
                       </div>
                     </div>
-                    {detailBadges.length > 0 && <div className="h-extra-badges">{detailBadges.slice(0, 4).map((badge, idx) => <span key={`${s.id}-badge-${idx}`} className="h-badge-mini">{badge}</span>)}</div>}
+                    {detailBadges.length > 0 && (
+                      <div className="h-session-details">
+                        <div className="h-detail-toggle" aria-hidden="true">
+                          <span>{isExpanded ? "Hide details" : "Show details"}</span>
+                          <span className={`h-detail-chevron ${isExpanded ? "is-open" : ""}`}>⌄</span>
+                        </div>
+                        {isExpanded && <div className="h-extra-badges">{detailBadges.slice(0, 4).map((badge, idx) => <span key={`${s.id}-badge-${idx}`} className="h-badge-mini">{badge}</span>)}</div>}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
