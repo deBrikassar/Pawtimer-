@@ -34,6 +34,36 @@ export function StatsWideInfoCard({ value, label, icon }) {
   );
 }
 
+export function StatsProgressRing({ value, label, progress, fillClassName, onLabelClick }) {
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const clampedProgress = Math.max(0, Math.min(progress, 1));
+
+  return (
+    <div className="ring-col">
+      <div className="ring-wrap">
+        <svg className="ring-svg" width={84} height={84} viewBox="0 0 88 88" aria-hidden="true">
+          <circle cx={44} cy={44} r={radius} className="ring-bg" />
+          <circle
+            cx={44}
+            cy={44}
+            r={radius}
+            className={fillClassName}
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - clampedProgress)}
+          />
+        </svg>
+        <div className="ring-inner">
+          <div className="ring-val">
+            <span className="ring-val-primary">{value}</span>
+          </div>
+        </div>
+      </div>
+      <button className="ring-sub-btn" onClick={onLabelClick}>{label}</button>
+    </div>
+  );
+}
+
 export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name, distressLabel, fmt }) {
   if (chartData.length <= 1) {
     return (
