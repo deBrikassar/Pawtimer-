@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { PROTOCOL, getNextDurationSeconds, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { formatDuration } from "./lib/time";
 import { SessionControl, WelcomeBackBanner, TrainProgressBar, SessionRatingPanel } from "./features/train/TrainComponents";
-import { StatsChartSection, StatsSection, StatsMetricCard, StatsWideInfoCard } from "./features/stats/StatsComponents";
+import { StatsChartSection, StatsSection, StatsMetricCard, StatsProgressRing, StatsWideInfoCard } from "./features/stats/StatsComponents";
 import EmptyState from "./components/EmptyState";
 import "./styles/theme.css";
 import "./styles/shared.css";
@@ -1827,46 +1827,27 @@ export default function PawTimer() {
 
                         {/* 4. Stats rings card */}
             {phase === "idle" && (() => {
-              const R = 36; const C = 2*Math.PI*R;
-              const goalFrac = Math.min(goalPct/100, 1);
-              const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(countToday/activeProto.sessionsPerDayMax, 1) : 0;
+              const goalFrac = Math.min(goalPct / 100, 1);
+              const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(countToday / activeProto.sessionsPerDayMax, 1) : 0;
+              const toggleRecommendations = () => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"));
               const nextSessionLabel = fmt(target);
               return (
                 <div className="stats-rings-card">
-                  <div className="ring-col">
-                    <div className="ring-wrap">
-                      <svg className="ring-svg" width={84} height={84} viewBox="0 0 88 88">
-                        <circle cx={44} cy={44} r={R} className="ring-bg"/>
-                        <circle cx={44} cy={44} r={R} className="ring-fill-1"
-                          strokeDasharray={C}
-                          strokeDashoffset={C * (1 - goalFrac)}/>
-                      </svg>
-                      <div className="ring-inner">
-                        <div className="ring-val">
-                          <span className="ring-val-primary">{nextSessionLabel}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Next session</button>
-                  </div>
+                  <StatsProgressRing
+                    value={nextSessionLabel}
+                    label="Next session"
+                    progress={goalFrac}
+                    fillClassName="ring-fill-1"
+                    onLabelClick={toggleRecommendations}
+                  />
                   <div className="ring-col-sep"/>
-                  <div className="ring-col">
-                    <div className="ring-wrap">
-                      <svg className="ring-svg" width={84} height={84} viewBox="0 0 88 88">
-                        <circle cx={44} cy={44} r={R} className="ring-bg"/>
-                        <circle cx={44} cy={44} r={R} className="ring-fill-2"
-                          strokeDasharray={C}
-                          strokeDashoffset={C * (1 - sessFrac)}/>
-                      </svg>
-                      <div className="ring-inner">
-                        <div className="ring-val">
-                          <span className="ring-val-primary">{countToday}</span>
-                          <span className="ring-val-secondary num-stable">/{activeProto.sessionsPerDayMax}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <button className="ring-sub-btn" onClick={() => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"))}>Sessions today</button>
-                  </div>
+                  <StatsProgressRing
+                    value={countToday}
+                    label="Sessions today"
+                    progress={sessFrac}
+                    fillClassName="ring-fill-2"
+                    onLabelClick={toggleRecommendations}
+                  />
                   {openTip === "recommendations" && (
                     <div className="recommendation-pop" role="tooltip">
                       <p>
