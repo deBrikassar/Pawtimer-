@@ -1,9 +1,9 @@
 import EmptyState from "../../components/EmptyState";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
-import { normalizeDistressLevel, suggestNext } from "../../lib/protocol";
+import { normalizeDistressLevel } from "../../lib/protocol";
 import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, sessionDetailBadges, walkTypeLabel } from "../app/helpers";
 import { Img } from "../app/ui";
-import { normalizeSession } from "../app/storage";
+import { mergeSessionWithDerivedFields, normalizeSession } from "../app/storage";
 
 export function useHistoryEditing({
   sessions,
@@ -15,12 +15,11 @@ export function useHistoryEditing({
   pushWithSyncStatus,
   syncDelete,
   syncDeleteSessionsForDog,
-  setSessions,
+  commitSessions,
   setWalks,
   setPatterns,
   setFeedings,
-  setTarget,
-  dog,
+  recomputeTarget,
   activeDogId,
 }) {
   const openHistoryDurationEditor = (kind, entry, setHistoryModal) => {
@@ -79,7 +78,7 @@ export function useHistoryEditing({
       const currentSession = sessions.find((s) => s.id === historyModal.id);
       if (!currentSession) return;
       const updatedSession = normalizeSession({ ...currentSession, date: updatedIso });
-      setSessions((prev) => sortByDateAsc(prev.map((s) => (s.id === historyModal.id ? updatedSession : s))));
+      commitSessions(sortByDateAsc(sessions.map((s) => (s.id === historyModal.id ? updatedSession : s))));
       pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
         if (!ok) showToast(`⚠️ Sync failed: ${error}`);
       });
@@ -108,8 +107,8 @@ export function useHistoryEditing({
       }
       const currentSession = sessions.find((s) => s.id === historyModal.id);
       if (!currentSession) return;
-      const updatedSession = normalizeSession({ ...currentSession, actualDuration: parsedDuration });
-      setSessions((prev) => prev.map((s) => (s.id === historyModal.id ? updatedSession : s)));
+      const updatedSession = mergeSessionWithDerivedFields(currentSession, { actualDuration: parsedDuration });
+      commitSessions(sessions.map((s) => (s.id === historyModal.id ? updatedSession : s)));
       pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
         if (!ok) showToast(`⚠️ Sync failed: ${error}`);
       });
@@ -120,21 +119,24 @@ export function useHistoryEditing({
       if (!historyModal || historyModal.mode !== "delete") return;
       if (historyModal.kind === "session") {
         const nextSessions = sessions.filter((item) => item.id !== historyModal.id);
-        setSessions(nextSessions);
+        commitSessions(nextSessions);
         syncDelete("session", historyModal.id).then((ok) => {
           if (!ok) showToast("⚠️ Session removed locally — remote delete failed");
         });
-        setTarget((prevTarget) => suggestNext(nextSessions, dog) ?? prevTarget);
       } else if (historyModal.kind === "walk") {
-        setWalks((prev) => prev.filter((item) => item.id !== historyModal.id));
+        const nextWalks = walks.filter((item) => item.id !== historyModal.id);
+        setWalks(nextWalks);
         syncDelete("walk", historyModal.id).then((ok) => {
           if (!ok) showToast("⚠️ Walk removed locally — remote delete failed");
         });
+        recomputeTarget(sessions, nextWalks, patterns);
       } else if (historyModal.kind === "pattern") {
-        setPatterns((prev) => prev.filter((item) => item.id !== historyModal.id));
+        const nextPatterns = patterns.filter((item) => item.id !== historyModal.id);
+        setPatterns(nextPatterns);
         syncDelete("pattern", historyModal.id).then((ok) => {
           if (!ok) showToast("⚠️ Pattern break removed locally — remote delete failed");
         });
+        recomputeTarget(sessions, walks, nextPatterns);
       } else if (historyModal.kind === "feeding") {
         setFeedings((prev) => prev.filter((item) => item.id !== historyModal.id));
         syncDelete("feeding", historyModal.id).then((ok) => {
@@ -146,8 +148,7 @@ export function useHistoryEditing({
     },
     clearSessions: () => {
       if (window.confirm("Clear all training sessions?")) {
-        setSessions([]);
-        setTarget(suggestNext([], dog));
+        commitSessions([]);
         syncDeleteSessionsForDog(activeDogId).then((ok) => {
           if (ok === null) showToast("⚠️ Sessions cleared locally — remote delete failed");
           else showToast("Sessions cleared");
