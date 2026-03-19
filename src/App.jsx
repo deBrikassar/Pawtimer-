@@ -2251,7 +2251,7 @@ export default function PawTimer() {
 
             <StatsSection title="Supporting metrics" className="stats-section-supporting">
               <div className="stats-support-list">
-                <StatsSupportRow label="Alone time per week" value={fmt(aloneLastWeek)} icon={<PawIcon size={20} />} />
+                <StatsSupportRow label="Alone time per week" value={fmt(aloneLastWeek)} />
                 <StatsSupportRow
                   label="Average walk duration"
                   value={avgWalkDuration != null ? fmt(avgWalkDuration, { hoursMinutesOnly: true }) : "—"}
