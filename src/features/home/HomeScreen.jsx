@@ -91,7 +91,7 @@ export default function HomeScreen(props) {
           const toggleRecommendations = () => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"));
           const nextSessionLabel = fmt(target);
           return (
-            <div className="stats-rings-card">
+            <div className="stats-rings-card surface-group-soft">
               <StatsProgressRing
                 value={nextSessionLabel}
                 label="Next session"

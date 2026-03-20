@@ -61,6 +61,13 @@
   box-shadow: var(--shadow-lg);
 }
 
+.surface-group-soft {
+  background: color-mix(in srgb, var(--surf-soft) 62%, var(--surf) 38%);
+  border: 1px solid color-mix(in srgb, var(--border) 34%, transparent);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
 .shared-pill {
   border-radius: 999px;
   font-size: var(--type-overline-size);
