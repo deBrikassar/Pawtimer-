@@ -61,6 +61,9 @@ export default function HomeScreen(props) {
 
   return (
     <div className="tab-content">
+      <div className="section">
+        <div className="section-title">Train</div>
+      </div>
       {showWelcomeBack && <WelcomeBackBanner sessions={sessions} name={name} target={target} onDismiss={() => setShowWelcomeBack(false)} fmt={fmt} />}
 
       <div className="train-main">
@@ -128,20 +131,21 @@ export default function HomeScreen(props) {
         )}
 
         <div className="tool-group-card">
+          <div className="section-title" style={{ marginBottom: 12 }}>Today's logs</div>
           <div className="quick-actions-row">
             <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
               <span className="quick-action-icon"><Img src="walk.png" alt="Walk" /></span>
-              <span className="quick-action-label">Log a walk</span>
+              <span className="quick-action-label">Log walk</span>
               <span className="quick-action-meta">{walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `Today: ${pattern.todayWalks}`}</span>
             </button>
             <button className={`quick-action-btn ${pattern.behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
               <span className="quick-action-icon"><Img src="pattern-keys.png" alt="Pattern" /></span>
-              <span className="quick-action-label">Pattern breaking</span>
+              <span className="quick-action-label">Log pattern break</span>
               <span className="quick-action-meta">Today: {pattern.todayPat}</span>
             </button>
             <button className="quick-action-btn" type="button" onClick={openFeedingForm}>
               <span className="quick-action-icon" aria-hidden="true"><span className="qa-glyph">🍽️</span></span>
-              <span className="quick-action-label">Add feeding</span>
+              <span className="quick-action-label">Log feeding</span>
               <span className="quick-action-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
             </button>
           </div>
@@ -151,7 +155,7 @@ export default function HomeScreen(props) {
           <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
             <div className="quick-modal-card" onClick={(e) => e.stopPropagation()}>
               <div className="quick-modal-head">
-                <div className="quick-modal-title">{walkPhase !== "idle" ? "Log a walk" : "Pattern breaking"}</div>
+                <div className="quick-modal-title">{walkPhase !== "idle" ? "Log walk" : "Log pattern break"}</div>
                 <ModalCloseButton onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }} />
               </div>
 

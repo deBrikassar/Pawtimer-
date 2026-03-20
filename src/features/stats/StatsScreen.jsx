@@ -6,11 +6,11 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
   return (
     <div className="tab-content">
       <div className="section">
-        <div className="section-title">{name}'s Progress</div>
+        <div className="section-title">Progress</div>
         {totalCount === 0 ? (
-          <EmptyState icon="🌱" title="Progress starts here" body={`Complete your first session and ${name}'s stats, streak, and progress chart will appear here.`} ctaLabel="Start first session →" onCta={() => setTab("home")} />
+          <EmptyState icon="🌱" title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
         ) : <>
-          <StatsSection title="Overview" className="stats-section-priority">
+          <StatsSection title="Today" className="stats-section-priority">
             <div className="stats-headline-card">
               <span className="stats-headline-label">Current threshold</span>
               <div className="stats-headline-main">
@@ -20,7 +20,7 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
             </div>
           </StatsSection>
 
-          <StatsSection title="Core metrics">
+          <StatsSection title="Key metrics">
             <div className="stats-row stats-row-core stats-row-core-trimmed">
               <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" />
               <StatsMetricCard value={fmt(target)} label="Next target" detail="Tap for factors" onClick={() => openMetricHelp("nextTarget")} buttonLabel="Open Next target explanation" />
@@ -28,11 +28,11 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
             </div>
           </StatsSection>
 
-          <StatsSection title="Progression">
+          <StatsSection title="Progress chart">
             <StatsChartSection chartData={chartData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmt} insightLabel={chartTrendLabel} />
           </StatsSection>
 
-          <StatsSection title="Supporting metrics" className="stats-section-supporting">
+          <StatsSection title="Daily patterns" className="stats-section-supporting">
             <div className="stats-support-list">
               <StatsSupportRow label="Alone time per week" value={fmt(aloneLastWeek)} />
               <StatsSupportRow label="Average walk duration" value={avgWalkDuration != null ? fmt(avgWalkDuration, { hoursMinutesOnly: true }) : "—"} />
