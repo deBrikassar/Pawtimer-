@@ -107,14 +107,14 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
         {dogs.length > 0 && <>
           <div className="ds-section-label">Your dogs</div>
           {dogs.map((d) => (
-            <div key={d.id} className="ds-dog-card" onClick={() => onSelect(d.id)}>
+            <button key={d.id} className="ds-dog-card" type="button" onClick={() => onSelect(d.id)}>
               <PawIcon size={30} />
               <div>
                 <div className="ds-dog-name">{d.dogName || "Your dog"}</div>
                 <div className="ds-dog-id">ID: {d.id}</div>
               </div>
               <div className="ds-dog-arrow">›</div>
-            </div>
+            </button>
           ))}
           <div className="ds-divider">
             <div className="ds-divider-line" /><div className="ds-divider-text">or</div><div className="ds-divider-line" />

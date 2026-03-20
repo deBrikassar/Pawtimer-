@@ -40,7 +40,7 @@ export function StatsSupportRow({ label, value }) {
   );
 }
 
-export function StatsProgressRing({ value, label, progress, fillClassName, onLabelClick }) {
+export function StatsProgressRing({ value, label, progress, fillClassName, onLabelClick, labelExpanded = false, labelControls }) {
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
   const clampedProgress = Math.max(0, Math.min(progress, 1));
@@ -65,7 +65,16 @@ export function StatsProgressRing({ value, label, progress, fillClassName, onLab
           </div>
         </div>
       </div>
-      <button className="ring-sub-btn" onClick={onLabelClick}>{label}</button>
+      <button
+        className="ring-sub-btn"
+        type="button"
+        onClick={onLabelClick}
+        aria-haspopup="dialog"
+        aria-expanded={labelExpanded}
+        aria-controls={labelControls}
+      >
+        <span className="ring-sub-btn-text">{label}</span>
+      </button>
     </div>
   );
 }

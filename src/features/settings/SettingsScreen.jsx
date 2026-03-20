@@ -1,5 +1,5 @@
 import { PATTERN_TYPES, fmt } from "../app/helpers";
-import { PawIcon, Img } from "../app/ui";
+import { PawIcon, Img, ModalCloseButton } from "../app/ui";
 
 export default function SettingsScreen(props) {
   const {
@@ -171,7 +171,7 @@ export default function SettingsScreen(props) {
           <div className="quick-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="quick-modal-head">
               <div className="quick-modal-title" id="training-settings-title">Training settings</div>
-              <button className="quick-modal-close" type="button" onClick={() => setTrainingSettingsOpen(false)}>×</button>
+              <ModalCloseButton onClick={() => setTrainingSettingsOpen(false)} />
             </div>
             <div className="share-sub">Adjust protocol values only if a trainer has advised you to. Full guidance is kept in Help.</div>
             {!protoWarnAck ? (
