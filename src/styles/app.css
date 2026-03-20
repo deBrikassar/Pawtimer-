@@ -705,6 +705,11 @@
 
   /* ── Tab content transition ── */
   .tab-content { animation:tabFade 0.2s ease; }
+  .train-screen { padding-top:var(--space-2); }
+  .train-screen .train-main { gap:calc(var(--space-section-gap) - 4px); }
+  .train-screen .prog-section,
+  .train-screen .session-control-wrap,
+  .train-screen .stats-rings-card { margin-top:0; }
   @keyframes tabFade { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
   /* ── Collapsible animation ── */
   .collapsible-body { overflow:hidden; transition:max-height 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease; }
@@ -755,6 +760,7 @@
 
   /* ── Welcome-back banner ── */
   .welcome-back { margin:0 24px 16px; padding:16px; border-left:3px solid var(--green-dark); display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .train-screen .welcome-back { margin-bottom:12px; }
   .welcome-back-text { font-size:var(--type-secondary-size); color:var(--text-muted); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); }
   .welcome-back-dismiss { background:none; border:none; color:var(--border); font-size:var(--text-md); cursor:pointer; padding:2px 4px; flex-shrink:0; }
 
