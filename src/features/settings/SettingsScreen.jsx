@@ -49,7 +49,7 @@ export default function SettingsScreen(props) {
         <div className="section">
           <div className="section-title">Settings</div>
 
-          <div className="settings-section-label">Dog &amp; sync</div>
+          <div className="settings-section-label">Profile &amp; sync</div>
           <div className="share-card">
             <div className="share-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><PawIcon size={20} /> {name}'s Dog ID</div>
             <div className="share-sub">Share this ID to sync devices.</div>
@@ -77,21 +77,21 @@ export default function SettingsScreen(props) {
             </div>
           </div>
 
-          <div className="settings-section-label">Training settings</div>
+          <div className="settings-section-label">Training</div>
           <div className="share-card">
-            <div className="share-title">Training settings</div>
+            <div className="share-title">Training plan</div>
             <div className="settings-summary-list">
               <div className="settings-summary-row"><span className="settings-summary-label">Sessions per day</span><span className="settings-summary-value">Up to {activeProto.sessionsPerDayMax}/day</span></div>
               <div className="settings-summary-row"><span className="settings-summary-label">Max alone time</span><span className="settings-summary-value">{activeProto.maxDailyAloneMinutes} min/day</span></div>
               <div className="settings-summary-row"><span className="settings-summary-label">Next-target logic</span><span className="settings-summary-value">Adaptive from calm history, distress, and risk</span></div>
               <div className="settings-summary-row"><span className="settings-summary-label">Pattern breaks</span><span className="settings-summary-value">{pattern.recMin}–{pattern.recMax}/day</span></div>
             </div>
-            <button className="settings-inline-btn" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit settings</button>
+            <button className="settings-inline-btn" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit training plan</button>
           </div>
 
-          <div className="settings-section-label">Customisation</div>
+          <div className="settings-section-label">Custom labels</div>
           <div className="share-card">
-            <div className="share-title">Customise Pattern Names</div>
+            <div className="share-title">Pattern labels</div>
             <div className="share-sub">Rename each pattern to match your own routine.</div>
             {PATTERN_TYPES.map((pt) => (
               <div key={pt.type} className="pat-edit-row">
@@ -105,6 +105,24 @@ export default function SettingsScreen(props) {
                 {patLabels[pt.type] && <button className="pat-edit-reset" onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">↩</button>}
               </div>
             ))}
+          </div>
+
+          <div className="settings-section-label">Support</div>
+          <div className="share-card settings-collapsible-card">
+            <button className="settings-collapsible-toggle" type="button" aria-expanded={settingsDisclosure === "help"} onClick={() => setSettingsDisclosure((prev) => prev === "help" ? null : "help")}>
+              <span className="share-title" style={{ marginBottom: 0 }}>Help</span>
+              <span className="settings-collapsible-arrow">{settingsDisclosure === "help" ? "−" : "+"}</span>
+            </button>
+            <div className={`collapsible-body ${settingsDisclosure === "help" ? "open" : "closed"}`}>
+              <div className="settings-collapsible-inner">
+                <div className="proto-section" style={{ marginTop: 0 }}><div className="proto-title">Sync devices</div><div className="proto-row">Copy the Dog ID, send it to your partner, then have them join with that ID in PawTimer.</div></div>
+                <div className="proto-section"><div className="proto-title">How to run a session</div><div className="proto-row">Tap Start, leave calmly, come back when needed, then rate how {name} did so PawTimer can set the next target.</div></div>
+                <div className="proto-section"><div className="proto-title">Progress rules</div><div className="proto-row">PawTimer starts from a weighted safe-alone estimate built from recent calm sessions. Five calm sessions in a row usually earn a +15% step. Subtle stress usually repeats the same duration, active distress shortens the next target, and severe distress triggers a deeper stabilization step.</div></div>
+                <div className="proto-section"><div className="proto-title">Next target factors</div><div className="proto-row">{nextTargetInfo.summary} Right now it uses {nextTargetInfo.factors.join(" ")}</div></div>
+                <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions and {activeProto.maxDailyAloneMinutes} min alone/day, with {pattern.recMin}–{pattern.recMax} pattern breaks for about {pattern.normalizedLeaves} departures/day and {activeProto.restDaysPerWeekRecommended} rest days/week.</div></div>
+                <div className="proto-section"><div className="proto-title">Walk buffer</div><div className="proto-row">Use walks plus a {pattern.walkBuffer}-minute buffer before counting a departure toward pattern-break practice.</div></div>
+              </div>
+            </div>
           </div>
 
           <div className="settings-section-label">Advanced</div>
@@ -131,27 +149,9 @@ export default function SettingsScreen(props) {
             </div>
           </div>
 
-          <div className="settings-section-label">Help</div>
-          <div className="share-card settings-collapsible-card">
-            <button className="settings-collapsible-toggle" type="button" aria-expanded={settingsDisclosure === "help"} onClick={() => setSettingsDisclosure((prev) => prev === "help" ? null : "help")}>
-              <span className="share-title" style={{ marginBottom: 0 }}>Help</span>
-              <span className="settings-collapsible-arrow">{settingsDisclosure === "help" ? "−" : "+"}</span>
-            </button>
-            <div className={`collapsible-body ${settingsDisclosure === "help" ? "open" : "closed"}`}>
-              <div className="settings-collapsible-inner">
-                <div className="proto-section" style={{ marginTop: 0 }}><div className="proto-title">Sync devices</div><div className="proto-row">Copy the Dog ID, send it to your partner, then have them join with that ID in PawTimer.</div></div>
-                <div className="proto-section"><div className="proto-title">How to run a session</div><div className="proto-row">Tap Start, leave calmly, come back when needed, then rate how {name} did so PawTimer can set the next target.</div></div>
-                <div className="proto-section"><div className="proto-title">Progress rules</div><div className="proto-row">PawTimer starts from a weighted safe-alone estimate built from recent calm sessions. Five calm sessions in a row usually earn a +15% step. Subtle stress usually repeats the same duration, active distress shortens the next target, and severe distress triggers a deeper stabilization step.</div></div>
-                <div className="proto-section"><div className="proto-title">Next target factors</div><div className="proto-row">{nextTargetInfo.summary} Right now it uses {nextTargetInfo.factors.join(" ")}</div></div>
-                <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions and {activeProto.maxDailyAloneMinutes} min alone/day, with {pattern.recMin}–{pattern.recMax} pattern breaks for about {pattern.normalizedLeaves} departures/day and {activeProto.restDaysPerWeekRecommended} rest days/week.</div></div>
-                <div className="proto-section"><div className="proto-title">Walk buffer</div><div className="proto-row">Use walks plus a {pattern.walkBuffer}-minute buffer before counting a departure toward pattern-break practice.</div></div>
-              </div>
-            </div>
-          </div>
-
           <div className="settings-section-label">Account</div>
-          <button className="settings-btn" onClick={() => { if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) { setDogs((prev) => prev.filter((d) => d.id !== activeDogId)); setScreen("onboard"); } }}>✎ Edit {name}'s settings</button>
-          <button className="settings-btn" onClick={() => setScreen("select")} style={{ display: "flex", alignItems: "center", gap: 8 }}><PawIcon size={18} aria-hidden="true" /> Switch to another dog</button>
+          <button className="settings-btn" onClick={() => { if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) { setDogs((prev) => prev.filter((d) => d.id !== activeDogId)); setScreen("onboard"); } }}>Edit {name}'s profile</button>
+          <button className="settings-btn" onClick={() => setScreen("select")} style={{ display: "flex", alignItems: "center", gap: 8 }}><PawIcon size={18} aria-hidden="true" /> Switch dog</button>
 
           <div className="settings-danger-sep" />
           <div className="settings-section-label" style={{ color: "var(--red)" }}>Danger zone</div>
@@ -170,7 +170,7 @@ export default function SettingsScreen(props) {
         <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="training-settings-title" onClick={() => setTrainingSettingsOpen(false)}>
           <div className="quick-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="quick-modal-head">
-              <div className="quick-modal-title" id="training-settings-title">Training settings</div>
+              <div className="quick-modal-title" id="training-settings-title">Edit training plan</div>
               <ModalCloseButton onClick={() => setTrainingSettingsOpen(false)} />
             </div>
             <div className="share-sub">Adjust protocol values only if a trainer has advised you to. Full guidance is kept in Help.</div>
