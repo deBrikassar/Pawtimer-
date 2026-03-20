@@ -245,26 +245,27 @@
   /* ── Status message ── */
   .status-msg { margin:var(--space-card-row-gap) auto 0; max-width:360px; font-size:var(--type-helper-text-size); font-weight:var(--type-helper-text-weight); color:var(--text-muted); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); text-align:center; }
   .ring-sub-btn {
-    margin-top:var(--space-card-row-gap);
-    min-height:44px;
-    min-width:44px;
-    background:rgba(96,142,111,0.08);
-    border:1px solid transparent;
-    border-radius:999px;
-    padding:8px 12px;
+    margin-top:10px;
+    min-height:auto;
+    min-width:auto;
+    background:transparent;
+    border:none;
+    border-radius:0;
+    padding:0;
     font-size:var(--type-helper-text-size);
-    color:var(--brown-mid);
-    font-weight:var(--type-button-weight);
+    color:var(--text-muted);
+    font-weight:var(--type-helper-text-weight);
     text-align:center;
     line-height:var(--type-helper-text-line);
     letter-spacing:var(--type-helper-text-track);
-    cursor:pointer;
+    cursor:default;
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    transition:color 0.2s ease, opacity 0.2s ease;
+    opacity:0.92;
   }
-  .ring-sub-btn:hover, .ring-sub-btn:focus-visible { color:var(--green-dark); border-color:rgba(96,142,111,0.22); background:rgba(96,142,111,0.14); }
+  .ring-sub-btn:hover, .ring-sub-btn:focus-visible { color:var(--brown-mid); background:transparent; border-color:transparent; opacity:1; }
   .ring-sub-btn-text { display:inline-flex; align-items:center; justify-content:center; }
   .recommendation-pop { position:absolute; top:calc(100% + var(--space-control-gap)); left:50%; transform:translateX(-50%); width:min(360px, 88vw); background:var(--surf); color:var(--text-muted); border:1.5px solid var(--border); border-radius:12px; box-shadow:var(--shadow-lg); padding:var(--space-inline-control-padding); font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); text-align:left; z-index:20; }
   .recommendation-pop p { margin:0; }
@@ -272,9 +273,9 @@
   .recommendation-pop strong { color:var(--brown); }
 
   /* ── Stats rings card ── */
-  .stats-rings-card { margin:var(--space-card-row-gap) 0 0; background:rgba(255,255,255,0.9); border-radius:14px; padding:var(--space-card-row-gap); box-shadow:0 1px 7px rgba(75,60,48,0.05); border:1px solid rgba(96,142,111,0.08); display:flex; position:relative; }
-  .ring-col { flex:1; display:flex; flex-direction:column; align-items:center; }
-  .ring-col-sep { width:1px; background:var(--border); align-self:stretch; margin:8px 0; }
+  .stats-rings-card { margin:var(--space-card-row-gap) 0 0; background:rgba(255,255,255,0.84); border-radius:14px; padding:14px 12px 12px; box-shadow:0 1px 4px rgba(75,60,48,0.04); border:1px solid rgba(96,142,111,0.06); display:flex; position:relative; align-items:stretch; }
+  .ring-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:2px; padding:0 2px; }
+  .ring-col-sep { width:1px; background:rgba(75,60,48,0.08); align-self:stretch; margin:10px 0 8px; }
   .ring-wrap {
     --ring-min-size: 84px;
     --ring-inner-padding: 12px;
