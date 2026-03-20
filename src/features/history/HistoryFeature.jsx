@@ -1,3 +1,4 @@
+import { useState } from "react";
 import EmptyState from "../../components/EmptyState";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
@@ -13,7 +14,10 @@ function HistoryActionGroup({ actions }) {
           key={key}
           className={`h-action-btn ${className}`.trim()}
           type="button"
-          onClick={onClick}
+          onClick={(event) => {
+            event.stopPropagation();
+            onClick();
+          }}
           title={label}
           aria-label={label}
         >
@@ -21,6 +25,24 @@ function HistoryActionGroup({ actions }) {
           <span className="h-action-text">{label}</span>
         </button>
       ))}
+    </div>
+  );
+}
+
+function HistoryDetailGroup({ label, children }) {
+  return (
+    <div className="h-detail-group">
+      <div className="h-detail-label">{label}</div>
+      <div className="h-detail-body">{children}</div>
+    </div>
+  );
+}
+
+function HistoryChipList({ items }) {
+  if (!items?.length) return <div className="h-detail-empty">No extra details recorded.</div>;
+  return (
+    <div className="h-chip-list">
+      {items.map((item) => <span className="h-chip" key={item}>{item}</span>)}
     </div>
   );
 }
@@ -192,6 +214,56 @@ const renderSyncBadge = (entry) => {
 };
 
 export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
+  const [expandedItemKey, setExpandedItemKey] = useState(null);
+
+  const toggleExpandedItem = (itemKey) => {
+    setExpandedItemKey((prev) => (prev === itemKey ? null : itemKey));
+  };
+
+  const renderHistoryCard = ({ itemKey, iconClassName, icon, title, date, value, badge, syncBadge, expandedContent }) => {
+    const isExpanded = expandedItemKey === itemKey;
+    const detailsId = `history-details-${itemKey}`;
+
+    return (
+      <div
+        className={`h-item ${isExpanded ? "is-expanded" : ""}`.trim()}
+        key={itemKey}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
+        aria-controls={detailsId}
+        onClick={() => toggleExpandedItem(itemKey)}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          toggleExpandedItem(itemKey);
+        }}
+      >
+        <div className={`h-dot ${iconClassName}`.trim()}>{icon}</div>
+        <div className="h-body">
+          <div className="h-content">
+            <div className="h-info">
+              <div className="h-main">{title}</div>
+              <div className="h-meta-line">
+                <span className="h-date">{date}</span>
+                {syncBadge}
+              </div>
+            </div>
+            <div className="h-side">
+              {value ? <div className="h-value">{value}</div> : null}
+              {badge}
+            </div>
+          </div>
+          {isExpanded ? (
+            <div className="h-expand" id={detailsId}>
+              {expandedContent}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="tab-content">
@@ -209,26 +281,23 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               const lv = normalizeDistressLevel(s.distressLevel ?? (s.result === "success" ? "none" : "strong"));
               const icon = lv === "none" ? "result-calm.png" : lv === "subtle" ? "result-mild.png" : "result-strong.png";
               const detailBadges = sessionDetailBadges(s);
-              const secondarySummary = detailBadges.slice(0, 2).join(" • ");
-              return (
-                <div className="h-item" key={`s-${s.id}`}>
-                  <div className={`h-dot dot-${lv}`}><Img src={icon} size={22} /></div>
-                  <div className="h-body">
-                    <div className="h-content">
-                      <div className="h-info">
-                        <div className="h-main">Training session</div>
-                        <div className="h-meta-line">
-                          <span className="h-date">{fmtDate(s.date)}</span>
-                          {renderSyncBadge(s)}
-                        </div>
-                      </div>
-                      <div className="h-side">
-                        <div className="h-value">{fmt(s.actualDuration)}</div>
-                        <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>
-                      </div>
-                    </div>
-                    <div className="h-footer">
-                      <div className="h-secondary">{secondarySummary || "Duration recorded"}</div>
+              return renderHistoryCard({
+                itemKey: `s-${s.id}`,
+                iconClassName: `dot-${lv}`,
+                icon: <Img src={icon} size={22} />,
+                title: "Training session",
+                date: fmtDate(s.date),
+                value: fmt(s.actualDuration),
+                badge: <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>,
+                syncBadge: renderSyncBadge(s),
+                expandedContent: <>
+                  <div className="h-expand-grid">
+                    <HistoryDetailGroup label="Session details">
+                      <HistoryChipList items={detailBadges} />
+                    </HistoryDetailGroup>
+                  </div>
+                  <div className="h-expand-footer">
+                    <HistoryDetailGroup label="Actions">
                       <HistoryActionGroup
                         actions={[
                           { key: "time", className: "h-edit", label: "Edit session time", icon: "🕒", onClick: () => actions.editSessionTime(s.id, setHistoryModal) },
@@ -236,32 +305,30 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                           { key: "delete", className: "h-del", label: "Delete session", icon: "✕", onClick: () => actions.requestHistoryDelete("session", s, setHistoryModal) },
                         ]}
                       />
-                    </div>
+                    </HistoryDetailGroup>
                   </div>
-                </div>
-              );
+                </>,
+              });
             }
             if (item.kind === "walk") {
               const w = item.data;
-              return (
-                <div className="h-item" key={`w-${w.id}`}>
-                  <div className="h-dot dot-walk"><Img src="walk.png" size={22} /></div>
-                  <div className="h-body">
-                    <div className="h-content">
-                      <div className="h-info">
-                        <div className="h-main">{walkTypeLabel(w.type)} with {name}</div>
-                        <div className="h-meta-line">
-                          <span className="h-date">{fmtDate(w.date)}</span>
-                          {renderSyncBadge(w)}
-                        </div>
-                      </div>
-                      <div className="h-side">
-                        <div className="h-value">{w.duration ? fmt(w.duration) : "—"}</div>
-                        <span className="h-side-label">Duration</span>
-                      </div>
-                    </div>
-                    <div className="h-footer">
-                      <div className="h-secondary">Walk logged</div>
+              return renderHistoryCard({
+                itemKey: `w-${w.id}`,
+                iconClassName: "dot-walk",
+                icon: <Img src="walk.png" size={22} />,
+                title: `${walkTypeLabel(w.type)} with ${name}`,
+                date: fmtDate(w.date),
+                value: w.duration ? fmt(w.duration) : "—",
+                badge: <span className="h-side-label">Duration</span>,
+                syncBadge: renderSyncBadge(w),
+                expandedContent: <>
+                  <div className="h-expand-grid">
+                    <HistoryDetailGroup label="Walk details">
+                      <HistoryChipList items={["Walk logged", `Type: ${walkTypeLabel(w.type)}`]} />
+                    </HistoryDetailGroup>
+                  </div>
+                  <div className="h-expand-footer">
+                    <HistoryDetailGroup label="Actions">
                       <HistoryActionGroup
                         actions={[
                           { key: "time", className: "h-edit", label: "Edit walk time", icon: "🕒", onClick: () => actions.editWalkTime(w.id, setHistoryModal) },
@@ -269,72 +336,68 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                           { key: "delete", className: "h-del", label: "Delete walk", icon: "✕", onClick: () => actions.requestHistoryDelete("walk", w, setHistoryModal) },
                         ]}
                       />
-                    </div>
+                    </HistoryDetailGroup>
                   </div>
-                </div>
-              );
+                </>,
+              });
             }
             if (item.kind === "pat") {
               const p = item.data;
               const pt = PATTERN_TYPES.find((x) => x.type === p.type) ?? PATTERN_TYPES[0];
-              return (
-                <div className="h-item" key={`p-${p.id}`}>
-                  <div className="h-dot dot-pat"><Img src={pt.icon} size={22} /></div>
-                  <div className="h-body">
-                    <div className="h-content">
-                      <div className="h-info">
-                        <div className="h-main">{patLabels[pt.type] || pt.label}</div>
-                        <div className="h-meta-line">
-                          <span className="h-date">{fmtDate(p.date)}</span>
-                          {renderSyncBadge(p)}
-                        </div>
-                      </div>
-                      <div className="h-side">
-                        <span className="h-badge badge-pat">Pattern break</span>
-                      </div>
-                    </div>
-                    <div className="h-footer">
-                      <div className="h-secondary">Routine support item</div>
+              return renderHistoryCard({
+                itemKey: `p-${p.id}`,
+                iconClassName: "dot-pat",
+                icon: <Img src={pt.icon} size={22} />,
+                title: patLabels[pt.type] || pt.label,
+                date: fmtDate(p.date),
+                badge: <span className="h-badge badge-pat">Pattern break</span>,
+                syncBadge: renderSyncBadge(p),
+                expandedContent: <>
+                  <div className="h-expand-grid">
+                    <HistoryDetailGroup label="Pattern details">
+                      <HistoryChipList items={["Routine support item", pt.desc]} />
+                    </HistoryDetailGroup>
+                  </div>
+                  <div className="h-expand-footer">
+                    <HistoryDetailGroup label="Actions">
                       <HistoryActionGroup
                         actions={[
                           { key: "delete", className: "h-del", label: "Delete pattern break", icon: "✕", onClick: () => actions.requestHistoryDelete("pattern", p, setHistoryModal) },
                         ]}
                       />
-                    </div>
+                    </HistoryDetailGroup>
                   </div>
-                </div>
-              );
+                </>,
+              });
             }
             if (item.kind === "feeding") {
               const f = item.data;
-              return (
-                <div className="h-item" key={`f-${f.id}`}>
-                  <div className="h-dot dot-feed">🍽️</div>
-                  <div className="h-body">
-                    <div className="h-content">
-                      <div className="h-info">
-                        <div className="h-main" style={{ textTransform: "capitalize" }}>{f.foodType}</div>
-                        <div className="h-meta-line">
-                          <span className="h-date">{fmtDate(f.date)}</span>
-                          {renderSyncBadge(f)}
-                        </div>
-                      </div>
-                      <div className="h-side">
-                        <div className="h-value" style={{ textTransform: "capitalize" }}>{f.amount}</div>
-                        <span className="h-badge badge-feed">Feeding</span>
-                      </div>
-                    </div>
-                    <div className="h-footer">
-                      <div className="h-secondary">Meal recorded</div>
+              return renderHistoryCard({
+                itemKey: `f-${f.id}`,
+                iconClassName: "dot-feed",
+                icon: "🍽️",
+                title: <span style={{ textTransform: "capitalize" }}>{f.foodType}</span>,
+                date: fmtDate(f.date),
+                value: f.amount,
+                badge: <span className="h-badge badge-feed">Feeding</span>,
+                syncBadge: renderSyncBadge(f),
+                expandedContent: <>
+                  <div className="h-expand-grid">
+                    <HistoryDetailGroup label="Meal details">
+                      <HistoryChipList items={["Meal recorded", `Amount: ${f.amount}`, `Type: ${f.foodType}`]} />
+                    </HistoryDetailGroup>
+                  </div>
+                  <div className="h-expand-footer">
+                    <HistoryDetailGroup label="Actions">
                       <HistoryActionGroup
                         actions={[
                           { key: "delete", className: "h-del", label: "Delete feeding", icon: "✕", onClick: () => actions.requestHistoryDelete("feeding", f, setHistoryModal) },
                         ]}
                       />
-                    </div>
+                    </HistoryDetailGroup>
                   </div>
-                </div>
-              );
+                </>,
+              });
             }
             return null;
           })}
