@@ -584,12 +584,14 @@
   .pat-edit-btn:hover { color:var(--brown); }
   .pat-edit-reset { background:none; border:none; font-size:var(--text-sm); color:var(--brown-muted); cursor:pointer; padding:4px; }
   .pat-edit-reset:hover { color:var(--red); }
-  .h-item { padding:var(--space-card-padding); margin-bottom:var(--space-card-row-gap); display:flex; align-items:flex-start; gap:var(--space-control-gap); animation:fadeIn 0.3s ease; background:var(--surf); border:1px solid rgba(75,60,48,0.08); border-radius:var(--radius-sm); box-shadow:var(--shadow); }
+  .h-item { padding:var(--space-card-padding); margin-bottom:var(--space-card-row-gap); display:flex; align-items:flex-start; gap:var(--space-control-gap); animation:fadeIn 0.3s ease; background:var(--surf); border:1px solid rgba(75,60,48,0.08); border-radius:var(--radius-sm); box-shadow:var(--shadow); cursor:pointer; transition:border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
+  .h-item:hover { border-color:rgba(75,60,48,0.14); }
+  .h-item:focus-visible { outline:2px solid rgba(74,158,110,0.28); outline-offset:2px; }
+  .h-item.is-expanded { box-shadow:var(--shadow-lg); }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
   .h-dot { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:var(--text-md); flex-shrink:0; }
   .h-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--space-control-gap); }
   .h-content { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-control-gap); min-width:0; }
-  .h-footer { display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); padding-top:var(--space-card-row-gap); border-top:1px solid rgba(75,60,48,0.08); }
   .dot-none   { background:rgba(168,213,186,0.3); }
   .dot-subtle { background:rgba(230,126,34,0.12); }
   .dot-active { background:rgba(214,95,60,0.14); }
@@ -612,6 +614,15 @@
   .h-secondary { font-size:var(--type-helper-text-size); font-weight:var(--type-helper-text-weight); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); color:var(--text-muted); }
   .h-secondary { min-width:0; }
   .h-badge { font-size:var(--type-status-text-size); font-weight:var(--type-status-text-weight); line-height:var(--type-status-text-line); padding:3px 8px; border-radius:99px; letter-spacing:var(--type-status-text-track); white-space:nowrap; flex-shrink:0; text-transform:uppercase; }
+  .h-expand { display:grid; gap:var(--space-control-gap); margin-top:var(--space-card-row-gap); padding-top:var(--space-control-gap); border-top:1px solid rgba(75,60,48,0.08); }
+  .h-expand-grid { display:grid; gap:var(--space-control-gap); }
+  .h-expand-footer { padding-top:2px; }
+  .h-detail-group { display:grid; gap:8px; }
+  .h-detail-label { font-size:var(--type-overline-size); font-weight:var(--type-overline-weight); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); text-transform:uppercase; color:var(--text-muted); }
+  .h-detail-body { display:grid; gap:8px; }
+  .h-chip-list { display:flex; flex-wrap:wrap; gap:8px; }
+  .h-chip { display:inline-flex; align-items:center; min-height:30px; padding:6px 10px; border-radius:999px; background:var(--surf-soft); color:var(--brown-muted); font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); }
+  .h-detail-empty { font-size:var(--type-secondary-size); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); }
   .badge-none   { background:rgba(168,213,186,0.22);  color:var(--green-dark); }
   .badge-subtle { background:rgba(230,126,34,0.10); color:var(--orange); }
   .badge-active { background:rgba(214,95,60,0.11); color:#b4492b; }
@@ -619,7 +630,7 @@
   .badge-feed   { background:rgba(212,129,58,0.12); color:#8a4c19; }
   .badge-pat    { background:rgba(75,60,48,0.07); color:var(--brown-mid); }
   @media (max-width: 560px) {
-    .h-content, .h-footer { flex-direction:column; align-items:flex-start; }
+    .h-content { flex-direction:column; align-items:flex-start; }
     .h-side { align-items:flex-start; text-align:left; }
     .h-actions { justify-content:flex-start; }
   }
