@@ -2,8 +2,28 @@ import EmptyState from "../../components/EmptyState";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
 import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, sessionDetailBadges, walkTypeLabel } from "../app/helpers";
-import { Img } from "../app/ui";
+import { Img, ModalCloseButton } from "../app/ui";
 import { mergeSessionWithDerivedFields, normalizeSession } from "../app/storage";
+
+function HistoryActionGroup({ actions }) {
+  return (
+    <div className="h-actions" role="group" aria-label="Item actions">
+      {actions.map(({ key, className = "", label, icon, onClick }) => (
+        <button
+          key={key}
+          className={`h-action-btn ${className}`.trim()}
+          type="button"
+          onClick={onClick}
+          title={label}
+          aria-label={label}
+        >
+          <span className="h-action-icon" aria-hidden="true">{icon}</span>
+          <span className="h-action-text">{label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function useHistoryEditing({
   sessions,
@@ -199,11 +219,13 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                       </div>
                       <div className="h-trailing">
                         <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>
-                        <div className="h-actions">
-                          <button className="h-action-btn h-edit" type="button" onClick={() => actions.editSessionTime(s.id, setHistoryModal)} title="Edit time" aria-label="Edit session time">🕒</button>
-                          <button className="h-action-btn h-edit" type="button" onClick={() => actions.editSessionDuration(s.id, setHistoryModal)} title="Edit duration" aria-label="Edit session duration">✎</button>
-                          <button className="h-action-btn h-del" type="button" onClick={() => actions.requestHistoryDelete("session", s, setHistoryModal)} title="Delete" aria-label="Delete session">✕</button>
-                        </div>
+                        <HistoryActionGroup
+                          actions={[
+                            { key: "time", className: "h-edit", label: "Edit session time", icon: "🕒", onClick: () => actions.editSessionTime(s.id, setHistoryModal) },
+                            { key: "duration", className: "h-edit", label: "Edit session duration", icon: "✎", onClick: () => actions.editSessionDuration(s.id, setHistoryModal) },
+                            { key: "delete", className: "h-del", label: "Delete session", icon: "✕", onClick: () => actions.requestHistoryDelete("session", s, setHistoryModal) },
+                          ]}
+                        />
                       </div>
                     </div>
                     {detailBadges.length > 0 && <div className="h-extra-badges">{detailBadges.slice(0, 4).map((badge, idx) => <span key={`${s.id}-badge-${idx}`} className="h-badge-mini">{badge}</span>)}</div>}
@@ -228,11 +250,13 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   </div>
                   <div className="h-trailing">
                     <span className="h-badge badge-walk">{walkTypeLabel(w.type)}</span>
-                    <div className="h-actions">
-                      <button className="h-action-btn h-edit" type="button" onClick={() => actions.editWalkTime(w.id, setHistoryModal)} title="Edit time" aria-label="Edit walk time">🕒</button>
-                      <button className="h-action-btn h-edit" type="button" onClick={() => actions.editWalkDuration(w.id, setHistoryModal)} title="Edit duration" aria-label="Edit walk duration">✎</button>
-                      <button className="h-action-btn h-del" type="button" onClick={() => actions.requestHistoryDelete("walk", w, setHistoryModal)} title="Delete" aria-label="Delete walk">✕</button>
-                    </div>
+                    <HistoryActionGroup
+                      actions={[
+                        { key: "time", className: "h-edit", label: "Edit walk time", icon: "🕒", onClick: () => actions.editWalkTime(w.id, setHistoryModal) },
+                        { key: "duration", className: "h-edit", label: "Edit walk duration", icon: "✎", onClick: () => actions.editWalkDuration(w.id, setHistoryModal) },
+                        { key: "delete", className: "h-del", label: "Delete walk", icon: "✕", onClick: () => actions.requestHistoryDelete("walk", w, setHistoryModal) },
+                      ]}
+                    />
                   </div>
                 </div>
               );
@@ -249,9 +273,11 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   </div>
                   <div className="h-trailing">
                     <span className="h-badge badge-pat">Pattern break</span>
-                    <div className="h-actions">
-                      <button className="h-action-btn h-del" type="button" onClick={() => actions.requestHistoryDelete("pattern", p, setHistoryModal)} title="Delete" aria-label="Delete pattern break">✕</button>
-                    </div>
+                    <HistoryActionGroup
+                      actions={[
+                        { key: "delete", className: "h-del", label: "Delete pattern break", icon: "✕", onClick: () => actions.requestHistoryDelete("pattern", p, setHistoryModal) },
+                      ]}
+                    />
                   </div>
                 </div>
               );
@@ -273,9 +299,11 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   </div>
                   <div className="h-trailing">
                     <span className="h-badge badge-feed">Feeding</span>
-                    <div className="h-actions">
-                      <button className="h-action-btn h-del" type="button" onClick={() => actions.requestHistoryDelete("feeding", f, setHistoryModal)} title="Delete" aria-label="Delete feeding">✕</button>
-                    </div>
+                    <HistoryActionGroup
+                      actions={[
+                        { key: "delete", className: "h-del", label: "Delete feeding", icon: "✕", onClick: () => actions.requestHistoryDelete("feeding", f, setHistoryModal) },
+                      ]}
+                    />
                   </div>
                 </div>
               );
@@ -292,7 +320,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               <div className="section-title" id="history-modal-title" style={{ marginBottom: 0 }}>
                 {historyModal.mode === "delete" ? `Delete ${historyModal.kind === "pattern" ? "pattern break" : historyModal.kind}` : `Edit ${historyModal.kind} ${historyModal.mode === "datetime" ? "date & time" : "duration"}`}
               </div>
-              <button className="quick-modal-close" type="button" onClick={() => setHistoryModal(null)} aria-label="Close">×</button>
+              <ModalCloseButton onClick={() => setHistoryModal(null)} />
             </div>
 
             {historyModal.mode === "datetime" && <>

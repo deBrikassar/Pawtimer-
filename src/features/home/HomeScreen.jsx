@@ -1,7 +1,7 @@
 import { SessionControl, SessionRatingPanel, TrainProgressBar, WelcomeBackBanner } from "../train/TrainComponents";
 import { StatsProgressRing } from "../stats/StatsComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, isToday, walkTypeLabel } from "../app/helpers";
-import { Img } from "../app/ui";
+import { Img, ModalCloseButton } from "../app/ui";
 
 export default function HomeScreen(props) {
   const {
@@ -92,11 +92,27 @@ export default function HomeScreen(props) {
           const nextSessionLabel = fmt(target);
           return (
             <div className="stats-rings-card">
-              <StatsProgressRing value={nextSessionLabel} label="Next session" progress={goalFrac} fillClassName="ring-fill-1" onLabelClick={toggleRecommendations} />
+              <StatsProgressRing
+                value={nextSessionLabel}
+                label="Next session"
+                progress={goalFrac}
+                fillClassName="ring-fill-1"
+                onLabelClick={toggleRecommendations}
+                labelExpanded={openTip === "recommendations"}
+                labelControls="recommendation-popover"
+              />
               <div className="ring-col-sep" />
-              <StatsProgressRing value={daily.count} label="Sessions today" progress={sessFrac} fillClassName="ring-fill-2" onLabelClick={toggleRecommendations} />
+              <StatsProgressRing
+                value={daily.count}
+                label="Sessions today"
+                progress={sessFrac}
+                fillClassName="ring-fill-2"
+                onLabelClick={toggleRecommendations}
+                labelExpanded={openTip === "recommendations"}
+                labelControls="recommendation-popover"
+              />
               {openTip === "recommendations" && (
-                <div className="recommendation-pop" role="tooltip">
+                <div className="recommendation-pop" id="recommendation-popover" role="dialog" aria-label="Recommendation details">
                   <p>Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)} built from recent calm history, distress, and stability.</p>
                   <p>Leave frequency profile: ~{pattern.normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.</p>
                 </div>
@@ -136,7 +152,7 @@ export default function HomeScreen(props) {
             <div className="quick-modal-card" onClick={(e) => e.stopPropagation()}>
               <div className="quick-modal-head">
                 <div className="quick-modal-title">{walkPhase !== "idle" ? "Log a walk" : "Pattern breaking"}</div>
-                <button className="quick-modal-close" type="button" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>×</button>
+                <ModalCloseButton onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }} />
               </div>
 
               {walkPhase === "timing" && (
@@ -191,7 +207,10 @@ export default function HomeScreen(props) {
         {feedingOpen && (
           <div className="feeding-overlay" role="dialog" aria-modal="true" aria-labelledby="feeding-title" onClick={cancelFeedingForm}>
             <div className="feeding-card" onClick={(e) => e.stopPropagation()}>
-              <div className="section-title" id="feeding-title" style={{ marginBottom: 10 }}>Log feeding</div>
+              <div className="quick-modal-head">
+                <div className="section-title" id="feeding-title" style={{ marginBottom: 0 }}>Log feeding</div>
+                <ModalCloseButton onClick={cancelFeedingForm} />
+              </div>
               <label className="feeding-field">
                 <span className="t-helper">Feeding time</span>
                 <input type="datetime-local" value={feedingDraft.time} onChange={(e) => setFeedingDraft((prev) => ({ ...prev, time: e.target.value }))} />
