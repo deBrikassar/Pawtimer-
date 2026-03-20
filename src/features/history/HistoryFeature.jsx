@@ -183,7 +183,12 @@ const renderSyncBadge = (entry) => {
   const state = entry?.syncState ?? (entry?.pendingSync ? "local" : "synced");
   if (state === "synced") return null;
   const label = state === "error" ? "Sync failed" : state === "syncing" ? "Syncing" : "Local only";
-  return <span className={`h-sync-pill h-sync-${state}`}>{label}</span>;
+  return (
+    <span className={`h-sync-meta h-sync-${state}`}>
+      <span className="h-sync-dot" aria-hidden="true" />
+      <span>{label}</span>
+    </span>
+  );
 };
 
 export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
@@ -204,31 +209,34 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               const lv = normalizeDistressLevel(s.distressLevel ?? (s.result === "success" ? "none" : "strong"));
               const icon = lv === "none" ? "result-calm.png" : lv === "subtle" ? "result-mild.png" : "result-strong.png";
               const detailBadges = sessionDetailBadges(s);
+              const secondarySummary = detailBadges.slice(0, 2).join(" • ");
               return (
                 <div className="h-item" key={`s-${s.id}`}>
                   <div className={`h-dot dot-${lv}`}><Img src={icon} size={22} /></div>
-                  <div className="h-session-body">
-                    <div className="h-session-top">
+                  <div className="h-body">
+                    <div className="h-content">
                       <div className="h-info">
                         <div className="h-main">Training session</div>
-                        <div className="h-session-meta">
-                          <div className="h-date h-session-date">{fmtDate(s.date)}</div>
-                          <div className="h-session-duration">{fmt(s.actualDuration)}</div>
+                        <div className="h-meta-line">
+                          <span className="h-date">{fmtDate(s.date)}</span>
                           {renderSyncBadge(s)}
                         </div>
                       </div>
-                      <div className="h-trailing">
+                      <div className="h-side">
+                        <div className="h-value">{fmt(s.actualDuration)}</div>
                         <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>
-                        <HistoryActionGroup
-                          actions={[
-                            { key: "time", className: "h-edit", label: "Edit session time", icon: "🕒", onClick: () => actions.editSessionTime(s.id, setHistoryModal) },
-                            { key: "duration", className: "h-edit", label: "Edit session duration", icon: "✎", onClick: () => actions.editSessionDuration(s.id, setHistoryModal) },
-                            { key: "delete", className: "h-del", label: "Delete session", icon: "✕", onClick: () => actions.requestHistoryDelete("session", s, setHistoryModal) },
-                          ]}
-                        />
                       </div>
                     </div>
-                    {detailBadges.length > 0 && <div className="h-extra-badges">{detailBadges.slice(0, 4).map((badge, idx) => <span key={`${s.id}-badge-${idx}`} className="h-badge-mini">{badge}</span>)}</div>}
+                    <div className="h-footer">
+                      <div className="h-secondary">{secondarySummary || "Duration recorded"}</div>
+                      <HistoryActionGroup
+                        actions={[
+                          { key: "time", className: "h-edit", label: "Edit session time", icon: "🕒", onClick: () => actions.editSessionTime(s.id, setHistoryModal) },
+                          { key: "duration", className: "h-edit", label: "Edit session duration", icon: "✎", onClick: () => actions.editSessionDuration(s.id, setHistoryModal) },
+                          { key: "delete", className: "h-del", label: "Delete session", icon: "✕", onClick: () => actions.requestHistoryDelete("session", s, setHistoryModal) },
+                        ]}
+                      />
+                    </div>
                   </div>
                 </div>
               );
@@ -238,25 +246,30 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               return (
                 <div className="h-item" key={`w-${w.id}`}>
                   <div className="h-dot dot-walk"><Img src="walk.png" size={22} /></div>
-                  <div className="h-info">
-                    <div className="h-main">{walkTypeLabel(w.type)} with {name}</div>
-                    <div className="h-meta-row">
-                      <div>
-                        <div className="h-date">{fmtDate(w.date)}</div>
-                        {renderSyncBadge(w)}
+                  <div className="h-body">
+                    <div className="h-content">
+                      <div className="h-info">
+                        <div className="h-main">{walkTypeLabel(w.type)} with {name}</div>
+                        <div className="h-meta-line">
+                          <span className="h-date">{fmtDate(w.date)}</span>
+                          {renderSyncBadge(w)}
+                        </div>
                       </div>
-                      <div className="h-value">{w.duration ? fmt(w.duration) : "—"}</div>
+                      <div className="h-side">
+                        <div className="h-value">{w.duration ? fmt(w.duration) : "—"}</div>
+                        <span className="h-side-label">Duration</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="h-trailing">
-                    <span className="h-badge badge-walk">{walkTypeLabel(w.type)}</span>
-                    <HistoryActionGroup
-                      actions={[
-                        { key: "time", className: "h-edit", label: "Edit walk time", icon: "🕒", onClick: () => actions.editWalkTime(w.id, setHistoryModal) },
-                        { key: "duration", className: "h-edit", label: "Edit walk duration", icon: "✎", onClick: () => actions.editWalkDuration(w.id, setHistoryModal) },
-                        { key: "delete", className: "h-del", label: "Delete walk", icon: "✕", onClick: () => actions.requestHistoryDelete("walk", w, setHistoryModal) },
-                      ]}
-                    />
+                    <div className="h-footer">
+                      <div className="h-secondary">Walk logged</div>
+                      <HistoryActionGroup
+                        actions={[
+                          { key: "time", className: "h-edit", label: "Edit walk time", icon: "🕒", onClick: () => actions.editWalkTime(w.id, setHistoryModal) },
+                          { key: "duration", className: "h-edit", label: "Edit walk duration", icon: "✎", onClick: () => actions.editWalkDuration(w.id, setHistoryModal) },
+                          { key: "delete", className: "h-del", label: "Delete walk", icon: "✕", onClick: () => actions.requestHistoryDelete("walk", w, setHistoryModal) },
+                        ]}
+                      />
+                    </div>
                   </div>
                 </div>
               );
@@ -267,17 +280,27 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               return (
                 <div className="h-item" key={`p-${p.id}`}>
                   <div className="h-dot dot-pat"><Img src={pt.icon} size={22} /></div>
-                  <div className="h-info">
-                    <div className="h-main">{patLabels[pt.type] || pt.label}</div>
-                    <div className="h-meta-row"><div><div className="h-date">{fmtDate(p.date)}</div>{renderSyncBadge(p)}</div></div>
-                  </div>
-                  <div className="h-trailing">
-                    <span className="h-badge badge-pat">Pattern break</span>
-                    <HistoryActionGroup
-                      actions={[
-                        { key: "delete", className: "h-del", label: "Delete pattern break", icon: "✕", onClick: () => actions.requestHistoryDelete("pattern", p, setHistoryModal) },
-                      ]}
-                    />
+                  <div className="h-body">
+                    <div className="h-content">
+                      <div className="h-info">
+                        <div className="h-main">{patLabels[pt.type] || pt.label}</div>
+                        <div className="h-meta-line">
+                          <span className="h-date">{fmtDate(p.date)}</span>
+                          {renderSyncBadge(p)}
+                        </div>
+                      </div>
+                      <div className="h-side">
+                        <span className="h-badge badge-pat">Pattern break</span>
+                      </div>
+                    </div>
+                    <div className="h-footer">
+                      <div className="h-secondary">Routine support item</div>
+                      <HistoryActionGroup
+                        actions={[
+                          { key: "delete", className: "h-del", label: "Delete pattern break", icon: "✕", onClick: () => actions.requestHistoryDelete("pattern", p, setHistoryModal) },
+                        ]}
+                      />
+                    </div>
                   </div>
                 </div>
               );
@@ -287,23 +310,28 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               return (
                 <div className="h-item" key={`f-${f.id}`}>
                   <div className="h-dot dot-feed">🍽️</div>
-                  <div className="h-info">
-                    <div className="h-main" style={{ textTransform: "capitalize" }}>{f.foodType}</div>
-                    <div className="h-meta-row">
-                      <div>
-                        <div className="h-date">{fmtDate(f.date)}</div>
-                        {renderSyncBadge(f)}
+                  <div className="h-body">
+                    <div className="h-content">
+                      <div className="h-info">
+                        <div className="h-main" style={{ textTransform: "capitalize" }}>{f.foodType}</div>
+                        <div className="h-meta-line">
+                          <span className="h-date">{fmtDate(f.date)}</span>
+                          {renderSyncBadge(f)}
+                        </div>
                       </div>
-                      <div className="h-value" style={{ textTransform: "capitalize" }}>{f.amount}</div>
+                      <div className="h-side">
+                        <div className="h-value" style={{ textTransform: "capitalize" }}>{f.amount}</div>
+                        <span className="h-badge badge-feed">Feeding</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="h-trailing">
-                    <span className="h-badge badge-feed">Feeding</span>
-                    <HistoryActionGroup
-                      actions={[
-                        { key: "delete", className: "h-del", label: "Delete feeding", icon: "✕", onClick: () => actions.requestHistoryDelete("feeding", f, setHistoryModal) },
-                      ]}
-                    />
+                    <div className="h-footer">
+                      <div className="h-secondary">Meal recorded</div>
+                      <HistoryActionGroup
+                        actions={[
+                          { key: "delete", className: "h-del", label: "Delete feeding", icon: "✕", onClick: () => actions.requestHistoryDelete("feeding", f, setHistoryModal) },
+                        ]}
+                      />
+                    </div>
                   </div>
                 </div>
               );
