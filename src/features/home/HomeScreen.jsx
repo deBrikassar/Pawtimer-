@@ -60,10 +60,7 @@ export default function HomeScreen(props) {
   } = props;
 
   return (
-    <div className="tab-content">
-      <div className="section">
-        <div className="section-title">Train</div>
-      </div>
+    <div className="tab-content train-screen">
       {showWelcomeBack && <WelcomeBackBanner sessions={sessions} name={name} target={target} onDismiss={() => setShowWelcomeBack(false)} fmt={fmt} />}
 
       <div className="train-main">
