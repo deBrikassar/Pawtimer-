@@ -676,9 +676,9 @@
   .share-card  { padding:var(--space-card-padding); margin-bottom:var(--space-section-gap); }
   .share-title { font-size:var(--type-card-heading-size); font-weight:var(--type-card-heading-weight); line-height:var(--type-card-heading-line); letter-spacing:var(--type-card-heading-track); color:var(--brown); margin-bottom:var(--space-card-row-gap); }
   .share-sub   { font-size:var(--type-helper-text-size); font-weight:var(--type-helper-text-weight); color:var(--text-muted); margin-bottom:var(--space-control-gap); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); }
-  .share-id-row { display:flex; align-items:center; gap:var(--space-control-gap); background:var(--surf-soft); border-radius:var(--radius-sm); padding:var(--space-inline-control-padding); margin-bottom:var(--space-control-gap); }
-  .share-id-val { font-family:var(--font-ui); font-size:var(--type-section-title-size); line-height:var(--type-section-title-line); font-weight:var(--type-body-weight); color:var(--brown); letter-spacing:var(--type-overline-track); text-transform:uppercase; flex:1; font-variant-numeric:tabular-nums; }
-  .copy-btn { border:none; border-radius:var(--radius-sm); padding:var(--space-inline-control-padding); font-size:var(--type-button-size); font-weight:var(--type-button-weight); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); }
+  .share-id-row { display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); background:var(--surf-soft); border-radius:var(--radius-sm); padding:var(--space-inline-control-padding); margin-bottom:var(--space-control-gap); }
+  .share-id-val { font-family:var(--font-ui); font-size:16px; line-height:var(--type-field-value-line); font-weight:var(--type-field-value-weight); color:var(--brown); letter-spacing:var(--type-field-value-track); text-transform:uppercase; flex:1; min-width:0; font-variant-numeric:tabular-nums; }
+  .copy-btn { border:none; border-radius:var(--radius-sm); padding:var(--space-inline-control-padding); font-size:var(--type-button-size); font-weight:var(--type-button-weight); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); flex-shrink:0; }
 
   .share-steps { font-size:var(--type-body-size); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); padding-left:var(--space-card-padding); font-family:var(--font-prose); }
   .share-steps li { margin-bottom:var(--space-card-row-gap); }
