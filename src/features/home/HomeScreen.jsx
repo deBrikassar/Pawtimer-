@@ -128,7 +128,7 @@ export default function HomeScreen(props) {
         )}
 
         <div className="tool-group-card">
-          <div className="section-title" style={{ marginBottom: 12 }}>Today's logs</div>
+          <div className="section-title">Today's logs</div>
           <div className="quick-actions-row">
             <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
               <span className="quick-action-label">Walk</span>
@@ -206,7 +206,7 @@ export default function HomeScreen(props) {
           <div className="feeding-overlay" role="dialog" aria-modal="true" aria-labelledby="feeding-title" onClick={cancelFeedingForm}>
             <div className="feeding-card" onClick={(e) => e.stopPropagation()}>
               <div className="quick-modal-head">
-                <div className="section-title" id="feeding-title" style={{ marginBottom: 0 }}>Log feeding</div>
+                <div className="section-title section-title--flush" id="feeding-title">Log feeding</div>
                 <ModalCloseButton onClick={cancelFeedingForm} />
               </div>
               <label className="feeding-field">
