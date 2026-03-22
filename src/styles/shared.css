@@ -5,13 +5,13 @@
 .surface-card,
 .surface-card-default {
   background: var(--surf);
-  border: 1.5px solid transparent;
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
 }
 
 .surface-card-elevated {
-  background: linear-gradient(160deg, var(--surf) 0%, var(--surf-soft) 100%);
+  background: linear-gradient(180deg, var(--surf) 0%, #FBFCFD 100%);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -31,7 +31,7 @@
 }
 
 .surface-card-interactive:hover {
-  border-color: var(--green);
+  border-color: color-mix(in srgb, var(--green-dark) 42%, var(--border));
   transform: translateY(-1px);
 }
 
@@ -43,12 +43,12 @@
 .surface-card-interactive.is-selected,
 .surface-card-interactive[aria-pressed="true"] {
   border-color: var(--green-dark);
-  background: color-mix(in srgb, var(--green) 12%, var(--surf));
+  background: color-mix(in srgb, var(--green-dark) 8%, white);
 }
 
 .surface-card-panel,
 .surface-card-inset {
-  background: var(--surf-soft);
+  background: #FAFBFC;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surf) 60%, transparent);
@@ -86,7 +86,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border: 1.5px solid transparent;
+  border: 1px solid var(--border);
   cursor: pointer;
   font-weight: var(--type-button-weight);
   font-size: var(--type-button-size);
@@ -102,8 +102,8 @@
 }
 
 .button-primary {
-  background: var(--brown);
-  color: var(--surf);
+  background: var(--green-dark);
+  color: #FFFFFF;
   box-shadow: var(--shadow);
 }
 
@@ -113,8 +113,8 @@
 }
 
 .button-secondary {
-  background: var(--green);
-  color: var(--brown);
+  background: color-mix(in srgb, var(--green-dark) 12%, white);
+  color: var(--green-dark);
   box-shadow: var(--shadow);
 }
 
@@ -132,7 +132,7 @@
 
 .button-tertiary:hover:not(:disabled),
 .button-ghost:hover:not(:disabled) {
-  background: var(--surf-soft);
+  background: #FAFBFC;
   border-color: var(--green-dark);
 }
 
@@ -160,13 +160,13 @@
 
 :is(.share-card, .stat-card, .h-item) {
   background: var(--surf);
-  border: 1.5px solid transparent;
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
 }
 
 .tool-group-card {
-  background: linear-gradient(160deg, var(--surf) 0%, var(--surf-soft) 100%);
+  background: linear-gradient(180deg, var(--surf) 0%, #FBFCFD 100%);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -180,7 +180,7 @@
 }
 
 .welcome-back {
-  background: var(--surf-soft);
+  background: #FAFBFC;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surf) 60%, transparent);
@@ -200,13 +200,13 @@
 }
 
 :is(.ds-dog-card, .ob-option, .ob-dur-btn):hover {
-  border-color: var(--green);
+  border-color: color-mix(in srgb, var(--green-dark) 42%, var(--border));
   transform: translateY(-1px);
 }
 
 :is(.ob-option.selected, .ob-dur-btn.selected) {
   border-color: var(--green-dark);
-  background: color-mix(in srgb, var(--green) 12%, var(--surf));
+  background: color-mix(in srgb, var(--green-dark) 8%, white);
 }
 
 .ds-dog-card:hover {
@@ -214,9 +214,9 @@
 }
 
 :is(.ds-btn-primary, .ob-btn-next, .copy-btn, .coach-btn, .metric-help-close) {
-  background: var(--brown);
-  color: var(--surf);
-  border: 1.5px solid transparent;
+  background: var(--green-dark);
+  color: #FFFFFF;
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
   cursor: pointer;
   transition:
@@ -235,9 +235,9 @@
 
 .walk-end-btn,
 .empty-state .es-cta {
-  background: var(--green);
-  color: var(--brown);
-  border: 1.5px solid transparent;
+  background: color-mix(in srgb, var(--green-dark) 12%, white);
+  color: var(--green-dark);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
   cursor: pointer;
   transition:
@@ -269,7 +269,7 @@
 }
 
 :is(.walk-cancel-btn, .settings-inline-btn, .settings-btn):hover:not(:disabled) {
-  background: var(--surf-soft);
+  background: #FAFBFC;
   border-color: var(--green-dark);
 }
 
