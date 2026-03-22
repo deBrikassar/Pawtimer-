@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CloseIcon } from "../app/ui";
 
 function SessionActionRow({ onEnd, onCancel }) {
   return (
@@ -96,7 +97,7 @@ export function WelcomeBackBanner({ sessions, name, target, onDismiss, fmt }) {
       <div className="welcome-back-text">
         Welcome back — last session was <strong>{days} day{days !== 1 ? "s" : ""} ago</strong>. {name}'s target is still {fmt(target)}.
       </div>
-      <button className="welcome-back-dismiss" onClick={onDismiss} aria-label="Dismiss">×</button>
+      <button className="welcome-back-dismiss" onClick={onDismiss} aria-label="Dismiss"><CloseIcon size={16} /></button>
     </div>
   );
 }

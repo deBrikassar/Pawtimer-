@@ -309,3 +309,25 @@
   transform: translateY(-1px);
   box-shadow: var(--shadow-lg);
 }
+
+
+/* Design-system consistency overrides */
+.shared-button,
+.button-base,
+.copy-btn,
+.empty-state .es-cta,
+.walk-cancel-btn,
+.settings-inline-btn,
+.settings-btn,
+.walk-end-btn {
+  min-height: 44px;
+  padding-block: 10px;
+  line-height: 1;
+}
+
+.button-icon {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-grid;
+  place-items: center;
+}

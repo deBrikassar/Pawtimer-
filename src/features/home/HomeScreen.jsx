@@ -1,7 +1,7 @@
 import { SessionControl, SessionRatingPanel, TrainProgressBar, WelcomeBackBanner } from "../train/TrainComponents";
 import { StatsProgressRing } from "../stats/StatsComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, isToday, walkTypeLabel } from "../app/helpers";
-import { Img, ModalCloseButton } from "../app/ui";
+import { BowlIcon, Img, ModalCloseButton } from "../app/ui";
 
 export default function HomeScreen(props) {
   const {
@@ -141,7 +141,7 @@ export default function HomeScreen(props) {
               <span className="quick-action-meta">Today: {pattern.todayPat}</span>
             </button>
             <button className="quick-action-btn" type="button" onClick={openFeedingForm}>
-              <span className="quick-action-icon" aria-hidden="true"><span className="qa-glyph">🍽️</span></span>
+              <span className="quick-action-icon" aria-hidden="true"><BowlIcon /></span>
               <span className="quick-action-label">Log feeding</span>
               <span className="quick-action-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
             </button>

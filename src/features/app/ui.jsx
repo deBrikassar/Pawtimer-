@@ -14,11 +14,19 @@ export const ICONS = {
 };
 
 // ─── Custom image icon helper ─────────────────────────────────────────────────
-export const Img = ({ src, size = 24, alt = "" }) => {
+export const Img = ({ src, size = 24, alt = "", className = "" }) => {
   const key = src.replace(".png", "").replace(/-/g, "_");
   const uri = ICONS[key] || "";
-  return <img src={uri} width={size} height={size} alt={alt}
-    style={{ display:"inline-block", flexShrink:0, objectFit:"contain" }}/>;
+  return (
+    <img
+      src={uri}
+      width={size}
+      height={size}
+      alt={alt}
+      className={className}
+      style={{ display: "block", flexShrink: 0, objectFit: "contain" }}
+    />
+  );
 };
 
 // ─── Pattern-break cue types ──────────────────────────────────────────────────
@@ -63,35 +71,119 @@ const walkTypeLabel = (walkType) => (WALK_TYPE_OPTIONS.find((option) => option.v
 
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
-export const PawIcon = ({ size = 36 }) => (
-  <img src={ICONS.paw} width={size} height={size} alt="PawTimer"
-    style={{ display:"inline-block", objectFit:"contain" }}/>
+const IconBase = ({ children, size = 20, className = "", strokeWidth = 1.9, ...props }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    width={size}
+    height={size}
+    className={["app-icon", className].filter(Boolean).join(" ")}
+    aria-hidden="true"
+    {...props}
+  >
+    {children}
+  </svg>
 );
+
+export const PawIcon = ({ size = 36, className = "", alt = "PawTimer" }) => (
+  <img
+    src={ICONS.paw}
+    width={size}
+    height={size}
+    alt={alt}
+    className={["app-icon-image", className].filter(Boolean).join(" ")}
+    style={{ display: "block", objectFit: "contain" }}
+  />
+);
+
+export const CloseIcon = ({ size = 18, className = "" }) => (
+  <IconBase size={size} className={className}>
+    <path d="M6 6l12 12" />
+    <path d="M18 6l-12 12" />
+  </IconBase>
+);
+
+export const CameraIcon = ({ size = 16, className = "" }) => (
+  <IconBase size={size} className={className}>
+    <path d="M4 8h3l1.5-2h7L17 8h3v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+    <circle cx="12" cy="13" r="3.25" />
+  </IconBase>
+);
+
+export const TimeIcon = ({ size = 18, className = "" }) => (
+  <IconBase size={size} className={className}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5v5l3 2" />
+  </IconBase>
+);
+
+export const BowlIcon = ({ size = 20, className = "" }) => (
+  <IconBase size={size} className={className}>
+    <path d="M4 12h16" />
+    <path d="M6 12c.8 3.3 3.1 5 6 5s5.2-1.7 6-5" />
+    <path d="M8 9.75c.8-.9 2.1-1.5 4-1.5s3.2.6 4 1.5" />
+  </IconBase>
+);
+
+export const EditIcon = ({ size = 18, className = "" }) => (
+  <IconBase size={size} className={className}>
+    <path d="M12 20h9" />
+    <path d="m16.5 3.5 4 4L8 20l-4 1 1-4Z" />
+  </IconBase>
+);
+
+export const DeleteIcon = ({ size = 18, className = "" }) => (
+  <IconBase size={size} className={className}>
+    <path d="M4 7h16" />
+    <path d="M10 11v6" />
+    <path d="M14 11v6" />
+    <path d="M7 7l1 12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-12" />
+    <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+  </IconBase>
+);
+
+export const ResetIcon = ({ size = 18, className = "" }) => (
+  <IconBase size={size} className={className}>
+    <path d="M4 12a8 8 0 1 0 2.3-5.6" />
+    <path d="M4 4v4h4" />
+  </IconBase>
+);
+
+export const DisclosureIcon = ({ size = 18, open = false, className = "" }) => (
+  <IconBase size={size} className={className} style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}>
+    <path d="m6 9 6 6 6-6" />
+  </IconBase>
+);
+
 export const ModalCloseButton = ({ onClick, label = "Close dialog" }) => (
   <button className="modal-close-btn" type="button" onClick={onClick} aria-label={label}>
-    <span aria-hidden="true">×</span>
+    <CloseIcon />
   </button>
 );
-export const HomeIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
+export const HomeIcon = ({ size = 20, className = "" }) => (
+  <IconBase size={size} className={className}>
+    <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
     <path d="M9 21V12h6v9"/>
-  </svg>
+  </IconBase>
 );
-export const HistoryIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+export const HistoryIcon = ({ size = 20, className = "" }) => (
+  <IconBase size={size} className={className}>
     <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
-  </svg>
+  </IconBase>
 );
-export const ChartIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+export const ChartIcon = ({ size = 20, className = "" }) => (
+  <IconBase size={size} className={className}>
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-  </svg>
+  </IconBase>
 );
-export const SettingsIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+export const SettingsIcon = ({ size = 20, className = "" }) => (
+  <IconBase size={size} className={className}>
     <circle cx="12" cy="12" r="3"/>
     <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-  </svg>
+  </IconBase>
 );
 

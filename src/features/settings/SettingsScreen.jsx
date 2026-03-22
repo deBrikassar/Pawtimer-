@@ -1,5 +1,5 @@
 import { PATTERN_TYPES, fmt } from "../app/helpers";
-import { PawIcon, Img, ModalCloseButton } from "../app/ui";
+import { DeleteIcon, DisclosureIcon, EditIcon, PawIcon, Img, ModalCloseButton, ResetIcon } from "../app/ui";
 
 export default function SettingsScreen(props) {
   const {
@@ -101,8 +101,8 @@ export default function SettingsScreen(props) {
                 ) : (
                   <span className="pat-edit-label">{patLabels[pt.type] || pt.label}</span>
                 )}
-                <button className="pat-edit-btn" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}>✎</button>
-                {patLabels[pt.type] && <button className="pat-edit-reset" onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">↩</button>}
+                <button className="pat-edit-btn" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}><EditIcon size={16} /></button>
+                {patLabels[pt.type] && <button className="pat-edit-reset" onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default"><ResetIcon size={16} /></button>}
               </div>
             ))}
           </div>
@@ -111,7 +111,7 @@ export default function SettingsScreen(props) {
           <div className="share-card settings-collapsible-card">
             <button className="settings-collapsible-toggle" type="button" aria-expanded={settingsDisclosure === "help"} onClick={() => setSettingsDisclosure((prev) => prev === "help" ? null : "help")}>
               <span className="share-title" style={{ marginBottom: 0 }}>Help</span>
-              <span className="settings-collapsible-arrow">{settingsDisclosure === "help" ? "−" : "+"}</span>
+              <span className="settings-collapsible-arrow"><DisclosureIcon open={settingsDisclosure === "help"} /></span>
             </button>
             <div className={`collapsible-body ${settingsDisclosure === "help" ? "open" : "closed"}`}>
               <div className="settings-collapsible-inner">
@@ -129,7 +129,7 @@ export default function SettingsScreen(props) {
           <div className="share-card settings-collapsible-card">
             <button className="settings-collapsible-toggle" type="button" aria-expanded={settingsDisclosure === "advanced"} onClick={() => setSettingsDisclosure((prev) => prev === "advanced" ? null : "advanced")}>
               <span className="share-title" style={{ marginBottom: 0 }}>Advanced</span>
-              <span className="settings-collapsible-arrow">{settingsDisclosure === "advanced" ? "−" : "+"}</span>
+              <span className="settings-collapsible-arrow"><DisclosureIcon open={settingsDisclosure === "advanced"} /></span>
             </button>
             <div className={`collapsible-body ${settingsDisclosure === "advanced" ? "open" : "closed"}`}>
               <div className="settings-collapsible-inner">
@@ -162,7 +162,7 @@ export default function SettingsScreen(props) {
               save(ACTIVE_DOG_KEY, null);
               setActiveDogId(null);
             }
-          }}>✕ Remove {name} from this device</button>
+          }}><DeleteIcon size={16} /> Remove {name} from this device</button>
         </div>
       </div>
 
