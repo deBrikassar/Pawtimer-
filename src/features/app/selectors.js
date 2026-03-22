@@ -1,18 +1,18 @@
 import { PROTOCOL, explainNextTarget, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel } from "../../lib/protocol";
-import { dailyInfo, distressLabel, fmt, getLeaveProfile, isToday, patternInfo, toDayKey } from "./helpers";
+import { dailyInfo, distressLabel, fmt, getInformationalTone, getLeaveProfile, getRiskTone, isToday, patternInfo, toDayKey } from "./helpers";
 
 const hasValue = (value) => value !== null && value !== undefined;
 
 const statusTone = (value, { good, warn, invert = false }) => {
-  if (value == null) return { color: "var(--brown-muted)", label: "Building baseline" };
+  if (value == null) return getInformationalTone("neutral");
   if (!invert) {
-    if (value >= good) return { color: "var(--green-dark)", label: "Strong" };
-    if (value >= warn) return { color: "var(--orange)", label: "Mixed" };
-    return { color: "var(--red)", label: "Watch closely" };
+    if (value >= good) return getInformationalTone("stable");
+    if (value >= warn) return { ...getRiskTone("medium"), label: "Mixed" };
+    return { ...getRiskTone("high"), label: "Watch closely" };
   }
-  if (value <= good) return { color: "var(--green-dark)", label: "Stable" };
-  if (value <= warn) return { color: "var(--orange)", label: "Variable" };
-  return { color: "var(--red)", label: "Unsteady" };
+  if (value <= good) return getInformationalTone("stable");
+  if (value <= warn) return { ...getRiskTone("medium"), label: "Variable" };
+  return { ...getRiskTone("high"), label: "Unsteady" };
 };
 
 export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, feedings, target, protoOverride }) {
@@ -126,12 +126,12 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     const lastSessionTs = lastSession ? new Date(lastSession.date).getTime() : NaN;
     const minutesSinceLastSession = Number.isFinite(lastSessionTs) ? ((now - lastSessionTs) / 60000) : null;
     if (!walkToday || ["active", "severe"].includes(lastSessionLevel) || (minutesSinceLastSession != null && minutesSinceLastSession < 5)) {
-      return { level: "LOW", color: "var(--red)" };
+      return { level: "LOW", ...getRiskTone("low") };
     }
     if (walkWithinTwoHours && lastSessionLevel === "none" && (minutesSinceLastSession == null || minutesSinceLastSession >= 10)) {
-      return { level: "HIGH", color: "var(--green-dark)" };
+      return { level: "HIGH", ...getRiskTone("high") };
     }
-    return { level: "MEDIUM", color: "var(--orange)" };
+    return { level: "MEDIUM", ...getRiskTone("medium") };
   })();
 
   const adherenceByDay = (() => {
@@ -162,11 +162,11 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   const stabilityTone = statusTone(durationVariability, { good: 120, warn: 240, invert: true });
   const adherenceTone = statusTone(adherenceByDay, { good: 85, warn: 65 });
   const relapseTone = (() => {
-    if (recentHighDistress.relapseRisk) return { color: "var(--red)", label: "High" };
+    if (recentHighDistress.relapseRisk) return getRiskTone("high");
     if (recentHighDistress.highDistressCount === 1 || recentHighDistress.recentSessions.length < recentHighDistress.window) {
-      return { color: "var(--orange)", label: "Medium" };
+      return getRiskTone("medium");
     }
-    return { color: "var(--green-dark)", label: "Low" };
+    return getRiskTone("low");
   })();
 
   const metricExplainers = {
@@ -209,7 +209,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     if ((calmRate7 != null && calmRate14 != null && calmRate7 > calmRate14) || streak >= 3 || bestCalm >= currentThreshold) return "Improving";
     return "Stable";
   })();
-  const headlineStatusColor = headlineStatus === "Improving" ? "var(--green-dark)" : headlineStatus === "Stable" ? "var(--orange)" : "var(--red)";
+  const headlineStatusTone = headlineStatus === "Needs attention" ? { ...getRiskTone("high"), label: headlineStatus } : headlineStatus === "Improving" ? getInformationalTone("improving") : getInformationalTone("stable");
   const chartTrendLabel = (() => {
     const recentDurations = chartData.map((item) => item.durationSeconds).filter((value) => Number.isFinite(value));
     if (recentDurations.length < 4) return "Trend: Plateau";
@@ -271,7 +271,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     chartData,
     currentThreshold,
     headlineStatus,
-    headlineStatusColor,
+    headlineStatusTone,
     chartTrendLabel,
     timeline,
     distressCounts,
