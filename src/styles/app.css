@@ -651,14 +651,14 @@
   .stats-row-core { gap:var(--space-section-gap); }
   .stats-row-core-trimmed { grid-template-columns:repeat(3, minmax(0, 1fr)); }
   .stat-card-span2 { grid-column:span 2; }
-  .stat-card   { padding:var(--space-card-padding); text-align:left; min-height:94px; display:grid; grid-template-rows:minmax(2.4rem, auto) auto auto; align-content:start; justify-items:start; row-gap:var(--space-card-row-gap); border:1px solid var(--border); width:100%; font:inherit; color:inherit; }
+  .stat-card   { padding:var(--space-card-padding); text-align:left; min-height:94px; display:grid; grid-template-rows:minmax(2.4rem, auto) minmax(calc(var(--type-field-label-line) * 1em), auto) auto; align-content:start; justify-items:start; align-items:end; row-gap:clamp(4px, 1.2vw, var(--space-card-row-gap)); border:1px solid var(--border); width:100%; font:inherit; color:inherit; min-width:0; overflow:hidden; }
   button.stat-card { appearance:none; cursor:pointer; }
   button.stat-card:focus-visible { outline:2px solid var(--blue-dark); outline-offset:2px; }
   .stat-card-emphasis { min-height:98px; }
   .stat-card .stats-metric-value,
-  .stat-card .stat-val { font-family:var(--font-ui); font-size:var(--type-metric-card-value-size); color:var(--brown); font-weight:var(--type-metric-card-value-weight); line-height:var(--type-metric-card-value-line); letter-spacing:var(--type-metric-card-value-track); text-transform:none; opacity:1; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; margin:0; padding:0; align-self:end; }
+  .stat-card .stat-val { font-family:var(--font-ui); font-size:clamp(1rem, 3vw, var(--type-metric-card-value-size)); color:var(--brown); font-weight:var(--type-metric-card-value-weight); line-height:var(--type-metric-card-value-line); letter-spacing:var(--type-metric-card-value-track); text-transform:none; opacity:1; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; margin:0; padding:0; align-self:end; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:clip; }
   .stat-card .stats-metric-label,
-  .stat-card .stat-lbl { font-family:var(--font-ui); font-size:var(--type-field-label-size); color:var(--text-muted); margin-top:0; font-weight:var(--type-field-label-weight); line-height:var(--type-field-label-line); letter-spacing:var(--type-field-label-track); text-transform:none; opacity:1; font-feature-settings:normal; margin-bottom:0; padding:0; align-self:start; }
+  .stat-card .stat-lbl { font-family:var(--font-ui); font-size:clamp(0.6875rem, 2.4vw, var(--type-field-label-size)); color:var(--text-muted); margin-top:0; font-weight:var(--type-field-label-weight); line-height:var(--type-field-label-line); letter-spacing:var(--type-field-label-track); text-transform:none; opacity:1; font-feature-settings:normal; margin-bottom:0; padding:0; align-self:start; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:clip; }
   .stat-card .stats-metric-detail { font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); color:var(--text-muted); margin-top:var(--space-card-row-gap); }
   .stats-headline-card { background:linear-gradient(180deg,#FFFFFF 0%, #FAFBFC 100%); border:1px solid var(--border); border-radius:var(--radius); padding:var(--space-card-padding); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:var(--space-control-gap); }
   .stats-headline-main { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:end; column-gap:var(--space-control-gap); min-width:0; }
@@ -672,6 +672,11 @@
   .stats-support-label-wrap { display:flex; align-items:center; gap:var(--space-card-row-gap); min-width:0; }
   .stats-support-label { font-size:var(--type-field-label-size); line-height:var(--type-field-label-line); letter-spacing:var(--type-field-label-track); font-weight:var(--type-field-label-weight); color:var(--text-muted); }
   .stats-support-value { font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); font-weight:var(--type-field-value-weight); color:var(--brown); font-variant-numeric:tabular-nums; text-align:right; }
+
+  @media (max-width: 380px) {
+    .stats-row-core-trimmed { gap:clamp(8px, 2.5vw, var(--space-control-gap)); }
+    .stat-card { padding:clamp(10px, 3vw, var(--space-inline-control-padding)); }
+  }
   /* ── Settings tab ── */
   .share-card  { padding:var(--space-card-padding); margin-bottom:var(--space-section-gap); }
   .share-title { font-size:var(--type-card-heading-size); font-weight:var(--type-card-heading-weight); line-height:var(--type-card-heading-line); letter-spacing:var(--type-card-heading-track); color:var(--brown); margin-bottom:var(--space-card-row-gap); }
