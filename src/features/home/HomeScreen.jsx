@@ -94,6 +94,8 @@ export default function HomeScreen(props) {
             <div className="stats-rings-card">
               <StatsProgressRing
                 value={nextSessionLabel}
+                numericValue={target}
+                formatValue={fmt}
                 label="Next session"
                 progress={goalFrac}
                 fillClassName="ring-fill-1"
@@ -104,6 +106,7 @@ export default function HomeScreen(props) {
               <div className="ring-col-sep" />
               <StatsProgressRing
                 value={daily.count}
+                numericValue={daily.count}
                 label="Sessions today"
                 progress={sessFrac}
                 fillClassName="ring-fill-2"

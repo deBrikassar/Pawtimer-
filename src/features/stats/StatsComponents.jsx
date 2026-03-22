@@ -1,8 +1,44 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import EmptyState from "../../components/EmptyState";
+
+
+function useAnimatedValue(value, { duration = 180, round = false } = {}) {
+  const [displayValue, setDisplayValue] = useState(value);
+
+  useEffect(() => {
+    if (!Number.isFinite(value)) {
+      setDisplayValue(value);
+      return undefined;
+    }
+
+    let frameId = 0;
+    let startTime = 0;
+
+    setDisplayValue((previousValue) => {
+      const fromValue = Number.isFinite(previousValue) ? previousValue : value;
+
+      const animate = (timestamp) => {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const eased = 1 - ((1 - progress) * (1 - progress));
+        const nextValue = fromValue + ((value - fromValue) * eased);
+        setDisplayValue(round ? Math.round(nextValue) : nextValue);
+        if (progress < 1) frameId = window.requestAnimationFrame(animate);
+      };
+
+      frameId = window.requestAnimationFrame(animate);
+      return fromValue;
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [duration, round, value]);
+
+  return displayValue;
+}
 
 export function StatsSection({ title, children, className = "" }) {
   return (
@@ -40,10 +76,29 @@ export function StatsSupportRow({ label, value }) {
   );
 }
 
-export function StatsProgressRing({ value, label, progress, fillClassName, onLabelClick, labelExpanded = false, labelControls }) {
+export function StatsProgressRing({
+  value,
+  numericValue = null,
+  formatValue = null,
+  label,
+  progress,
+  fillClassName,
+  onLabelClick,
+  labelExpanded = false,
+  labelControls,
+}) {
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
   const clampedProgress = Math.max(0, Math.min(progress, 1));
+  const animatedValue = useAnimatedValue(
+    Number.isFinite(numericValue) ? numericValue : null,
+    { duration: 180, round: Number.isInteger(numericValue) },
+  );
+  const displayValue = useMemo(() => {
+    if (!Number.isFinite(numericValue)) return value;
+    if (typeof formatValue === "function") return formatValue(animatedValue);
+    return Number.isInteger(numericValue) ? Math.round(animatedValue) : animatedValue.toFixed(1);
+  }, [animatedValue, formatValue, numericValue, value]);
 
   return (
     <div className="ring-col">
@@ -61,7 +116,7 @@ export function StatsProgressRing({ value, label, progress, fillClassName, onLab
         </svg>
         <div className="ring-inner">
           <div className="ring-val">
-            <span className="ring-val-primary">{value}</span>
+            <span className="ring-val-primary">{displayValue}</span>
           </div>
         </div>
       </div>
