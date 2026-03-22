@@ -31,19 +31,19 @@
 }
 
 .surface-card-interactive:hover {
-  border-color: color-mix(in srgb, var(--green-dark) 42%, var(--border));
+  border-color: color-mix(in srgb, var(--blue-dark) 42%, var(--border));
   transform: translateY(-1px);
 }
 
 .surface-card-interactive:focus-visible {
   outline: none;
-  border-color: var(--green-dark);
+  border-color: var(--blue-dark);
 }
 
 .surface-card-interactive.is-selected,
 .surface-card-interactive[aria-pressed="true"] {
-  border-color: var(--green-dark);
-  background: color-mix(in srgb, var(--green-dark) 8%, white);
+  border-color: var(--blue-dark);
+  background: color-mix(in srgb, var(--blue-dark) 8%, white);
 }
 
 .surface-card-panel,
@@ -113,14 +113,23 @@
 }
 
 .button-secondary {
-  background: color-mix(in srgb, var(--green-dark) 12%, white);
-  color: var(--green-dark);
+  background: color-mix(in srgb, var(--blue-dark) 10%, white);
+  color: var(--blue-dark);
+  border-color: color-mix(in srgb, var(--blue-dark) 28%, var(--border));
   box-shadow: var(--shadow);
 }
 
 .button-secondary:hover:not(:disabled) {
   transform: translateY(-2px);
+  background: color-mix(in srgb, var(--blue-dark) 16%, white);
+  border-color: var(--blue-dark);
   box-shadow: var(--shadow-lg);
+}
+
+.button-secondary:active:not(:disabled) {
+  background: color-mix(in srgb, var(--blue-darker) 18%, white);
+  border-color: var(--blue-darker);
+  transform: translateY(0);
 }
 
 .button-tertiary,
@@ -133,7 +142,8 @@
 .button-tertiary:hover:not(:disabled),
 .button-ghost:hover:not(:disabled) {
   background: #FAFBFC;
-  border-color: var(--green-dark);
+  border-color: var(--blue-dark);
+  color: var(--blue-dark);
 }
 
 .button-danger {
@@ -200,20 +210,20 @@
 }
 
 :is(.ds-dog-card, .ob-option, .ob-dur-btn):hover {
-  border-color: color-mix(in srgb, var(--green-dark) 42%, var(--border));
+  border-color: color-mix(in srgb, var(--blue-dark) 42%, var(--border));
   transform: translateY(-1px);
 }
 
 :is(.ob-option.selected, .ob-dur-btn.selected) {
-  border-color: var(--green-dark);
-  background: color-mix(in srgb, var(--green-dark) 8%, white);
+  border-color: var(--blue-dark);
+  background: color-mix(in srgb, var(--blue-dark) 8%, white);
 }
 
 .ds-dog-card:hover {
-  border-color: var(--green-dark);
+  border-color: var(--blue-dark);
 }
 
-:is(.ds-btn-primary, .ob-btn-next, .copy-btn, .coach-btn, .metric-help-close) {
+:is(.ds-btn-primary, .ob-btn-next, .coach-btn, .metric-help-close, .walk-end-btn) {
   background: var(--green-dark);
   color: #FFFFFF;
   border: 1px solid var(--border);
@@ -228,15 +238,15 @@
     opacity var(--motion-fast) var(--ease-standard);
 }
 
-:is(.ds-btn-primary, .ob-btn-next, .copy-btn, .coach-btn, .metric-help-close):hover:not(:disabled) {
+:is(.ds-btn-primary, .ob-btn-next, .coach-btn, .metric-help-close, .walk-end-btn):hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
 
-.walk-end-btn,
+.copy-btn,
 .empty-state .es-cta {
-  background: color-mix(in srgb, var(--green-dark) 12%, white);
-  color: var(--green-dark);
+  background: color-mix(in srgb, var(--blue-dark) 10%, white);
+  color: var(--blue-dark);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -249,15 +259,17 @@
     opacity var(--motion-fast) var(--ease-standard);
 }
 
-:is(.walk-end-btn, .empty-state .es-cta):hover:not(:disabled) {
+:is(.copy-btn, .empty-state .es-cta):hover:not(:disabled) {
   transform: translateY(-2px);
+  background: color-mix(in srgb, var(--blue-dark) 15%, white);
+  border-color: var(--blue-dark);
   box-shadow: var(--shadow-lg);
 }
 
 :is(.walk-cancel-btn, .settings-inline-btn, .settings-btn) {
   background: var(--surf);
-  color: var(--brown);
-  border: 1.5px solid var(--border);
+  color: var(--blue-dark);
+  border: 1.5px solid color-mix(in srgb, var(--blue-dark) 26%, var(--border));
   cursor: pointer;
   transition:
     border-color var(--motion-base) var(--ease-standard),
@@ -269,8 +281,9 @@
 }
 
 :is(.walk-cancel-btn, .settings-inline-btn, .settings-btn):hover:not(:disabled) {
-  background: #FAFBFC;
-  border-color: var(--green-dark);
+  background: color-mix(in srgb, var(--blue-dark) 7%, white);
+  border-color: var(--blue-dark);
+  color: var(--blue-darker);
 }
 
 :is(.walk-end-btn, .walk-cancel-btn, .settings-inline-btn) {
