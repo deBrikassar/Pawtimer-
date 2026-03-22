@@ -49,6 +49,13 @@
     --color-text-subtle: #8A94A6;
     --color-accent-700: #2F7A57;
     --color-accent-200: #B8E0C7;
+    --color-secondary-50: #EFF6FF;
+    --color-secondary-100: #DBEAFE;
+    --color-secondary-200: #BFDBFE;
+    --color-secondary-500: #3B82F6;
+    --color-secondary-600: #2563EB;
+    --color-secondary-700: #1D4ED8;
+    --color-secondary-800: #1E40AF;
     --bg:          var(--color-bg);
     --surf:        var(--color-surface);
     --surf-soft:   var(--color-surface-soft);
@@ -56,6 +63,12 @@
     --green:       var(--color-accent-200);
     --green-light: #D7F0E1;
     --green-dark:  var(--color-accent-700);
+    --blue:        var(--color-secondary-500);
+    --blue-light:  var(--color-secondary-100);
+    --blue-soft:   var(--color-secondary-50);
+    --blue-dark:   var(--color-secondary-600);
+    --blue-darker: var(--color-secondary-700);
+    --focus-ring:  color-mix(in srgb, var(--blue) 34%, transparent);
     --brown:       var(--color-text);
     --brown-mid:   var(--color-text-muted);
     --brown-muted: var(--color-text-subtle);
@@ -213,7 +226,7 @@
   button:focus-visible,
   input:focus-visible,
   select:focus-visible {
-    outline: 2px solid rgba(46,129,95,0.55);
+    outline: 2px solid color-mix(in srgb, var(--blue-dark) 55%, transparent);
     outline-offset: 2px;
   }
 
