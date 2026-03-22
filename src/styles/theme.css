@@ -238,9 +238,12 @@
     --icon-size-sm: 18px;
     --icon-size-md: 24px;
     --icon-size-lg: 32px;
+    --motion-press: 120ms;
+    --motion-enter: 180ms;
     --motion-fast: 0.15s;
     --motion-base: 0.2s;
     --motion-slow: 0.35s;
     --ease-standard: ease;
     --ease-emphasized: cubic-bezier(0.34,1.56,0.64,1);
+    --ease-out: cubic-bezier(0,0,0.2,1);
   }
