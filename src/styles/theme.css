@@ -29,11 +29,11 @@
        - row gap inside cards: use --space-card-row-gap between stacked bits of card content.
        - control gap: use --space-control-gap for form fields, button rows, and inline actions.
        - modal spacing: use --space-modal-padding around modal content and --space-modal-footer-gap above footer actions. */
-    --space-section-gap: 20px;
-    --space-card-padding: 18px;
+    --space-section-gap: var(--space-3);
+    --space-card-padding: var(--space-2);
     --space-card-padding-lg: var(--space-3);
-    --space-card-row-gap: 12px;
-    --space-control-gap: 12px;
+    --space-card-row-gap: var(--space-2);
+    --space-control-gap: var(--space-1);
     --space-modal-padding: var(--space-3);
     --space-modal-footer-gap: var(--space-2);
     --space-inline-control-padding: var(--space-1) var(--space-2);
