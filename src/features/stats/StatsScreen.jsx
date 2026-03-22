@@ -2,7 +2,7 @@ import EmptyState from "../../components/EmptyState";
 import { StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
 import { fmt } from "../app/helpers";
 
-export default function StatsScreen({ name, totalCount, setTab, bestCalm, target, relapseTone, openMetricHelp, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, currentThreshold, headlineStatus, headlineStatusColor }) {
+export default function StatsScreen({ name, totalCount, setTab, bestCalm, target, relapseTone, openMetricHelp, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, currentThreshold, headlineStatus, headlineStatusTone }) {
   return (
     <div className="tab-content">
       <div className="section">
@@ -15,7 +15,7 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
               <span className="stats-headline-label">Current threshold</span>
               <div className="stats-headline-main">
                 <span className="stats-headline-value">{fmt(currentThreshold)}</span>
-                <span className="stats-headline-status" style={{ color: headlineStatusColor }}>{headlineStatus}</span>
+                <span className="stats-headline-status" style={{ color: headlineStatusTone.color }}>{headlineStatus}</span>
               </div>
             </div>
           </StatsSection>

@@ -55,6 +55,43 @@ export function patternInfo(patterns, walks, leavesPerDay = 3, protocol = PROTOC
   return { todayPat, todayWalks, recMin, recMax, needed, behind, walkBuffer, normalizedLeaves };
 }
 
+export const SEMANTIC_STATUS = {
+  outcome: {
+    none: { color: "var(--green-dark)", label: "No distress" },
+    calm: { color: "var(--green-dark)", label: "No distress" },
+    completed: { color: "var(--green-dark)", label: "Completed" },
+    subtle: { color: "var(--orange)", label: "Subtle stress" },
+    active: { color: "var(--red)", label: "Active distress" },
+    severe: { color: "var(--red)", label: "Severe distress" },
+  },
+  risk: {
+    low: { color: "var(--green-dark)", label: "Low" },
+    medium: { color: "var(--orange)", label: "Medium" },
+    high: { color: "var(--red)", label: "High" },
+  },
+  informational: {
+    improving: { color: "var(--blue-dark)", label: "Improving" },
+    stable: { color: "var(--blue-dark)", label: "Stable" },
+    neutral: { color: "var(--blue-dark)", label: "Building baseline" },
+  },
+};
+
+export const getOutcomeTone = (level) => {
+  if (level === "completed") return SEMANTIC_STATUS.outcome.completed;
+  const normalized = String(level || "").trim().toLowerCase();
+  return SEMANTIC_STATUS.outcome[normalized] ?? SEMANTIC_STATUS.informational.neutral;
+};
+
+export const getRiskTone = (level) => {
+  const normalized = String(level || "").trim().toLowerCase();
+  return SEMANTIC_STATUS.risk[normalized] ?? SEMANTIC_STATUS.informational.neutral;
+};
+
+export const getInformationalTone = (state) => {
+  const normalized = String(state || "").trim().toLowerCase();
+  return SEMANTIC_STATUS.informational[normalized] ?? SEMANTIC_STATUS.informational.neutral;
+};
+
 export const distressLabel = (l) =>
   l === "none" ? "No distress" : l === "subtle" ? "Subtle stress" : l === "active" ? "Active distress" : l === "severe" ? "Severe distress" : "—";
 
