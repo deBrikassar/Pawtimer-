@@ -29,44 +29,44 @@
        - row gap inside cards: use --space-card-row-gap between stacked bits of card content.
        - control gap: use --space-control-gap for form fields, button rows, and inline actions.
        - modal spacing: use --space-modal-padding around modal content and --space-modal-footer-gap above footer actions. */
-    --space-section-gap: var(--space-2);
-    --space-card-padding: var(--space-2);
+    --space-section-gap: 20px;
+    --space-card-padding: 18px;
     --space-card-padding-lg: var(--space-3);
-    --space-card-row-gap: var(--space-1);
-    --space-control-gap: var(--space-1);
+    --space-card-row-gap: 12px;
+    --space-control-gap: 12px;
     --space-modal-padding: var(--space-3);
     --space-modal-footer-gap: var(--space-2);
     --space-inline-control-padding: var(--space-1) var(--space-2);
     --radius-sm: 12px;
     --radius-md: 16px;
     --radius-lg: 20px;
-    --color-bg: #F7F2E7;
+    --color-bg: #FFFFFF;
     --color-surface: #FFFFFF;
-    --color-surface-soft: #EDF5EF;
-    --color-border: #C6DDD0;
-    --color-text: #4B3C30;
-    --color-text-muted: #6B5A4A;
-    --color-text-subtle: #7B6757;
-    --color-accent-700: #2E815F;
-    --color-accent-200: #A8D5BA;
+    --color-surface-soft: #F7F8FA;
+    --color-border: #E5E7EB;
+    --color-text: #1F2937;
+    --color-text-muted: #6B7280;
+    --color-text-subtle: #8A94A6;
+    --color-accent-700: #2F7A57;
+    --color-accent-200: #B8E0C7;
     --bg:          var(--color-bg);
     --surf:        var(--color-surface);
     --surf-soft:   var(--color-surface-soft);
     --border:      var(--color-border);
     --green:       var(--color-accent-200);
-    --green-light: #CBE9D7;
+    --green-light: #D7F0E1;
     --green-dark:  var(--color-accent-700);
     --brown:       var(--color-text);
     --brown-mid:   var(--color-text-muted);
     --brown-muted: var(--color-text-subtle);
-    --amber:       #d4813a;
-    --amber-light: #f0a865;
-    --red:         #c0392b;
-    --orange:      #e67e22;
-    --text:        #4B3C30;
-    --text-muted:  #6b5a4a;
-    --shadow:    0 4px 24px rgba(75,60,48,0.09);
-    --shadow-lg: 0 8px 40px rgba(75,60,48,0.14);
+    --amber:       #C97A2B;
+    --amber-light: #E5A460;
+    --red:         #C24138;
+    --orange:      #D97706;
+    --text:        #1F2937;
+    --text-muted:  #6B7280;
+    --shadow:    0 12px 30px rgba(15,23,42,0.06);
+    --shadow-lg: 0 20px 44px rgba(15,23,42,0.10);
     --radius:    var(--radius-lg);
 
     /* Typography tokens */

@@ -98,10 +98,10 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
       <div className="chart-title">Session duration over time (min)</div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
-          <CartesianGrid stroke="rgba(75,60,48,0.08)" vertical={false}/>
+          <CartesianGrid stroke="rgba(15,23,42,0.08)" vertical={false}/>
           <XAxis dataKey="session" tick={{fontSize:"var(--text-sm)",fill:"var(--text-muted)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} tickLine={false} axisLine={false}/>
           <YAxis tick={{fontSize:"var(--text-sm)",fill:"var(--text-muted)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} tickLine={false} axisLine={false}/>
-          <Tooltip contentStyle={{background:"var(--brown)",border:"none",borderRadius:10,color:"white",fontSize:"var(--text-sm)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} labelStyle={{color:"var(--green-light)",fontSize:"var(--text-sm)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} formatter={(_v,_n,p)=>[`${fmt(p.payload.durationSeconds)} — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
+          <Tooltip contentStyle={{background:"#111827",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,color:"white",fontSize:"var(--text-sm)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)",boxShadow:"0 16px 30px rgba(15,23,42,0.20)"}} labelStyle={{color:"var(--green-light)",fontSize:"var(--text-sm)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} formatter={(_v,_n,p)=>[`${fmt(p.payload.durationSeconds)} — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
           <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:"var(--text-sm)",fill:"var(--green-dark)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}}/>
           <Line type="monotone" dataKey="durationMinutes" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
         </LineChart>
