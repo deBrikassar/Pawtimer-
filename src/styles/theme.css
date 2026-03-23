@@ -165,6 +165,10 @@
     --type-section-eyebrow-line: var(--type-overline-line);
     --type-section-eyebrow-weight: var(--type-overline-weight);
     --type-section-eyebrow-track: var(--type-overline-track);
+    --type-section-heading-size: var(--type-section-title-size);
+    --type-section-heading-line: var(--type-section-title-line);
+    --type-section-heading-weight: var(--type-section-title-weight);
+    --type-section-heading-track: var(--type-section-title-track);
     --type-card-heading-size: var(--type-card-title-size);
     --type-card-heading-line: var(--type-card-title-line);
     --type-card-heading-weight: var(--type-card-title-weight);
