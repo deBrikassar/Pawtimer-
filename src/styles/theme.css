@@ -151,6 +151,10 @@
     --type-button-line: 24px;
     --type-button-weight: var(--font-medium);
     --type-button-track: -0.01em;
+    --type-button-compact-size: var(--text-sm);
+    --type-button-compact-line: 18px;
+    --type-button-compact-weight: var(--type-button-weight);
+    --type-button-compact-track: var(--type-button-track);
 
     /* Semantic typography roles */
     --type-page-heading-size: var(--type-page-title-size);
