@@ -193,6 +193,10 @@
     --type-helper-text-line: var(--type-secondary-line);
     --type-helper-text-weight: var(--type-secondary-weight);
     --type-helper-text-track: var(--type-secondary-track);
+    --type-placeholder-size: var(--type-body-size);
+    --type-placeholder-line: var(--type-body-line);
+    --type-placeholder-weight: var(--type-body-weight);
+    --type-placeholder-track: var(--type-body-track);
     --type-status-text-size: var(--type-overline-size);
     --type-status-text-line: var(--type-overline-line);
     --type-status-text-weight: var(--type-overline-weight);
