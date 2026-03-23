@@ -5,6 +5,7 @@ import { normalizeWalkType } from "./helpers";
 // ─── Storage keys ─────────────────────────────────────────────────────────────
 export const DOGS_KEY       = "pawtimer_dogs_v3";
 export const ACTIVE_DOG_KEY = "pawtimer_active_dog_v3";
+export const GUIDED_ONBOARDING_KEY = "pawtimer_guided_onboarding_v1";
 const SESS_SCHEMA_VERSION = 5;
 export const sessKey    = (id) => `pawtimer_sess_v${SESS_SCHEMA_VERSION}_${id}`;
 const legacySessKeyV4 = (id) => `pawtimer_sess_v4_${id}`;

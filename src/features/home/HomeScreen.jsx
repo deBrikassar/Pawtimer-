@@ -50,6 +50,8 @@ export default function HomeScreen(props) {
     setFeedingDraft,
     cancelFeedingForm,
     saveFeeding,
+    onWalkQuickAction,
+    walkButtonClassName,
   } = props;
 
   return (
@@ -111,7 +113,11 @@ export default function HomeScreen(props) {
         <div className="tool-group-card">
           <div className="section-title">Today's logs</div>
           <div className="quick-actions-row">
-            <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
+            <button
+              className={`quick-action-btn ${walkButtonClassName || ""}`.trim()}
+              type="button"
+              onClick={onWalkQuickAction || (walkPhase === "idle" ? startWalk : undefined)}
+            >
               <span className="quick-action-label">Walk</span>
               <span className="quick-action-meta">{walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `Today: ${pattern.todayWalks}`}</span>
             </button>
