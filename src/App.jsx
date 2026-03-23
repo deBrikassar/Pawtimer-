@@ -53,9 +53,6 @@ export default function PawTimer() {
   const [protoOverride, setProtoOverride] = useState(() => ensureObject(load("pawtimer_proto_override", {})));
   const [settingsDisclosure, setSettingsDisclosure] = useState(null);
   const [trainingSettingsOpen, setTrainingSettingsOpen] = useState(false);
-  const [showCoach, setShowCoach] = useState(false);
-  const [showWelcomeBack, setShowWelcomeBack] = useState(false);
-  const [openTip, setOpenTip] = useState(null);
   const [metricHelp, setMetricHelp] = useState(null);
   const [walkPhase, setWalkPhase] = useState("idle");
   const [walkElapsed, setWalkElapsed] = useState(0);
@@ -316,21 +313,6 @@ export default function PawTimer() {
   }, [activeDogId, dogs]);
 
   useEffect(() => {
-    if (screen === "app" && sessions.length === 0) {
-      const seen = load("pawtimer_coach_seen", false);
-      if (!seen) setTimeout(() => setShowCoach(true), 600);
-    }
-  }, [screen, sessions.length]);
-
-  useEffect(() => {
-    if (screen === "app" && sessions.length > 0) {
-      const last = sessions[sessions.length - 1];
-      const daysSince = (Date.now() - new Date(last.date)) / 86400000;
-      if (daysSince >= 5) setShowWelcomeBack(true);
-    }
-  }, [screen, sessions]);
-
-  useEffect(() => {
     if (phase !== "running") { setSessionCompleted(false); return; }
     if (elapsed >= target) setSessionCompleted(true);
   }, [phase, elapsed, target]);
@@ -567,8 +549,6 @@ export default function PawTimer() {
     <>
       {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
       {metricHelp && <div className="metric-help-overlay" role="dialog" aria-modal="true" aria-labelledby="metric-help-title" onClick={() => setMetricHelp(null)}><div className="metric-help-card" onClick={(e) => e.stopPropagation()}><div className="metric-help-title" id="metric-help-title">{appData.metricExplainers[metricHelp]?.title}</div><div className="metric-help-body">{appData.metricExplainers[metricHelp]?.body}</div>{appData.metricExplainers[metricHelp]?.detail && <div className="metric-help-detail">{appData.metricExplainers[metricHelp]?.detail}</div>}<button className="metric-help-close" onClick={() => setMetricHelp(null)} type="button">Got it</button></div></div>}
-      {showCoach && <div className="coach-overlay" role="dialog" aria-modal="true" aria-labelledby="coach-title"><div className="coach-backdrop" onClick={() => { setShowCoach(false); save("pawtimer_coach_seen", true); }} /><div className="coach-tip" style={{ bottom: 220 }}><div className="coach-tip-arrow" /><div className="coach-title" id="coach-title">This is {appData.name}'s first session 🐾</div><div className="coach-body prose">Tap <strong>Start Session</strong> when you're ready to step out. We'll track the time and check in on how {appData.name} felt when you come back.</div><button className="coach-btn" onClick={() => { setShowCoach(false); save("pawtimer_coach_seen", true); }}>Got it — let's start</button></div></div>}
-
       <div className="app">
         <div className="header">
           <div className="header-top">
@@ -586,7 +566,7 @@ export default function PawTimer() {
           </div>
         </div>
 
-        {tab === "home" && <HomeScreen name={appData.name} sessions={sessions} target={target} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} showWelcomeBack={showWelcomeBack} setShowWelcomeBack={setShowWelcomeBack} activeProto={appData.activeProto} daily={appData.daily} recommendationConfidence={appData.recommendationConfidence} adjustedTarget={appData.adjustedTarget} pattern={appData.pattern} leaveProfile={appData.leaveProfile} openTip={openTip} setOpenTip={setOpenTip} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} />}
+        {tab === "home" && <HomeScreen name={appData.name} sessions={sessions} target={target} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} />}
         {tab === "history" && <HistoryScreen timeline={appData.timeline} sessions={sessions} name={appData.name} setTab={setTab} patLabels={patLabels} historyModal={historyModal} setHistoryModal={setHistoryModal} actions={historyActions} />}
         {tab === "progress" && <StatsScreen name={appData.name} totalCount={appData.totalCount} setTab={setTab} bestCalm={appData.bestCalm} target={target} relapseTone={appData.relapseTone} openMetricHelp={openMetricHelp} chartData={appData.chartData} goalSec={appData.goalSec} CustomDot={CustomDot} distressLabel={appData.distressLabel} chartTrendLabel={appData.chartTrendLabel} aloneLastWeek={appData.aloneLastWeek} avgWalkDuration={appData.avgWalkDuration} avgSessionsPerDay={appData.avgSessionsPerDay} avgWalksPerDay={appData.avgWalksPerDay} currentThreshold={appData.currentThreshold} headlineStatus={appData.headlineStatus} headlineStatusTone={appData.headlineStatusTone} />}
         {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} nextTargetInfo={appData.nextTargetInfo} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} />}

@@ -260,18 +260,13 @@
     text-align:center;
     line-height:var(--type-helper-text-line);
     letter-spacing:var(--type-helper-text-track);
-    cursor:pointer;
+    cursor:default;
     display:inline-flex;
     align-items:center;
     justify-content:center;
     transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  .ring-sub-btn:hover, .ring-sub-btn:focus-visible { color:var(--blue-dark); border-color:color-mix(in srgb, var(--blue-dark) 14%, transparent); background:color-mix(in srgb, var(--blue-dark) 6%, white); }
   .ring-sub-btn-text { display:inline-flex; align-items:center; justify-content:center; }
-  .recommendation-pop { position:absolute; top:calc(100% + var(--space-control-gap)); left:50%; transform:translateX(-50%); width:min(360px, 88vw); background:linear-gradient(180deg, #FFFFFF 0%, color-mix(in srgb, var(--blue-dark) 4%, white) 100%); color:var(--text-muted); border:1px solid color-mix(in srgb, var(--blue-dark) 12%, var(--border)); border-radius:12px; box-shadow:var(--shadow-lg); padding:var(--space-inline-control-padding); font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); text-align:left; z-index:20; }
-  .recommendation-pop p { margin:0; }
-  .recommendation-pop p + p { margin-top:10px; }
-  .recommendation-pop strong { color:var(--brown); }
 
   /* ── Stats rings card ── */
   .stats-rings-card { margin:0; background:linear-gradient(180deg, #FFFFFF 0%, var(--color-surface-raised) 100%); border-radius:18px; padding:var(--space-card-padding); box-shadow:var(--shadow); border:1px solid color-mix(in srgb, var(--border) 88%, white); display:flex; position:relative; animation:surfaceEnter var(--motion-enter) var(--ease-out); }
@@ -745,16 +740,6 @@
   .empty-state .es-cta   { display:inline-block; padding:13px 28px; border:none; border-radius:99px; font-size:var(--type-button-size); font-weight:var(--type-button-weight); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); }
 
 
-  /* ── Coach mark (first launch) ── */
-  .coach-overlay { position:fixed; inset:0; z-index:200; pointer-events:none; }
-  .coach-backdrop { position:absolute; inset:0; background:rgba(15,23,42,0.44); pointer-events:all; }
-  .coach-tip { position:absolute; left:var(--space-card-padding-lg); right:var(--space-card-padding-lg); background:var(--surf); border-radius:var(--radius); padding:var(--space-modal-padding); box-shadow:var(--shadow-lg); pointer-events:all; animation:slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-  .coach-tip-arrow { width:14px; height:10px; background:var(--surf); clip-path:polygon(50% 0%,0% 100%,100% 100%); position:absolute; top:-9px; left:50%; transform:translateX(-50%); }
-  .coach-title { font-size:var(--type-card-title-size); color:var(--brown); font-weight:var(--type-card-title-weight); line-height:var(--type-card-title-line); letter-spacing:var(--type-card-title-track); margin-bottom:var(--space-card-row-gap); }
-  .coach-body  { font-size:var(--type-secondary-size); color:var(--text-muted); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); font-weight:var(--type-secondary-weight); margin-bottom:var(--space-modal-footer-gap); }
-  .coach-btn   { width:100%; padding:var(--space-card-padding); border:none; border-radius:var(--radius-sm); font-size:var(--type-button-lg-size); font-weight:var(--type-button-lg-weight); line-height:var(--type-button-lg-line); letter-spacing:var(--type-button-lg-track); }
-
-
   .metric-help-overlay { position:fixed; inset:0; z-index:240; background:rgba(15,23,42,0.36); display:flex; align-items:flex-end; justify-content:center; padding:var(--space-card-padding); }
   .metric-help-card { width:min(100%, 420px); background:var(--surf); border-radius:var(--radius); padding:var(--space-modal-padding); box-shadow:var(--shadow-lg); }
   .metric-help-title { font-size:var(--type-modal-title-size); color:var(--brown); font-weight:var(--type-modal-title-weight); line-height:var(--type-modal-title-line); letter-spacing:var(--type-modal-title-track); margin-bottom:var(--space-card-row-gap); }
@@ -781,10 +766,6 @@
   .train-coverage { text-align:center; }
 
   /* ── Welcome-back banner ── */
-  .welcome-back { margin:0 var(--space-3); padding:var(--space-card-padding); border-left:3px solid var(--blue-dark); display:flex; justify-content:space-between; align-items:center; gap:var(--space-control-gap); }
-  .train-screen .welcome-back { margin-bottom:var(--space-section-gap); }
-  .welcome-back-text { font-size:var(--type-secondary-size); color:var(--text-muted); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); }
-  .welcome-back-dismiss { background:none; border:none; color:var(--blue-dark); font-size:var(--text-md); cursor:pointer; padding:2px 4px; flex-shrink:0; }
 
   /* ── Pattern break tap ripple ── */
   @keyframes patRipple { from{transform:scale(0.96);opacity:0.6} to{transform:scale(1);opacity:1} }
