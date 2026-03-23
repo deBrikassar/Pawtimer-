@@ -239,8 +239,8 @@
   .session-cancel-btn:hover { border-color:var(--mutedBlue); background:var(--color-surface-soft); }
 
   .readiness-hint { margin:var(--space-card-row-gap) auto 0; width:min(100%, 320px); padding:var(--space-inline-control-padding); border-radius:12px; border:1px solid var(--border); background:#FAFBFC; display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); }
-  .readiness-label { font-size:var(--text-xs); color:var(--text-muted); font-weight:400; }
-  .readiness-value { font-size:var(--text-xs); font-weight:400; letter-spacing:0.03em; }
+  .readiness-label { font-size:var(--type-field-label-size); line-height:var(--type-field-label-line); letter-spacing:var(--type-field-label-track); color:var(--text-muted); font-weight:var(--type-field-label-weight); }
+  .readiness-value { font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); font-weight:var(--type-field-value-weight); letter-spacing:var(--type-field-value-track); color:var(--brown); font-variant-numeric:tabular-nums; }
 
   .session-feedback { margin:0; }
 
@@ -390,7 +390,7 @@
   .walk-type-option { width:100%; text-align:left; border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:var(--space-inline-control-padding); text-transform:capitalize; color:var(--brown); background:var(--surf); cursor:pointer; transition:transform var(--motion-press) var(--ease-out), color var(--motion-base) var(--ease-out), background var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out); }
   .walk-type-option:hover { border-color:var(--mutedBlue); background:var(--softBlue); color:var(--primaryBlue); }
   .walk-type-actions { display:flex; justify-content:flex-end; margin-top:var(--space-control-gap); }
-  .walk-timer-left .walk-timer-elapsed { font-size:var(--text-2xl); font-weight:var(--type-metric-lg-weight); color:var(--green-dark); line-height:var(--type-metric-lg-line); }
+  .walk-timer-left .walk-timer-elapsed { font-size:var(--type-metric-lg-size); font-weight:var(--type-metric-lg-weight); color:var(--green-dark); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
   .walk-timer-left .walk-timer-lbl { font-size:var(--type-secondary-size); color:var(--text-muted); margin-top:1px; }
   .walk-timer-btns { display:flex; gap:var(--space-control-gap); align-items:center; }
   .walk-end-btn { padding:var(--space-inline-control-padding); border:none; }
@@ -698,7 +698,7 @@
   .share-title { font-size:var(--type-card-heading-size); font-weight:var(--type-card-heading-weight); line-height:var(--type-card-heading-line); letter-spacing:var(--type-card-heading-track); color:var(--brown); margin-bottom:0; }
   .share-sub   { font-size:var(--type-helper-text-size); font-weight:var(--type-helper-text-weight); color:var(--text-muted); margin-bottom:0; line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); }
   .share-id-row { display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); background:#FAFBFC; border-radius:var(--radius-sm); padding:var(--space-inline-control-padding); margin-bottom:0; }
-  .share-id-val { font-family:var(--font-ui); font-size:16px; line-height:var(--type-field-value-line); font-weight:var(--type-field-value-weight); color:var(--brown); letter-spacing:var(--type-field-value-track); text-transform:uppercase; flex:1; min-width:0; font-variant-numeric:tabular-nums; }
+  .share-id-val { font-family:var(--font-ui); font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); font-weight:var(--type-field-value-weight); color:var(--brown); letter-spacing:var(--type-field-value-track); text-transform:uppercase; flex:1; min-width:0; font-variant-numeric:tabular-nums; }
   .copy-btn { border:none; border-radius:var(--radius-sm); padding:var(--space-inline-control-padding); flex-shrink:0; transition:transform var(--motion-press) var(--ease-out), color var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out); }
 
   .share-steps { font-size:var(--type-body-size); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); padding-left:var(--space-card-padding); font-family:var(--font-prose); }
