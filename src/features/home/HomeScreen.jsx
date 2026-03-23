@@ -1,4 +1,4 @@
-import { SessionControl, SessionRatingPanel, TrainProgressBar, WelcomeBackBanner } from "../train/TrainComponents";
+import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
 import { StatsProgressRing } from "../stats/StatsComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton } from "../app/ui";
@@ -27,16 +27,9 @@ export default function HomeScreen(props) {
     startSession,
     endSession,
     cancelSession,
-    showWelcomeBack,
-    setShowWelcomeBack,
     activeProto,
     daily,
-    recommendationConfidence,
-    adjustedTarget,
     pattern,
-    leaveProfile,
-    openTip,
-    setOpenTip,
     walkPhase,
     startWalk,
     cancelWalk,
@@ -61,8 +54,6 @@ export default function HomeScreen(props) {
 
   return (
     <div className="tab-content train-screen">
-      {showWelcomeBack && <WelcomeBackBanner sessions={sessions} name={name} target={target} onDismiss={() => setShowWelcomeBack(false)} fmt={fmt} />}
-
       <div className="train-main">
         <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} />
 
@@ -88,7 +79,6 @@ export default function HomeScreen(props) {
         {phase === "idle" && (() => {
           const goalFrac = Math.min(goalPct / 100, 1);
           const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(daily.count / activeProto.sessionsPerDayMax, 1) : 0;
-          const toggleRecommendations = () => setOpenTip((prev) => (prev === "recommendations" ? null : "recommendations"));
           const nextSessionLabel = fmt(target);
           return (
             <div className="stats-rings-card">
@@ -99,9 +89,6 @@ export default function HomeScreen(props) {
                 label="Next session"
                 progress={goalFrac}
                 fillClassName="ring-fill-1"
-                onLabelClick={toggleRecommendations}
-                labelExpanded={openTip === "recommendations"}
-                labelControls="recommendation-popover"
               />
               <div className="ring-col-sep" />
               <StatsProgressRing
@@ -110,16 +97,7 @@ export default function HomeScreen(props) {
                 label="Sessions today"
                 progress={sessFrac}
                 fillClassName="ring-fill-2"
-                onLabelClick={toggleRecommendations}
-                labelExpanded={openTip === "recommendations"}
-                labelControls="recommendation-popover"
               />
-              {openTip === "recommendations" && (
-                <div className="recommendation-pop" id="recommendation-popover" role="dialog" aria-label="Recommendation details">
-                  <p>Recommendation confidence: <strong>{recommendationConfidence.toUpperCase()}</strong> · suggested desensitization dose target {fmt(adjustedTarget)} built from recent calm history, distress, and stability.</p>
-                  <p>Leave frequency profile: ~{pattern.normalizedLeaves}/day ({leaveProfile.desc}). Higher leave frequency raises today's pattern-break target and requires more calm-session consistency before bigger recommendations.</p>
-                </div>
-              )}
             </div>
           );
         })()}

@@ -199,12 +199,6 @@
   animation: surfaceEnter var(--motion-enter) var(--ease-out);
 }
 
-.welcome-back {
-  background: #FAFBFC;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surf) 60%, transparent);
-}
 
 :is(.ds-dog-card, .ob-option, .ob-dur-btn) {
   background: var(--surf);
@@ -233,7 +227,7 @@
   border-color: var(--blue-dark);
 }
 
-:is(.ds-btn-primary, .ob-btn-next, .coach-btn, .metric-help-close, .walk-end-btn) {
+:is(.ds-btn-primary, .ob-btn-next, .metric-help-close, .walk-end-btn) {
   background: var(--green-dark);
   color: #FFFFFF;
   border: 1px solid var(--border);
@@ -248,7 +242,7 @@
     opacity var(--motion-fast) var(--ease-standard);
 }
 
-:is(.ds-btn-primary, .ob-btn-next, .coach-btn, .metric-help-close, .walk-end-btn):hover:not(:disabled) {
+:is(.ds-btn-primary, .ob-btn-next, .metric-help-close, .walk-end-btn):hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
@@ -321,8 +315,8 @@
 }
 
 
-:is(.ds-btn-primary, .ob-btn-next, .coach-btn, .metric-help-close, .walk-end-btn):active:not(:disabled),
-:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .pat-edit-reset, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-cancel, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .welcome-back-dismiss, .es-cta):active:not(:disabled) {
+:is(.ds-btn-primary, .ob-btn-next, .metric-help-close, .walk-end-btn):active:not(:disabled),
+:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .pat-edit-reset, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-cancel, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta):active:not(:disabled) {
   transform: scale(0.96);
 }
 

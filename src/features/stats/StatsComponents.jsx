@@ -83,9 +83,6 @@ export function StatsProgressRing({
   label,
   progress,
   fillClassName,
-  onLabelClick,
-  labelExpanded = false,
-  labelControls,
 }) {
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
@@ -120,16 +117,9 @@ export function StatsProgressRing({
           </div>
         </div>
       </div>
-      <button
-        className="ring-sub-btn"
-        type="button"
-        onClick={onLabelClick}
-        aria-haspopup="dialog"
-        aria-expanded={labelExpanded}
-        aria-controls={labelControls}
-      >
+      <div className="ring-sub-btn" aria-label={label}>
         <span className="ring-sub-btn-text">{label}</span>
-      </button>
+      </div>
     </div>
   );
 }

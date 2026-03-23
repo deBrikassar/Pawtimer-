@@ -87,19 +87,6 @@ export function SessionControl({
   );
 }
 
-export function WelcomeBackBanner({ sessions, name, target, onDismiss, fmt }) {
-  if (!sessions.length) return null;
-  const last = sessions[sessions.length - 1];
-  const days = Math.floor((Date.now() - new Date(last.date)) / 86400000);
-  return (
-    <div className="welcome-back">
-      <div className="welcome-back-text">
-        Welcome back — last session was <strong>{days} day{days !== 1 ? "s" : ""} ago</strong>. {name}'s target is still {fmt(target)}.
-      </div>
-      <button className="welcome-back-dismiss" onClick={onDismiss} aria-label="Dismiss">×</button>
-    </div>
-  );
-}
 
 export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
   return (
