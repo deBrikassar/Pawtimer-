@@ -50,13 +50,18 @@
     --color-text-subtle: #8A97A8;
     --color-accent-700: #2F7A57;
     --color-accent-200: #B8E0C7;
-    --color-secondary-50: #EFF6FF;
-    --color-secondary-100: #DBEAFE;
-    --color-secondary-200: #BFDBFE;
-    --color-secondary-500: #3B82F6;
-    --color-secondary-600: #2563EB;
-    --color-secondary-700: #1D4ED8;
-    --color-secondary-800: #1E40AF;
+    --color-secondary-50: #F4F7FC;
+    --color-secondary-100: #E7EEF8;
+    --color-secondary-200: #D3DFF0;
+    --color-secondary-500: #5B78B4;
+    --color-secondary-600: #4D6AA5;
+    --color-secondary-700: #405B90;
+    --color-secondary-800: #334977;
+    --primaryBlue: var(--color-secondary-500);
+    --softBlue: var(--color-secondary-50);
+    --softBlueHover: var(--color-secondary-100);
+    --softBlueBorder: var(--color-secondary-200);
+    --mutedBlue: #7B91BA;
     --bg:          var(--color-bg);
     --surf:        var(--color-surface);
     --surf-soft:   var(--color-surface-soft);
@@ -64,13 +69,14 @@
     --green:       var(--color-accent-200);
     --green-light: #D7F0E1;
     --green-dark:  var(--color-accent-700);
-    --blue:        var(--color-secondary-500);
-    --blue-light:  var(--color-secondary-100);
-    --blue-soft:   var(--color-secondary-50);
-    --blue-dark:   var(--color-secondary-600);
-    --blue-darker: var(--color-secondary-700);
-    --blue-wash:   rgba(37,99,235,0.07);
-    --focus-ring:  color-mix(in srgb, var(--blue) 34%, transparent);
+    --blue:        var(--primaryBlue);
+    --blue-light:  var(--softBlueHover);
+    --blue-soft:   var(--softBlue);
+    --blue-dark:   var(--primaryBlue);
+    --blue-darker: var(--color-secondary-600);
+    --blue-muted:  var(--mutedBlue);
+    --blue-wash:   rgba(91,120,180,0.08);
+    --focus-ring:  color-mix(in srgb, var(--primaryBlue) 28%, transparent);
     --brown:       var(--color-text);
     --brown-mid:   var(--color-text-muted);
     --brown-muted: var(--color-text-subtle);
@@ -228,7 +234,7 @@
   button:focus-visible,
   input:focus-visible,
   select:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--blue-dark) 55%, transparent);
+    outline: 2px solid color-mix(in srgb, var(--primaryBlue) 40%, transparent);
     outline-offset: 2px;
   }
 

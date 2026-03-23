@@ -33,7 +33,7 @@
 }
 
 .surface-card-interactive:hover {
-  border-color: color-mix(in srgb, var(--blue-dark) 42%, var(--border));
+  border-color: color-mix(in srgb, var(--mutedBlue) 52%, var(--border));
   transform: translateY(-1px);
 }
 
@@ -44,8 +44,8 @@
 
 .surface-card-interactive.is-selected,
 .surface-card-interactive[aria-pressed="true"] {
-  border-color: var(--blue-dark);
-  background: color-mix(in srgb, var(--blue-dark) 8%, white);
+  border-color: var(--primaryBlue);
+  background: var(--softBlue);
 }
 
 .surface-card-panel,
@@ -121,21 +121,21 @@
 }
 
 .button-secondary {
-  background: color-mix(in srgb, var(--blue-dark) 10%, white);
-  color: var(--blue-dark);
-  border-color: color-mix(in srgb, var(--blue-dark) 28%, var(--border));
+  background: var(--softBlue);
+  color: var(--primaryBlue);
+  border-color: color-mix(in srgb, var(--mutedBlue) 34%, var(--border));
   box-shadow: var(--shadow);
 }
 
 .button-secondary:hover:not(:disabled) {
   transform: translateY(-2px);
-  background: color-mix(in srgb, var(--blue-dark) 16%, white);
-  border-color: var(--blue-dark);
+  background: var(--softBlueHover);
+  border-color: var(--mutedBlue);
   box-shadow: var(--shadow-lg);
 }
 
 .button-secondary:active:not(:disabled) {
-  background: color-mix(in srgb, var(--blue-darker) 18%, white);
+  background: var(--softBlueHover);
   border-color: var(--blue-darker);
   transform: translateY(0);
 }
@@ -149,9 +149,9 @@
 
 .button-tertiary:hover:not(:disabled),
 .button-ghost:hover:not(:disabled) {
-  background: #FAFBFC;
-  border-color: var(--blue-dark);
-  color: var(--blue-dark);
+  background: var(--color-surface-soft);
+  border-color: var(--mutedBlue);
+  color: var(--primaryBlue);
 }
 
 .button-danger {
@@ -214,13 +214,13 @@
 }
 
 :is(.ds-dog-card, .ob-option, .ob-dur-btn):hover {
-  border-color: color-mix(in srgb, var(--blue-dark) 42%, var(--border));
+  border-color: color-mix(in srgb, var(--mutedBlue) 52%, var(--border));
   transform: translateY(-1px);
 }
 
 :is(.ob-option.selected, .ob-dur-btn.selected) {
-  border-color: var(--blue-dark);
-  background: color-mix(in srgb, var(--blue-dark) 8%, white);
+  border-color: var(--primaryBlue);
+  background: var(--softBlue);
 }
 
 .ds-dog-card:hover {
@@ -249,8 +249,8 @@
 
 .copy-btn,
 .empty-state .es-cta {
-  background: color-mix(in srgb, var(--blue-dark) 10%, white);
-  color: var(--blue-dark);
+  background: var(--softBlue);
+  color: var(--primaryBlue);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -265,15 +265,15 @@
 
 :is(.copy-btn, .empty-state .es-cta):hover:not(:disabled) {
   transform: translateY(-2px);
-  background: color-mix(in srgb, var(--blue-dark) 15%, white);
-  border-color: var(--blue-dark);
+  background: var(--softBlueHover);
+  border-color: var(--mutedBlue);
   box-shadow: var(--shadow-lg);
 }
 
 :is(.walk-cancel-btn, .settings-inline-btn, .settings-btn) {
   background: var(--surf);
-  color: var(--blue-dark);
-  border: 1.5px solid color-mix(in srgb, var(--blue-dark) 26%, var(--border));
+  color: var(--primaryBlue);
+  border: 1.5px solid color-mix(in srgb, var(--mutedBlue) 32%, var(--border));
   cursor: pointer;
   transition:
     border-color var(--motion-base) var(--ease-standard),
@@ -285,8 +285,8 @@
 }
 
 :is(.walk-cancel-btn, .settings-inline-btn, .settings-btn):hover:not(:disabled) {
-  background: color-mix(in srgb, var(--blue-dark) 7%, white);
-  border-color: var(--blue-dark);
+  background: var(--color-surface-soft);
+  border-color: var(--mutedBlue);
   color: var(--blue-darker);
 }
 
