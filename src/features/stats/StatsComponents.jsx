@@ -43,7 +43,7 @@ function useAnimatedValue(value, { duration = 180, round = false } = {}) {
 export function StatsSection({ title, children, className = "" }) {
   return (
     <div className={`stats-section ${className}`.trim()}>
-      <p className="stats-section-title">{title}</p>
+      <h2 className="stats-section-title">{title}</h2>
       {children}
     </div>
   );
