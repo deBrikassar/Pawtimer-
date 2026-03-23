@@ -55,7 +55,7 @@ export default function SettingsScreen(props) {
             <div className="share-sub">Share this ID to sync devices.</div>
             <div className="share-id-row">
               <div className="share-id-val" aria-label="Dog ID">{activeDogId}</div>
-              <button className="copy-btn" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
+              <button className="copy-btn button-size-secondary-pill" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
             </div>
             <div className="settings-sync-summary" aria-live="polite">
               <div className="share-sub" style={{ marginBottom: 8 }}>Current sync status</div>
@@ -86,7 +86,7 @@ export default function SettingsScreen(props) {
               <div className="settings-summary-row"><span className="settings-summary-label">Next-target logic</span><span className="settings-summary-value">Adaptive from calm history, distress, and risk</span></div>
               <div className="settings-summary-row"><span className="settings-summary-label">Pattern breaks</span><span className="settings-summary-value">{pattern.recMin}–{pattern.recMax}/day</span></div>
             </div>
-            <button className="settings-inline-btn" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit training plan</button>
+            <button className="settings-inline-btn button-size-secondary-pill" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit training plan</button>
           </div>
 
           <div className="settings-section-label">Custom labels</div>
@@ -135,7 +135,7 @@ export default function SettingsScreen(props) {
               <div className="settings-collapsible-inner">
                 <div className="diag-head">
                   <div className="share-title" style={{ marginBottom: 0 }}>Sync diagnostics</div>
-                  <button className="diag-run-btn" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>{syncDiagRunning ? "Running…" : "Run connection test"}</button>
+                  <button className="diag-run-btn button-size-compact-tertiary" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>{syncDiagRunning ? "Running…" : "Run connection test"}</button>
                 </div>
                 <div className="share-sub" style={{ marginBottom: 10 }}>Use this if sync turns red. It checks env setup, read access, and write/delete permissions.</div>
                 <div className="diag-grid">
@@ -150,15 +150,15 @@ export default function SettingsScreen(props) {
           </div>
 
           <div className="settings-section-label">Account</div>
-          <button className="settings-btn" onClick={() => { if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) { setDogs((prev) => prev.filter((d) => d.id !== activeDogId)); setScreen("onboard"); } }}>Edit {name}'s profile</button>
-          <button className="settings-btn settings-btn--icon" onClick={() => setScreen("select")}>
+          <button className="settings-btn button-size-secondary-pill" onClick={() => { if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) { setDogs((prev) => prev.filter((d) => d.id !== activeDogId)); setScreen("onboard"); } }}>Edit {name}'s profile</button>
+          <button className="settings-btn settings-btn--icon button-size-secondary-pill" onClick={() => setScreen("select")}>
             <span className="settings-btn__icon" aria-hidden="true"><PawIcon size={18} /></span>
             <span className="settings-btn__label">Switch dog</span>
           </button>
 
           <div className="settings-danger-sep" />
           <div className="settings-section-label" style={{ color: "var(--red)" }}>Danger zone</div>
-          <button className="settings-btn danger" onClick={() => {
+          <button className="settings-btn danger button-size-secondary-pill" onClick={() => {
             if (window.confirm(`Remove ${name} from this device? Sessions stored elsewhere are unaffected.`)) {
               const newDogs = dogsState.filter((d) => d.id !== activeDogId);
               setDogs(newDogs);
@@ -181,7 +181,7 @@ export default function SettingsScreen(props) {
               <div className="proto-warn-banner">
                 <div className="proto-warn-title">Editing is usually not recommended</div>
                 <div className="proto-warn-body">These values are based on clinical separation anxiety protocols. Changing them may slow your dog's progress or cause regression.</div>
-                <button onClick={() => setProtoWarnAck(true)} className="settings-inline-btn" type="button">I understand — let me edit</button>
+                <button onClick={() => setProtoWarnAck(true)} className="settings-inline-btn button-size-secondary-pill" type="button">I understand — let me edit</button>
               </div>
             ) : (
               <div>
