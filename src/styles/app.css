@@ -312,11 +312,11 @@
     text-align:center;
     white-space:nowrap;
     color:var(--text);
-    font-family:var(--font-main);
-    font-size:clamp(1.15rem, 4vw, 1.5rem);
-    line-height:1;
-    font-weight:var(--font-bold);
-    letter-spacing:-0.03em;
+    font-family:var(--font-ui);
+    font-size:var(--type-ring-metric-size);
+    line-height:var(--type-ring-metric-line);
+    font-weight:var(--type-ring-metric-weight);
+    letter-spacing:var(--type-ring-metric-track);
     font-variant-numeric:tabular-nums;
     font-feature-settings:"tnum" 1;
   }
@@ -656,9 +656,9 @@
   button.stat-card:focus-visible { outline:2px solid var(--primaryBlue); outline-offset:2px; }
   .stat-card-emphasis { min-height:98px; }
   .stat-card .stats-metric-value,
-  .stat-card .stat-val { font-family:var(--font-ui); font-size:clamp(1.05rem, 3vw, var(--type-metric-card-value-size)); color:var(--text); font-weight:var(--font-bold); line-height:var(--type-metric-card-value-line); letter-spacing:var(--type-metric-card-value-track); text-transform:none; opacity:1; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; margin:0; padding:0; align-self:end; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:clip; transition:color var(--motion-base) var(--ease-out); }
+  .stat-card .stat-val { font-family:var(--font-ui); font-size:var(--type-metric-card-value-size); color:var(--text); font-weight:var(--type-metric-card-value-weight); line-height:var(--type-metric-card-value-line); letter-spacing:var(--type-metric-card-value-track); text-transform:none; opacity:1; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; margin:0; padding:0; align-self:end; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:clip; transition:color var(--motion-base) var(--ease-out); }
   .stat-card .stats-metric-label,
-  .stat-card .stat-lbl { font-family:var(--font-ui); font-size:clamp(0.6875rem, 2.4vw, var(--type-field-label-size)); color:var(--text-muted); margin-top:0; font-weight:var(--font-medium); line-height:var(--type-field-label-line); letter-spacing:0.01em; text-transform:none; opacity:1; font-feature-settings:normal; margin-bottom:0; padding:0; align-self:start; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:clip; }
+  .stat-card .stat-lbl { font-family:var(--font-ui); font-size:var(--type-field-label-size); color:var(--text-muted); margin-top:0; font-weight:var(--type-field-label-weight); line-height:var(--type-field-label-line); letter-spacing:var(--type-field-label-track); text-transform:none; opacity:1; font-feature-settings:normal; margin-bottom:0; padding:0; align-self:start; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:clip; }
   .stat-card .stats-metric-detail { font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); color:var(--text-muted); margin-top:var(--space-card-row-gap); }
   .stats-headline-card { background:linear-gradient(180deg,#FFFFFF 0%, #FAFBFC 100%); border:1px solid var(--border); border-radius:var(--radius); padding:var(--space-card-padding); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:var(--space-control-gap); }
   .stats-headline-main { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:end; column-gap:var(--space-control-gap); min-width:0; }

@@ -112,12 +112,12 @@ export function StatsProgressRing({
           />
         </svg>
         <div className="ring-inner">
-          <div className="ring-val">
+          <div className="ring-val stats-metric-value">
             <span className="ring-val-primary">{displayValue}</span>
           </div>
         </div>
       </div>
-      <div className="ring-sub-btn" aria-label={label}>
+      <div className="ring-sub-btn stats-metric-label" aria-label={label}>
         <span className="ring-sub-btn-text">{label}</span>
       </div>
     </div>
