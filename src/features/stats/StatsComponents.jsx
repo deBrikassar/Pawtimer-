@@ -6,6 +6,32 @@ import {
 import EmptyState from "../../components/EmptyState";
 
 
+const chartTypography = {
+  helperText: {
+    fontFamily: "var(--font-main)",
+    fontSize: "var(--type-helper-text-size)",
+    lineHeight: "var(--type-helper-text-line)",
+    fontWeight: "var(--type-helper-text-weight)",
+    letterSpacing: "var(--type-helper-text-track)",
+  },
+  axisTick: {
+    fill: "var(--text-muted)",
+  },
+  tooltipContent: {
+    background: "#111827",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 12,
+    color: "white",
+    boxShadow: "0 16px 30px rgba(15,23,42,0.20)",
+  },
+  tooltipLabel: {
+    color: "var(--green-light)",
+  },
+  referenceLabel: {
+    fill: "var(--green-dark)",
+  },
+};
+
 function useAnimatedValue(value, { duration = 180, round = false } = {}) {
   const [displayValue, setDisplayValue] = useState(value);
 
@@ -144,10 +170,10 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
           <CartesianGrid stroke="rgba(15,23,42,0.08)" vertical={false}/>
-          <XAxis dataKey="session" tick={{fontSize:"var(--text-sm)",fill:"var(--text-muted)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} tickLine={false} axisLine={false}/>
-          <YAxis tick={{fontSize:"var(--text-sm)",fill:"var(--text-muted)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} tickLine={false} axisLine={false}/>
-          <Tooltip contentStyle={{background:"#111827",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,color:"white",fontSize:"var(--text-sm)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)",boxShadow:"0 16px 30px rgba(15,23,42,0.20)"}} labelStyle={{color:"var(--green-light)",fontSize:"var(--text-sm)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}} formatter={(_v,_n,p)=>[`${fmt(p.payload.durationSeconds)} — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
-          <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{value:"Goal",position:"right",fontSize:"var(--text-sm)",fill:"var(--green-dark)",fontWeight:"var(--type-secondary-weight)",fontFamily:"var(--font-main)"}}/>
+          <XAxis dataKey="session" tick={{ ...chartTypography.helperText, ...chartTypography.axisTick }} tickLine={false} axisLine={false}/>
+          <YAxis tick={{ ...chartTypography.helperText, ...chartTypography.axisTick }} tickLine={false} axisLine={false}/>
+          <Tooltip contentStyle={{ ...chartTypography.helperText, ...chartTypography.tooltipContent }} labelStyle={{ ...chartTypography.helperText, ...chartTypography.tooltipLabel }} formatter={(_v,_n,p)=>[`${fmt(p.payload.durationSeconds)} — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
+          <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{ value:"Goal", position:"right", ...chartTypography.helperText, ...chartTypography.referenceLabel }}/>
           <Line type="monotone" dataKey="durationMinutes" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
         </LineChart>
       </ResponsiveContainer>
