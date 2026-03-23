@@ -449,7 +449,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               </div>
               <div className="feeding-actions">
                 <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Keep item</button>
-                <button className="history-delete-confirm" type="button" onClick={() => actions.confirmHistoryDelete(historyModal, setHistoryModal)}>Delete</button>
+                <button className="history-delete-confirm button-size-secondary-pill" type="button" onClick={() => actions.confirmHistoryDelete(historyModal, setHistoryModal)}>Delete</button>
               </div>
             </>}
           </div>
