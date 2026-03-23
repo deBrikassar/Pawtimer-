@@ -296,6 +296,10 @@
 }
 
 .settings-btn {
+  min-height: 44px;
+  padding-block: 12px;
+  justify-content: flex-start;
+  text-align: left;
   box-shadow: var(--shadow);
 }
 

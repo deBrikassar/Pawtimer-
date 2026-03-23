@@ -151,7 +151,10 @@ export default function SettingsScreen(props) {
 
           <div className="settings-section-label">Account</div>
           <button className="settings-btn" onClick={() => { if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) { setDogs((prev) => prev.filter((d) => d.id !== activeDogId)); setScreen("onboard"); } }}>Edit {name}'s profile</button>
-          <button className="settings-btn" onClick={() => setScreen("select")} style={{ display: "flex", alignItems: "center", gap: 8 }}><PawIcon size={18} aria-hidden="true" /> Switch dog</button>
+          <button className="settings-btn settings-btn--icon" onClick={() => setScreen("select")}>
+            <span className="settings-btn__icon" aria-hidden="true"><PawIcon size={18} /></span>
+            <span className="settings-btn__label">Switch dog</span>
+          </button>
 
           <div className="settings-danger-sep" />
           <div className="settings-section-label" style={{ color: "var(--red)" }}>Danger zone</div>
