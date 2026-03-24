@@ -225,16 +225,29 @@
 
 .shared-button,
 .button-base {
+  --button-size-min-height: 44px;
+  --button-size-padding-block: var(--space-1);
+  --button-size-padding-inline: var(--space-2);
+  --button-size-radius: var(--radius-md);
+  --button-size-font-size: var(--type-button-size);
+  --button-size-line-height: var(--type-button-line);
+  --button-size-font-weight: var(--type-button-weight);
+  --button-size-letter-spacing: var(--type-button-track);
+  --button-size-gap: var(--space-control-gap);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--row-gap-default);
+  gap: var(--button-size-gap);
+  min-height: var(--button-size-min-height);
+  padding-block: var(--button-size-padding-block);
+  padding-inline: var(--button-size-padding-inline);
+  border-radius: var(--button-size-radius);
   border: 1px solid var(--border);
   cursor: pointer;
-  font-weight: var(--type-button-weight);
-  font-size: var(--type-button-size);
-  line-height: var(--type-button-line);
-  letter-spacing: var(--type-button-track);
+  font-weight: var(--button-size-font-weight);
+  font-size: var(--button-size-font-size);
+  line-height: var(--button-size-line-height);
+  letter-spacing: var(--button-size-letter-spacing);
   transition:
     border-color var(--motion-base) var(--ease-standard),
     background var(--motion-base) var(--ease-standard),
@@ -252,7 +265,10 @@
 
 .button-size-primary-cta,
 .button-size-secondary-pill,
-.button-size-compact-tertiary {
+.button-size-compact-tertiary,
+.button--sm,
+.button--md,
+.button--lg {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -268,12 +284,48 @@
   white-space: nowrap;
 }
 
-:is(.button-size-primary-cta, .button-size-secondary-pill, .button-size-compact-tertiary) > :is(svg, .settings-btn__icon, .shared-button__icon) {
+:is(.button-size-primary-cta, .button-size-secondary-pill, .button-size-compact-tertiary, .button--sm, .button--md, .button--lg) > :is(svg, .settings-btn__icon, .shared-button__icon) {
   flex-shrink: 0;
 }
 
-:is(.button-size-primary-cta, .button-size-secondary-pill, .button-size-compact-tertiary) > :is(.settings-btn__label, .shared-button__label) {
+:is(.button-size-primary-cta, .button-size-secondary-pill, .button-size-compact-tertiary, .button--sm, .button--md, .button--lg) > :is(.settings-btn__label, .shared-button__label) {
   min-width: 0;
+}
+
+.button--sm {
+  --button-size-min-height: 36px;
+  --button-size-padding-block: 6px;
+  --button-size-padding-inline: 12px;
+  --button-size-radius: 999px;
+  --button-size-font-size: var(--type-button-compact-size);
+  --button-size-line-height: var(--type-button-compact-line);
+  --button-size-font-weight: var(--type-button-compact-weight);
+  --button-size-letter-spacing: var(--type-button-compact-track);
+  --button-size-gap: 6px;
+}
+
+.button--md {
+  --button-size-min-height: 44px;
+  --button-size-padding-block: var(--space-1);
+  --button-size-padding-inline: var(--space-2);
+  --button-size-radius: 999px;
+  --button-size-font-size: var(--type-button-size);
+  --button-size-line-height: var(--type-button-line);
+  --button-size-font-weight: var(--type-button-weight);
+  --button-size-letter-spacing: var(--type-button-track);
+  --button-size-gap: var(--space-control-gap);
+}
+
+.button--lg {
+  --button-size-min-height: 52px;
+  --button-size-padding-block: 14px;
+  --button-size-padding-inline: 24px;
+  --button-size-radius: var(--radius-md);
+  --button-size-font-size: var(--type-button-lg-size);
+  --button-size-line-height: var(--type-button-lg-line);
+  --button-size-font-weight: var(--type-button-lg-weight);
+  --button-size-letter-spacing: var(--type-button-lg-track);
+  --button-size-gap: 10px;
 }
 
 .button-size-primary-cta {
@@ -389,12 +441,25 @@
 .button-danger {
   background: var(--red);
   color: var(--surf);
+  border-color: transparent;
   box-shadow: var(--shadow);
 }
 
 .button-danger:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--red) 92%, black);
   box-shadow: var(--shadow-lg);
+}
+
+.button-danger:active:not(:disabled) {
+  background: color-mix(in srgb, var(--red) 85%, black);
+  transform: translateY(0);
+}
+
+.button-danger:disabled {
+  background: color-mix(in srgb, var(--red) 55%, var(--border));
+  border-color: transparent;
+  color: color-mix(in srgb, var(--surf) 78%, var(--text-muted));
 }
 
 .button-pill,
@@ -544,19 +609,8 @@
   box-shadow: var(--shadow);
 }
 
-.settings-btn.danger {
-  background: var(--red);
-  color: var(--surf);
-  border-color: transparent;
+.settings-btn.button-danger {
   box-shadow: var(--shadow);
-}
-
-.settings-btn.danger:hover:not(:disabled) {
-  background: var(--red);
-  color: var(--surf);
-  border-color: transparent;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
 }
 
 

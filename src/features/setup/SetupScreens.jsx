@@ -71,7 +71,7 @@ export function Onboarding({ onComplete, onBack }) {
         </>}
       </div>
       <div className="ob-footer">
-        <button className="ob-btn-next button-base button-primary button-size-primary-cta button--block" onClick={handleNext} disabled={!canNext}>
+        <button className="ob-btn-next button-base button-primary button--lg button-size-primary-cta button--block" onClick={handleNext} disabled={!canNext}>
           {step < 3 ? "Continue →" : `Start training with ${displayName} 🐾`}
         </button>
         <button className="ob-back-btn" onClick={() => step === 0 ? onBack?.() : setStep((s) => s - 1)}>
@@ -121,7 +121,7 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
           </div>
         </>}
 
-        <button className="ds-btn button-base button-primary button-size-primary-cta button--block" onClick={onCreateNew}>
+        <button className="ds-btn button-base button-primary button--lg button-size-primary-cta button--block" onClick={onCreateNew}>
           <PawIcon size={20} color="rgba(255,255,255,0.85)" /> Add a new dog
         </button>
 
