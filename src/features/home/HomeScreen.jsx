@@ -128,7 +128,7 @@ export default function HomeScreen(props) {
 
         {(walkPhase !== "idle" || patOpen) && (
           <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
-            <div className="quick-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
               <div className="quick-modal-head">
                 <div className="quick-modal-title">{walkPhase !== "idle" ? "Log walk" : "Log pattern break"}</div>
                 <ModalCloseButton onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }} />
@@ -185,7 +185,7 @@ export default function HomeScreen(props) {
 
         {feedingOpen && (
           <div className="feeding-overlay" role="dialog" aria-modal="true" aria-labelledby="feeding-title" onClick={cancelFeedingForm}>
-            <div className="feeding-card" onClick={(e) => e.stopPropagation()}>
+            <div className="feeding-card modal-card modal-card--dialog-sm" onClick={(e) => e.stopPropagation()}>
               <div className="quick-modal-head">
                 <div className="section-title section-title--flush" id="feeding-title">Log feeding</div>
                 <ModalCloseButton onClick={cancelFeedingForm} />

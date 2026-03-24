@@ -63,6 +63,35 @@
   box-shadow: var(--shadow-lg);
 }
 
+.modal-card {
+  --modal-card-max-width: min(100%, 420px);
+  --modal-card-max-height: none;
+  width: min(100%, var(--modal-card-max-width));
+  max-height: var(--modal-card-max-height);
+  overflow: auto;
+  padding: var(--space-modal-padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-control-gap);
+  background: linear-gradient(180deg, #FFFFFF 0%, var(--color-surface-raised) 100%);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modal-card--sheet {
+  align-self: flex-end;
+}
+
+.modal-card--dialog-sm {
+  --modal-card-max-width: min(100%, 360px);
+}
+
+.modal-card--dialog-md {
+  --modal-card-max-width: min(100%, 430px);
+}
+
 .shared-pill {
   border-radius: 999px;
   font-size: var(--type-overline-size);
@@ -300,15 +329,6 @@
   animation: surfaceEnter var(--motion-enter) var(--ease-out);
 }
 
-:is(.quick-modal-card, .feeding-card, .activity-time-card) {
-  background: var(--surf);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  animation: surfaceEnter var(--motion-enter) var(--ease-out);
-}
-
-
 :is(.ds-dog-card, .ob-option, .ob-dur-btn) {
   background: var(--surf);
   border: 1.5px solid var(--border);
@@ -449,7 +469,7 @@
 @media (prefers-reduced-motion: reduce) {
   .shared-button,
   .button-base,
-  :is(.share-card, .stat-card, .h-item, .tool-group-card, .quick-modal-card, .feeding-card, .activity-time-card, .stats-section, .stats-support-row, .stats-rings-card) {
+  :is(.share-card, .stat-card, .h-item, .tool-group-card, .modal-card, .stats-section, .stats-support-row, .stats-rings-card) {
     animation: none;
     transition-duration: 0.01ms !important;
   }

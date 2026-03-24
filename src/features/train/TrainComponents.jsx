@@ -123,7 +123,7 @@ export function SessionRatingPanel({
 
   return (
     <div className="rating-overlay" role="presentation">
-      <div className="rating-screen session-feedback" role="dialog" aria-modal="true" aria-labelledby="session-rating-title">
+      <div className="rating-screen session-feedback modal-card modal-card--dialog-md" role="dialog" aria-modal="true" aria-labelledby="session-rating-title">
         <div className="rating-title" id="session-rating-title">Was there any stress?</div>
         <div className="rating-sub">
           {fmt(finalElapsed)} session — how did {name} handle it?

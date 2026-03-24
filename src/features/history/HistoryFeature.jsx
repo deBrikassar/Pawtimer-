@@ -406,7 +406,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
 
       {historyModal && (
         <div className="activity-time-overlay" role="dialog" aria-modal="true" aria-labelledby="history-modal-title" onClick={() => setHistoryModal(null)}>
-          <div className="activity-time-card history-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="activity-time-card history-modal-card modal-card modal-card--dialog-sm" onClick={(e) => e.stopPropagation()}>
             <div className="quick-modal-head">
               <div className="section-title section-title--flush" id="history-modal-title">
                 {historyModal.mode === "delete" ? `Delete ${historyModal.kind === "pattern" ? "pattern break" : historyModal.kind}` : `Edit ${historyModal.kind} ${historyModal.mode === "datetime" ? "date & time" : "duration"}`}
