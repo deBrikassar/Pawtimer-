@@ -55,7 +55,7 @@ export default function SettingsScreen(props) {
             <div className="share-sub">Share this ID to sync devices.</div>
             <div className="share-id-row">
               <div className="share-id-val" aria-label="Dog ID">{activeDogId}</div>
-              <button className="copy-btn button-size-secondary-pill" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
+              <button className="copy-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
             </div>
             <div className="settings-sync-summary" aria-live="polite">
               <div className="share-sub" style={{ marginBottom: 8 }}>Current sync status</div>
@@ -72,7 +72,7 @@ export default function SettingsScreen(props) {
             <div className="share-title">Daily training reminder</div>
             <div className="share-sub">Set a gentle daily prompt so sessions stay consistent.</div>
             <div className="settings-inline-row">
-              <button className={`notif-toggle ${notifEnabled ? "on" : ""}`} onClick={handleToggleNotif}>{notifEnabled ? "On" : "Off"}</button>
+              <button className={`notif-toggle secondary-control secondary-control--toggle ${notifEnabled ? "on" : ""}`} onClick={handleToggleNotif}>{notifEnabled ? "On" : "Off"}</button>
               {notifEnabled && <input type="time" value={notifTime} onChange={(e) => { setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase())?.dogName ?? "your dog"); }} className="notif-time-input" />}
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function SettingsScreen(props) {
               <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Next-target logic</span><span className="settings-summary-value info-row__value">Adaptive from calm history, distress, and risk</span></div>
               <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Pattern breaks</span><span className="settings-summary-value info-row__value">{pattern.recMin}–{pattern.recMax}/day</span></div>
             </div>
-            <button className="settings-inline-btn button-size-secondary-pill" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit training plan</button>
+            <button className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit training plan</button>
           </div>
 
           <div className="settings-section-label">Custom labels</div>
@@ -101,15 +101,15 @@ export default function SettingsScreen(props) {
                 ) : (
                   <span className="pat-edit-label">{patLabels[pt.type] || pt.label}</span>
                 )}
-                <button className="pat-edit-btn" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}>✎</button>
-                {patLabels[pt.type] && <button className="pat-edit-reset" onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">↩</button>}
+                <button className="pat-edit-btn secondary-control secondary-control--icon" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}>✎</button>
+                {patLabels[pt.type] && <button className="pat-edit-reset secondary-control secondary-control--icon" onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">↩</button>}
               </div>
             ))}
           </div>
 
           <div className="settings-section-label">Support</div>
           <div className="share-card settings-collapsible-card">
-            <button className="settings-collapsible-toggle" type="button" aria-expanded={settingsDisclosure === "help"} onClick={() => setSettingsDisclosure((prev) => prev === "help" ? null : "help")}>
+            <button className="settings-collapsible-toggle secondary-control secondary-control--toggle" type="button" aria-expanded={settingsDisclosure === "help"} onClick={() => setSettingsDisclosure((prev) => prev === "help" ? null : "help")}>
               <span className="share-title" style={{ marginBottom: 0 }}>Help</span>
               <span className="settings-collapsible-arrow">{settingsDisclosure === "help" ? "−" : "+"}</span>
             </button>
@@ -127,7 +127,7 @@ export default function SettingsScreen(props) {
 
           <div className="settings-section-label">Advanced</div>
           <div className="share-card settings-collapsible-card">
-            <button className="settings-collapsible-toggle" type="button" aria-expanded={settingsDisclosure === "advanced"} onClick={() => setSettingsDisclosure((prev) => prev === "advanced" ? null : "advanced")}>
+            <button className="settings-collapsible-toggle secondary-control secondary-control--toggle" type="button" aria-expanded={settingsDisclosure === "advanced"} onClick={() => setSettingsDisclosure((prev) => prev === "advanced" ? null : "advanced")}>
               <span className="share-title" style={{ marginBottom: 0 }}>Advanced</span>
               <span className="settings-collapsible-arrow">{settingsDisclosure === "advanced" ? "−" : "+"}</span>
             </button>
@@ -135,7 +135,7 @@ export default function SettingsScreen(props) {
               <div className="settings-collapsible-inner">
                 <div className="diag-head">
                   <div className="share-title" style={{ marginBottom: 0 }}>Sync diagnostics</div>
-                  <button className="diag-run-btn button-size-compact-tertiary" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>{syncDiagRunning ? "Running…" : "Run connection test"}</button>
+                  <button className="diag-run-btn button-size-compact-tertiary secondary-control secondary-control--compact-button" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>{syncDiagRunning ? "Running…" : "Run connection test"}</button>
                 </div>
                 <div className="share-sub" style={{ marginBottom: 10 }}>Use this if sync turns red. It checks env setup, read access, and write/delete permissions.</div>
                 <div className="diag-grid">
@@ -181,7 +181,7 @@ export default function SettingsScreen(props) {
               <div className="proto-warn-banner">
                 <div className="proto-warn-title">Editing is usually not recommended</div>
                 <div className="proto-warn-body">These values are based on clinical separation anxiety protocols. Changing them may slow your dog's progress or cause regression.</div>
-                <button onClick={() => setProtoWarnAck(true)} className="settings-inline-btn button-size-secondary-pill" type="button">I understand — let me edit</button>
+                <button onClick={() => setProtoWarnAck(true)} className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" type="button">I understand — let me edit</button>
               </div>
             ) : (
               <div>

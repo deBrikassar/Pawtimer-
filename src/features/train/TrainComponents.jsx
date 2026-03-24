@@ -4,7 +4,7 @@ function SessionActionRow({ onEnd, onCancel }) {
   return (
     <div className="session-actions">
       <button className="session-end-btn button-base button-primary button--md button--pill" onClick={onEnd}>End Session</button>
-      <button className="session-cancel-btn" onClick={onCancel}>Cancel (don't save)</button>
+      <button className="session-cancel-btn secondary-control secondary-control--modal" onClick={onCancel}>Cancel (don't save)</button>
     </div>
   );
 }
@@ -182,7 +182,7 @@ export function SessionRatingPanel({
             </button>
           </div>
         )}
-        <button className="btn-cancel" onClick={onCancel}>
+        <button className="btn-cancel secondary-control secondary-control--modal" onClick={onCancel}>
           Discard this session
         </button>
       </div>

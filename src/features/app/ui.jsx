@@ -68,7 +68,7 @@ export const PawIcon = ({ size = 36 }) => (
     style={{ display:"inline-block", objectFit:"contain" }}/>
 );
 export const ModalCloseButton = ({ onClick, label = "Close dialog" }) => (
-  <button className="modal-close-btn" type="button" onClick={onClick} aria-label={label}>
+  <button className="modal-close-btn secondary-control secondary-control--icon" type="button" onClick={onClick} aria-label={label}>
     <span aria-hidden="true">×</span>
   </button>
 );

@@ -158,7 +158,7 @@ export function StatsProgressRing({
           </div>
         </div>
       </div>
-      <div className="ring-sub-btn stats-metric-label">
+      <div className="ring-sub-btn stats-metric-label secondary-control secondary-control--inline-text">
         <span className="ring-sub-btn-text">{label}</span>
       </div>
     </div>

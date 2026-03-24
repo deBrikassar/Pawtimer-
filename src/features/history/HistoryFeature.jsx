@@ -12,7 +12,7 @@ function HistoryActionGroup({ actions }) {
       {actions.map(({ key, className = "", label, icon, onClick }) => (
         <button
           key={key}
-          className={`h-action-btn ${className}`.trim()}
+          className={`h-action-btn secondary-control secondary-control--icon ${className}`.trim()}
           type="button"
           onClick={(event) => {
             event.stopPropagation();
@@ -270,7 +270,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
         <div className="section">
           <div className="history-section-head">
             <div className="section-title">Activity Log</div>
-            {sessions.length > 0 && <button className="clear-btn" onClick={actions.clearSessions}>Clear sessions</button>}
+            {sessions.length > 0 && <button className="clear-btn secondary-control secondary-control--inline-text" onClick={actions.clearSessions}>Clear sessions</button>}
           </div>
 
           {timeline.length === 0 ? (
@@ -425,7 +425,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 <input type="time" step="60" value={historyModal.time} onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, time: e.target.value } : prev))} />
               </label>
               <div className="feeding-actions">
-                <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
+                <button className="walk-cancel-btn secondary-control secondary-control--modal" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
                 <button className="walk-end-btn button-base button-primary button--md button--pill" type="button" onClick={() => actions.saveEditedActivityTime(historyModal, setHistoryModal)}>Save</button>
               </div>
             </>}
@@ -437,7 +437,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 <input type="text" inputMode="numeric" placeholder="e.g. 90 or 1:30" value={historyModal.value} onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, value: e.target.value } : prev))} />
               </label>
               <div className="feeding-actions">
-                <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
+                <button className="walk-cancel-btn secondary-control secondary-control--modal" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
                 <button className="walk-end-btn button-base button-primary button--md button--pill" type="button" onClick={() => actions.saveEditedActivityDuration(historyModal, setHistoryModal)}>Save</button>
               </div>
             </>}
@@ -448,8 +448,8 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 <p>This action removes the item from the timeline for this dog. You can’t undo it after confirmation.</p>
               </div>
               <div className="feeding-actions">
-                <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Keep item</button>
-                <button className="history-delete-confirm button-base button-danger button--md" type="button" onClick={() => actions.confirmHistoryDelete(historyModal, setHistoryModal)}>Delete</button>
+                <button className="walk-cancel-btn secondary-control secondary-control--modal" type="button" onClick={() => setHistoryModal(null)}>Keep item</button>
+                <button className="history-delete-confirm button-base button-danger button--md secondary-control secondary-control--modal" type="button" onClick={() => actions.confirmHistoryDelete(historyModal, setHistoryModal)}>Delete</button>
               </div>
             </>}
           </div>
