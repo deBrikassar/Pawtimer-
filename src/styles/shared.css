@@ -112,6 +112,7 @@
 }
 
 
+.surface-row,
 .info-row {
   display:grid;
   grid-template-columns:minmax(0, 1fr) max-content;
@@ -121,15 +122,18 @@
   border-bottom:1px solid var(--border);
 }
 
+.surface-row:last-child,
 .info-row:last-child {
   border-bottom:none;
   padding-bottom:0;
 }
 
+.surface-row__label-wrap,
 .info-row__label-wrap {
   min-width:0;
 }
 
+.surface-row__label,
 .info-row__label {
   display:block;
   font-size:var(--type-field-label-size);
@@ -140,6 +144,7 @@
   overflow-wrap:anywhere;
 }
 
+.surface-row__value,
 .info-row__value {
   justify-self:end;
   align-self:baseline;
@@ -160,6 +165,7 @@
     row-gap:4px;
   }
 
+  .surface-row__value,
   .info-row__value {
     justify-self:start;
     text-align:left;
@@ -167,6 +173,7 @@
   }
 }
 
+.surface-row--interactive,
 .interactive-row-card {
   width:100%;
   display:flex;
@@ -187,17 +194,23 @@
     color var(--motion-base) var(--ease-standard);
 }
 
+.surface-row--interactive:hover,
 .interactive-row-card:hover {
   border-color:color-mix(in srgb, var(--mutedBlue) 52%, var(--border));
   transform:translateY(-1px);
   box-shadow:var(--shadow-lg);
 }
 
+.surface-row--interactive:focus-visible,
 .interactive-row-card:focus-visible {
   outline:none;
   border-color:var(--primaryBlue);
 }
 
+.surface-row--interactive.is-selected,
+.surface-row--interactive[aria-selected="true"],
+.surface-row--interactive[aria-current="true"],
+.surface-row--interactive[aria-pressed="true"],
 .interactive-row-card.is-selected,
 .interactive-row-card[aria-selected="true"],
 .interactive-row-card[aria-current="true"],
@@ -206,6 +219,7 @@
   background:var(--softBlue);
 }
 
+.surface-row__icon,
 .interactive-row-card__icon {
   flex:0 0 auto;
   display:inline-flex;
@@ -213,14 +227,47 @@
   justify-content:center;
 }
 
+.surface-row__content,
 .interactive-row-card__content {
   flex:1;
   min-width:0;
 }
 
+.surface-row__trailing,
 .interactive-row-card__trailing {
   margin-left:auto;
   flex:0 0 auto;
+}
+
+.surface-compact-info {
+  background: #FAFBFC;
+  border: 1px solid color-mix(in srgb, var(--border) 90%, white);
+  border-radius: var(--radius-sm);
+}
+
+.surface-text-button {
+  --small-tertiary-size:44px;
+  background:none;
+  border:1px solid transparent;
+  border-radius:999px;
+  color:var(--primaryBlue);
+  font-size:var(--type-secondary-size);
+  font-weight:var(--type-secondary-weight);
+  line-height:var(--type-secondary-line);
+  letter-spacing:var(--type-secondary-track);
+  cursor:pointer;
+  min-height:var(--small-tertiary-size);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 var(--space-2);
+  transition:color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.surface-text-button:hover {
+  color:var(--blue-darker);
+  background:color-mix(in srgb, var(--softBlue) 74%, transparent);
+  border-color:color-mix(in srgb, var(--mutedBlue) 18%, transparent);
 }
 
 .shared-button,

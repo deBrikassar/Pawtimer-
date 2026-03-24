@@ -7,12 +7,12 @@ const statusTone = (value, { good, warn, invert = false }) => {
   if (value == null) return getInformationalTone("neutral");
   if (!invert) {
     if (value >= good) return getInformationalTone("stable");
-    if (value >= warn) return { ...getRiskTone("medium"), label: "Mixed" };
-    return { ...getRiskTone("high"), label: "Watch closely" };
+    if (value >= warn) return { ...getRiskTone("medium"), label: "Mixed", surfaceState: "upcoming" };
+    return { ...getRiskTone("high"), label: "Watch closely", surfaceState: "overdue" };
   }
   if (value <= good) return getInformationalTone("stable");
-  if (value <= warn) return { ...getRiskTone("medium"), label: "Variable" };
-  return { ...getRiskTone("high"), label: "Unsteady" };
+  if (value <= warn) return { ...getRiskTone("medium"), label: "Variable", surfaceState: "upcoming" };
+  return { ...getRiskTone("high"), label: "Unsteady", surfaceState: "overdue" };
 };
 
 export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, feedings, target, protoOverride }) {
@@ -209,7 +209,11 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     if ((calmRate7 != null && calmRate14 != null && calmRate7 > calmRate14) || streak >= 3 || bestCalm >= currentThreshold) return "Improving";
     return "Stable";
   })();
-  const headlineStatusTone = headlineStatus === "Needs attention" ? { ...getRiskTone("high"), label: headlineStatus } : headlineStatus === "Improving" ? getInformationalTone("improving") : getInformationalTone("stable");
+  const headlineStatusTone = headlineStatus === "Needs attention"
+    ? { ...getRiskTone("high"), label: headlineStatus, surfaceState: "overdue" }
+    : headlineStatus === "Improving"
+      ? { ...getInformationalTone("improving"), surfaceState: "upcoming" }
+      : { ...getInformationalTone("stable"), surfaceState: "today" };
   const chartTrendLabel = (() => {
     const recentDurations = chartData.map((item) => item.durationSeconds).filter((value) => Number.isFinite(value));
     if (recentDurations.length < 4) return "Trend: Plateau";

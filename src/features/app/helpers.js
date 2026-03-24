@@ -57,22 +57,22 @@ export function patternInfo(patterns, walks, leavesPerDay = 3, protocol = PROTOC
 
 export const SEMANTIC_STATUS = {
   outcome: {
-    none: { color: "var(--green-dark)", label: "No distress" },
-    calm: { color: "var(--green-dark)", label: "No distress" },
-    completed: { color: "var(--green-dark)", label: "Completed" },
-    subtle: { color: "var(--orange)", label: "Subtle stress" },
-    active: { color: "var(--red)", label: "Active distress" },
-    severe: { color: "var(--red)", label: "Severe distress" },
+    none: { color: "var(--green-dark)", label: "No distress", surfaceState: "today" },
+    calm: { color: "var(--green-dark)", label: "No distress", surfaceState: "today" },
+    completed: { color: "var(--green-dark)", label: "Completed", surfaceState: "today" },
+    subtle: { color: "var(--orange)", label: "Subtle stress", surfaceState: "upcoming" },
+    active: { color: "var(--red)", label: "Active distress", surfaceState: "overdue" },
+    severe: { color: "var(--red)", label: "Severe distress", surfaceState: "overdue" },
   },
   risk: {
-    low: { color: "var(--green-dark)", label: "Low" },
-    medium: { color: "var(--orange)", label: "Medium" },
-    high: { color: "var(--red)", label: "High" },
+    low: { color: "var(--green-dark)", label: "Low", surfaceState: "today" },
+    medium: { color: "var(--orange)", label: "Medium", surfaceState: "upcoming" },
+    high: { color: "var(--red)", label: "High", surfaceState: "overdue" },
   },
   informational: {
-    improving: { color: "var(--blue-dark)", label: "Improving" },
-    stable: { color: "var(--blue-dark)", label: "Stable" },
-    neutral: { color: "var(--blue-dark)", label: "Building baseline" },
+    improving: { color: "var(--blue-dark)", label: "Improving", surfaceState: "upcoming" },
+    stable: { color: "var(--blue-dark)", label: "Stable", surfaceState: "today" },
+    neutral: { color: "var(--blue-dark)", label: "Building baseline", surfaceState: "today" },
   },
 };
 
