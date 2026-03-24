@@ -81,10 +81,10 @@ export default function SettingsScreen(props) {
           <div className="share-card">
             <div className="share-title">Training plan</div>
             <div className="settings-summary-list">
-              <div className="settings-summary-row"><span className="settings-summary-label">Sessions per day</span><span className="settings-summary-value">Up to {activeProto.sessionsPerDayMax}/day</span></div>
-              <div className="settings-summary-row"><span className="settings-summary-label">Max alone time</span><span className="settings-summary-value">{activeProto.maxDailyAloneMinutes} min/day</span></div>
-              <div className="settings-summary-row"><span className="settings-summary-label">Next-target logic</span><span className="settings-summary-value">Adaptive from calm history, distress, and risk</span></div>
-              <div className="settings-summary-row"><span className="settings-summary-label">Pattern breaks</span><span className="settings-summary-value">{pattern.recMin}–{pattern.recMax}/day</span></div>
+              <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Sessions per day</span><span className="settings-summary-value info-row__value">Up to {activeProto.sessionsPerDayMax}/day</span></div>
+              <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Max alone time</span><span className="settings-summary-value info-row__value">{activeProto.maxDailyAloneMinutes} min/day</span></div>
+              <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Next-target logic</span><span className="settings-summary-value info-row__value">Adaptive from calm history, distress, and risk</span></div>
+              <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Pattern breaks</span><span className="settings-summary-value info-row__value">{pattern.recMin}–{pattern.recMax}/day</span></div>
             </div>
             <button className="settings-inline-btn button-size-secondary-pill" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit training plan</button>
           </div>

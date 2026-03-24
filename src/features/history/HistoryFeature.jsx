@@ -226,7 +226,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
 
     return (
       <div
-        className={`h-item ${isExpanded ? "is-expanded" : ""}`.trim()}
+        className={`h-item interactive-row-card ${isExpanded ? "is-expanded" : ""}`.trim()}
         key={itemKey}
         role="button"
         tabIndex={0}

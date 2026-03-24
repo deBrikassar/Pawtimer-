@@ -168,13 +168,13 @@ export default function HomeScreen(props) {
                   <div className={`pat-reminder ${pattern.behind ? "warn" : ""}`}>{patReminderText}</div>
                   <div className="pat-btns">
                     {PATTERN_TYPES.map((pt) => (
-                      <button key={pt.type} className="btn-pat" onClick={(e) => { e.stopPropagation(); logPattern(pt.type); }}>
-                        <Img src={pt.icon} size={28} alt={pt.label} />
-                        <div className="p-text">
+                      <button key={pt.type} className="btn-pat interactive-row-card" onClick={(e) => { e.stopPropagation(); logPattern(pt.type); }}>
+                        <span className="interactive-row-card__icon"><Img src={pt.icon} size={28} alt={pt.label} /></span>
+                        <div className="p-text interactive-row-card__content">
                           <div className="p-label">{patLabels[pt.type] || pt.label}</div>
                           <div className="p-desc">{pt.desc}</div>
                         </div>
-                        <span className="p-count">Today: {patterns.filter((p) => isToday(p.date) && p.type === pt.type).length}</span>
+                        <span className="p-count interactive-row-card__trailing">Today: {patterns.filter((p) => isToday(p.date) && p.type === pt.type).length}</span>
                       </button>
                     ))}
                   </div>
