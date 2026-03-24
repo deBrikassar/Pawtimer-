@@ -268,7 +268,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
     <>
       <div className="tab-content">
         <div className="section">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 18 }}>
+          <div className="history-section-head">
             <div className="section-title">Activity Log</div>
             {sessions.length > 0 && <button className="clear-btn" onClick={actions.clearSessions}>Clear sessions</button>}
           </div>
@@ -408,14 +408,14 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
         <div className="activity-time-overlay" role="dialog" aria-modal="true" aria-labelledby="history-modal-title" onClick={() => setHistoryModal(null)}>
           <div className="activity-time-card history-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="quick-modal-head">
-              <div className="section-title" id="history-modal-title" style={{ marginBottom: 0 }}>
+              <div className="section-title section-title--flush" id="history-modal-title">
                 {historyModal.mode === "delete" ? `Delete ${historyModal.kind === "pattern" ? "pattern break" : historyModal.kind}` : `Edit ${historyModal.kind} ${historyModal.mode === "datetime" ? "date & time" : "duration"}`}
               </div>
               <ModalCloseButton onClick={() => setHistoryModal(null)} />
             </div>
 
             {historyModal.mode === "datetime" && <>
-              <div className="t-helper" style={{ marginBottom: 10 }}>Choose a date and time. Duration is edited separately.</div>
+              <div className="t-helper activity-time-hint">Choose a date and time. Duration is edited separately.</div>
               <label className="activity-time-field">
                 <span className="t-helper">Date</span>
                 <input type="date" value={historyModal.date} onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, date: e.target.value } : prev))} />
@@ -431,7 +431,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
             </>}
 
             {historyModal.mode === "duration" && <>
-              <div className="t-helper" style={{ marginBottom: 10 }}>Enter seconds or <code>mm:ss</code>.</div>
+              <div className="t-helper activity-time-hint">Enter seconds or <code>mm:ss</code>.</div>
               <label className="activity-time-field">
                 <span className="t-helper">Duration</span>
                 <input type="text" inputMode="numeric" placeholder="e.g. 90 or 1:30" value={historyModal.value} onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, value: e.target.value } : prev))} />
