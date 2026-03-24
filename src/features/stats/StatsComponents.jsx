@@ -4,6 +4,7 @@ import {
   Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import EmptyState from "../../components/EmptyState";
+import { TrendIcon } from "../app/ui";
 
 export const METRIC_VARIANTS = Object.freeze({
   HEADLINE: "headline",
@@ -169,7 +170,7 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
   if (chartData.length <= 1) {
     return (
       <EmptyState
-        icon="📈"
+        icon={<TrendIcon />}
         title="Almost there"
         body={`Complete 2 more sessions to see ${name}'s progress chart and trends.`}
         ctaLabel="Start training →"

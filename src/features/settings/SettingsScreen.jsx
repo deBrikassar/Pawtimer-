@@ -1,5 +1,5 @@
 import { PATTERN_TYPES, fmt } from "../app/helpers";
-import { PawIcon, Img, ModalCloseButton } from "../app/ui";
+import { DeleteIcon, EditIcon, PawIcon, Img, ModalCloseButton, ResetIcon } from "../app/ui";
 
 export default function SettingsScreen(props) {
   const {
@@ -101,8 +101,8 @@ export default function SettingsScreen(props) {
                 ) : (
                   <span className="pat-edit-label">{patLabels[pt.type] || pt.label}</span>
                 )}
-                <button className="pat-edit-btn secondary-control secondary-control--icon" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}>✎</button>
-                {patLabels[pt.type] && <button className="pat-edit-reset secondary-control secondary-control--icon" onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">↩</button>}
+                <button className="pat-edit-btn secondary-control secondary-control--icon" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}><EditIcon /></button>
+                {patLabels[pt.type] && <button className="pat-edit-reset secondary-control secondary-control--icon" onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default"><ResetIcon /></button>}
               </div>
             ))}
           </div>
@@ -158,14 +158,17 @@ export default function SettingsScreen(props) {
 
           <div className="settings-danger-sep" />
           <div className="settings-section-label" style={{ color: "var(--red)" }}>Danger zone</div>
-          <button className="settings-btn button-danger button-size-secondary-pill" onClick={() => {
+          <button className="settings-btn settings-btn--icon button-danger button-size-secondary-pill" onClick={() => {
             if (window.confirm(`Remove ${name} from this device? Sessions stored elsewhere are unaffected.`)) {
               const newDogs = dogsState.filter((d) => d.id !== activeDogId);
               setDogs(newDogs);
               save(ACTIVE_DOG_KEY, null);
               setActiveDogId(null);
             }
-          }}>✕ Remove {name} from this device</button>
+          }}>
+            <span className="settings-btn__icon" aria-hidden="true"><DeleteIcon /></span>
+            <span className="settings-btn__label">Remove {name} from this device</span>
+          </button>
         </div>
       </div>
 

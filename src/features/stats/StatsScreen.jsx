@@ -1,6 +1,7 @@
 import EmptyState from "../../components/EmptyState";
 import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
 import { fmt } from "../app/helpers";
+import { SproutIcon } from "../app/ui";
 
 export default function StatsScreen({ name, totalCount, setTab, bestCalm, target, relapseTone, openMetricHelp, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, currentThreshold, headlineStatus, headlineStatusTone }) {
   const headlineMetricVariant = METRIC_VARIANTS.HEADLINE;
@@ -12,7 +13,7 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
       <div className="section">
         <div className="section-title">Progress</div>
         {totalCount === 0 ? (
-          <EmptyState icon="🌱" title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
+          <EmptyState icon={<SproutIcon />} title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
         ) : <>
           <StatsSection title="Today" className="stats-section-priority">
             <div className={`stats-headline-card metric-surface metric-surface--${headlineMetricVariant}`} data-metric-variant={headlineMetricVariant}>

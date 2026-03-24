@@ -3,7 +3,7 @@ import EmptyState from "../../components/EmptyState";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
 import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, sessionDetailBadges, walkTypeLabel } from "../app/helpers";
-import { Img, ModalCloseButton } from "../app/ui";
+import { ClockIcon, DeleteIcon, EditIcon, FoodIcon, Img, ModalCloseButton, TrendIcon } from "../app/ui";
 import { mergeSessionWithDerivedFields, normalizeSession } from "../app/storage";
 
 function HistoryActionGroup({ actions }) {
@@ -274,7 +274,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
           </div>
 
           {timeline.length === 0 ? (
-            <EmptyState icon="🐾" title="No activity yet" body={`Start ${name}'s first session and your training history will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
+            <EmptyState icon={<TrendIcon />} title="No activity yet" body={`Start ${name}'s first session and your training history will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
           ) : timeline.map((item) => {
             if (item.kind === "session") {
               const s = item.data;
@@ -300,9 +300,9 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                     <HistoryDetailGroup label="Actions">
                       <HistoryActionGroup
                         actions={[
-                          { key: "time", className: "h-edit", label: "Edit session time", icon: "🕒", onClick: () => actions.editSessionTime(s.id, setHistoryModal) },
-                          { key: "duration", className: "h-edit", label: "Edit session duration", icon: "✎", onClick: () => actions.editSessionDuration(s.id, setHistoryModal) },
-                          { key: "delete", className: "h-del", label: "Delete session", icon: "✕", onClick: () => actions.requestHistoryDelete("session", s, setHistoryModal) },
+                          { key: "time", className: "h-edit", label: "Edit session time", icon: <ClockIcon />, onClick: () => actions.editSessionTime(s.id, setHistoryModal) },
+                          { key: "duration", className: "h-edit", label: "Edit session duration", icon: <EditIcon />, onClick: () => actions.editSessionDuration(s.id, setHistoryModal) },
+                          { key: "delete", className: "h-del", label: "Delete session", icon: <DeleteIcon />, onClick: () => actions.requestHistoryDelete("session", s, setHistoryModal) },
                         ]}
                       />
                     </HistoryDetailGroup>
@@ -331,9 +331,9 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                     <HistoryDetailGroup label="Actions">
                       <HistoryActionGroup
                         actions={[
-                          { key: "time", className: "h-edit", label: "Edit walk time", icon: "🕒", onClick: () => actions.editWalkTime(w.id, setHistoryModal) },
-                          { key: "duration", className: "h-edit", label: "Edit walk duration", icon: "✎", onClick: () => actions.editWalkDuration(w.id, setHistoryModal) },
-                          { key: "delete", className: "h-del", label: "Delete walk", icon: "✕", onClick: () => actions.requestHistoryDelete("walk", w, setHistoryModal) },
+                          { key: "time", className: "h-edit", label: "Edit walk time", icon: <ClockIcon />, onClick: () => actions.editWalkTime(w.id, setHistoryModal) },
+                          { key: "duration", className: "h-edit", label: "Edit walk duration", icon: <EditIcon />, onClick: () => actions.editWalkDuration(w.id, setHistoryModal) },
+                          { key: "delete", className: "h-del", label: "Delete walk", icon: <DeleteIcon />, onClick: () => actions.requestHistoryDelete("walk", w, setHistoryModal) },
                         ]}
                       />
                     </HistoryDetailGroup>
@@ -362,7 +362,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                     <HistoryDetailGroup label="Actions">
                       <HistoryActionGroup
                         actions={[
-                          { key: "delete", className: "h-del", label: "Delete pattern break", icon: "✕", onClick: () => actions.requestHistoryDelete("pattern", p, setHistoryModal) },
+                          { key: "delete", className: "h-del", label: "Delete pattern break", icon: <DeleteIcon />, onClick: () => actions.requestHistoryDelete("pattern", p, setHistoryModal) },
                         ]}
                       />
                     </HistoryDetailGroup>
@@ -375,7 +375,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               return renderHistoryCard({
                 itemKey: `f-${f.id}`,
                 iconClassName: "dot-feed",
-                icon: "🍽️",
+                icon: <FoodIcon />,
                 title: <span style={{ textTransform: "capitalize" }}>{f.foodType}</span>,
                 date: fmtDate(f.date),
                 value: f.amount,
@@ -391,7 +391,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                     <HistoryDetailGroup label="Actions">
                       <HistoryActionGroup
                         actions={[
-                          { key: "delete", className: "h-del", label: "Delete feeding", icon: "✕", onClick: () => actions.requestHistoryDelete("feeding", f, setHistoryModal) },
+                          { key: "delete", className: "h-del", label: "Delete feeding", icon: <DeleteIcon />, onClick: () => actions.requestHistoryDelete("feeding", f, setHistoryModal) },
                         ]}
                       />
                     </HistoryDetailGroup>
