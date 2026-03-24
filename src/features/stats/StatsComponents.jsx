@@ -143,7 +143,7 @@ export function StatsProgressRing({
           </div>
         </div>
       </div>
-      <div className="ring-sub-btn stats-metric-label" aria-label={label}>
+      <div className="ring-sub-btn stats-metric-label">
         <span className="ring-sub-btn-text">{label}</span>
       </div>
     </div>

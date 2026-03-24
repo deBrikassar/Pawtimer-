@@ -273,23 +273,12 @@
   .status-msg { margin:var(--space-card-row-gap) auto 0; max-width:360px; font-size:var(--type-helper-text-size); font-weight:var(--type-helper-text-weight); color:var(--text-muted); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); text-align:center; transition:color var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out); }
   .ring-sub-btn {
     margin-top:var(--space-card-row-gap);
-    min-height:44px;
-    min-width:44px;
-    background:transparent;
-    border:1px solid transparent;
-    border-radius:999px;
-    padding:6px 10px;
     font-size:var(--type-helper-text-size);
     color:var(--text-muted);
     font-weight:var(--type-helper-text-weight);
     text-align:center;
     line-height:var(--type-helper-text-line);
     letter-spacing:var(--type-helper-text-track);
-    cursor:default;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    transition:background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
   .ring-sub-btn-text { display:inline-flex; align-items:center; justify-content:center; }
 
