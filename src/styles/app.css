@@ -777,9 +777,14 @@
   .stats-support-label { display:block; font-size:var(--type-field-label-size); line-height:var(--type-field-label-line); letter-spacing:var(--type-field-label-track); font-weight:var(--type-field-label-weight); color:var(--text-muted); overflow-wrap:anywhere; }
   .stats-support-value { justify-self:end; align-self:baseline; font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); font-weight:var(--type-field-value-weight); color:var(--brown); font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; text-align:right; white-space:nowrap; }
 
-  @media (max-width: 420px) {
+  @media (max-width: 390px) {
     .stats-row-core-trimmed { grid-template-columns:repeat(2, minmax(0, 1fr)); }
     .stats-row-core-trimmed .stat-card-span2 { grid-column:span 2; }
+  }
+
+  @media (max-width: 340px) {
+    .stats-row-core-trimmed { grid-template-columns:minmax(0, 1fr); row-gap:clamp(10px, 3vw, var(--space-section-gap)); }
+    .stats-row-core-trimmed .stat-card-span2 { grid-column:auto; }
   }
 
   @media (max-width: 380px) {
