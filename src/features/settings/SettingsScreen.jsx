@@ -51,7 +51,7 @@ export default function SettingsScreen(props) {
 
           <div className="settings-section-label">Profile &amp; sync</div>
           <div className="share-card">
-            <div className="share-title" style={{ display: "flex", alignItems: "center", gap: 8 }}><PawIcon size={20} /> {name}'s Dog ID</div>
+            <div className="share-title share-title-with-icon"><PawIcon size={20} /> {name}'s Dog ID</div>
             <div className="share-sub">Share this ID to sync devices.</div>
             <div className="share-id-row">
               <div className="share-id-val" aria-label="Dog ID">{activeDogId}</div>
