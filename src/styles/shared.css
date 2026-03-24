@@ -87,7 +87,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: var(--row-gap-default);
   border: 1px solid var(--border);
   cursor: pointer;
   font-weight: var(--type-button-weight);
