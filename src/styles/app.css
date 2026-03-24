@@ -850,6 +850,7 @@
 
   /* ── Settings section headers ── */
   .settings-section-label { font-size:var(--type-section-eyebrow-size); color:var(--text-muted); font-weight:var(--type-section-eyebrow-weight); line-height:var(--type-section-eyebrow-line); letter-spacing:var(--type-section-eyebrow-track); margin:0 0 var(--space-control-gap); text-transform:uppercase; }
+  .settings-section-label + .share-card { margin-bottom:var(--space-section-gap); }
   :is(.share-card, .settings-btn, .settings-danger-sep) + .settings-section-label { margin-top:var(--space-section-gap); }
   .settings-danger-sep { height:1px; background:var(--border); margin:var(--space-section-gap) 0 0; opacity:0.5; }
 
