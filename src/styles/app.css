@@ -430,7 +430,8 @@
   .streak-fire { font-size:var(--text-2xl); line-height:1; display:inline-flex; align-items:center; margin-right:6px; position:relative; top:-1px; }
 
   /* ── Notification toggle ── */
-  .notif-time-input { border:1.5px solid var(--border); border-radius:8px; padding:5px 8px; font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); color:var(--brown); background:#FAFBFC; outline:none; }
+  /* Form controls: compact field */
+  .notif-time-input { border:1.5px solid var(--border); border-radius:8px; padding:var(--space-field-padding-compact); font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); color:var(--brown); background:#FAFBFC; outline:none; }
   .notif-toggle { min-height:44px; padding:0 18px; border-radius:99px; border:1.5px solid color-mix(in srgb, var(--mutedBlue) 32%, var(--border)); background:#FAFBFC; color:var(--primaryBlue); cursor:pointer; transition:transform var(--motion-press) var(--ease-out), color var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out); display:flex; align-items:center; }
   .notif-toggle.on { background:var(--softBlue); color:var(--primaryBlue); border-color:var(--mutedBlue); }
 
@@ -441,7 +442,7 @@
   .proto-field-row  { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); }
   .proto-field-row:last-child { border-bottom:none; }
   .proto-field-label { font-size:var(--type-field-label-size); color:var(--brown); font-weight:var(--type-field-label-weight); line-height:var(--type-field-label-line); letter-spacing:var(--type-field-label-track); }
-  .proto-field-input { width:64px; text-align:right; padding:5px 8px; border:1.5px solid var(--border); border-radius:8px; font-size:var(--type-field-value-size); font-weight:var(--type-field-value-weight); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); color:var(--brown); background:#FAFBFC; outline:none; font-variant-numeric:tabular-nums; }
+  .proto-field-input { width:64px; text-align:right; padding:var(--space-field-padding-compact); border:1.5px solid var(--border); border-radius:8px; font-size:var(--type-field-value-size); font-weight:var(--type-field-value-weight); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); color:var(--brown); background:#FAFBFC; outline:none; font-variant-numeric:tabular-nums; }
   .proto-field-input:focus { border-color:var(--amber); }
 
   /* ── Goal card (kept for stats tab) ── */
@@ -497,7 +498,8 @@
   .btn-result:hover { transform:translateY(-2px); }
   .outcome-details { margin-top:10px; padding:12px; border:1px solid var(--border); border-radius:var(--radius-sm); background:#FAFBFC; display:flex; flex-direction:column; gap:8px; }
   .field-label { font-size:var(--type-secondary-size); color:var(--brown); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); }
-  .text-input { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:var(--brown); background:white; }
+  /* Form controls: default field */
+  .text-input { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:var(--space-field-padding-default); font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:var(--brown); background:white; }
   .btn-save-outcome { margin-top:4px; border:none; border-radius:10px; padding:11px 12px; font-size:var(--type-button-size); line-height:var(--type-button-line); letter-spacing:var(--type-button-track); font-weight:var(--type-button-weight); background:var(--brown); color:white; cursor:pointer; }
 
   /* ── Contextual tips ── */
@@ -626,7 +628,8 @@
   .pat-edit-row { display:flex; align-items:center; gap:var(--space-control-gap); padding:var(--space-control-gap) 0; border-bottom:1px solid var(--surf-soft); }
   .pat-edit-row:last-child { border-bottom:none; }
   .pat-edit-label { flex:1; font-size:var(--type-body-size); color:var(--brown); }
-  .pat-edit-input { flex:1; padding:7px 10px; border:1.5px solid var(--primaryBlue); border-radius:var(--radius-sm); font-size:var(--type-body-size); color:var(--brown); background:#FAFBFC; outline:none; }
+  /* Form controls: inline edit */
+  .pat-edit-input { flex:1; padding:var(--space-field-padding-default); border:1.5px solid var(--primaryBlue); border-radius:var(--radius-sm); font-size:var(--type-body-size); color:var(--brown); background:#FAFBFC; outline:none; }
   .pat-edit-btn,
   .pat-edit-reset {
     --small-tertiary-size:40px;
@@ -824,13 +827,14 @@
   .feeding-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.28); display:flex; align-items:center; justify-content:center; padding:var(--space-card-padding); z-index:220; }
   .feeding-card { width:min(100%, 360px); padding:var(--space-modal-padding); display:flex; flex-direction:column; gap:var(--space-control-gap); background:linear-gradient(180deg, #FFFFFF 0%, var(--color-surface-raised) 100%); border-radius:20px; box-shadow:var(--shadow-lg); border:1px solid color-mix(in srgb, var(--border) 90%, white); }
   .feeding-field { display:flex; flex-direction:column; gap:var(--space-card-row-gap); }
-  .feeding-field input, .feeding-field select { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:var(--space-inline-control-padding); background:#FAFBFC; color:var(--brown); font-size:var(--type-body-size); line-height:var(--type-body-line); font-weight:var(--type-body-weight); letter-spacing:var(--type-body-track); }
+  .feeding-field input, .feeding-field select { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:var(--space-field-padding-default); background:#FAFBFC; color:var(--brown); font-size:var(--type-body-size); line-height:var(--type-body-line); font-weight:var(--type-body-weight); letter-spacing:var(--type-body-track); }
   .feeding-actions { display:flex; justify-content:flex-end; gap:var(--space-control-gap); margin-top:var(--space-modal-footer-gap); }
   .activity-time-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.28); display:flex; align-items:center; justify-content:center; padding:var(--space-card-padding); z-index:230; }
   .activity-time-card { width:min(100%, 360px); padding:var(--space-modal-padding); display:flex; flex-direction:column; gap:var(--space-control-gap); }
   .history-modal-card { width:min(100%, 390px); }
   .activity-time-field { display:flex; flex-direction:column; gap:var(--space-card-row-gap); }
-  .activity-time-field input { width:100%; border:1.5px solid var(--border); border-radius:999px; padding:var(--space-inline-control-padding); background:#FAFBFC; color:var(--brown); font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); font-weight:var(--type-field-value-weight); letter-spacing:var(--type-field-value-track); accent-color:var(--primaryBlue); }
+  /* Form controls: pill/default-pill field */
+  .activity-time-field input { width:100%; border:1.5px solid var(--border); border-radius:999px; padding:var(--space-field-padding-pill); background:#FAFBFC; color:var(--brown); font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); font-weight:var(--type-field-value-weight); letter-spacing:var(--type-field-value-track); accent-color:var(--primaryBlue); }
   .activity-time-field input::-webkit-calendar-picker-indicator { cursor:pointer; }
   .history-delete-copy { display:flex; flex-direction:column; gap:8px; padding:6px 0 4px; }
   .history-delete-copy p { margin:0; color:var(--text-muted); font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); font-weight:var(--type-helper-text-weight); letter-spacing:var(--type-helper-text-track); }
