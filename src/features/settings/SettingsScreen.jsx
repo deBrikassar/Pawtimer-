@@ -171,7 +171,7 @@ export default function SettingsScreen(props) {
 
       {trainingSettingsOpen && (
         <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="training-settings-title" onClick={() => setTrainingSettingsOpen(false)}>
-          <div className="quick-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
             <div className="quick-modal-head">
               <div className="quick-modal-title" id="training-settings-title">Edit training plan</div>
               <ModalCloseButton onClick={() => setTrainingSettingsOpen(false)} />
