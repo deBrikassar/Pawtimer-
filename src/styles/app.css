@@ -745,6 +745,25 @@
   .stat-card .stats-metric-label,
   .stat-card .stat-lbl { font-family:var(--font-ui); font-size:var(--type-field-label-size); color:var(--text-muted); margin-top:0; font-weight:var(--type-field-label-weight); line-height:var(--type-field-label-line); letter-spacing:var(--type-field-label-track); text-transform:none; opacity:1; font-feature-settings:normal; margin-bottom:0; padding:0; align-self:start; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:clip; }
   .stat-card .stats-metric-detail { font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); color:var(--text-muted); margin-top:var(--space-card-row-gap); }
+  .stats-row-core-trimmed .stat-card { min-height:112px; grid-template-rows:minmax(2.5rem, auto) minmax(calc(var(--type-field-label-line) * 1em), auto) minmax(calc(var(--type-helper-text-line) * 1em), auto); }
+  .stats-row-core-trimmed .stat-card .stats-metric-value,
+  .stats-row-core-trimmed .stat-card .stat-val { min-height:2.5rem; display:inline-flex; align-items:center; }
+  .stats-row-core-trimmed .stat-card .stats-metric-detail { color:color-mix(in srgb, var(--text-muted) 86%, var(--text)); }
+  .stat-card-risk .stats-metric-value,
+  .stat-card-risk .stat-val {
+    min-height:2.5rem;
+    padding:0 var(--space-2);
+    border-radius:999px;
+    font-size:var(--type-field-value-size);
+    line-height:var(--type-field-value-line);
+    letter-spacing:var(--type-field-value-track);
+    font-weight:var(--type-field-value-weight);
+    background:color-mix(in srgb, currentColor 14%, #FFFFFF);
+    border:1px solid color-mix(in srgb, currentColor 32%, transparent);
+  }
+  .stat-card-risk .stats-metric-label,
+  .stat-card-risk .stat-lbl { color:color-mix(in srgb, var(--text-muted) 82%, var(--text)); }
+  .stat-card-risk .stats-metric-detail { color:color-mix(in srgb, var(--text-muted) 78%, var(--text)); }
   .stats-headline-card { background:linear-gradient(180deg,#FFFFFF 0%, #FAFBFC 100%); border:1px solid var(--border); border-radius:var(--radius); padding:var(--space-surface-card); padding-left:var(--stats-content-inset, var(--space-card-padding)); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:var(--space-control-gap); }
   .stats-headline-main { display:flex; align-items:baseline; justify-content:space-between; column-gap:var(--space-control-gap); min-width:0; }
   .stats-headline-label { font-size:var(--type-section-eyebrow-size); line-height:var(--type-section-eyebrow-line); letter-spacing:var(--type-section-eyebrow-track); font-weight:var(--type-section-eyebrow-weight); color:var(--text-muted); text-transform:uppercase; }
