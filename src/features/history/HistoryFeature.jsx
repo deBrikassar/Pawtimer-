@@ -426,7 +426,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               </label>
               <div className="feeding-actions">
                 <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
-                <button className="walk-end-btn button-base button-primary button--pill" type="button" onClick={() => actions.saveEditedActivityTime(historyModal, setHistoryModal)}>Save</button>
+                <button className="walk-end-btn button-base button-primary button--md button--pill" type="button" onClick={() => actions.saveEditedActivityTime(historyModal, setHistoryModal)}>Save</button>
               </div>
             </>}
 
@@ -438,7 +438,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               </label>
               <div className="feeding-actions">
                 <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
-                <button className="walk-end-btn button-base button-primary button--pill" type="button" onClick={() => actions.saveEditedActivityDuration(historyModal, setHistoryModal)}>Save</button>
+                <button className="walk-end-btn button-base button-primary button--md button--pill" type="button" onClick={() => actions.saveEditedActivityDuration(historyModal, setHistoryModal)}>Save</button>
               </div>
             </>}
 
@@ -449,7 +449,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               </div>
               <div className="feeding-actions">
                 <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Keep item</button>
-                <button className="history-delete-confirm button-size-secondary-pill" type="button" onClick={() => actions.confirmHistoryDelete(historyModal, setHistoryModal)}>Delete</button>
+                <button className="history-delete-confirm button-base button-danger button--md" type="button" onClick={() => actions.confirmHistoryDelete(historyModal, setHistoryModal)}>Delete</button>
               </div>
             </>}
           </div>

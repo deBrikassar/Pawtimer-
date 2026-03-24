@@ -381,11 +381,6 @@
   .walk-timer-left .walk-timer-elapsed { font-size:var(--type-metric-lg-size); font-weight:var(--type-metric-lg-weight); color:var(--green-dark); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-variant-numeric:tabular-nums; }
   .walk-timer-left .walk-timer-lbl { font-size:var(--type-field-label-size); line-height:var(--type-field-label-line); font-weight:var(--type-field-label-weight); letter-spacing:var(--type-field-label-track); color:var(--text-muted); margin-top:1px; }
   .walk-timer-btns { display:flex; gap:var(--space-control-gap); align-items:center; }
-  .walk-end-btn { padding:var(--space-inline-control-padding); }
-
-  .walk-cancel-btn { padding:var(--space-inline-control-padding); }
-
-
   /* ── Daily alone-time card ── */
   .alone-card   { margin:0; background:var(--surf); border-radius:16px; padding:13px 14px; box-shadow:var(--shadow); display:flex; align-items:center; gap:16px; border:1px solid var(--border); }
   .alone-left   { flex:1; }
@@ -819,7 +814,7 @@
   .metric-help-title { font-size:var(--type-modal-title-size); color:var(--brown); font-weight:var(--type-modal-title-weight); line-height:var(--type-modal-title-line); letter-spacing:var(--type-modal-title-track); margin-bottom:var(--space-card-row-gap); }
   .metric-help-body { font-size:var(--type-body-size); color:var(--text-muted); line-height:var(--type-body-line); font-weight:var(--type-body-weight); letter-spacing:var(--type-body-track); }
   .metric-help-detail { margin-top:var(--space-control-gap); font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); color:var(--text-muted); font-weight:var(--type-secondary-weight); }
-  .metric-help-close { margin-top:var(--space-modal-footer-gap); border-radius:var(--radius-sm); padding:var(--space-inline-control-padding); }
+  .metric-help-close { margin-top:var(--space-modal-footer-gap); }
 
   .feeding-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.28); display:flex; align-items:center; justify-content:center; padding:var(--space-card-padding); z-index:220; }
   .feeding-card { --modal-card-max-width:360px; }
@@ -837,7 +832,7 @@
   .history-delete-copy { display:flex; flex-direction:column; gap:var(--space-1); padding:var(--space-1) 0 0; }
   .history-delete-copy p { margin:0; color:var(--text-muted); font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); font-weight:var(--type-helper-text-weight); letter-spacing:var(--type-helper-text-track); }
   .history-delete-label { font-size:var(--type-body-lg-size); line-height:var(--type-body-lg-line); letter-spacing:var(--type-body-lg-track); font-weight:var(--type-body-lg-weight); color:var(--brown); }
-  .history-delete-confirm { border:none; background:var(--red); color:#fff; cursor:pointer; }
+  .history-delete-confirm { cursor:pointer; }
 
   .train-coverage { text-align:center; }
 

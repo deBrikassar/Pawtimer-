@@ -158,7 +158,7 @@ export default function SettingsScreen(props) {
 
           <div className="settings-danger-sep" />
           <div className="settings-section-label" style={{ color: "var(--red)" }}>Danger zone</div>
-          <button className="settings-btn danger button-size-secondary-pill" onClick={() => {
+          <button className="settings-btn button-danger button-size-secondary-pill" onClick={() => {
             if (window.confirm(`Remove ${name} from this device? Sessions stored elsewhere are unaffected.`)) {
               const newDogs = dogsState.filter((d) => d.id !== activeDogId);
               setDogs(newDogs);
