@@ -4,7 +4,7 @@ import { sortByDateAsc } from "./lib/activityDateTime";
 import { selectAppData } from "./features/app/selectors";
 import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeById, mergeSessionWithDerivedFields, normalizeFeedings, normalizeSessions, patKey, patLblKey, photoKey, save, sessKey, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncUpsertDog, toDateTimeLocalValue, walkKey } from "./features/app/storage";
 import { fmt, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
-import { ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
+import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
 import { DogSelect, Onboarding } from "./features/setup/SetupScreens";
 import HomeScreen from "./features/home/HomeScreen";
 import StatsScreen from "./features/stats/StatsScreen";
@@ -556,7 +556,7 @@ export default function PawTimer() {
               <label className="dog-photo-btn" title="Tap to change photo">
                 <input type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoUpload} />
                 {dogPhoto ? <img src={dogPhoto} className="dog-photo-img" alt={appData.name} /> : <div className="dog-photo-placeholder"><PawIcon size={28} /></div>}
-                <div className="dog-photo-overlay">📷</div>
+                <div className="dog-photo-overlay"><CameraIcon /></div>
               </label>
               <div className="identity-copy">
                 <div className="app-title">{appData.name}</div>
