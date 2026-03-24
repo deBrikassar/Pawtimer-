@@ -109,11 +109,11 @@ export function StatsMetricCard({
 
 export function StatsSupportRow({ label, value }) {
   return (
-    <div className="stats-support-row info-row">
-      <div className="stats-support-label-wrap info-row__label-wrap">
-        <span className="stats-support-label info-row__label">{label}</span>
+    <div className="stats-support-row surface-row info-row">
+      <div className="stats-support-label-wrap surface-row__label-wrap info-row__label-wrap">
+        <span className="stats-support-label surface-row__label info-row__label">{label}</span>
       </div>
-      <span className="stats-support-value info-row__value">{value}</span>
+      <span className="stats-support-value surface-row__value info-row__value">{value}</span>
     </div>
   );
 }
@@ -159,7 +159,7 @@ export function StatsProgressRing({
           </div>
         </div>
       </div>
-      <div className="ring-sub-btn stats-metric-label secondary-control secondary-control--inline-text">
+      <div className="ring-sub-btn surface-text-button stats-metric-label secondary-control secondary-control--inline-text">
         <span className="ring-sub-btn-text">{label}</span>
       </div>
     </div>

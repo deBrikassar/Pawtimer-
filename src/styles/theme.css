@@ -245,6 +245,18 @@
     --type-metric-headline-track: -0.03em;
     --surface-metric-radius: var(--radius-md);
     --surface-metric-shadow: 0 10px 24px rgba(15,23,42,0.05);
+    --surface-state-bg-default: linear-gradient(180deg, #FFFFFF 0%, #F8FAFD 100%);
+    --surface-state-border-default: color-mix(in srgb, var(--border) 90%, white);
+    --surface-state-accent-default: var(--text);
+    --surface-state-bg-today: linear-gradient(180deg, #FFFFFF 0%, #F8FAFD 100%);
+    --surface-state-border-today: color-mix(in srgb, var(--green) 34%, var(--border));
+    --surface-state-accent-today: var(--green-dark);
+    --surface-state-bg-upcoming: linear-gradient(180deg, #FFFFFF 0%, color-mix(in srgb, var(--softBlue) 52%, #FFFFFF) 100%);
+    --surface-state-border-upcoming: color-mix(in srgb, var(--mutedBlue) 38%, var(--border));
+    --surface-state-accent-upcoming: var(--blue-dark);
+    --surface-state-bg-overdue: linear-gradient(180deg, #FFFFFF 0%, color-mix(in srgb, var(--red) 7%, #FFFFFF) 100%);
+    --surface-state-border-overdue: color-mix(in srgb, var(--red) 28%, var(--border));
+    --surface-state-accent-overdue: var(--red);
   }
 
   html { overflow-x: hidden; width: 100%; max-width: 100vw; }

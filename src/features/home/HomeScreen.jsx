@@ -168,7 +168,7 @@ export default function HomeScreen(props) {
                   <div className={`pat-reminder ${pattern.behind ? "warn" : ""}`}>{patReminderText}</div>
                   <div className="pat-btns">
                     {PATTERN_TYPES.map((pt) => (
-                      <button key={pt.type} className="btn-pat interactive-row-card" onClick={(e) => { e.stopPropagation(); logPattern(pt.type); }}>
+                      <button key={pt.type} className="btn-pat surface-row--interactive interactive-row-card" onClick={(e) => { e.stopPropagation(); logPattern(pt.type); }}>
                         <span className="interactive-row-card__icon"><Img src={pt.icon} size={28} alt={pt.label} /></span>
                         <div className="p-text interactive-row-card__content">
                           <div className="p-label">{patLabels[pt.type] || pt.label}</div>

@@ -53,7 +53,7 @@ export default function SettingsScreen(props) {
           <div className="share-card">
             <div className="share-title share-title-with-icon"><PawIcon size={20} /> {name}'s Dog ID</div>
             <div className="share-sub">Share this ID to sync devices.</div>
-            <div className="share-id-row">
+            <div className="share-id-row surface-compact-info">
               <div className="share-id-val" aria-label="Dog ID">{activeDogId}</div>
               <button className="copy-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
             </div>
@@ -81,10 +81,10 @@ export default function SettingsScreen(props) {
           <div className="share-card">
             <div className="share-title">Training plan</div>
             <div className="settings-summary-list">
-              <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Sessions per day</span><span className="settings-summary-value info-row__value">Up to {activeProto.sessionsPerDayMax}/day</span></div>
-              <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Max alone time</span><span className="settings-summary-value info-row__value">{activeProto.maxDailyAloneMinutes} min/day</span></div>
-              <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Next-target logic</span><span className="settings-summary-value info-row__value">Adaptive from calm history, distress, and risk</span></div>
-              <div className="settings-summary-row info-row"><span className="settings-summary-label info-row__label">Pattern breaks</span><span className="settings-summary-value info-row__value">{pattern.recMin}–{pattern.recMax}/day</span></div>
+              <div className="settings-summary-row surface-row info-row"><span className="settings-summary-label surface-row__label info-row__label">Sessions per day</span><span className="settings-summary-value surface-row__value info-row__value">Up to {activeProto.sessionsPerDayMax}/day</span></div>
+              <div className="settings-summary-row surface-row info-row"><span className="settings-summary-label surface-row__label info-row__label">Max alone time</span><span className="settings-summary-value surface-row__value info-row__value">{activeProto.maxDailyAloneMinutes} min/day</span></div>
+              <div className="settings-summary-row surface-row info-row"><span className="settings-summary-label surface-row__label info-row__label">Next-target logic</span><span className="settings-summary-value surface-row__value info-row__value">Adaptive from calm history, distress, and risk</span></div>
+              <div className="settings-summary-row surface-row info-row"><span className="settings-summary-label surface-row__label info-row__label">Pattern breaks</span><span className="settings-summary-value surface-row__value info-row__value">{pattern.recMin}–{pattern.recMax}/day</span></div>
             </div>
             <button className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit training plan</button>
           </div>

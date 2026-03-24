@@ -226,7 +226,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
 
     return (
       <div
-        className={`h-item interactive-row-card ${isExpanded ? "is-expanded" : ""}`.trim()}
+        className={`h-item surface-row--interactive interactive-row-card ${isExpanded ? "is-expanded" : ""}`.trim()}
         key={itemKey}
         role="button"
         tabIndex={0}
@@ -270,7 +270,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
         <div className="section">
           <div className="history-section-head">
             <div className="section-title">Activity Log</div>
-            {sessions.length > 0 && <button className="clear-btn secondary-control secondary-control--inline-text" onClick={actions.clearSessions}>Clear sessions</button>}
+            {sessions.length > 0 && <button className="clear-btn surface-text-button secondary-control secondary-control--inline-text" onClick={actions.clearSessions}>Clear sessions</button>}
           </div>
 
           {timeline.length === 0 ? (
