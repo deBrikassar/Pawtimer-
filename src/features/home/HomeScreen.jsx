@@ -142,7 +142,7 @@ export default function HomeScreen(props) {
                     <div className="walk-timer-lbl">Walk in progress…</div>
                   </div>
                   <div className="walk-timer-btns">
-                    <button className="walk-cancel-btn" onClick={cancelWalk}>Cancel</button>
+                    <button className="walk-cancel-btn secondary-control secondary-control--modal" onClick={cancelWalk}>Cancel</button>
                     <button className="walk-end-btn button-base button-primary button--md button--pill" onClick={endWalk}>End Walk</button>
                   </div>
                 </div>
@@ -158,7 +158,7 @@ export default function HomeScreen(props) {
                     ))}
                   </div>
                   <div className="walk-type-actions">
-                    <button className="walk-cancel-btn" type="button" onClick={cancelWalk}>Cancel</button>
+                    <button className="walk-cancel-btn secondary-control secondary-control--modal" type="button" onClick={cancelWalk}>Cancel</button>
                   </div>
                 </div>
               )}
@@ -214,7 +214,7 @@ export default function HomeScreen(props) {
                 </select>
               </label>
               <div className="feeding-actions">
-                <button className="walk-cancel-btn" type="button" onClick={cancelFeedingForm}>Cancel</button>
+                <button className="walk-cancel-btn secondary-control secondary-control--modal" type="button" onClick={cancelFeedingForm}>Cancel</button>
                 <button className="walk-end-btn button-base button-primary button--md button--pill" type="button" onClick={saveFeeding}>Save</button>
               </div>
             </div>

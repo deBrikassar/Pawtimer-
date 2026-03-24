@@ -757,6 +757,46 @@
   .share-id-val { font-family:var(--font-ui); font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); font-weight:var(--type-field-value-weight); color:var(--brown); letter-spacing:var(--type-field-value-track); text-transform:uppercase; flex:1; min-width:0; font-variant-numeric:tabular-nums; }
   .copy-btn { border:none; flex-shrink:0; transition:transform var(--motion-press) var(--ease-out), color var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out); }
 
+  /* Secondary-control family aliases for current screen-level controls. */
+  :is(.settings-inline-btn, .diag-run-btn, .copy-btn, .settings-btn, .walk-cancel-btn, .session-cancel-btn, .history-delete-confirm, .btn-cancel).secondary-control--compact-button,
+  :is(.diag-run-btn).secondary-control--compact-button {
+    min-height: var(--secondary-min-height);
+    padding-block: var(--secondary-padding-block);
+    padding-inline: var(--secondary-padding-inline);
+    font-size: var(--secondary-font-size);
+    line-height: var(--secondary-line-height);
+    font-weight: var(--secondary-font-weight);
+    letter-spacing: var(--secondary-letter-spacing);
+    border-radius: var(--secondary-radius);
+  }
+
+  :is(.clear-btn, .ring-sub-btn).secondary-control--inline-text {
+    min-height: var(--secondary-min-height);
+    padding-inline: var(--secondary-padding-inline);
+    font-size: var(--secondary-font-size);
+    line-height: var(--secondary-line-height);
+    font-weight: var(--secondary-font-weight);
+    letter-spacing: var(--secondary-letter-spacing);
+  }
+
+  :is(.modal-close-btn, .pat-edit-btn, .pat-edit-reset, .h-action-btn).secondary-control--icon {
+    min-height: var(--secondary-min-height);
+    min-width: var(--secondary-min-height);
+  }
+
+  :is(.notif-toggle, .settings-collapsible-toggle).secondary-control--toggle {
+    min-height: var(--secondary-min-height);
+    padding-block: var(--secondary-padding-block);
+    padding-inline: var(--secondary-padding-inline);
+  }
+
+  :is(.walk-cancel-btn, .session-cancel-btn, .history-delete-confirm).secondary-control--modal {
+    min-height: var(--secondary-min-height);
+    padding-block: var(--secondary-padding-block);
+    padding-inline: var(--secondary-padding-inline);
+  }
+
+
   .share-steps { font-size:var(--type-body-size); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); padding-left:var(--space-card-padding); font-family:var(--font-prose); }
   .share-steps li { margin-bottom:var(--space-card-row-gap); }
   .settings-btn { width:100%; justify-content:flex-start; text-align:left; white-space:normal; margin-bottom:0; transition:transform var(--motion-press) var(--ease-out), color var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out); }

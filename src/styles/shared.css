@@ -506,6 +506,80 @@
   animation: surfaceEnter var(--motion-enter) var(--ease-out);
 }
 
+
+/* ── Secondary interactive controls: explicit auditable families ──
+   Families:
+   - secondary-inline-text: low-emphasis inline textual actions.
+   - secondary-compact-button: compact neutral utility/support buttons.
+   - secondary-icon-button: icon-only edit/close/dismiss controls.
+   - secondary-toggle-control: compact binary toggles/collapsible triggers.
+   - secondary-modal-action: secondary actions in mixed modal footers. */
+.secondary-control {
+  --secondary-min-height: 44px;
+  --secondary-padding-block: var(--space-1);
+  --secondary-padding-inline: var(--space-2);
+  --secondary-radius: 999px;
+  --secondary-font-size: var(--type-button-size);
+  --secondary-line-height: var(--type-button-line);
+  --secondary-font-weight: var(--type-button-weight);
+  --secondary-letter-spacing: var(--type-button-track);
+  min-height: var(--secondary-min-height);
+  padding-block: var(--secondary-padding-block);
+  padding-inline: var(--secondary-padding-inline);
+  border-radius: var(--secondary-radius);
+  font-size: var(--secondary-font-size);
+  line-height: var(--secondary-line-height);
+  font-weight: var(--secondary-font-weight);
+  letter-spacing: var(--secondary-letter-spacing);
+}
+
+.secondary-control--compact-button {
+  --secondary-min-height: 36px;
+  --secondary-padding-block: 6px;
+  --secondary-padding-inline: 12px;
+  --secondary-font-size: var(--type-button-compact-size);
+  --secondary-line-height: var(--type-button-compact-line);
+  --secondary-font-weight: var(--type-button-compact-weight);
+  --secondary-letter-spacing: var(--type-button-compact-track);
+}
+
+.secondary-control--inline-text {
+  --secondary-min-height: 44px;
+  --secondary-padding-block: 0;
+  --secondary-padding-inline: var(--space-2);
+  --secondary-font-size: var(--type-secondary-size);
+  --secondary-line-height: var(--type-secondary-line);
+  --secondary-font-weight: var(--type-secondary-weight);
+  --secondary-letter-spacing: var(--type-secondary-track);
+}
+
+.secondary-control--icon {
+  --secondary-min-height: 40px;
+  --secondary-padding-block: 0;
+  --secondary-padding-inline: 0;
+  inline-size: var(--secondary-min-height);
+  block-size: var(--secondary-min-height);
+  min-inline-size: var(--secondary-min-height);
+  min-block-size: var(--secondary-min-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.secondary-control--toggle {
+  --secondary-min-height: 44px;
+  --secondary-padding-block: var(--space-1);
+  --secondary-padding-inline: var(--space-2);
+}
+
+.secondary-control--modal {
+  --secondary-min-height: 44px;
+  --secondary-padding-block: var(--space-1);
+  --secondary-padding-inline: var(--space-2);
+}
+
 :is(.ob-option, .ob-dur-btn) {
   background: var(--surf);
   border: 1.5px solid var(--border);
