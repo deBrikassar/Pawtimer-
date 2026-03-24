@@ -227,10 +227,24 @@
     --type-metric-card-value-line: 1.08;
     --type-metric-card-value-weight: var(--font-semibold);
     --type-metric-card-value-track: -0.02em;
+    --type-metric-value-size: var(--type-metric-card-value-size);
+    --type-metric-value-line: var(--type-metric-card-value-line);
+    --type-metric-value-weight: var(--type-metric-card-value-weight);
+    --type-metric-value-track: var(--type-metric-card-value-track);
+    --type-metric-label-size: var(--type-field-label-size);
+    --type-metric-label-line: var(--type-field-label-line);
+    --type-metric-label-weight: var(--type-field-label-weight);
+    --type-metric-label-track: var(--type-field-label-track);
+    --type-metric-detail-size: var(--type-helper-text-size);
+    --type-metric-detail-line: var(--type-helper-text-line);
+    --type-metric-detail-weight: var(--type-helper-text-weight);
+    --type-metric-detail-track: var(--type-helper-text-track);
     --type-metric-headline-size: clamp(1.65rem, 6vw, 2.15rem);
     --type-metric-headline-line: 1.05;
     --type-metric-headline-weight: var(--font-semibold);
     --type-metric-headline-track: -0.03em;
+    --surface-metric-radius: var(--radius-md);
+    --surface-metric-shadow: 0 10px 24px rgba(15,23,42,0.05);
   }
 
   html { overflow-x: hidden; width: 100%; max-width: 100vw; }

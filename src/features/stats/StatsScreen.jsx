@@ -1,17 +1,21 @@
 import EmptyState from "../../components/EmptyState";
-import { StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
+import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
 import { fmt } from "../app/helpers";
 
 export default function StatsScreen({ name, totalCount, setTab, bestCalm, target, relapseTone, openMetricHelp, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, currentThreshold, headlineStatus, headlineStatusTone }) {
+  const headlineMetricVariant = METRIC_VARIANTS.HEADLINE;
+  const standardMetricVariant = METRIC_VARIANTS.STANDARD;
+  const ringMetricVariant = METRIC_VARIANTS.RING;
+
   return (
-    <div className="tab-content">
+    <div className="tab-content" data-ring-metric-variant={ringMetricVariant}>
       <div className="section">
         <div className="section-title">Progress</div>
         {totalCount === 0 ? (
           <EmptyState icon="🌱" title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
         ) : <>
           <StatsSection title="Today" className="stats-section-priority">
-            <div className="stats-headline-card">
+            <div className={`stats-headline-card metric-surface metric-surface--${headlineMetricVariant}`} data-metric-variant={headlineMetricVariant}>
               <span className="stats-headline-label">Current threshold</span>
               <div className="stats-headline-main">
                 <span className="stats-headline-value">{fmt(currentThreshold)}</span>
@@ -22,9 +26,9 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
 
           <StatsSection title="Key metrics">
             <div className="stats-row stats-row-core stats-row-core-trimmed">
-              <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" detail="Longest calm session" />
-              <StatsMetricCard value={fmt(target)} label="Next target" detail="Recommended next session" onClick={() => openMetricHelp("nextTarget")} buttonLabel="Open Next target explanation" />
-              <StatsMetricCard value={relapseTone.label} label="Risk" detail="From recent distress signals" className="stat-card-risk" valueStyle={{ color: relapseTone.color }} />
+              <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" detail="Longest calm session" variant={standardMetricVariant} />
+              <StatsMetricCard value={fmt(target)} label="Next target" detail="Recommended next session" onClick={() => openMetricHelp("nextTarget")} buttonLabel="Open Next target explanation" variant={standardMetricVariant} />
+              <StatsMetricCard value={relapseTone.label} label="Risk" detail="From recent distress signals" className="stat-card-risk" valueStyle={{ color: relapseTone.color }} variant={standardMetricVariant} />
             </div>
           </StatsSection>
 

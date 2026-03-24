@@ -1,5 +1,5 @@
 import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
-import { StatsProgressRing } from "../stats/StatsComponents";
+import { METRIC_VARIANTS, StatsProgressRing } from "../stats/StatsComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton } from "../app/ui";
 
@@ -80,8 +80,9 @@ export default function HomeScreen(props) {
           const goalFrac = Math.min(goalPct / 100, 1);
           const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(daily.count / activeProto.sessionsPerDayMax, 1) : 0;
           const nextSessionLabel = fmt(target);
+          const ringMetricVariant = METRIC_VARIANTS.RING;
           return (
-            <div className="stats-rings-card">
+            <div className={`stats-rings-card metric-surface metric-surface--${ringMetricVariant}`}>
               <StatsProgressRing
                 value={nextSessionLabel}
                 numericValue={target}

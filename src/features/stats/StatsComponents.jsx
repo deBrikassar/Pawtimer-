@@ -5,6 +5,11 @@ import {
 } from "recharts";
 import EmptyState from "../../components/EmptyState";
 
+export const METRIC_VARIANTS = Object.freeze({
+  HEADLINE: "headline",
+  STANDARD: "standard",
+  RING: "ring",
+});
 
 const chartTypography = {
   helperText: {
@@ -75,11 +80,21 @@ export function StatsSection({ title, children, className = "" }) {
   );
 }
 
-export function StatsMetricCard({ value, label, className = "", valueStyle, detail = null, onClick = null, buttonLabel = null }) {
+export function StatsMetricCard({
+  value,
+  label,
+  className = "",
+  valueStyle,
+  detail = null,
+  onClick = null,
+  buttonLabel = null,
+  variant = METRIC_VARIANTS.STANDARD,
+}) {
   const Tag = onClick ? "button" : "div";
+  const variantClass = `metric-surface metric-surface--${variant}`;
   return (
     <Tag
-      className={`stat-card ${className}`.trim()}
+      className={`stat-card ${variantClass} ${className}`.trim()}
       onClick={onClick || undefined}
       type={onClick ? "button" : undefined}
       aria-label={buttonLabel || label}
