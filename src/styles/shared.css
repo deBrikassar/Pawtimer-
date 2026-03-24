@@ -171,15 +171,28 @@
   --button-size-gap: 6px;
 }
 
-.button-primary {
+.button-primary,
+.button-base.button-primary {
   background: var(--green-dark);
   color: #FFFFFF;
   box-shadow: var(--shadow);
+  border-color: transparent;
+  min-height: 44px;
+  font-size: var(--type-button-size);
+  line-height: var(--type-button-line);
+  font-weight: var(--type-button-weight);
+  letter-spacing: var(--type-button-track);
 }
 
-.button-primary:hover:not(:disabled) {
+.button-primary:hover:not(:disabled),
+.button-base.button-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+}
+
+.button-primary:active:not(:disabled),
+.button-base.button-primary:active:not(:disabled) {
+  background: color-mix(in srgb, var(--green-dark) 92%, black);
 }
 
 .button-secondary {
@@ -231,6 +244,24 @@
 .button-icon {
   min-height: 44px;
   border-radius: 999px;
+}
+
+.button--block {
+  width: 100%;
+}
+
+.button--pill {
+  border-radius: 999px;
+}
+
+.button--compact {
+  min-height: 36px;
+  padding-block: 6px;
+  padding-inline: 12px;
+  font-size: var(--type-button-compact-size);
+  line-height: var(--type-button-compact-line);
+  font-weight: var(--type-button-compact-weight);
+  letter-spacing: var(--type-button-compact-track);
 }
 
 .button-icon {
@@ -287,26 +318,6 @@
 
 .ds-dog-card:hover {
   border-color: var(--blue-dark);
-}
-
-:is(.ds-btn-primary, .ob-btn-next, .metric-help-close, .walk-end-btn) {
-  background: var(--green-dark);
-  color: #FFFFFF;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition:
-    border-color var(--motion-base) var(--ease-standard),
-    background var(--motion-base) var(--ease-standard),
-    box-shadow var(--motion-base) var(--ease-standard),
-    color var(--motion-base) var(--ease-standard),
-    transform var(--motion-fast) var(--ease-standard),
-    opacity var(--motion-fast) var(--ease-standard);
-}
-
-:is(.ds-btn-primary, .ob-btn-next, .metric-help-close, .walk-end-btn):hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
 }
 
 .copy-btn,
@@ -381,7 +392,6 @@
 }
 
 
-:is(.ds-btn-primary, .ob-btn-next, .metric-help-close, .walk-end-btn):active:not(:disabled),
 :is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .pat-edit-reset, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-cancel, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta):active:not(:disabled) {
   transform: scale(0.96);
 }

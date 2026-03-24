@@ -3,7 +3,7 @@ import { useState } from "react";
 function SessionActionRow({ onEnd, onCancel }) {
   return (
     <div className="session-actions">
-      <button className="session-end-btn" onClick={onEnd}>End Session</button>
+      <button className="session-end-btn button-base button-primary button--pill" onClick={onEnd}>End Session</button>
       <button className="session-cancel-btn" onClick={onCancel}>Cancel (don't save)</button>
     </div>
   );
@@ -172,7 +172,7 @@ export function SessionRatingPanel({
               ))}
             </select>
             <button
-              className="btn-save-outcome"
+              className="btn-save-outcome button-base button-primary button--block"
               onClick={() => recordResult(sessionOutcome, {
                 latencyToFirstDistress: latencyDraft,
                 distressType: distressTypeDraft || null,
