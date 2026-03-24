@@ -548,7 +548,7 @@ export default function PawTimer() {
   return (
     <>
       {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
-      {metricHelp && <div className="metric-help-overlay" role="dialog" aria-modal="true" aria-labelledby="metric-help-title" onClick={() => setMetricHelp(null)}><div className="metric-help-card" onClick={(e) => e.stopPropagation()}><div className="metric-help-title" id="metric-help-title">{appData.metricExplainers[metricHelp]?.title}</div><div className="metric-help-body">{appData.metricExplainers[metricHelp]?.body}</div>{appData.metricExplainers[metricHelp]?.detail && <div className="metric-help-detail">{appData.metricExplainers[metricHelp]?.detail}</div>}<button className="metric-help-close" onClick={() => setMetricHelp(null)} type="button">Got it</button></div></div>}
+      {metricHelp && <div className="metric-help-overlay" role="dialog" aria-modal="true" aria-labelledby="metric-help-title" onClick={() => setMetricHelp(null)}><div className="metric-help-card" onClick={(e) => e.stopPropagation()}><div className="metric-help-title" id="metric-help-title">{appData.metricExplainers[metricHelp]?.title}</div><div className="metric-help-body">{appData.metricExplainers[metricHelp]?.body}</div>{appData.metricExplainers[metricHelp]?.detail && <div className="metric-help-detail">{appData.metricExplainers[metricHelp]?.detail}</div>}<button className="metric-help-close button-base button-primary button--block" onClick={() => setMetricHelp(null)} type="button">Got it</button></div></div>}
       <div className="app">
         <div className="header">
           <div className="header-top">

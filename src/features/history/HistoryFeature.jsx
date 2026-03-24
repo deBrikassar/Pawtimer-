@@ -426,7 +426,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               </label>
               <div className="feeding-actions">
                 <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
-                <button className="walk-end-btn" type="button" onClick={() => actions.saveEditedActivityTime(historyModal, setHistoryModal)}>Save</button>
+                <button className="walk-end-btn button-base button-primary button--pill" type="button" onClick={() => actions.saveEditedActivityTime(historyModal, setHistoryModal)}>Save</button>
               </div>
             </>}
 
@@ -438,7 +438,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               </label>
               <div className="feeding-actions">
                 <button className="walk-cancel-btn" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
-                <button className="walk-end-btn" type="button" onClick={() => actions.saveEditedActivityDuration(historyModal, setHistoryModal)}>Save</button>
+                <button className="walk-end-btn button-base button-primary button--pill" type="button" onClick={() => actions.saveEditedActivityDuration(historyModal, setHistoryModal)}>Save</button>
               </div>
             </>}
 
