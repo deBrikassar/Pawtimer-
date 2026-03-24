@@ -108,11 +108,11 @@ export function StatsMetricCard({
 
 export function StatsSupportRow({ label, value }) {
   return (
-    <div className="stats-support-row">
-      <div className="stats-support-label-wrap">
-        <span className="stats-support-label">{label}</span>
+    <div className="stats-support-row info-row">
+      <div className="stats-support-label-wrap info-row__label-wrap">
+        <span className="stats-support-label info-row__label">{label}</span>
       </div>
-      <span className="stats-support-value">{value}</span>
+      <span className="stats-support-value info-row__value">{value}</span>
     </div>
   );
 }

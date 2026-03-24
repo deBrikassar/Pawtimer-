@@ -107,13 +107,13 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
         {dogs.length > 0 && <>
           <div className="ds-section-label">Your dogs</div>
           {dogs.map((d) => (
-            <button key={d.id} className="ds-dog-card" type="button" onClick={() => onSelect(d.id)}>
-              <PawIcon size={30} />
-              <div>
+            <button key={d.id} className="ds-dog-card interactive-row-card" type="button" onClick={() => onSelect(d.id)}>
+              <span className="interactive-row-card__icon"><PawIcon size={30} /></span>
+              <div className="interactive-row-card__content">
                 <div className="ds-dog-name">{d.dogName || "Your dog"}</div>
                 <div className="ds-dog-id">ID: {d.id}</div>
               </div>
-              <div className="ds-dog-arrow">›</div>
+              <div className="ds-dog-arrow interactive-row-card__trailing">›</div>
             </button>
           ))}
           <div className="ds-divider">
