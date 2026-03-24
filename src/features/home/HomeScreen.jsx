@@ -164,7 +164,7 @@ export default function HomeScreen(props) {
 
               {patOpen && (
                 <div className="tool-expand" style={{ borderTop: "none", borderRadius: 12 }}>
-                  <div className={`pat-reminder ${pattern.behind ? "warn" : ""}`} style={{ marginBottom: 10 }}>{patReminderText}</div>
+                  <div className={`pat-reminder ${pattern.behind ? "warn" : ""}`}>{patReminderText}</div>
                   <div className="pat-btns">
                     {PATTERN_TYPES.map((pt) => (
                       <button key={pt.type} className="btn-pat" onClick={(e) => { e.stopPropagation(); logPattern(pt.type); }}>
