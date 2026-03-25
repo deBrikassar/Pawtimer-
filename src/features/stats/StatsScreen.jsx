@@ -13,7 +13,6 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
   return (
     <div className="tab-content" data-ring-metric-variant={ringMetricVariant}>
       <div className="section">
-        <div className="section-title">Progress</div>
         {totalCount === 0 ? (
           <EmptyState media={<SproutIcon />} title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
         ) : <>
