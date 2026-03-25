@@ -1,6 +1,6 @@
 import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
 import { METRIC_VARIANTS, StatsProgressRing } from "../stats/StatsComponents";
-import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, isToday, walkTypeLabel } from "../app/helpers";
+import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton } from "../app/ui";
 
 export default function HomeScreen(props) {
@@ -79,17 +79,18 @@ export default function HomeScreen(props) {
         {phase === "idle" && (() => {
           const goalFrac = Math.min(goalPct / 100, 1);
           const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(daily.count / activeProto.sessionsPerDayMax, 1) : 0;
-          const nextSessionLabel = fmt(target);
+          const nextSessionLabel = fmtClock(target);
           const ringMetricVariant = METRIC_VARIANTS.RING;
           return (
             <div className={`stats-rings-card metric-surface metric-surface--${ringMetricVariant}`}>
               <StatsProgressRing
                 value={nextSessionLabel}
                 numericValue={target}
-                formatValue={fmt}
+                formatValue={fmtClock}
                 label="Next session"
                 progress={goalFrac}
                 fillClassName="ring-fill-1"
+                className="ring-col--next-session"
               />
               <div className="ring-col-sep" />
               <StatsProgressRing

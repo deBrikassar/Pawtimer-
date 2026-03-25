@@ -1,7 +1,8 @@
 import { PROTOCOL } from "../../lib/protocol";
-import { formatDuration } from "../../lib/time";
+import { formatClockDuration, formatDuration } from "../../lib/time";
 
 export const fmt = formatDuration;
+export const fmtClock = formatClockDuration;
 
 export const parseDurationInput = (value) => {
   const raw = String(value ?? "").trim();
