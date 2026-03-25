@@ -53,12 +53,12 @@ export default function SettingsScreen(props) {
           <div className="share-card">
             <div className="share-title share-title-with-icon"><PawIcon size={20} /> {name}'s Dog ID</div>
             <div className="share-sub">Share this ID to sync devices.</div>
-            <div className="share-id-row surface-compact-info">
+            <div className="share-id-row surface-compact-info density-compact">
               <div className="share-id-val" aria-label="Dog ID">{activeDogId}</div>
               <button className="copy-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
             </div>
             <div className="settings-sync-summary" aria-live="polite">
-              <div className="share-sub" style={{ marginBottom: 8 }}>Current sync status</div>
+              <div className="share-sub u-mb-row">Current sync status</div>
               <div className={`sync-badge sync-state-${syncSummary.badgeState}`} title={syncSummary.detail}>
                 <span className={`sync-dot sync-${syncSummary.badgeState}`} />
                 <span>{syncSummary.label}</span>
@@ -110,12 +110,12 @@ export default function SettingsScreen(props) {
           <div className="settings-section-label">Support</div>
           <div className="share-card settings-collapsible-card">
             <button className="settings-collapsible-toggle secondary-control secondary-control--toggle" type="button" aria-expanded={settingsDisclosure === "help"} onClick={() => setSettingsDisclosure((prev) => prev === "help" ? null : "help")}>
-              <span className="share-title" style={{ marginBottom: 0 }}>Help</span>
+              <span className="share-title">Help</span>
               <span className="settings-collapsible-arrow">{settingsDisclosure === "help" ? "−" : "+"}</span>
             </button>
             <div className={`collapsible-body ${settingsDisclosure === "help" ? "open" : "closed"}`}>
               <div className="settings-collapsible-inner">
-                <div className="proto-section" style={{ marginTop: 0 }}><div className="proto-title">Sync devices</div><div className="proto-row">Copy the Dog ID, send it to your partner, then have them join with that ID in PawTimer.</div></div>
+                <div className="proto-section u-mt-none"><div className="proto-title">Sync devices</div><div className="proto-row">Copy the Dog ID, send it to your partner, then have them join with that ID in PawTimer.</div></div>
                 <div className="proto-section"><div className="proto-title">How to run a session</div><div className="proto-row">Tap Start, leave calmly, come back when needed, then rate how {name} did so PawTimer can set the next target.</div></div>
                 <div className="proto-section"><div className="proto-title">Progress rules</div><div className="proto-row">PawTimer starts from a weighted safe-alone estimate built from recent calm sessions. Five calm sessions in a row usually earn a +15% step. Subtle stress usually repeats the same duration, active distress shortens the next target, and severe distress triggers a deeper stabilization step.</div></div>
                 <div className="proto-section"><div className="proto-title">Next target factors</div><div className="proto-row">{nextTargetInfo.summary} Right now it uses {nextTargetInfo.factors.join(" ")}</div></div>
@@ -128,16 +128,16 @@ export default function SettingsScreen(props) {
           <div className="settings-section-label">Advanced</div>
           <div className="share-card settings-collapsible-card">
             <button className="settings-collapsible-toggle secondary-control secondary-control--toggle" type="button" aria-expanded={settingsDisclosure === "advanced"} onClick={() => setSettingsDisclosure((prev) => prev === "advanced" ? null : "advanced")}>
-              <span className="share-title" style={{ marginBottom: 0 }}>Advanced</span>
+              <span className="share-title">Advanced</span>
               <span className="settings-collapsible-arrow">{settingsDisclosure === "advanced" ? "−" : "+"}</span>
             </button>
             <div className={`collapsible-body ${settingsDisclosure === "advanced" ? "open" : "closed"}`}>
               <div className="settings-collapsible-inner">
                 <div className="diag-head">
-                  <div className="share-title" style={{ marginBottom: 0 }}>Sync diagnostics</div>
+                  <div className="share-title">Sync diagnostics</div>
                   <button className="diag-run-btn button-size-compact-tertiary secondary-control secondary-control--compact-button" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>{syncDiagRunning ? "Running…" : "Run connection test"}</button>
                 </div>
-                <div className="share-sub" style={{ marginBottom: 10 }}>Use this if sync turns red. It checks env setup, read access, and write/delete permissions.</div>
+                <div className="share-sub u-mb-card-row">Use this if sync turns red. It checks env setup, read access, and write/delete permissions.</div>
                 <div className="diag-grid">
                   <div>Sync enabled: <strong>{SYNC_ENABLED ? "Yes" : "No"}</strong></div>
                   <div>VITE_SUPABASE_URL: <strong>{SB_URL ? "Set" : "Missing"}</strong></div>
@@ -188,7 +188,7 @@ export default function SettingsScreen(props) {
               </div>
             ) : (
               <div>
-                <div className="t-helper" style={{ color: "var(--amber)", marginBottom: 10 }}>Edit with caution.</div>
+                <div className="t-helper u-color-amber u-mb-card-row">Edit with caution.</div>
                 {[
                   { key: "sessionsPerDayMax", label: "Max sessions/day", unit: "" },
                   { key: "maxDailyAloneMinutes", label: "Max alone time/day", unit: "min" },
@@ -197,13 +197,13 @@ export default function SettingsScreen(props) {
                 ].map(({ key, label, unit }) => (
                   <div key={key} className="proto-field-row">
                     <span className="proto-field-label">{label}</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <div className="u-gap-compact">
                       <input type="number" className="proto-field-input" aria-label={label} value={protoOverride[key] ?? activeProto[key]} onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v) && v > 0) setProtoOverride((prev) => ({ ...prev, [key]: v })); }} />
                       {unit && <span className="t-helper">{unit}</span>}
                     </div>
                   </div>
                 ))}
-                <button onClick={() => { setProtoOverride({}); setProtoWarnAck(false); }} className="t-helper" style={{ marginTop: 12, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }} type="button">Reset to defaults</button>
+                <button onClick={() => { setProtoOverride({}); setProtoWarnAck(false); }} className="t-helper u-mt-row" style={{ background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }} type="button">Reset to defaults</button>
               </div>
             )}
           </div>
