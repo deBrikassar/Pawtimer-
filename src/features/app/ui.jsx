@@ -22,7 +22,7 @@ export const Img = ({ src, size = 24, alt = "" }) => {
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 export const PawIcon = ({ size = 36 }) => (
-  <img src={ICONS.paw} width={size} height={size} alt="PawTimer"
+  <img src="/icons/app-logo.png" width={size} height={size} alt="PawTimer"
     className="paw-icon-img" />
 );
 export const ModalCloseButton = ({ onClick, label = "Close dialog" }) => (
