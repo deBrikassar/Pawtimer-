@@ -98,12 +98,12 @@ export function useHistoryEditing({
     },
     saveEditedActivityTime: (historyModal, setHistoryModal) => {
       if (!historyModal?.date || !historyModal?.time) {
-        showToast("⚠️ Please choose a valid date and time");
+        showToast("Please choose a valid date and time");
         return;
       }
       const updatedIso = buildEditedActivityIso(historyModal.date, historyModal.time);
       if (!updatedIso) {
-        showToast("⚠️ Please choose a valid date and time");
+        showToast("Please choose a valid date and time");
         return;
       }
       if (historyModal.kind === "walk") {
@@ -112,9 +112,9 @@ export function useHistoryEditing({
         const updatedWalk = stampLocalEntry({ ...currentWalk, date: updatedIso }, currentWalk);
         setWalks((prev) => sortByDateAsc(prev.map((w) => (w.id === historyModal.id ? updatedWalk : w))));
         pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
-          if (!ok) showToast(`⚠️ Sync failed: ${error}`);
+          if (!ok) showToast(`Sync failed: ${error}`);
         });
-        showToast(`🕒 Walk date and time updated to ${fmtDate(updatedWalk.date)}`);
+        showToast(`Walk date and time updated to ${fmtDate(updatedWalk.date)}`);
         setHistoryModal(null);
         return;
       }
@@ -123,9 +123,9 @@ export function useHistoryEditing({
       const updatedSession = stampLocalEntry(normalizeSession({ ...currentSession, date: updatedIso }), currentSession);
       commitSessions(sortByDateAsc(sessions.map((s) => (s.id === historyModal.id ? updatedSession : s))));
       pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
-        if (!ok) showToast(`⚠️ Sync failed: ${error}`);
+        if (!ok) showToast(`Sync failed: ${error}`);
       });
-      showToast(`🕒 Session date and time updated to ${fmtDate(updatedSession.date)}`);
+      showToast(`Session date and time updated to ${fmtDate(updatedSession.date)}`);
       setHistoryModal(null);
     },
     saveEditedActivityDuration: (historyModal, setHistoryModal) => {
@@ -133,7 +133,7 @@ export function useHistoryEditing({
       const parsedDuration = parseDurationInput(historyModal.value);
       const requiresPositive = historyModal.kind === "session";
       if (!Number.isFinite(parsedDuration) || (requiresPositive ? parsedDuration <= 0 : parsedDuration < 0)) {
-        showToast(requiresPositive ? "⚠️ Invalid duration. Use a positive value (seconds or mm:ss)" : "⚠️ Invalid duration. Use seconds or mm:ss");
+        showToast(requiresPositive ? "Invalid duration. Use a positive value (seconds or mm:ss)" : "Invalid duration. Use seconds or mm:ss");
         return;
       }
       if (historyModal.kind === "walk") {
@@ -142,9 +142,9 @@ export function useHistoryEditing({
         const updatedWalk = stampLocalEntry({ ...currentWalk, duration: parsedDuration }, currentWalk);
         setWalks((prev) => prev.map((w) => (w.id === historyModal.id ? updatedWalk : w)));
         pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
-          if (!ok) showToast(`⚠️ Sync failed: ${error}`);
+          if (!ok) showToast(`Sync failed: ${error}`);
         });
-        showToast(`🚶 Walk updated to ${fmt(parsedDuration)}`);
+        showToast(`Walk updated to ${fmt(parsedDuration)}`);
         setHistoryModal(null);
         return;
       }
@@ -153,9 +153,9 @@ export function useHistoryEditing({
       const updatedSession = stampLocalEntry(mergeSessionWithDerivedFields(currentSession, { actualDuration: parsedDuration }), currentSession);
       commitSessions(sessions.map((s) => (s.id === historyModal.id ? updatedSession : s)));
       pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
-        if (!ok) showToast(`⚠️ Sync failed: ${error}`);
+        if (!ok) showToast(`Sync failed: ${error}`);
       });
-      showToast(`⏱️ Session updated to ${fmt(parsedDuration)}`);
+      showToast(`Session updated to ${fmt(parsedDuration)}`);
       setHistoryModal(null);
     },
     confirmHistoryDelete: (historyModal, setHistoryModal) => {
@@ -164,36 +164,36 @@ export function useHistoryEditing({
         const nextSessions = sessions.filter((item) => item.id !== historyModal.id);
         commitSessions(nextSessions);
         syncDelete("session", historyModal.id).then((ok) => {
-          if (!ok) showToast("⚠️ Session removed locally — remote delete failed");
+          if (!ok) showToast("Session removed locally — remote delete failed");
         });
       } else if (historyModal.kind === "walk") {
         const nextWalks = walks.filter((item) => item.id !== historyModal.id);
         setWalks(nextWalks);
         syncDelete("walk", historyModal.id).then((ok) => {
-          if (!ok) showToast("⚠️ Walk removed locally — remote delete failed");
+          if (!ok) showToast("Walk removed locally — remote delete failed");
         });
         recomputeTarget(sessions, nextWalks, patterns);
       } else if (historyModal.kind === "pattern") {
         const nextPatterns = patterns.filter((item) => item.id !== historyModal.id);
         setPatterns(nextPatterns);
         syncDelete("pattern", historyModal.id).then((ok) => {
-          if (!ok) showToast("⚠️ Pattern break removed locally — remote delete failed");
+          if (!ok) showToast("Pattern break removed locally — remote delete failed");
         });
         recomputeTarget(sessions, walks, nextPatterns);
       } else if (historyModal.kind === "feeding") {
         setFeedings((prev) => prev.filter((item) => item.id !== historyModal.id));
         syncDelete("feeding", historyModal.id).then((ok) => {
-          if (!ok) showToast("⚠️ Feeding removed locally — remote delete failed");
+          if (!ok) showToast("Feeding removed locally — remote delete failed");
         });
       }
-      showToast(`🗑️ ${historyModal.label} deleted`);
+      showToast(`${historyModal.label} deleted`);
       setHistoryModal(null);
     },
     clearSessions: () => {
       if (window.confirm("Clear all training sessions?")) {
         commitSessions([]);
         syncDeleteSessionsForDog(activeDogId).then((ok) => {
-          if (ok === null) showToast("⚠️ Sessions cleared locally — remote delete failed");
+          if (ok === null) showToast("Sessions cleared locally — remote delete failed");
           else showToast("Sessions cleared");
         });
       }
