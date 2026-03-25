@@ -360,8 +360,8 @@ export default function PawTimer() {
     const dogName = dog?.dogName ?? "your dog";
     if (!notifEnabled) {
       const ok = await scheduleNotif(notifTime, dogName);
-      if (ok) { setNotifEnabled(true); showToast("🔔 Reminder set!"); } else showToast("⚠️ Notifications blocked — check browser settings");
-    } else { cancelNotif(); setNotifEnabled(false); showToast("🔕 Reminder turned off"); }
+      if (ok) { setNotifEnabled(true); showToast("Reminder set."); } else showToast("Notifications blocked — check browser settings");
+    } else { cancelNotif(); setNotifEnabled(false); showToast("Reminder turned off."); }
   };
 
   const openDog = (dog) => { logSyncDebug("openDog", { dogId: canonicalDogId(dog?.id) }); setActiveDogId(canonicalDogId(dog.id)); setScreen("app"); };
@@ -371,7 +371,7 @@ export default function PawTimer() {
     if (isJoin && SYNC_ENABLED) {
       setSyncStatus("syncing");
       const { result: remote, error } = await syncFetch(normalizedId);
-      if (!remote?.dog) { setSyncStatus("err"); setSyncError(error || `No shared dog account found for ${normalizedId}`); showToast(`⚠️ No shared profile found for ${normalizedId} yet.`); return; }
+      if (!remote?.dog) { setSyncStatus("err"); setSyncError(error || `No shared dog account found for ${normalizedId}`); showToast(`No shared profile found for ${normalizedId} yet.`); return; }
       const sharedDog = { ...remote.dog, id: normalizedId };
       setDogs((prev) => [...prev.filter((d) => canonicalDogId(d.id) !== normalizedId), sharedDog]);
       const joinedSessions = normalizeSessions(remote.sessions).map(markRemoteEntryConfirmed);
@@ -386,14 +386,14 @@ export default function PawTimer() {
       save(walkKey(normalizedId), joinedWalks);
       save(patKey(normalizedId), joinedPatterns);
       save(feedingKey(normalizedId), joinedFeedings);
-      if (error) { setSyncStatus("err"); setSyncError(error); showToast(`⚠️ Joined ${normalizedId}, but related history failed to load.`); }
-      else { setSyncError(""); setSyncStatus("ok"); showToast(`✅ Joined shared profile ${normalizedId}.`); }
+      if (error) { setSyncStatus("err"); setSyncError(error); showToast(`Joined ${normalizedId}, but related history failed to load.`); }
+      else { setSyncError(""); setSyncStatus("ok"); showToast(`Joined shared profile ${normalizedId}.`); }
       openDog(sharedDog);
       return;
     }
     const existing = dogs.find((d) => canonicalDogId(d.id) === normalizedId) ?? ensureArray(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === normalizedId);
     if (existing) { openDog(existing); return; }
-    if (isJoin) { setSyncStatus("err"); setSyncError(`No shared dog account found for ${normalizedId}`); showToast(`⚠️ No shared profile found for ${normalizedId}. Check the ID and try again.`); }
+    if (isJoin) { setSyncStatus("err"); setSyncError(`No shared dog account found for ${normalizedId}`); showToast(`No shared profile found for ${normalizedId}. Check the ID and try again.`); }
     else { setActiveDogId(normalizedId); setScreen("onboard"); }
   };
 
@@ -449,13 +449,13 @@ export default function PawTimer() {
     const rawSession = mergeSessionWithDerivedFields({}, { id: makeEntryId("sess", activeDogId), date: now.toISOString(), plannedDuration: target, actualDuration: finalElapsed, distressLevel, result: distressLevel === "none" ? "success" : "distress", belowThreshold: distressLevel === "none" && finalElapsed >= target, latencyToFirstDistress, distressType, distressSeverity: distressLevel, context: { timeOfDay, departureType: "training", cuesUsed: [], location: null, barrierUsed: null, enrichmentPresent: null, mediaOn: null, whoLeft: null, anotherPersonStayed: null }, symptoms: { barking: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, pacing: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, destructive: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0, salivation: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0 }, videoReview: { recorded: false, firstSubtleDistressTs: null, firstActiveDistressTs: null, eventTags: [], notes: null, ratingConfidence: null }, recoverySeconds: distressLevel === "none" ? 0 : null, preSession: { walkDuration: null, enrichmentGiven: null }, environment: { noiseEvent: false } });
     const session = stampLocalEntry(rawSession);
     const updated = commitSessions((prev) => [...prev, session]);
-    pushWithSyncStatus("session", session).then(({ ok, error }) => { if (!ok) showToast(`⚠️ Sync failed: ${error}`); });
+    pushWithSyncStatus("session", session).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
     const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
     cancelSession();
     const n = dog?.dogName ?? "your dog";
-    if (distressLevel === "none") showToast(`✅ ${n} was calm! Next: ${fmt(next)}`);
-    else if (distressLevel === "subtle") showToast(`⚠️ Subtle stress signs — holding at ${fmt(next)}`);
-    else showToast(`❤️ Rolled back to ${fmt(next)}`);
+    if (distressLevel === "none") showToast(`${n} was calm. Next: ${fmt(next)}`);
+    else if (distressLevel === "subtle") showToast(`Subtle stress signs — holding at ${fmt(next)}`);
+    else showToast(`Rolled back to ${fmt(next)}`);
   };
 
   const startWalk = () => { setWalkElapsed(0); setWalkPhase("timing"); };
@@ -463,28 +463,28 @@ export default function PawTimer() {
   const saveWalkWithType = (walkType) => {
     const entry = stampLocalEntry({ id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration: walkPendingDuration, type: normalizeWalkType(walkType) });
     commitWalks((prev) => [...prev, entry]);
-    pushWithSyncStatus("walk", entry).then(({ ok, error }) => { if (!ok) showToast(`⚠️ Sync failed: ${error}`); });
-    showToast(`🚶 ${walkTypeLabel(normalizeWalkType(walkType))} with ${appData.name} logged — ${fmt(walkPendingDuration)}!`);
+    pushWithSyncStatus("walk", entry).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
+    showToast(`${walkTypeLabel(normalizeWalkType(walkType))} with ${appData.name} logged — ${fmt(walkPendingDuration)}.`);
     setWalkPhase("idle"); setWalkElapsed(0); setWalkPendingDuration(0);
   };
   const cancelWalk = () => { clearInterval(walkTimerRef.current); setWalkPhase("idle"); setWalkElapsed(0); setWalkPendingDuration(0); };
   const logPattern = (type) => {
     const entry = stampLocalEntry({ id: makeEntryId("pat", activeDogId), date: new Date().toISOString(), type });
     commitPatterns((prev) => [...prev, entry]);
-    pushWithSyncStatus("pattern", entry).then(({ ok, error }) => { if (!ok) showToast(`⚠️ Sync failed: ${error}`); });
-    showToast("✓ Pattern break logged!");
+    pushWithSyncStatus("pattern", entry).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
+    showToast("Pattern break logged.");
   };
   const openFeedingForm = () => { setFeedingDraft({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }); setFeedingOpen(true); };
   const cancelFeedingForm = () => { setFeedingOpen(false); setFeedingDraft({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }); };
   const saveFeeding = () => {
     const when = feedingDraft.time ? new Date(feedingDraft.time) : new Date();
-    if (Number.isNaN(when.getTime())) { showToast("⚠️ Please enter a valid feeding time"); return; }
+    if (Number.isNaN(when.getTime())) { showToast("Please enter a valid feeding time"); return; }
     const entry = stampLocalEntry({ id: makeEntryId("feed", activeDogId), date: when.toISOString(), foodType: feedingDraft.foodType, amount: feedingDraft.amount });
     commitFeedings((prev) => [...prev, entry]);
-    pushWithSyncStatus("feeding", entry).then(({ ok, error }) => { if (!ok) showToast(`⚠️ Sync failed: ${error}`); });
-    setFeedingOpen(false); showToast("🍽️ Feeding logged");
+    pushWithSyncStatus("feeding", entry).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
+    setFeedingOpen(false); showToast("Feeding logged.");
   };
-  const copyDogId = () => { navigator.clipboard?.writeText(activeDogId).catch(() => {}); showToast(`📋 ID copied: ${activeDogId}`); };
+  const copyDogId = () => { navigator.clipboard?.writeText(activeDogId).catch(() => {}); showToast(`ID copied: ${activeDogId}`); };
   const handlePhotoUpload = (e) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => setDogPhoto(ev.target.result); reader.readAsDataURL(file); };
 
   const historyActions = useHistoryEditing({ sessions, walks, patterns, feedings, patLabels, showToast, pushWithSyncStatus, syncDelete, syncDeleteSessionsForDog, commitSessions, setWalks: commitWalks, setPatterns: commitPatterns, setFeedings: commitFeedings, recomputeTarget, activeDogId, stampLocalEntry });

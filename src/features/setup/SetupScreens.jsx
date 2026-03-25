@@ -41,7 +41,6 @@ export function Onboarding({ onComplete, onBack }) {
           <div className="ob-options">
             {LEAVE_OPTIONS.map((o) => (
               <button key={o.value} className={`ob-option ${leaves === o.value ? "selected" : ""}`} onClick={() => setLeaves(o.value)}>
-                <span className="ob-option-emoji">{o.emoji}</span>
                 <div><div className="ob-option-label">{o.label}</div><div className="ob-option-sub">{o.sub}</div></div>
               </button>
             ))}
@@ -72,7 +71,7 @@ export function Onboarding({ onComplete, onBack }) {
       </div>
       <div className="ob-footer">
         <button className="ob-btn-next button-base button-primary button--lg button-size-primary-cta button--block" onClick={handleNext} disabled={!canNext}>
-          {step < 3 ? "Continue →" : `Start training with ${displayName} 🐾`}
+          {step < 3 ? "Continue →" : `Start training with ${displayName}`}
         </button>
         <button className="ob-back-btn" onClick={() => step === 0 ? onBack?.() : setStep((s) => s - 1)}>
           ← {step === 0 ? "Back to dogs" : "Back"}

@@ -144,7 +144,7 @@ export default function SettingsScreen(props) {
                   <div>VITE_SUPABASE_ANON_KEY: <strong>{SB_KEY ? "Set" : "Missing"}</strong></div>
                   <div>Supabase base URL: <code>{SB_BASE_URL || "(missing)"}</code></div>
                 </div>
-                {syncDiagResult && <><div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>{syncDiagResult.checks?.summary?.ok ? "✓ All checks passed" : "✕ Some checks failed"}</div><pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre></>}
+                {syncDiagResult && <><div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>{syncDiagResult.checks?.summary?.ok ? "All checks passed" : "Some checks failed"}</div><pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre></>}
               </div>
             </div>
           </div>

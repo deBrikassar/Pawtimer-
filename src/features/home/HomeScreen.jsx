@@ -105,7 +105,7 @@ export default function HomeScreen(props) {
 
         {daily.count >= Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0)) && (
           <p className="status-msg status-msg--warning">
-            ⚠️ {daily.count} sessions today — for ~{pattern.normalizedLeaves} departures/day, keep it around {Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0))} to avoid overloading real departures.
+            {daily.count} sessions today — for ~{pattern.normalizedLeaves} departures/day, keep it around {Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0))} to avoid overloading real departures.
           </p>
         )}
 

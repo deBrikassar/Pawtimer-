@@ -113,17 +113,17 @@ const symptomIntensity = (v) => (Number.isFinite(v) ? v : asBool(v) ? 1 : 0);
 
 export const sessionDetailBadges = (s) => {
   const badges = [];
-  if (s.context?.timeOfDay) badges.push(`🕒 ${s.context.timeOfDay}`);
-  if (s.context?.departureType) badges.push(`🚪 ${s.context.departureType}`);
-  if (Array.isArray(s.context?.cuesUsed) && s.context.cuesUsed.length) badges.push(`🧩 ${s.context.cuesUsed.length} cue${s.context.cuesUsed.length === 1 ? "" : "s"}`);
+  if (s.context?.timeOfDay) badges.push(`Time: ${s.context.timeOfDay}`);
+  if (s.context?.departureType) badges.push(`Departure: ${s.context.departureType}`);
+  if (Array.isArray(s.context?.cuesUsed) && s.context.cuesUsed.length) badges.push(`Cues: ${s.context.cuesUsed.length}`);
 
   const symptomTotal = ["barking", "pacing", "destructive", "salivation"].reduce((sum, key) => sum + symptomIntensity(s.symptoms?.[key]), 0);
-  if (symptomTotal > 0) badges.push(`💬 symptoms ${symptomTotal}`);
+  if (symptomTotal > 0) badges.push(`Symptoms: ${symptomTotal}`);
 
-  if (Number.isFinite(s.recoverySeconds)) badges.push(`❤️ recovery ${fmt(s.recoverySeconds)}`);
-  if (Number.isFinite(s.preSession?.walkDuration)) badges.push(`🚶 walk ${fmt(s.preSession.walkDuration)}`);
-  if (s.preSession?.enrichmentGiven) badges.push("🦴 enrichment");
-  if (s.environment?.noiseEvent) badges.push("🔊 noise/event");
+  if (Number.isFinite(s.recoverySeconds)) badges.push(`Recovery: ${fmt(s.recoverySeconds)}`);
+  if (Number.isFinite(s.preSession?.walkDuration)) badges.push(`Pre-walk: ${fmt(s.preSession.walkDuration)}`);
+  if (s.preSession?.enrichmentGiven) badges.push("Enrichment");
+  if (s.environment?.noiseEvent) badges.push("Noise/event");
 
   return badges;
 };
@@ -174,10 +174,10 @@ export const normalizeWalkType = (value) => {
 export const walkTypeLabel = (walkType) => (WALK_TYPE_OPTIONS.find((option) => option.value === normalizeWalkType(walkType))?.label ?? "regular walk");
 
 export const LEAVE_OPTIONS = [
-  { value: 1, label: "1–2 times", sub: "Work from home / rarely leave", emoji: "🏠" },
-  { value: 3, label: "3–4 times", sub: "Short errands, occasional walks", emoji: "🚶" },
-  { value: 5, label: "5–6 times", sub: "Regular commute or active lifestyle", emoji: "🚗" },
-  { value: 8, label: "7+ times", sub: "Frequent short trips during the day", emoji: "🏃" },
+  { value: 1, label: "1–2 times", sub: "Work from home / rarely leave" },
+  { value: 3, label: "3–4 times", sub: "Short errands, occasional walks" },
+  { value: 5, label: "5–6 times", sub: "Regular commute or active lifestyle" },
+  { value: 8, label: "7+ times", sub: "Frequent short trips during the day" },
 ];
 
 export const CALM_DURATIONS = [
