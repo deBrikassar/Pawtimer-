@@ -336,10 +336,6 @@
     font:inherit;
     transition:color var(--motion-base) var(--ease-out);
   }
-  .ring-col--next-session .ring-wrap {
-    --ring-min-size: 104px;
-    --ring-inner-padding: 11px;
-  }
   .ring-col--next-session .ring-val {
     font-size:var(--type-session-ring-value-size);
     line-height:var(--type-session-ring-value-line);
