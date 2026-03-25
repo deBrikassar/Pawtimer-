@@ -12,7 +12,7 @@
 }
 
 .surface-card--tool-group {
-  background: linear-gradient(180deg, var(--surf) 0%, color-mix(in srgb, var(--surf-soft) 42%, var(--surf)) 100%);
+  background: linear-gradient(180deg, var(--surf) 0%, color-mix(in srgb, var(--surf-soft) 28%, var(--surf)) 100%);
   border-color: color-mix(in srgb, var(--border) 90%, var(--surf));
   border-radius: 18px;
 }
@@ -86,12 +86,12 @@
 .surface-card-interactive.is-selected,
 .surface-card-interactive[aria-pressed="true"] {
   border-color: color-mix(in srgb, var(--primaryBlue) 70%, var(--warm-accent-border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 78%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 90%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
 }
 
 .surface-card-panel,
 .surface-card-inset {
-  background: linear-gradient(180deg, var(--surface-muted) 0%, color-mix(in srgb, var(--surface-muted) 86%, var(--warm-accent-soft)) 100%);
+  background: linear-gradient(180deg, var(--surface-muted) 0%, color-mix(in srgb, var(--surface-muted) 94%, var(--warm-accent-soft)) 100%);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surf) 60%, transparent);
@@ -478,7 +478,7 @@
 
 .button-secondary,
 .button-secondary-filled {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 84%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 92%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
   color: var(--primaryBlue);
   border-color: color-mix(in srgb, var(--mutedBlue) 34%, var(--border));
   box-shadow: var(--shadow);
@@ -521,8 +521,8 @@
 
 .button-tertiary:hover:not(:disabled),
 .button-ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--warm-accent-soft) 72%, transparent);
-  border-color: color-mix(in srgb, var(--warm-accent-border) 42%, transparent);
+  background: color-mix(in srgb, var(--warm-accent-soft) 56%, transparent);
+  border-color: color-mix(in srgb, var(--warm-accent-border) 30%, transparent);
   color: var(--primaryBlue);
 }
 
@@ -678,7 +678,7 @@
 
 :is(.ob-option.selected, .ob-dur-btn.selected) {
   border-color: color-mix(in srgb, var(--primaryBlue) 68%, var(--warm-accent-border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 78%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 90%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
 }
 
 
@@ -692,7 +692,7 @@
 }
 
 :is(.copy-btn, .ds-join-btn, .notif-toggle.on, .empty-state .es-cta) {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 84%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 92%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
   color: var(--primaryBlue);
   border: 1px solid color-mix(in srgb, var(--mutedBlue) 34%, var(--border));
   box-shadow: var(--shadow);
