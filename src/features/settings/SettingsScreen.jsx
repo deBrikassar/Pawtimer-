@@ -157,7 +157,7 @@ export default function SettingsScreen(props) {
           </button>
 
           <div className="settings-danger-sep" />
-          <div className="settings-section-label" style={{ color: "var(--red)" }}>Danger zone</div>
+          <div className="settings-section-label settings-section-label--danger">Danger zone</div>
           <button className="settings-btn settings-btn--icon button-danger button-size-secondary-pill" onClick={() => {
             if (window.confirm(`Remove ${name} from this device? Sessions stored elsewhere are unaffected.`)) {
               const newDogs = dogsState.filter((d) => d.id !== activeDogId);
@@ -203,7 +203,7 @@ export default function SettingsScreen(props) {
                     </div>
                   </div>
                 ))}
-                <button onClick={() => { setProtoOverride({}); setProtoWarnAck(false); }} className="t-helper u-mt-row" style={{ background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }} type="button">Reset to defaults</button>
+                <button onClick={() => { setProtoOverride({}); setProtoWarnAck(false); }} className="settings-inline-reset-btn t-helper u-mt-row secondary-control secondary-control--inline-text" type="button">Reset to defaults</button>
               </div>
             )}
           </div>

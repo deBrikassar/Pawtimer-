@@ -18,7 +18,7 @@ export const Img = ({ src, size = 24, alt = "" }) => {
   const key = src.replace(".png", "").replace(/-/g, "_");
   const uri = ICONS[key] || "";
   return <img src={uri} width={size} height={size} alt={alt}
-    style={{ display:"inline-block", flexShrink:0, objectFit:"contain" }}/>;
+    className="icon-img" />;
 };
 
 // ─── Pattern-break cue types ──────────────────────────────────────────────────
@@ -65,7 +65,7 @@ const walkTypeLabel = (walkType) => (WALK_TYPE_OPTIONS.find((option) => option.v
 // ─── Icons ────────────────────────────────────────────────────────────────────
 export const PawIcon = ({ size = 36 }) => (
   <img src={ICONS.paw} width={size} height={size} alt="PawTimer"
-    style={{ display:"inline-block", objectFit:"contain" }}/>
+    className="paw-icon-img" />
 );
 export const ModalCloseButton = ({ onClick, label = "Close dialog" }) => (
   <button className="modal-close-btn secondary-control secondary-control--icon" type="button" onClick={onClick} aria-label={label}>

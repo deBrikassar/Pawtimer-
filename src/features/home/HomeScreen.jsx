@@ -104,7 +104,7 @@ export default function HomeScreen(props) {
         })()}
 
         {daily.count >= Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0)) && (
-          <p className="status-msg" style={{ color: "var(--amber)" }}>
+          <p className="status-msg status-msg--warning">
             ⚠️ {daily.count} sessions today — for ~{pattern.normalizedLeaves} departures/day, keep it around {Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0))} to avoid overloading real departures.
           </p>
         )}
@@ -164,7 +164,7 @@ export default function HomeScreen(props) {
               )}
 
               {patOpen && (
-                <div className="tool-expand" style={{ borderTop: "none", borderRadius: 12 }}>
+                <div className="tool-expand tool-expand--modal">
                   <div className={`pat-reminder ${pattern.behind ? "warn" : ""}`}>{patReminderText}</div>
                   <div className="pat-btns">
                     {PATTERN_TYPES.map((pt) => (

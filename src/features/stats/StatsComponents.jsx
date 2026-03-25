@@ -85,7 +85,6 @@ export function StatsMetricCard({
   value,
   label,
   className = "",
-  valueStyle,
   detail = null,
   onClick = null,
   buttonLabel = null,
@@ -100,7 +99,7 @@ export function StatsMetricCard({
       type={onClick ? "button" : undefined}
       aria-label={buttonLabel || label}
     >
-      <div className="stat-val stats-metric-value" style={valueStyle}>{value}</div>
+      <div className="stat-val stats-metric-value">{value}</div>
       <div className="stat-lbl stats-metric-label">{label}</div>
       {detail ? <div className="stats-metric-detail">{detail}</div> : null}
     </Tag>
