@@ -34,14 +34,6 @@
   --space-density-control-gap: var(--space-density-roomy-control-gap);
 }
 
-/* Legacy semantic alias for older markup like `action-grid compact`. */
-.compact {
-  --space-density-surface: var(--space-density-compact-surface);
-  --space-density-section-gap: var(--space-density-compact-section-gap);
-  --space-density-row-gap: var(--space-density-compact-row-gap);
-  --space-density-control-gap: var(--space-density-compact-control-gap);
-}
-
 .surface-card-elevated {
   background: var(--surface-gradient-raised);
   border: 1.5px solid var(--border);
