@@ -329,7 +329,7 @@
   .quick-action-btn:active { transform:translateY(0) scale(0.99); }
 
   /* ── Action button typography roles ── */
-  :is(.ds-join-btn, .session-cancel-btn, .walk-type-option, .walk-cancel-btn, .copy-btn, .settings-btn, .settings-inline-btn, .notif-toggle, .btn-pat, .history-delete-confirm, .empty-state .es-cta) {
+  :is(.ds-join-btn, .walk-type-option, .btn-pat) {
     font-size:var(--type-button-size);
     font-weight:var(--type-button-weight);
     line-height:var(--type-button-line);
@@ -494,9 +494,6 @@
   .history-section-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:var(--space-3); }
   .section-title { font-size:var(--type-section-heading-size); font-weight:var(--type-section-heading-weight); color:var(--text); line-height:var(--type-section-heading-line); letter-spacing:var(--type-section-heading-track); margin:0; min-height:calc(var(--type-section-heading-line) * 1em); display:flex; align-items:baseline; }
   .section-title--flush { margin-bottom:0; }
-  .empty-state { text-align:center; padding:var(--space-5) 28px; color:var(--text-muted); }
-
-
 
   /* ── Collapsible how-to ── */
   .howto-wrap { margin:0 var(--space-3) var(--space-card-row-gap); border-radius:var(--radius-sm); overflow:hidden; box-shadow:var(--shadow); border:1px solid var(--border); }
@@ -765,8 +762,7 @@
   .copy-btn { border:none; flex-shrink:0; transition:transform var(--motion-press) var(--ease-out), color var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out); }
 
   /* Secondary-control family aliases for current screen-level controls. */
-  :is(.settings-inline-btn, .diag-run-btn, .copy-btn, .settings-btn).secondary-control--compact-button,
-  :is(.diag-run-btn).secondary-control--compact-button {
+  :is(.settings-inline-btn, .diag-run-btn, .copy-btn, .settings-btn).secondary-control--compact-button {
     min-height: var(--secondary-min-height);
     padding-block: var(--secondary-padding-block);
     padding-inline: var(--secondary-padding-inline);
@@ -843,11 +839,14 @@
   .collapsible-body.open  { max-height:600px; opacity:1; }
   .collapsible-body.closed { max-height:0; opacity:0; }
 
-  /* ── Improved empty states ── */
+  /* ── Empty state (canonical) ── */
   .empty-state {
     --empty-state-media-size: 40px;
     --empty-state-media-glyph-size: 30px;
     --empty-state-media-gap: var(--space-card-row-gap);
+    text-align:center;
+    padding:var(--space-5) 28px;
+    color:var(--text-muted);
   }
   .empty-state .es-media {
     inline-size: var(--empty-state-media-size);
