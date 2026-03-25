@@ -652,8 +652,23 @@
   .h-item { margin-bottom:var(--space-card-row-gap); align-items:flex-start; animation:surfaceEnter var(--motion-enter) var(--ease-out); }
   .h-item.is-expanded { box-shadow:var(--shadow-lg); }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .h-dot { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:var(--text-md); flex-shrink:0; }
+  .h-dot { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:var(--text-md); flex-shrink:0; position:relative; }
   .h-dot svg { width:22px; height:22px; display:block; }
+  .h-dot::after {
+    content:"";
+    position:absolute;
+    right:4px;
+    bottom:4px;
+    width:8px;
+    height:8px;
+    background:var(--surf);
+    border:1.5px solid var(--brown-mid);
+    box-sizing:border-box;
+  }
+  .marker-session::after { border-radius:50%; }
+  .marker-walk::after { border-radius:2px; }
+  .marker-pat::after { border-radius:1px; transform:rotate(45deg); }
+  .marker-feed::after { width:10px; height:6px; border-radius:999px; }
   .h-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--space-control-gap); }
   .h-content { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-control-gap); min-width:0; }
   .dot-none   { background:var(--status-success-bg); }
