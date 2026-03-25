@@ -339,7 +339,7 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--font-main);
-    font-size: var(--text-md);
+    font-size: var(--type-body-size);
     font-weight: var(--font-regular);
     line-height: calc(var(--type-body-line) / var(--type-body-size));
     letter-spacing: var(--type-body-track);
