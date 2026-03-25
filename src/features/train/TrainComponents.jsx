@@ -92,7 +92,7 @@ export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
   const thumbPct = Math.max(Math.min(clampedGoalPct, 98), 2);
 
   return (
-    <div className="prog-section">
+    <div className="prog-section surface-card surface-card--progress">
       <svg className="prog-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
         <rect className="prog-fill-track" x="0" y="0" width="100" height="10" rx="5" ry="5" />
         <rect className="prog-fill" x="0" y="0" width={clampedGoalPct} height="10" rx="5" ry="5" />
