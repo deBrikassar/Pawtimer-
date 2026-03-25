@@ -4,7 +4,7 @@
 .shared-card,
 .surface-card,
 .surface-card-default {
-  background: var(--surf);
+  background: var(--surface-gradient-soft);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
@@ -12,8 +12,8 @@
 }
 
 .surface-card--tool-group {
-  background: var(--surface-gradient-raised);
-  border-color: color-mix(in srgb, var(--border) 88%, white);
+  background: linear-gradient(180deg, var(--surf) 0%, color-mix(in srgb, var(--surf-soft) 42%, var(--surf)) 100%);
+  border-color: color-mix(in srgb, var(--border) 90%, var(--surf));
   border-radius: 18px;
 }
 
@@ -61,7 +61,7 @@
 }
 
 .surface-card-interactive {
-  background: var(--surf);
+  background: var(--surface-gradient-raised);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
@@ -85,13 +85,13 @@
 
 .surface-card-interactive.is-selected,
 .surface-card-interactive[aria-pressed="true"] {
-  border-color: var(--primaryBlue);
-  background: var(--softBlue);
+  border-color: color-mix(in srgb, var(--primaryBlue) 70%, var(--warm-accent-border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 78%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
 }
 
 .surface-card-panel,
 .surface-card-inset {
-  background: var(--surface-muted);
+  background: linear-gradient(180deg, var(--surface-muted) 0%, color-mix(in srgb, var(--surface-muted) 86%, var(--warm-accent-soft)) 100%);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surf) 60%, transparent);
@@ -478,7 +478,7 @@
 
 .button-secondary,
 .button-secondary-filled {
-  background: var(--softBlue);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 84%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
   color: var(--primaryBlue);
   border-color: color-mix(in srgb, var(--mutedBlue) 34%, var(--border));
   box-shadow: var(--shadow);
@@ -506,7 +506,7 @@
 }
 
 .button-secondary-outline:hover:not(:disabled) {
-  background: var(--color-surface-soft);
+  background: color-mix(in srgb, var(--color-surface-soft) 86%, var(--warm-accent-soft));
   border-color: var(--mutedBlue);
   color: var(--blue-darker);
 }
@@ -521,8 +521,8 @@
 
 .button-tertiary:hover:not(:disabled),
 .button-ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--softBlue) 70%, transparent);
-  border-color: color-mix(in srgb, var(--mutedBlue) 18%, transparent);
+  background: color-mix(in srgb, var(--warm-accent-soft) 72%, transparent);
+  border-color: color-mix(in srgb, var(--warm-accent-border) 42%, transparent);
   color: var(--primaryBlue);
 }
 
@@ -677,8 +677,8 @@
 }
 
 :is(.ob-option.selected, .ob-dur-btn.selected) {
-  border-color: var(--primaryBlue);
-  background: var(--softBlue);
+  border-color: color-mix(in srgb, var(--primaryBlue) 68%, var(--warm-accent-border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 78%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
 }
 
 
@@ -692,7 +692,7 @@
 }
 
 :is(.copy-btn, .ds-join-btn, .notif-toggle.on, .empty-state .es-cta) {
-  background: var(--softBlue);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 84%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
   color: var(--primaryBlue);
   border: 1px solid color-mix(in srgb, var(--mutedBlue) 34%, var(--border));
   box-shadow: var(--shadow);
@@ -728,7 +728,7 @@
 }
 
 :is(.settings-inline-btn, .settings-btn, .notif-toggle):hover:not(:disabled) {
-  background: var(--color-surface-soft);
+  background: color-mix(in srgb, var(--color-surface-soft) 88%, var(--warm-accent-soft));
   border-color: var(--mutedBlue);
   color: var(--blue-darker);
 }
