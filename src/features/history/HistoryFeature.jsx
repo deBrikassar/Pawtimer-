@@ -274,7 +274,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
           </div>
 
           {timeline.length === 0 ? (
-            <EmptyState icon={<TrendIcon />} title="No activity yet" body={`Start ${name}'s first session and your training history will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
+            <EmptyState media={<TrendIcon />} title="No activity yet" body={`Start ${name}'s first session and your training history will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
           ) : timeline.map((item) => {
             if (item.kind === "session") {
               const s = item.data;

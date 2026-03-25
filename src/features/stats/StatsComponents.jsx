@@ -169,7 +169,7 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
   if (chartData.length <= 1) {
     return (
       <EmptyState
-        icon={<TrendIcon />}
+        media={<TrendIcon />}
         title="Almost there"
         body={`Complete 2 more sessions to see ${name}'s progress chart and trends.`}
         ctaLabel="Start training →"

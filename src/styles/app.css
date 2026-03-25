@@ -886,8 +886,25 @@
   .collapsible-body.closed { max-height:0; opacity:0; }
 
   /* ── Improved empty states ── */
-  .empty-state .es-icon { margin-bottom:var(--space-card-row-gap); inline-size:40px; block-size:40px; display:inline-flex; align-items:center; justify-content:center; color:var(--brown-muted); }
-  .empty-state .es-icon svg { inline-size:30px; block-size:30px; display:block; }
+  .empty-state {
+    --empty-state-media-size: 40px;
+    --empty-state-media-glyph-size: 30px;
+    --empty-state-media-gap: var(--space-card-row-gap);
+  }
+  .empty-state .es-media {
+    inline-size: var(--empty-state-media-size);
+    block-size: var(--empty-state-media-size);
+    margin: 0 auto var(--empty-state-media-gap);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brown-muted);
+  }
+  .empty-state .es-media > :is(svg, img) {
+    inline-size: var(--empty-state-media-glyph-size);
+    block-size: var(--empty-state-media-glyph-size);
+    display: block;
+  }
   .empty-state .es-title { font-size:var(--type-card-title-size); color:var(--brown); font-weight:var(--type-card-title-weight); margin-bottom:8px; line-height:var(--type-card-title-line); letter-spacing:var(--type-card-title-track); }
   .empty-state .es-body  { font-size:var(--type-body-size); color:var(--text-muted); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); margin-bottom:var(--space-card-row-gap); }
   .empty-state .es-cta   { border:none; }
