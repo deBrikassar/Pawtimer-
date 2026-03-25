@@ -11,6 +11,24 @@
   animation: surfaceEnter var(--motion-enter) var(--ease-out);
 }
 
+.surface-card--tool-group {
+  background: var(--surface-gradient-raised);
+  border-color: color-mix(in srgb, var(--border) 88%, white);
+  border-radius: 18px;
+}
+
+.surface-card--chart {
+  background: var(--surf);
+  border-color: var(--border);
+  border-radius: var(--radius);
+}
+
+.surface-card--progress {
+  background: var(--surface-gradient-raised);
+  border-color: color-mix(in srgb, var(--border) 92%, white);
+  border-radius: 16px;
+}
+
 /* Explicit spacing-density modifiers.
    Default is inherited from :root; use compact/roomy only where needed. */
 .density-default {
@@ -573,15 +591,6 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow);
 }
-
-.tool-group-card {
-  background: var(--surface-gradient-raised);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  animation: surfaceEnter var(--motion-enter) var(--ease-out);
-}
-
 
 /* ── Secondary interactive controls: explicit auditable families ──
    Families:

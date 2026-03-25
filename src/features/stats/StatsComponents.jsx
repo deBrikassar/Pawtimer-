@@ -179,7 +179,7 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
   }
 
   return (
-    <div className="chart-wrap chart-wrap-full">
+    <div className="chart-wrap chart-wrap-full surface-card surface-card--chart">
       {insightLabel ? <div className="chart-insight">{insightLabel}</div> : null}
       <div className="chart-title">Session duration over time (min)</div>
       <ResponsiveContainer width="100%" height={200}>

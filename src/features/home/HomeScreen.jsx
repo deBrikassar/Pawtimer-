@@ -109,7 +109,7 @@ export default function HomeScreen(props) {
           </p>
         )}
 
-        <div className="tool-group-card">
+        <div className="tool-group-card surface-card surface-card--tool-group">
           <div className="section-title">Today's logs</div>
           <div className="quick-actions-row">
             <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
