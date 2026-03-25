@@ -532,6 +532,12 @@
   color: color-mix(in srgb, var(--surf) 78%, var(--text-muted));
 }
 
+/* Canonical button-role map (auditable source of truth):
+   - .button-primary: main/high-emphasis action in the current scope.
+   - .button-danger: destructive confirmation action.
+   - .button-secondary: neutral contained action with medium emphasis.
+   - .button-ghost: low-emphasis text-like action in button slots (e.g. modal cancel/keep). */
+
 .button-pill,
 .button-icon {
   min-height: 44px;
@@ -582,8 +588,7 @@
    - secondary-inline-text: low-emphasis inline textual actions.
    - secondary-compact-button: compact neutral utility/support buttons.
    - secondary-icon-button: icon-only edit/close/dismiss controls.
-   - secondary-toggle-control: compact binary toggles/collapsible triggers.
-   - secondary-modal-action: secondary actions in mixed modal footers. */
+   - secondary-toggle-control: compact binary toggles/collapsible triggers. */
 .secondary-control {
   --secondary-min-height: 44px;
   --secondary-padding-block: var(--space-1);
@@ -644,12 +649,6 @@
   --secondary-padding-inline: var(--space-2);
 }
 
-.secondary-control--modal {
-  --secondary-min-height: 44px;
-  --secondary-padding-block: var(--space-1);
-  --secondary-padding-inline: var(--space-2);
-}
-
 :is(.ob-option, .ob-dur-btn) {
   background: var(--surf);
   border: 1.5px solid var(--border);
@@ -705,7 +704,7 @@
   box-shadow: var(--shadow-lg);
 }
 
-:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .session-cancel-btn, .notif-toggle) {
+:is(.settings-inline-btn, .settings-btn, .notif-toggle) {
   background: var(--surf);
   color: var(--primaryBlue);
   border: 1.5px solid color-mix(in srgb, var(--mutedBlue) 32%, var(--border));
@@ -719,7 +718,7 @@
     opacity var(--motion-fast) var(--ease-standard);
 }
 
-:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .session-cancel-btn, .notif-toggle):hover:not(:disabled) {
+:is(.settings-inline-btn, .settings-btn, .notif-toggle):hover:not(:disabled) {
   background: var(--color-surface-soft);
   border-color: var(--mutedBlue);
   color: var(--blue-darker);
@@ -758,7 +757,7 @@
 }
 
 
-:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .pat-edit-reset, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-cancel, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta):active:not(:disabled) {
+:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .pat-edit-reset, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta):active:not(:disabled) {
   transform: scale(0.96);
 }
 
