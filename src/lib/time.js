@@ -17,3 +17,11 @@ export const formatDuration = (seconds, options = {}) => {
   if (minutes > 0) return `${minutes}m ${secs}s`;
   return `${secs}s`;
 };
+
+export const formatClockDuration = (seconds) => {
+  if (seconds == null || Number.isNaN(Number(seconds))) return "—";
+  const totalSeconds = Math.max(0, Math.round(Number(seconds)));
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${totalMinutes}:${String(secs).padStart(2, "0")}`;
+};
