@@ -105,20 +105,26 @@
     --radius:    var(--radius-lg);
 
     /* Typography tokens */
+    --type-line-display-tight: 1.08;
+    --type-line-title: 1.24;
+    --type-line-body: 1.5;
+    --type-line-supporting: 1.35;
+    --type-line-micro: 1.16;
+
     --type-display-size: var(--text-3xl);
-    --type-display-line: 48px;
+    --type-display-line: calc(var(--type-display-size) * var(--type-line-title));
     --type-display-weight: 700;
     --type-display-track: -0.03em;
     --type-page-title-size: var(--text-3xl);
-    --type-page-title-line: 40px;
+    --type-page-title-line: calc(var(--type-page-title-size) * var(--type-line-title));
     --type-page-title-weight: var(--font-bold);
     --type-page-title-track: -0.025em;
     --type-section-title-size: var(--text-xl);
-    --type-section-title-line: 28px;
+    --type-section-title-line: calc(var(--type-section-title-size) * var(--type-line-title));
     --type-section-title-weight: var(--font-semibold);
     --type-section-title-track: -0.02em;
     --type-card-title-size: var(--text-lg);
-    --type-card-title-line: 24px;
+    --type-card-title-line: calc(var(--type-card-title-size) * var(--type-line-title));
     --type-card-title-weight: var(--font-semibold);
     --type-card-title-track: -0.015em;
     --type-list-title-size: var(--type-body-lg-size);
@@ -126,19 +132,19 @@
     --type-list-title-weight: var(--font-medium);
     --type-list-title-track: -0.01em;
     --type-body-lg-size: var(--text-md);
-    --type-body-lg-line: 24px;
+    --type-body-lg-line: calc(var(--type-body-lg-size) * var(--type-line-body));
     --type-body-lg-weight: var(--font-regular);
     --type-body-lg-track: -0.01em;
     --type-body-size: var(--text-md);
-    --type-body-line: 24px;
+    --type-body-line: calc(var(--type-body-size) * var(--type-line-body));
     --type-body-weight: var(--font-regular);
     --type-body-track: -0.005em;
     --type-secondary-size: var(--text-sm);
-    --type-secondary-line: 18px;
+    --type-secondary-line: calc(var(--type-secondary-size) * var(--type-line-supporting));
     --type-secondary-weight: var(--font-regular);
     --type-secondary-track: 0;
     --type-ring-metric-size: var(--text-sm);
-    --type-ring-metric-line: 18px;
+    --type-ring-metric-line: calc(var(--type-ring-metric-size) * var(--type-line-supporting));
     --type-ring-metric-weight: var(--font-semibold);
     --type-ring-metric-track: -0.01em;
     --type-session-ring-value-size: var(--type-ring-metric-size);
@@ -146,31 +152,35 @@
     --type-session-ring-value-weight: var(--type-ring-metric-weight);
     --type-session-ring-value-track: var(--type-ring-metric-track);
     --type-overline-size: var(--text-xs);
-    --type-overline-line: 14px;
+    --type-overline-line: calc(var(--type-overline-size) * var(--type-line-micro));
     --type-overline-weight: var(--font-regular);
     --type-overline-track: 0.04em;
     --type-metric-xl-size: var(--text-3xl);
-    --type-metric-xl-line: 42px;
+    --type-metric-xl-line: calc(var(--type-metric-xl-size) * var(--type-line-title));
     --type-metric-xl-weight: var(--font-bold);
     --type-metric-xl-track: -0.03em;
     --type-metric-lg-size: var(--text-2xl);
-    --type-metric-lg-line: 34px;
+    --type-metric-lg-line: calc(var(--type-metric-lg-size) * var(--type-line-title));
     --type-metric-lg-weight: var(--font-bold);
     --type-metric-lg-track: -0.025em;
     --type-button-lg-size: var(--text-lg);
-    --type-button-lg-line: 22px;
+    --type-button-lg-line: calc(var(--type-button-lg-size) * var(--type-line-title));
     --type-button-lg-weight: var(--font-medium);
     --type-button-lg-track: -0.01em;
     --type-button-size: var(--text-md);
-    --type-button-line: 24px;
+    --type-button-line: calc(var(--type-button-size) * var(--type-line-body));
     --type-button-weight: var(--font-medium);
     --type-button-track: -0.01em;
     --type-button-compact-size: var(--text-sm);
-    --type-button-compact-line: 18px;
+    --type-button-compact-line: calc(var(--type-button-compact-size) * var(--type-line-supporting));
     --type-button-compact-weight: var(--type-button-weight);
     --type-button-compact-track: var(--type-button-track);
 
     /* Semantic typography roles */
+    --type-hero-title-size: var(--type-page-title-size);
+    --type-hero-title-line: var(--type-page-title-line);
+    --type-hero-title-weight: var(--type-page-title-weight);
+    --type-hero-title-track: var(--type-page-title-track);
     --type-page-heading-size: var(--type-page-title-size);
     --type-page-heading-line: var(--type-page-title-line);
     --type-page-heading-weight: var(--type-page-title-weight);
@@ -223,8 +233,20 @@
     --type-panel-title-line: var(--type-card-heading-line);
     --type-panel-title-weight: var(--type-card-heading-weight);
     --type-panel-title-track: var(--type-card-heading-track);
+    --type-caption-text-size: var(--type-secondary-size);
+    --type-caption-text-line: var(--type-secondary-line);
+    --type-caption-text-weight: var(--type-secondary-weight);
+    --type-caption-text-track: var(--type-secondary-track);
+    --type-micro-text-size: var(--type-overline-size);
+    --type-micro-text-line: var(--type-overline-line);
+    --type-micro-text-weight: var(--type-overline-weight);
+    --type-micro-text-track: var(--type-overline-track);
+    --type-navigation-text-size: var(--type-caption-text-size);
+    --type-navigation-text-line: var(--type-caption-text-line);
+    --type-navigation-text-weight: var(--type-caption-text-weight);
+    --type-navigation-text-track: var(--type-caption-text-track);
     --type-metric-card-value-size: clamp(1.35rem, 4.4vw, var(--type-metric-lg-size));
-    --type-metric-card-value-line: 1.08;
+    --type-metric-card-value-line: var(--type-line-display-tight);
     --type-metric-card-value-weight: var(--font-semibold);
     --type-metric-card-value-track: -0.02em;
     --type-metric-value-size: var(--type-metric-card-value-size);
@@ -240,7 +262,7 @@
     --type-metric-detail-weight: var(--type-helper-text-weight);
     --type-metric-detail-track: var(--type-helper-text-track);
     --type-metric-headline-size: clamp(1.65rem, 6vw, 2.15rem);
-    --type-metric-headline-line: 1.05;
+    --type-metric-headline-line: var(--type-line-display-tight);
     --type-metric-headline-weight: var(--font-semibold);
     --type-metric-headline-track: -0.03em;
     --surface-metric-radius: var(--radius-md);
@@ -281,7 +303,12 @@
     letter-spacing: inherit;
   }
 
-  small { font-size: var(--text-xs); }
+  small {
+    font-size: var(--type-micro-text-size);
+    line-height: var(--type-micro-text-line);
+    font-weight: var(--type-micro-text-weight);
+    letter-spacing: var(--type-micro-text-track);
+  }
 
   button:focus-visible,
   input:focus-visible,
