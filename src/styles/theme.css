@@ -128,6 +128,8 @@
     --radius:    var(--radius-lg);
     --surface-muted: #FAFBFC;
     --surface-tint: #F8FAFD;
+    --surface-hero-top: #FCFDFD;
+    --surface-hero-mid: #F7F9FA;
     --surface-overlay: rgba(15,23,42,0.28);
     --surface-overlay-strong: rgba(15,23,42,0.36);
     --surface-frost: rgba(255,255,255,0.94);
@@ -151,6 +153,8 @@
     --chart-tooltip-bg: #111827;
     --chart-tooltip-border: rgba(255,255,255,0.08);
     --chart-tooltip-shadow: 0 16px 30px rgba(15,23,42,0.20);
+    --surface-diagnostics-bg: #1f1f1f;
+    --text-diagnostics: #e7e7e7;
 
     /* Typography tokens */
     --type-line-display-tight: 1.08;
