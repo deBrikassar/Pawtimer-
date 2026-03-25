@@ -43,7 +43,7 @@
 }
 
 .surface-card-elevated {
-  background: linear-gradient(180deg, var(--surf) 0%, #FBFCFD 100%);
+  background: var(--surface-gradient-raised);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -81,7 +81,7 @@
 
 .surface-card-panel,
 .surface-card-inset {
-  background: #FAFBFC;
+  background: var(--surface-muted);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surf) 60%, transparent);
@@ -104,7 +104,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-control-gap);
-  background: linear-gradient(180deg, #FFFFFF 0%, var(--color-surface-raised) 100%);
+  background: var(--surface-gradient-raised);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
@@ -213,7 +213,7 @@
   padding:var(--space-card-padding);
   border:1.5px solid var(--border);
   border-radius:var(--radius-sm);
-  background:linear-gradient(180deg, #FFFFFF 0%, #FBFCFD 100%);
+  background:var(--surface-gradient-raised);
   box-shadow:var(--shadow);
   cursor:pointer;
   text-align:left;
@@ -271,7 +271,7 @@
 }
 
 .surface-compact-info {
-  background: #FAFBFC;
+  background: var(--surface-muted);
   border: 1px solid color-mix(in srgb, var(--border) 90%, white);
   border-radius: var(--radius-sm);
 }
@@ -445,7 +445,7 @@
 .button-primary,
 .button-base.button-primary {
   background: var(--green-dark);
-  color: #FFFFFF;
+  color: var(--surf);
   box-shadow: var(--shadow);
   border-color: transparent;
   min-height: 44px;
@@ -577,7 +577,7 @@
 }
 
 .tool-group-card {
-  background: linear-gradient(180deg, var(--surf) 0%, #FBFCFD 100%);
+  background: var(--surface-gradient-raised);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);

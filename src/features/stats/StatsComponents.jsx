@@ -24,11 +24,11 @@ const chartTypography = {
     fill: "var(--text-muted)",
   },
   tooltipContent: {
-    background: "#111827",
-    border: "1px solid rgba(255,255,255,0.08)",
+    background: "var(--chart-tooltip-bg)",
+    border: "1px solid var(--chart-tooltip-border)",
     borderRadius: 12,
     color: "white",
-    boxShadow: "0 16px 30px rgba(15,23,42,0.20)",
+    boxShadow: "var(--chart-tooltip-shadow)",
   },
   tooltipLabel: {
     color: "var(--green-light)",
@@ -185,7 +185,7 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
       <div className="chart-title">Session duration over time (min)</div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
-          <CartesianGrid stroke="rgba(15,23,42,0.08)" vertical={false}/>
+          <CartesianGrid stroke="var(--chart-grid-stroke)" vertical={false}/>
           <XAxis dataKey="session" tick={{ ...chartTypography.helperText, ...chartTypography.axisTick }} tickLine={false} axisLine={false}/>
           <YAxis tick={{ ...chartTypography.helperText, ...chartTypography.axisTick }} tickLine={false} axisLine={false}/>
           <Tooltip contentStyle={{ ...chartTypography.helperText, ...chartTypography.tooltipContent }} labelStyle={{ ...chartTypography.helperText, ...chartTypography.tooltipLabel }} formatter={(_v,_n,p)=>[`${fmt(p.payload.durationSeconds)} — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
