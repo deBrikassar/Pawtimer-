@@ -376,7 +376,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 itemKey: `f-${f.id}`,
                 iconClassName: "dot-feed",
                 icon: <FoodIcon />,
-                title: <span style={{ textTransform: "capitalize" }}>{f.foodType}</span>,
+                title: <span className="history-food-type">{f.foodType}</span>,
                 date: fmtDate(f.date),
                 value: f.amount,
                 badge: <span className="h-badge badge-feed">Feeding</span>,

@@ -554,7 +554,7 @@ export default function PawTimer() {
           <div className="header-top">
             <div className="identity-zone">
               <label className="dog-photo-btn" title="Tap to change photo">
-                <input type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhotoUpload} />
+                <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoUpload} />
                 {dogPhoto ? <img src={dogPhoto} className="dog-photo-img" alt={appData.name} /> : <div className="dog-photo-placeholder"><PawIcon size={28} /></div>}
                 <div className="dog-photo-overlay"><CameraIcon /></div>
               </label>

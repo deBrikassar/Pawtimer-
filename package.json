@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "check:inline-styles": "node scripts/check-inline-style-hygiene.mjs",
     "icons:generate": "python scripts/generate_icons.py"
   },
   "dependencies": {

@@ -56,13 +56,12 @@ export function SessionControl({
           <svg className="sc-ring-svg" viewBox="0 0 226 226" aria-hidden="true">
             <circle className="sc-track" cx="113" cy="113" r={radius} />
             <circle
-              className="sc-progress"
+              className={`sc-progress ${isRunning || completed ? "" : "is-dim"}`.trim()}
               cx="113"
               cy="113"
               r={radius}
               strokeDasharray={circumference}
               strokeDashoffset={circumference * (1 - frac)}
-              style={{ opacity: isRunning || completed ? 1 : 0.18 }}
             />
           </svg>
 
@@ -89,12 +88,16 @@ export function SessionControl({
 
 
 export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
+  const clampedGoalPct = Math.max(0, Math.min(goalPct, 100));
+  const thumbPct = Math.max(Math.min(clampedGoalPct, 98), 2);
+
   return (
     <div className="prog-section">
-      <div className="prog-track">
-        <div className="prog-fill" style={{ width:`${goalPct}%` }}/>
-        <div className="prog-thumb" style={{ left:`${Math.max(Math.min(goalPct,98),2)}%` }}/>
-      </div>
+      <svg className="prog-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+        <rect className="prog-fill-track" x="0" y="0" width="100" height="10" rx="5" ry="5" />
+        <rect className="prog-fill" x="0" y="0" width={clampedGoalPct} height="10" rx="5" ry="5" />
+        <circle className="prog-thumb" cx={thumbPct} cy="5" r="3.5" />
+      </svg>
       <div className="prog-meta">
         <span>Threshold <strong className="num-stable">{fmt(target)}</strong></span>
         <span>Goal <strong className="num-stable">{fmt(goalSec)}</strong></span>
