@@ -11,6 +11,37 @@
   animation: surfaceEnter var(--motion-enter) var(--ease-out);
 }
 
+/* Explicit spacing-density modifiers.
+   Default is inherited from :root; use compact/roomy only where needed. */
+.density-default {
+  --space-density-surface: var(--space-density-default-surface);
+  --space-density-section-gap: var(--space-density-default-section-gap);
+  --space-density-row-gap: var(--space-density-default-row-gap);
+  --space-density-control-gap: var(--space-density-default-control-gap);
+}
+
+.density-compact {
+  --space-density-surface: var(--space-density-compact-surface);
+  --space-density-section-gap: var(--space-density-compact-section-gap);
+  --space-density-row-gap: var(--space-density-compact-row-gap);
+  --space-density-control-gap: var(--space-density-compact-control-gap);
+}
+
+.density-roomy {
+  --space-density-surface: var(--space-density-roomy-surface);
+  --space-density-section-gap: var(--space-density-roomy-section-gap);
+  --space-density-row-gap: var(--space-density-roomy-row-gap);
+  --space-density-control-gap: var(--space-density-roomy-control-gap);
+}
+
+/* Legacy semantic alias for older markup like `action-grid compact`. */
+.compact {
+  --space-density-surface: var(--space-density-compact-surface);
+  --space-density-section-gap: var(--space-density-compact-section-gap);
+  --space-density-row-gap: var(--space-density-compact-row-gap);
+  --space-density-control-gap: var(--space-density-compact-control-gap);
+}
+
 .surface-card-elevated {
   background: linear-gradient(180deg, var(--surf) 0%, #FBFCFD 100%);
   border: 1.5px solid var(--border);

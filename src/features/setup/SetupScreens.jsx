@@ -125,9 +125,9 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
           <PawIcon size={20} color="rgba(255,255,255,0.85)" /> Add a new dog
         </button>
 
-        <div className="ds-section-label" style={{ marginTop: 22 }}>Join with a dog ID</div>
+        <div className="ds-section-label u-mt-section-tight">Join with a dog ID</div>
         <div className="ds-note">Dog IDs are case-insensitive — matched automatically regardless of case.</div>
-        <div className="t-helper" style={{ marginBottom: 10 }}>
+        <div className="t-helper u-mb-card-row">
           Use the same ID from your partner's phone to track the same dog together.
         </div>
         <div className="ds-join-row">
