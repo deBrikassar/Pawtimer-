@@ -16,28 +16,28 @@ const SvgIcon = ({ children, strokeWidth = 1.9, className = "", viewBox = "0 0 2
 );
 
 const iconByName = {
-  "result-calm.png": (
+  sessionCalm: (
     <SvgIcon>
       <circle cx="12" cy="12" r="8.5" />
       <path d="M9 13c.7 1.1 1.8 1.8 3 1.8S14.3 14.1 15 13" />
       <path d="M9.2 10.2h.01M14.8 10.2h.01" />
     </SvgIcon>
   ),
-  "result-mild.png": (
+  sessionSubtle: (
     <SvgIcon>
       <circle cx="12" cy="12" r="8.5" />
       <path d="M9 14h6" />
       <path d="M9.2 10.2h.01M14.8 10.2h.01" />
     </SvgIcon>
   ),
-  "result-strong.png": (
+  sessionActive: (
     <SvgIcon>
       <circle cx="12" cy="12" r="8.5" />
       <path d="M9 15c1.1-1 2-1.3 3-1.3s1.9.3 3 1.3" />
       <path d="M9.2 10.2h.01M14.8 10.2h.01" />
     </SvgIcon>
   ),
-  "walk.png": (
+  walk: (
     <SvgIcon>
       <circle cx="13.5" cy="5.5" r="1.5" />
       <path d="M12 11l2-2 2 1.3" />
@@ -45,7 +45,7 @@ const iconByName = {
       <path d="M8.5 14.5l3-2" />
     </SvgIcon>
   ),
-  "pattern-keys.png": (
+  patternKeys: (
     <SvgIcon>
       <circle cx="8.5" cy="10" r="2.5" />
       <path d="M11 10h8" />
@@ -53,24 +53,39 @@ const iconByName = {
       <path d="M18.5 10v1.5" />
     </SvgIcon>
   ),
-  "pattern-shoes.png": (
+  patternShoes: (
     <SvgIcon>
       <path d="M4 15h16v3H4z" />
       <path d="M6 15c.8-1.2 1.8-2 3.2-2.4" />
       <path d="M10.5 12.6c1.4.6 2.1 1.5 2.8 2.4" />
     </SvgIcon>
   ),
-  "pattern-jacket.png": (
+  patternJacket: (
     <SvgIcon>
       <path d="M7 20V8l3-2 2 2 2-2 3 2v12" />
       <path d="M12 8v12" />
       <path d="M9 11h6" />
     </SvgIcon>
   ),
+  feeding: (
+    <SvgIcon>
+      <path d="M4 14a8 8 0 0016 0H4z" />
+      <path d="M8.5 10V6M12 10V5M15.5 10V6" />
+    </SvgIcon>
+  ),
 };
 
 export const Img = ({ src, size = 24, alt = "" }) => {
-  const icon = iconByName[src] ?? null;
+  const normalizedKey = {
+    "result-calm.png": "sessionCalm",
+    "result-mild.png": "sessionSubtle",
+    "result-strong.png": "sessionActive",
+    "walk.png": "walk",
+    "pattern-keys.png": "patternKeys",
+    "pattern-shoes.png": "patternShoes",
+    "pattern-jacket.png": "patternJacket",
+  }[src] ?? src;
+  const icon = iconByName[normalizedKey] ?? null;
   if (!icon) return null;
   return (
     <span

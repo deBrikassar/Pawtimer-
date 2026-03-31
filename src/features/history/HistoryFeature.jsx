@@ -279,7 +279,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
             if (item.kind === "session") {
               const s = item.data;
               const lv = normalizeDistressLevel(s.distressLevel ?? (s.result === "success" ? "none" : "strong"));
-              const icon = lv === "none" ? "result-calm.png" : lv === "subtle" ? "result-mild.png" : "result-strong.png";
+              const icon = lv === "none" ? "sessionCalm" : lv === "subtle" ? "sessionSubtle" : "sessionActive";
               const detailBadges = sessionDetailBadges(s);
               return renderHistoryCard({
                 itemKey: `s-${s.id}`,
@@ -317,7 +317,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 itemKey: `w-${w.id}`,
                 iconClassName: "dot-walk",
                 markerClassName: "marker-walk",
-                icon: <Img src="walk.png" size={22} />,
+                icon: <Img src="walk" size={22} />,
                 title: `${walkTypeLabel(w.type)} with ${name}`,
                 date: fmtDate(w.date),
                 value: w.duration ? fmt(w.duration) : "—",

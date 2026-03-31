@@ -135,19 +135,19 @@ export function SessionRatingPanel({
         </div>
         <div className="result-grid">
           <button className="btn-result btn-none" onClick={() => { setSessionOutcome("none"); recordResult("none"); }}>
-            <Img src="result-calm.png" size={36} alt="No distress"/>
+            <Img src="sessionCalm" size={36} alt="No distress"/>
             <div><div>No distress</div><div className="result-desc">{name} was completely calm</div></div>
           </button>
           <button className="btn-result btn-mild" onClick={() => setSessionOutcome("subtle")}>
-            <Img src="result-mild.png" size={36} alt="Subtle stress"/>
+            <Img src="sessionSubtle" size={36} alt="Subtle stress"/>
             <div><div>Subtle stress</div><div className="result-desc">Mild/passive signs (restless, lip licking, etc.)</div></div>
           </button>
           <button className="btn-result btn-strong" onClick={() => setSessionOutcome("active")}>
-            <Img src="result-strong.png" size={36} alt="Active distress"/>
+            <Img src="sessionActive" size={36} alt="Active distress"/>
             <div><div>Active distress</div><div className="result-desc">Barking, pacing, unable to settle</div></div>
           </button>
           <button className="btn-result btn-severe" onClick={() => setSessionOutcome("severe")}>
-            <Img src="result-strong.png" size={36} alt="Severe distress"/>
+            <Img src="sessionActive" size={36} alt="Severe distress"/>
             <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
           </button>
         </div>
