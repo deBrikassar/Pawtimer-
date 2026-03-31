@@ -36,7 +36,7 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
             <div className="stats-row stats-row-core stats-row-core-trimmed">
               <StatsMetricCard
                 value={fmt(bestCalm)}
-                label="Best session"
+                label="Best time"
                 className="stat-card--key-metric"
                 variant={standardMetricVariant}
               />
