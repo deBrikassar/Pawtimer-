@@ -1013,3 +1013,50 @@
   font-weight: 600;
   padding: 6px 12px;
 }
+
+/* ── Audio monitoring MVP ── */
+.audio-start-copy {
+  margin: 0 0 var(--space-card-row-gap);
+  color: var(--text-muted);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line);
+}
+.audio-start-actions {
+  display: grid;
+  gap: var(--space-control-gap);
+}
+.audio-results-card {
+  display: grid;
+  gap: var(--space-card-row-gap);
+}
+.audio-results-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--type-body-size);
+  color: var(--brown);
+}
+.audio-review-title {
+  font-size: var(--type-secondary-size);
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+.audio-review-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.audio-review-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: var(--type-secondary-size);
+  color: var(--brown);
+  background: var(--surface-muted);
+}
+.audio-results-note {
+  font-size: var(--type-helper-text-size);
+  color: var(--text-muted);
+}
