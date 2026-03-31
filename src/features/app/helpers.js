@@ -140,19 +140,19 @@ export const getLeaveProfile = (leavesPerDay = 3) => {
 export const PATTERN_TYPES = [
   {
     type: "keys",
-    icon: "patternKeys",
+    icon: "patternBreak",
     label: "Took keys — stayed home",
     desc: "Pick up your keys, then put them down without going out",
   },
   {
     type: "shoes",
-    icon: "patternShoes",
+    icon: "patternBreak",
     label: "Put on shoes — stayed home",
     desc: "Put shoes on, then take them off without going out",
   },
   {
     type: "jacket",
-    icon: "patternJacket",
+    icon: "patternBreak",
     label: "Put on jacket — stayed home",
     desc: "Put jacket on, then take it off without going out",
   },
