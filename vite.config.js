@@ -7,6 +7,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      filename: "sw.js",
+      injectRegister: false,
       includeAssets: ["icons/app-logo.png"],
       manifest: {
         name: "PawTimer — Dog Training",
@@ -42,7 +44,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ["**/*.{js,css,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,ico,png,svg,woff2,webmanifest}"],
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.mode === "navigate",
@@ -51,8 +53,8 @@ export default defineConfig({
               cacheName: "html-shell-cache",
               networkTimeoutSeconds: 5,
               expiration: {
-                maxEntries: 5,
-                maxAgeSeconds: 60 * 60
+                maxEntries: 3,
+                maxAgeSeconds: 60 * 5
               }
             }
           },
