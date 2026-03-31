@@ -20,7 +20,6 @@ const SYNC_STATE = {
   SYNCED: "synced",
   ERROR: "error",
 };
-const PROGRESS_METRIC_ONBOARDING_SEEN_KEY = "pawtimer_progress_metric_onboarding_seen_v1";
 const PROGRESS_METRIC_TOUR_ORDER = ["currentThreshold", "bestCalm", "nextTarget", "risk"];
 
 export default function PawTimer() {
@@ -57,7 +56,6 @@ export default function PawTimer() {
   const [trainingSettingsOpen, setTrainingSettingsOpen] = useState(false);
   const [metricHelp, setMetricHelp] = useState(null);
   const [metricHelpSequenceIndex, setMetricHelpSequenceIndex] = useState(null);
-  const [progressMetricOnboardingSeen, setProgressMetricOnboardingSeen] = useState(() => load(PROGRESS_METRIC_ONBOARDING_SEEN_KEY, false));
   const [walkPhase, setWalkPhase] = useState("idle");
   const [walkElapsed, setWalkElapsed] = useState(0);
   const [walkPendingDuration, setWalkPendingDuration] = useState(0);
@@ -127,7 +125,14 @@ export default function PawTimer() {
   useEffect(() => { save("pawtimer_notif_time", notifTime); }, [notifTime]);
   useEffect(() => { save("pawtimer_notif_on", notifEnabled); }, [notifEnabled]);
   useEffect(() => { save("pawtimer_proto_override", protoOverride); }, [protoOverride]);
-  useEffect(() => { save(PROGRESS_METRIC_ONBOARDING_SEEN_KEY, progressMetricOnboardingSeen); }, [progressMetricOnboardingSeen]);
+  const activeDog = useMemo(
+    () => dogs.find((dog) => canonicalDogId(dog?.id) === canonicalDogId(activeDogId)) ?? null,
+    [activeDogId, dogs],
+  );
+  const isProgressMetricOnboardingPending = Boolean(
+    activeDog?.progressMetricOnboardingEligible
+    && !activeDog?.progressMetricOnboardingCompletedAt,
+  );
 
   const appData = selectAppData({ dogs, activeDogId, sessions, walks, patterns, feedings, target, protoOverride });
   const progressMetricExplainers = useMemo(() => ({
@@ -422,7 +427,14 @@ export default function PawTimer() {
 
   const handleOnboardComplete = (data) => {
     const id = canonicalDogId(activeDogId || generateId(data.dogName));
-    const newDog = { ...data, id, dogName: data.dogName, createdAt: new Date().toISOString() };
+    const newDog = {
+      ...data,
+      id,
+      dogName: data.dogName,
+      createdAt: new Date().toISOString(),
+      progressMetricOnboardingEligible: true,
+      progressMetricOnboardingCompletedAt: null,
+    };
     setDogs((prev) => [...prev.filter((d) => d.id !== id), newDog]);
     setActiveDogId(id);
     setTarget(Math.max(Math.round(data.currentMaxCalm * 0.8), PROTOCOL.startDurationSeconds));
@@ -559,12 +571,25 @@ export default function PawTimer() {
     };
   }, [feedings, patterns, sessions, syncError, syncStatus, walks]);
 
+  const markProgressMetricOnboardingComplete = useCallback(() => {
+    if (!activeDogId) return;
+    setDogs((prev) => prev.map((dog) => {
+      if (canonicalDogId(dog?.id) !== canonicalDogId(activeDogId)) return dog;
+      if (dog.progressMetricOnboardingCompletedAt && !dog.progressMetricOnboardingEligible) return dog;
+      return {
+        ...dog,
+        progressMetricOnboardingEligible: false,
+        progressMetricOnboardingCompletedAt: dog.progressMetricOnboardingCompletedAt || new Date().toISOString(),
+      };
+    }));
+  }, [activeDogId]);
+
   useEffect(() => {
-    if (screen !== "app" || tab !== "progress" || progressMetricOnboardingSeen || appData.totalCount === 0) return;
+    if (screen !== "app" || tab !== "progress" || !isProgressMetricOnboardingPending || appData.totalCount === 0) return;
     setMetricHelp(PROGRESS_METRIC_TOUR_ORDER[0]);
     setMetricHelpSequenceIndex(0);
-    setProgressMetricOnboardingSeen(true);
-  }, [appData.totalCount, progressMetricOnboardingSeen, screen, tab]);
+    markProgressMetricOnboardingComplete();
+  }, [appData.totalCount, isProgressMetricOnboardingPending, markProgressMetricOnboardingComplete, screen, tab]);
 
   const openMetricHelp = (metricKey) => {
     if (!progressMetricExplainers[metricKey]) return;
@@ -618,7 +643,7 @@ export default function PawTimer() {
 
         {tab === "home" && <HomeScreen name={appData.name} sessions={sessions} target={target} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} />}
         {tab === "history" && <HistoryScreen timeline={appData.timeline} sessions={sessions} name={appData.name} setTab={setTab} patLabels={patLabels} historyModal={historyModal} setHistoryModal={setHistoryModal} actions={historyActions} />}
-        {tab === "progress" && <StatsScreen name={appData.name} totalCount={appData.totalCount} setTab={setTab} bestCalm={appData.bestCalm} target={target} relapseTone={appData.relapseTone} openMetricHelp={openMetricHelp} closeMetricHelp={closeMetricHelp} advanceMetricHelp={advanceMetricHelp} metricHelpKey={metricHelp} metricExplainers={progressMetricExplainers} metricHelpInAutoSequence={metricHelpSequenceIndex != null} metricHelpIsLastStep={metricHelpSequenceIndex === PROGRESS_METRIC_TOUR_ORDER.length - 1} chartData={appData.chartData} goalSec={appData.goalSec} CustomDot={CustomDot} distressLabel={appData.distressLabel} chartTrendLabel={appData.chartTrendLabel} aloneLastWeek={appData.aloneLastWeek} avgWalkDuration={appData.avgWalkDuration} avgSessionsPerDay={appData.avgSessionsPerDay} avgWalksPerDay={appData.avgWalksPerDay} currentThreshold={appData.currentThreshold} headlineStatus={appData.headlineStatus} headlineStatusTone={appData.headlineStatusTone} />}
+        {tab === "progress" && <StatsScreen name={appData.name} totalCount={appData.totalCount} setTab={setTab} bestCalm={appData.bestCalm} target={target} relapseTone={appData.relapseTone} openMetricHelp={openMetricHelp} closeMetricHelp={closeMetricHelp} advanceMetricHelp={advanceMetricHelp} metricHelpKey={metricHelp} metricExplainers={progressMetricExplainers} metricHelpInAutoSequence={metricHelpSequenceIndex != null} metricHelpIsLastStep={metricHelpSequenceIndex === PROGRESS_METRIC_TOUR_ORDER.length - 1} chartData={appData.chartData} goalSec={appData.goalSec} CustomDot={CustomDot} distressLabel={appData.distressLabel} chartTrendLabel={appData.chartTrendLabel} aloneLastWeek={appData.aloneLastWeek} avgWalkDuration={appData.avgWalkDuration} avgSessionsPerDay={appData.avgSessionsPerDay} avgWalksPerDay={appData.avgWalksPerDay} currentThreshold={appData.currentThreshold} headlineStatus={appData.headlineStatus} headlineStatusTone={appData.headlineStatusTone} metricHelpMode={metricHelpSequenceIndex != null ? "onboarding" : "regular"} />}
         {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} nextTargetInfo={appData.nextTargetInfo} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} />}
       </div>
 
