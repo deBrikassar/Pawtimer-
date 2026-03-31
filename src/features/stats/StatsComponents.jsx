@@ -86,73 +86,20 @@ export function StatsMetricCard({
   label,
   className = "",
   detail = null,
-  onClick = null,
-  buttonLabel = null,
   variant = METRIC_VARIANTS.STANDARD,
-  explainer = null,
-  isExplainerOpen = false,
-  onCloseExplainer = null,
-  onAdvanceExplainer = null,
-  isAutoSequence = false,
-  isSequenceComplete = false,
-  explainerMode = "regular",
-  isOnboardingActive = false,
 }) {
-  const Tag = onClick ? "button" : "div";
+  const Tag = "div";
   const variantClass = `metric-surface metric-surface--${variant}`;
   return (
-    <div className={`stats-metric-anchor ${isExplainerOpen ? "is-explainer-open" : ""} ${isOnboardingActive ? "is-onboarding-active" : ""}`.trim()}>
+    <div className="stats-metric-anchor">
       <Tag
         className={`stat-card ${variantClass} ${className}`.trim()}
-        onClick={onClick || undefined}
-        type={onClick ? "button" : undefined}
-        aria-label={buttonLabel || label}
+        aria-label={label}
       >
         <div className="stat-val stats-metric-value">{value}</div>
         <div className="stat-lbl stats-metric-label">{label}</div>
         {detail ? <div className="stats-metric-detail">{detail}</div> : null}
       </Tag>
-      {isExplainerOpen && explainer ? (
-        <StatsMetricExplainer
-          title={explainer.title}
-          body={explainer.body}
-          onClose={onCloseExplainer}
-          onAdvance={onAdvanceExplainer}
-          isAutoSequence={isAutoSequence}
-          isSequenceComplete={isSequenceComplete}
-          mode={explainerMode}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-export function StatsMetricExplainer({
-  title,
-  body,
-  onClose,
-  onAdvance,
-  isAutoSequence = false,
-  isSequenceComplete = false,
-  mode = "regular",
-}) {
-  const ctaLabel = isAutoSequence ? (isSequenceComplete ? "Done" : "Next") : "Got it";
-  const isOnboardingMode = mode === "onboarding";
-  return (
-    <div className={`metric-explainer metric-explainer--${mode} surface-card`.trim()} role="dialog" aria-live="polite">
-      {isOnboardingMode ? <div className="metric-explainer-kicker">Progress tour</div> : null}
-      <div className="metric-explainer-title">{title}</div>
-      <div className="metric-explainer-body">{body}</div>
-      <div className="metric-explainer-actions">
-        {isAutoSequence ? (
-          <button className="button-base button-secondary button--sm" onClick={onClose} type="button">
-            Close
-          </button>
-        ) : null}
-        <button className="button-base button-primary button--sm" onClick={onAdvance} type="button">
-          {ctaLabel}
-        </button>
-      </div>
     </div>
   );
 }
