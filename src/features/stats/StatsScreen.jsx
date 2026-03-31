@@ -28,9 +28,9 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
 
           <StatsSection title="Key metrics">
             <div className="stats-row stats-row-core stats-row-core-trimmed">
-              <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" detail="Longest calm session" variant={standardMetricVariant} />
-              <StatsMetricCard value={fmt(target)} label="Next target" detail="Recommended next session" onClick={() => openMetricHelp("nextTarget")} buttonLabel="Open Next target explanation" variant={standardMetricVariant} />
-              <StatsMetricCard value={relapseTone.label} label="Risk" detail="From recent distress signals" className={`stat-card-risk surface-state--${riskSurfaceState}`} variant={standardMetricVariant} />
+              <StatsMetricCard value={fmt(bestCalm)} label="Best calm time" variant={standardMetricVariant} />
+              <StatsMetricCard value={fmt(target)} label="Next target" onClick={() => openMetricHelp("nextTarget")} buttonLabel="Open Next target explanation" variant={standardMetricVariant} />
+              <StatsMetricCard value={relapseTone.label} label="Risk" className={`stat-card-risk surface-state--${riskSurfaceState}`} variant={standardMetricVariant} />
             </div>
           </StatsSection>
 
