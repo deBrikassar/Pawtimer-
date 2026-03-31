@@ -3,7 +3,7 @@ import EmptyState from "../../components/EmptyState";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
 import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, sessionDetailBadges, walkTypeLabel } from "../app/helpers";
-import { ClockIcon, DeleteIcon, EditIcon, FoodIcon, Img, ModalCloseButton, TrendIcon } from "../app/ui";
+import { ClockIcon, DeleteIcon, EditIcon, Img, ModalCloseButton, TrendIcon } from "../app/ui";
 import { mergeSessionWithDerivedFields, normalizeSession } from "../app/storage";
 
 function HistoryActionGroup({ actions }) {
@@ -279,7 +279,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
             if (item.kind === "session") {
               const s = item.data;
               const lv = normalizeDistressLevel(s.distressLevel ?? (s.result === "success" ? "none" : "strong"));
-              const icon = lv === "none" ? "sessionCalm" : lv === "subtle" ? "sessionSubtle" : "sessionActive";
+              const icon = lv === "none" ? "sessionCalm" : lv === "subtle" ? "sessionSubtle" : lv === "severe" ? "sessionSevere" : "sessionActive";
               const detailBadges = sessionDetailBadges(s);
               return renderHistoryCard({
                 itemKey: `s-${s.id}`,
@@ -379,7 +379,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 itemKey: `f-${f.id}`,
                 iconClassName: "dot-feed",
                 markerClassName: "marker-feed",
-                icon: <FoodIcon />,
+                icon: <Img src="feeding" size={22} />,
                 title: <span className="history-food-type">{f.foodType}</span>,
                 date: fmtDate(f.date),
                 value: f.amount,

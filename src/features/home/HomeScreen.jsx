@@ -1,7 +1,7 @@
 import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
 import { METRIC_VARIANTS, StatsProgressRing } from "../stats/StatsComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
-import { FoodIcon, Img, ModalCloseButton } from "../app/ui";
+import { Img, ModalCloseButton } from "../app/ui";
 
 export default function HomeScreen(props) {
   const {
@@ -115,21 +115,21 @@ export default function HomeScreen(props) {
           <div className="quick-actions-row">
             <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
               <span className="quick-action-head">
-                <span className="quick-action-icon" aria-hidden="true"><Img src="walk" size={18} /></span>
+                <span className="quick-action-icon" aria-hidden="true"><Img src="walk" size={20} /></span>
                 <span className="quick-action-label">Walk</span>
               </span>
               <span className="quick-action-meta">{walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `Today: ${pattern.todayWalks}`}</span>
             </button>
             <button className={`quick-action-btn ${pattern.behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
               <span className="quick-action-head">
-                <span className="quick-action-icon" aria-hidden="true"><Img src="patternKeys" size={18} /></span>
+                <span className="quick-action-icon" aria-hidden="true"><Img src="patternBreak" size={20} /></span>
                 <span className="quick-action-label">Pattern break</span>
               </span>
               <span className="quick-action-meta">Today: {pattern.todayPat}</span>
             </button>
             <button className="quick-action-btn" type="button" onClick={openFeedingForm}>
               <span className="quick-action-head">
-                <span className="quick-action-icon" aria-hidden="true"><FoodIcon /></span>
+                <span className="quick-action-icon" aria-hidden="true"><Img src="feeding" size={20} /></span>
                 <span className="quick-action-label">Feeding</span>
               </span>
               <span className="quick-action-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>

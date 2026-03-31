@@ -147,7 +147,7 @@ export function SessionRatingPanel({
             <div><div>Active distress</div><div className="result-desc">Barking, pacing, unable to settle</div></div>
           </button>
           <button className="btn-result btn-severe" onClick={() => setSessionOutcome("severe")}>
-            <Img src="sessionActive" size={36} alt="Severe distress"/>
+            <Img src="sessionSevere" size={36} alt="Severe distress"/>
             <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
           </button>
         </div>

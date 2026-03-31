@@ -1,8 +1,8 @@
 import React from "react";
 
-const SvgIcon = ({ children, strokeWidth = 1.9, className = "", viewBox = "0 0 24 24" }) => (
+const SvgIcon = ({ children, strokeWidth = 2.2, className = "", viewBox = "0 0 24 24" }) => (
   <svg
-    className={className}
+    className={`pt-icon ${className}`.trim()}
     viewBox={viewBox}
     fill="none"
     stroke="currentColor"
@@ -17,36 +17,51 @@ const SvgIcon = ({ children, strokeWidth = 1.9, className = "", viewBox = "0 0 2
 
 const iconByName = {
   sessionCalm: (
-    <SvgIcon>
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M9 13c.7 1.1 1.8 1.8 3 1.8S14.3 14.1 15 13" />
-      <path d="M9.2 10.2h.01M14.8 10.2h.01" />
+    <SvgIcon strokeWidth={2.1}>
+      <circle cx="12" cy="12" r="8.2" />
+      <path d="M8.8 12.3l2.3 2.3 4.2-4.4" />
     </SvgIcon>
   ),
   sessionSubtle: (
-    <SvgIcon>
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M9 14h6" />
-      <path d="M9.2 10.2h.01M14.8 10.2h.01" />
+    <SvgIcon strokeWidth={2.1}>
+      <circle cx="12" cy="12" r="8.2" />
+      <path d="M8.7 13.1c1.1-1 2.2-1.4 3.3-1.4s2.2.4 3.3 1.4" />
+      <path d="M8.9 15.4h6.2" />
     </SvgIcon>
   ),
   sessionActive: (
-    <SvgIcon>
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M9 15c1.1-1 2-1.3 3-1.3s1.9.3 3 1.3" />
-      <path d="M9.2 10.2h.01M14.8 10.2h.01" />
+    <SvgIcon strokeWidth={2.1}>
+      <path d="M12 3.8l8 14.2a1.2 1.2 0 01-1.05 1.8H5.05A1.2 1.2 0 014 18L12 3.8z" />
+      <path d="M12 9v4.6" />
+      <path d="M12 16.8h.01" />
+    </SvgIcon>
+  ),
+  sessionSevere: (
+    <SvgIcon strokeWidth={2.1}>
+      <path d="M9.2 3.9h5.6l4 4v8.2l-4 4H9.2l-4-4V7.9l4-4z" />
+      <path d="M12 8v5.2" />
+      <path d="M12 16.7h.01" />
     </SvgIcon>
   ),
   walk: (
-    <SvgIcon>
-      <circle cx="13.5" cy="5.5" r="1.5" />
-      <path d="M12 11l2-2 2 1.3" />
-      <path d="M10 20l1.8-4.2 2.4 1.2L16 20" />
-      <path d="M8.5 14.5l3-2" />
+    <SvgIcon strokeWidth={2.15}>
+      <path d="M7 18.2v-1.9c0-2.1 1.7-3.8 3.8-3.8h.7" />
+      <path d="M13.2 12.5h.3c2.1 0 3.8 1.7 3.8 3.8v1.9" />
+      <circle cx="11.5" cy="8.1" r="2.2" />
+      <path d="M6.2 20h11.6" />
+    </SvgIcon>
+  ),
+  patternBreak: (
+    <SvgIcon strokeWidth={2.15}>
+      <path d="M5 7.5a7.7 7.7 0 0112-.7" />
+      <path d="M19 16.5a7.7 7.7 0 01-12 .7" />
+      <path d="M15.8 5.8l1.3 1 .9-1.5" />
+      <path d="M8.2 18.2l-1.3-1-.9 1.5" />
+      <path d="M10 9.5l4 5" />
     </SvgIcon>
   ),
   patternKeys: (
-    <SvgIcon>
+    <SvgIcon strokeWidth={2.05}>
       <circle cx="8.5" cy="10" r="2.5" />
       <path d="M11 10h8" />
       <path d="M16 10v2" />
@@ -54,23 +69,24 @@ const iconByName = {
     </SvgIcon>
   ),
   patternShoes: (
-    <SvgIcon>
+    <SvgIcon strokeWidth={2.05}>
       <path d="M4 15h16v3H4z" />
       <path d="M6 15c.8-1.2 1.8-2 3.2-2.4" />
       <path d="M10.5 12.6c1.4.6 2.1 1.5 2.8 2.4" />
     </SvgIcon>
   ),
   patternJacket: (
-    <SvgIcon>
+    <SvgIcon strokeWidth={2.05}>
       <path d="M7 20V8l3-2 2 2 2-2 3 2v12" />
       <path d="M12 8v12" />
       <path d="M9 11h6" />
     </SvgIcon>
   ),
   feeding: (
-    <SvgIcon>
+    <SvgIcon strokeWidth={2.15}>
       <path d="M4 14a8 8 0 0016 0H4z" />
       <path d="M8.5 10V6M12 10V5M15.5 10V6" />
+      <path d="M6.6 14h10.8" />
     </SvgIcon>
   ),
 };
@@ -84,6 +100,7 @@ export const Img = ({ src, size = 24, alt = "" }) => {
     "pattern-keys.png": "patternKeys",
     "pattern-shoes.png": "patternShoes",
     "pattern-jacket.png": "patternJacket",
+    "feeding.png": "feeding",
   }[src] ?? src;
   const icon = iconByName[normalizedKey] ?? null;
   if (!icon) return null;
@@ -151,12 +168,6 @@ export const DeleteIcon = () => (
     <path d="M9 7V5h6v2" />
     <path d="M7 7l1 12h8l1-12" />
     <path d="M10 11v5M14 11v5" />
-  </SvgIcon>
-);
-export const FoodIcon = () => (
-  <SvgIcon>
-    <path d="M4 14a8 8 0 0016 0H4z" />
-    <path d="M8.5 10V6M12 10V5M15.5 10V6" />
   </SvgIcon>
 );
 export const CameraIcon = () => (
