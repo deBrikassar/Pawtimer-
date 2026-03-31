@@ -52,6 +52,7 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
               <StatsMetricCard
                 value={fmt(bestCalm)}
                 label="Best calm time"
+                className="stat-card--key-metric"
                 onClick={() => openMetricHelp("bestCalm")}
                 buttonLabel="Open Best calm time explanation"
                 variant={standardMetricVariant}
@@ -67,6 +68,7 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
               <StatsMetricCard
                 value={fmt(target)}
                 label="Next target"
+                className="stat-card--key-metric"
                 onClick={() => openMetricHelp("nextTarget")}
                 buttonLabel="Open Next target explanation"
                 variant={standardMetricVariant}
@@ -82,7 +84,7 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
               <StatsMetricCard
                 value={relapseTone.label}
                 label="Risk"
-                className={`stat-card-risk surface-state--${riskSurfaceState}`}
+                className={`stat-card--key-metric stat-card-risk surface-state--${riskSurfaceState}`}
                 onClick={() => openMetricHelp("risk")}
                 buttonLabel="Open Risk explanation"
                 variant={standardMetricVariant}
