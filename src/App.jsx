@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRegisterSW } from "virtual:pwa-register/react";
 import { PROTOCOL, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { sortByDateAsc } from "./lib/activityDateTime";
 import { selectAppData } from "./features/app/selectors";
@@ -62,6 +63,13 @@ export default function PawTimer() {
   const [feedingOpen, setFeedingOpen] = useState(false);
   const [feedingDraft, setFeedingDraft] = useState(() => ({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }));
   const [historyModal, setHistoryModal] = useState(null);
+
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    immediate: true,
+  });
 
   const walkTimerRef = useRef(null);
   const walkStartRef = useRef(null);
@@ -624,6 +632,14 @@ export default function PawTimer() {
   return (
     <>
       {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
+      {needRefresh && (
+        <div className="update-banner" role="status" aria-live="polite">
+          <span>Update available</span>
+          <button type="button" className="update-banner-btn" onClick={() => updateServiceWorker(true)}>
+            Reload
+          </button>
+        </div>
+      )}
       <div className="app">
         <div className="header">
           <div className="header-top">
