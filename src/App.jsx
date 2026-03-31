@@ -497,6 +497,7 @@ export default function PawTimer() {
   };
 
   const confirmSessionStartWithAudio = async () => {
+    if (phase !== "idle") return;
     setAudioStartPromptOpen(false);
     if (!recorder.isSupported) {
       setSessionAudioMeta({ enabled: false, status: "unsupported" });
@@ -525,8 +526,10 @@ export default function PawTimer() {
   const closeAudioStartPrompt = () => setAudioStartPromptOpen(false);
 
   const endSession = async () => {
+    if (phase !== "running") return;
+    const elapsedSnapshot = elapsed;
     clearInterval(timerRef.current);
-    setFinalElapsed(elapsed);
+    setFinalElapsed(elapsedSnapshot);
     setPhase("rating");
     if (!sessionAudioMeta.enabled) return;
 
