@@ -95,11 +95,13 @@ export function StatsMetricCard({
   onAdvanceExplainer = null,
   isAutoSequence = false,
   isSequenceComplete = false,
+  explainerMode = "regular",
+  isOnboardingActive = false,
 }) {
   const Tag = onClick ? "button" : "div";
   const variantClass = `metric-surface metric-surface--${variant}`;
   return (
-    <div className={`stats-metric-anchor ${isExplainerOpen ? "is-explainer-open" : ""}`.trim()}>
+    <div className={`stats-metric-anchor ${isExplainerOpen ? "is-explainer-open" : ""} ${isOnboardingActive ? "is-onboarding-active" : ""}`.trim()}>
       <Tag
         className={`stat-card ${variantClass} ${className}`.trim()}
         onClick={onClick || undefined}
@@ -118,6 +120,7 @@ export function StatsMetricCard({
           onAdvance={onAdvanceExplainer}
           isAutoSequence={isAutoSequence}
           isSequenceComplete={isSequenceComplete}
+          mode={explainerMode}
         />
       ) : null}
     </div>
@@ -131,10 +134,13 @@ export function StatsMetricExplainer({
   onAdvance,
   isAutoSequence = false,
   isSequenceComplete = false,
+  mode = "regular",
 }) {
   const ctaLabel = isAutoSequence ? (isSequenceComplete ? "Done" : "Next") : "Got it";
+  const isOnboardingMode = mode === "onboarding";
   return (
-    <div className="metric-explainer surface-card" role="dialog" aria-live="polite">
+    <div className={`metric-explainer metric-explainer--${mode} surface-card`.trim()} role="dialog" aria-live="polite">
+      {isOnboardingMode ? <div className="metric-explainer-kicker">Progress tour</div> : null}
       <div className="metric-explainer-title">{title}</div>
       <div className="metric-explainer-body">{body}</div>
       <div className="metric-explainer-actions">
