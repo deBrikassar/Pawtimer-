@@ -93,11 +93,13 @@ export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
 
   return (
     <div className="prog-section surface-card surface-card--progress">
-      <svg className="prog-track" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
-        <rect className="prog-fill-track" x="0" y="0" width="100" height="8" rx="4" ry="4" />
-        <rect className="prog-fill" x="0" y="0" width={clampedGoalPct} height="8" rx="4" ry="4" />
-        <circle className="prog-thumb" cx={thumbPct} cy="4" r="3" />
-      </svg>
+      <div className="prog-track-wrap">
+        <svg className="prog-track" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
+          <rect className="prog-fill-track" x="0" y="0" width="100" height="8" rx="4" ry="4" />
+          <rect className="prog-fill" x="0" y="0" width={clampedGoalPct} height="8" rx="4" ry="4" />
+        </svg>
+        <span className="prog-thumb" style={{ left: `${thumbPct}%` }} aria-hidden="true" />
+      </div>
       <div className="prog-meta">
         <span>Threshold <strong className="num-stable">{fmt(target)}</strong></span>
         <span>Goal <strong className="num-stable">{fmt(goalSec)}</strong></span>
