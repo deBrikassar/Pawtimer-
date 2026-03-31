@@ -1,4 +1,4 @@
-import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
+import { AudioAnalysisSummary, AudioStartPrompt, SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
 import { METRIC_VARIANTS, StatsProgressRing } from "../stats/StatsComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton } from "../app/ui";
@@ -50,6 +50,13 @@ export default function HomeScreen(props) {
     setFeedingDraft,
     cancelFeedingForm,
     saveFeeding,
+    audioStartPromptOpen,
+    confirmSessionStartWithAudio,
+    startSessionWithoutAudio,
+    closeAudioStartPrompt,
+    audioSummaryOpen,
+    audioSummaryResult,
+    closeAudioSummary,
   } = props;
 
   return (
@@ -58,6 +65,13 @@ export default function HomeScreen(props) {
         <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} />
 
         <SessionControl phase={phase} elapsed={elapsed} target={target} onStart={startSession} onEnd={endSession} onCancel={cancelSession} completed={sessionCompleted} fmt={fmt} />
+        <AudioStartPrompt
+          open={audioStartPromptOpen}
+          onConfirm={confirmSessionStartWithAudio}
+          onSkip={startSessionWithoutAudio}
+          onClose={closeAudioStartPrompt}
+        />
+        <AudioAnalysisSummary open={audioSummaryOpen} result={audioSummaryResult} onClose={closeAudioSummary} />
 
         <SessionRatingPanel
           phase={phase}

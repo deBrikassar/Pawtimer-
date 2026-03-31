@@ -11,6 +11,8 @@ import HomeScreen from "./features/home/HomeScreen";
 import StatsScreen from "./features/stats/StatsScreen";
 import SettingsScreen from "./features/settings/SettingsScreen";
 import { HistoryScreen, useHistoryEditing } from "./features/history/HistoryFeature";
+import { analyzeSessionAudio } from "./features/train/audioAnalysis";
+import { useAudioRecorder } from "./features/train/useAudioRecorder";
 import "./styles/theme.css";
 import "./styles/shared.css";
 import "./styles/app.css";
@@ -61,6 +63,11 @@ export default function PawTimer() {
   const [feedingOpen, setFeedingOpen] = useState(false);
   const [feedingDraft, setFeedingDraft] = useState(() => ({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }));
   const [historyModal, setHistoryModal] = useState(null);
+  const [audioStartPromptOpen, setAudioStartPromptOpen] = useState(false);
+  const [audioSummaryOpen, setAudioSummaryOpen] = useState(false);
+  const [audioSummaryResult, setAudioSummaryResult] = useState(null);
+  const [sessionAudioMeta, setSessionAudioMeta] = useState({ enabled: false, status: "idle" });
+  const recorder = useAudioRecorder();
 
   const {
     needRefresh: [needRefresh],
@@ -473,9 +480,95 @@ export default function PawTimer() {
     setTarget(Math.max(Math.round(data.currentMaxCalm * 0.8), PROTOCOL.startDurationSeconds));
   };
 
-  const startSession = () => { setElapsed(0); setSessionCompleted(false); setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft(""); setPhase("running"); };
-  const endSession = () => { clearInterval(timerRef.current); setFinalElapsed(elapsed); setPhase("rating"); };
-  const cancelSession = () => { setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false); setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft(""); clearInterval(timerRef.current); };
+  const startSessionCore = () => {
+    setElapsed(0);
+    setSessionCompleted(false);
+    setSessionOutcome(null);
+    setLatencyDraft("");
+    setDistressTypeDraft("");
+    setAudioSummaryResult(null);
+    setAudioSummaryOpen(false);
+    setPhase("running");
+  };
+
+  const startSession = () => {
+    if (phase !== "idle") return;
+    setAudioStartPromptOpen(true);
+  };
+
+  const confirmSessionStartWithAudio = async () => {
+    setAudioStartPromptOpen(false);
+    if (!recorder.isSupported) {
+      setSessionAudioMeta({ enabled: false, status: "unsupported" });
+      showToast("Audio monitoring is not supported in this browser. Session started without audio.");
+      startSessionCore();
+      return;
+    }
+    const startResult = await recorder.start();
+    if (!startResult.ok) {
+      setSessionAudioMeta({ enabled: false, status: startResult.reason || "failed" });
+      showToast("Audio monitoring could not start. Session started without audio.");
+      startSessionCore();
+      return;
+    }
+    setSessionAudioMeta({ enabled: true, status: "recording" });
+    startSessionCore();
+  };
+
+  const startSessionWithoutAudio = () => {
+    setAudioStartPromptOpen(false);
+    recorder.reset();
+    setSessionAudioMeta({ enabled: false, status: "disabled" });
+    startSessionCore();
+  };
+
+  const closeAudioStartPrompt = () => setAudioStartPromptOpen(false);
+
+  const endSession = async () => {
+    clearInterval(timerRef.current);
+    setFinalElapsed(elapsed);
+    setPhase("rating");
+    if (!sessionAudioMeta.enabled) return;
+
+    const stopResult = await recorder.stop();
+    if (!stopResult.ok || !stopResult.blob || stopResult.blob.size === 0) {
+      setSessionAudioMeta((prev) => ({ ...prev, enabled: false, status: "empty_or_failed" }));
+      showToast("Audio monitoring ended, but no reviewable audio was available.");
+      return;
+    }
+
+    const analysis = await analyzeSessionAudio({
+      audioBlob: stopResult.blob,
+      durationSeconds: stopResult.durationSeconds,
+    });
+    if (analysis.status !== "ready") {
+      setSessionAudioMeta((prev) => ({ ...prev, enabled: true, status: analysis.status }));
+      showToast("Audio analysis couldn't complete for this session.");
+      return;
+    }
+
+    setAudioSummaryResult(analysis);
+    setAudioSummaryOpen(true);
+    setSessionAudioMeta({ enabled: true, status: "analyzed" });
+  };
+
+  const closeAudioSummary = () => setAudioSummaryOpen(false);
+
+  const cancelSession = () => {
+    setPhase("idle");
+    setElapsed(0);
+    setFinalElapsed(0);
+    setSessionCompleted(false);
+    setSessionOutcome(null);
+    setLatencyDraft("");
+    setDistressTypeDraft("");
+    setAudioStartPromptOpen(false);
+    setAudioSummaryOpen(false);
+    setAudioSummaryResult(null);
+    recorder.reset();
+    setSessionAudioMeta({ enabled: false, status: "idle" });
+    clearInterval(timerRef.current);
+  };
 
   const pushWithSyncStatus = async (kind, data) => {
     if (!SYNC_ENABLED || !activeDogId) return { ok: false, error: "Sync is disabled" };
@@ -514,7 +607,7 @@ export default function PawTimer() {
     const latencyInput = Number(options.latencyToFirstDistress);
     const latencyToFirstDistress = Number.isFinite(latencyInput) && latencyInput >= 0 ? Math.round(latencyInput) : distressLevel === "none" ? finalElapsed : null;
     const distressType = options.distressType || (distressLevel === "none" ? "none" : null);
-    const rawSession = mergeSessionWithDerivedFields({}, { id: makeEntryId("sess", activeDogId), date: now.toISOString(), plannedDuration: target, actualDuration: finalElapsed, distressLevel, result: distressLevel === "none" ? "success" : "distress", belowThreshold: distressLevel === "none" && finalElapsed >= target, latencyToFirstDistress, distressType, distressSeverity: distressLevel, context: { timeOfDay, departureType: "training", cuesUsed: [], location: null, barrierUsed: null, enrichmentPresent: null, mediaOn: null, whoLeft: null, anotherPersonStayed: null }, symptoms: { barking: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, pacing: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, destructive: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0, salivation: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0 }, videoReview: { recorded: false, firstSubtleDistressTs: null, firstActiveDistressTs: null, eventTags: [], notes: null, ratingConfidence: null }, recoverySeconds: distressLevel === "none" ? 0 : null, preSession: { walkDuration: null, enrichmentGiven: null }, environment: { noiseEvent: false } });
+    const rawSession = mergeSessionWithDerivedFields({}, { id: makeEntryId("sess", activeDogId), date: now.toISOString(), plannedDuration: target, actualDuration: finalElapsed, distressLevel, result: distressLevel === "none" ? "success" : "distress", belowThreshold: distressLevel === "none" && finalElapsed >= target, latencyToFirstDistress, distressType, distressSeverity: distressLevel, context: { timeOfDay, departureType: "training", cuesUsed: [], location: null, barrierUsed: null, enrichmentPresent: null, mediaOn: null, whoLeft: null, anotherPersonStayed: null }, symptoms: { barking: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, pacing: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, destructive: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0, salivation: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0 }, videoReview: { recorded: false, firstSubtleDistressTs: null, firstActiveDistressTs: null, eventTags: [], notes: null, ratingConfidence: null }, recoverySeconds: distressLevel === "none" ? 0 : null, preSession: { walkDuration: null, enrichmentGiven: null }, environment: { noiseEvent: false }, audioMonitoringEnabled: sessionAudioMeta.enabled, audioAnalysisStatus: sessionAudioMeta.status, audioStressLevel: audioSummaryResult?.stressLevel || null, confirmedBarkCount: audioSummaryResult?.confirmedBarkCount ?? 0, reviewSegments: audioSummaryResult?.reviewSegments || [] });
     const session = stampLocalEntry(rawSession);
     const updated = commitSessions((prev) => [...prev, session]);
     pushWithSyncStatus("session", session).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
@@ -640,7 +733,7 @@ export default function PawTimer() {
           </div>
         </div>
 
-        {tab === "home" && <HomeScreen name={appData.name} sessions={sessions} target={target} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} />}
+        {tab === "home" && <HomeScreen name={appData.name} sessions={sessions} target={target} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} audioStartPromptOpen={audioStartPromptOpen} confirmSessionStartWithAudio={confirmSessionStartWithAudio} startSessionWithoutAudio={startSessionWithoutAudio} closeAudioStartPrompt={closeAudioStartPrompt} audioSummaryOpen={audioSummaryOpen} audioSummaryResult={audioSummaryResult} closeAudioSummary={closeAudioSummary} />}
         {tab === "history" && <HistoryScreen timeline={appData.timeline} sessions={sessions} name={appData.name} setTab={setTab} patLabels={patLabels} historyModal={historyModal} setHistoryModal={setHistoryModal} actions={historyActions} />}
         {tab === "progress" && <StatsScreen name={appData.name} totalCount={appData.totalCount} setTab={setTab} bestCalm={appData.bestCalm} target={target} relapseTone={appData.relapseTone} chartData={appData.chartData} goalSec={appData.goalSec} CustomDot={CustomDot} distressLabel={appData.distressLabel} chartTrendLabel={appData.chartTrendLabel} aloneLastWeek={appData.aloneLastWeek} avgWalkDuration={appData.avgWalkDuration} avgSessionsPerDay={appData.avgSessionsPerDay} avgWalksPerDay={appData.avgWalksPerDay} currentThreshold={appData.currentThreshold} headlineStatus={appData.headlineStatus} headlineStatusTone={appData.headlineStatusTone} />}
         {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} nextTargetInfo={appData.nextTargetInfo} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} setOnboardingState={setOnboardingState} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} />}

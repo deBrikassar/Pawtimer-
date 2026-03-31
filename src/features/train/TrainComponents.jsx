@@ -86,6 +86,59 @@ export function SessionControl({
   );
 }
 
+export function AudioStartPrompt({ open, onConfirm, onSkip, onClose }) {
+  if (!open) return null;
+  return (
+    <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="audio-start-title" onClick={onClose}>
+      <div className="quick-modal-card modal-card modal-card--dialog-md audio-start-prompt" onClick={(e) => e.stopPropagation()}>
+        <div className="quick-modal-head">
+          <div className="quick-modal-title" id="audio-start-title">Record audio during this session?</div>
+        </div>
+        <p className="audio-start-copy">Use microphone input to help detect possible stress signals while your dog is alone.</p>
+        <div className="audio-start-actions">
+          <button className="button-base button-primary button--md button--pill" type="button" onClick={onConfirm}>Yes, record audio</button>
+          <button className="button-base button-ghost button--md button--pill" type="button" onClick={onSkip}>No, start without audio</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AudioAnalysisSummary({ open, result, onClose }) {
+  if (!open || !result) return null;
+  return (
+    <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="audio-summary-title" onClick={onClose}>
+      <div className="quick-modal-card modal-card modal-card--dialog-md audio-results-card" onClick={(e) => e.stopPropagation()}>
+        <div className="quick-modal-head">
+          <div className="quick-modal-title" id="audio-summary-title">Audio monitoring summary</div>
+        </div>
+        <div className="audio-results-row">
+          <span>Stress level</span>
+          <strong>{result.stressLevel}</strong>
+        </div>
+        <div className="audio-results-row">
+          <span>Confirmed barking</span>
+          <strong>{result.confirmedBarkCount} event{result.confirmedBarkCount === 1 ? "" : "s"}</strong>
+        </div>
+        {result.reviewSegments?.length > 0 && (
+          <div className="audio-review-list">
+            <div className="audio-review-title">Possible vocal stress signals to review</div>
+            <div className="audio-review-items">
+              {result.reviewSegments.map((segment) => (
+                <span key={`${segment.startSeconds}-${segment.endSeconds}`} className="audio-review-chip">{segment.displayRange}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="audio-results-note">
+          Confirmed barking includes only events at 90%+ confidence.
+        </div>
+        <button className="button-base button-primary button--md button--block" type="button" onClick={onClose}>Done</button>
+      </div>
+    </div>
+  );
+}
+
 
 export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
   const clampedGoalPct = Math.max(0, Math.min(goalPct, 100));
