@@ -193,7 +193,7 @@ export function useHistoryEditing({
       if (window.confirm("Clear all training sessions?")) {
         commitSessions([]);
         syncDeleteSessionsForDog(activeDogId).then((ok) => {
-          if (ok === null) showToast("Sessions cleared locally — remote delete failed");
+          if (!ok) showToast("Sessions cleared locally — remote delete failed");
           else showToast("Sessions cleared");
         });
       }

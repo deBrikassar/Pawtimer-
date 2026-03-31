@@ -6,6 +6,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
       registerType: "autoUpdate",
       filename: "sw.js",
       injectRegister: false,
@@ -40,48 +42,9 @@ export default defineConfig({
           }
         ]
       },
-      workbox: {
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
+      injectManifest: {
         globPatterns: ["**/*.{js,css,ico,png,svg,woff2,webmanifest}"],
-        runtimeCaching: [
-          {
-            urlPattern: ({ request }) => request.mode === "navigate",
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "html-shell-cache",
-              networkTimeoutSeconds: 5,
-              expiration: {
-                maxEntries: 3,
-                maxAgeSeconds: 60 * 5
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "gstatic-fonts-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365
-              }
-            }
-          }
-        ]
-      }
+      },
     })
   ]
 });

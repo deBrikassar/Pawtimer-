@@ -82,6 +82,7 @@ export default function PawTimer() {
   const walkStartRef = useRef(null);
   const timerRef = useRef(null);
   const startRef = useRef(null);
+  const syncInFlightRef = useRef(false);
   const syncSnapshotRef = useRef({ dogs: [], sessions: [], walks: [], patterns: [], feedings: [] });
 
   useEffect(() => {
@@ -275,65 +276,71 @@ export default function PawTimer() {
     };
 
     const sync = async () => {
-      setSyncStatus("syncing");
-      const { result: remote, error } = await syncFetch(canonicalDogId(activeDogId));
-      if (!live) return;
-      if (!remote) { setSyncStatus("err"); setSyncError(error || "Unknown sync fetch error"); return; }
+      if (syncInFlightRef.current) return;
+      syncInFlightRef.current = true;
+      try {
+        setSyncStatus("syncing");
+        const { result: remote, error } = await syncFetch(canonicalDogId(activeDogId));
+        if (!live) return;
+        if (!remote) { setSyncStatus("err"); setSyncError(error || "Unknown sync fetch error"); return; }
 
-      const snapshot = syncSnapshotRef.current;
-      const remoteDog = remote.dog ? { ...remote.dog, id: canonicalDogId(remote.dog.id || activeDogId) } : null;
-      if (remoteDog) {
-        setDogs((prev) => {
-          const next = [...prev.filter((d) => canonicalDogId(d.id) !== remoteDog.id), remoteDog];
-          save(DOGS_KEY, next);
-          return next;
-        });
+        const snapshot = syncSnapshotRef.current;
+        const remoteDog = remote.dog ? { ...remote.dog, id: canonicalDogId(remote.dog.id || activeDogId) } : null;
+        if (remoteDog) {
+          setDogs((prev) => {
+            const next = [...prev.filter((d) => canonicalDogId(d.id) !== remoteDog.id), remoteDog];
+            save(DOGS_KEY, next);
+            return next;
+          });
+        }
+
+        const remoteSessions = normalizeSessions(remote.sessions);
+        const remoteWalks = ensureArray(remote.walks).map((item) => ({ ...item, type: normalizeWalkType(item?.type) }));
+        const remotePatterns = ensureArray(remote.patterns);
+        const remoteFeedings = normalizeFeedings(remote.feedings);
+
+        const mergedSessions = mergeSyncedCollection(snapshot.sessions, remoteSessions);
+        const mergedWalks = mergeSyncedCollection(snapshot.walks, remoteWalks);
+        const mergedPatterns = mergeSyncedCollection(snapshot.patterns, remotePatterns);
+        const mergedFeedings = mergeSyncedCollection(snapshot.feedings, remoteFeedings);
+
+        commitSessions(mergedSessions);
+        commitWalks(mergedWalks);
+        commitPatterns(mergedPatterns);
+        commitFeedings(mergedFeedings);
+
+        const currentDog = snapshot.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
+        const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : remoteDog;
+        const pendingEntries = [
+          ...mergedSessions.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "session", entry })),
+          ...mergedWalks.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "walk", entry })),
+          ...mergedPatterns.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "pattern", entry })),
+          ...mergedFeedings.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "feeding", entry })),
+        ];
+
+        let allPendingFlushed = true;
+        for (const { kind, entry } of pendingEntries) {
+          const pushed = await pushPendingEntry(kind, entry, dogSettings);
+          allPendingFlushed = allPendingFlushed && pushed;
+        }
+
+        const syncDog = remoteDog ?? currentDog;
+        setTarget(suggestNextWithContext(mergedSessions, mergedWalks, mergedPatterns, syncDog) ?? suggestNext(mergedSessions, syncDog));
+        if (!allPendingFlushed) {
+          setSyncError("Some local changes are still waiting for confirmation.");
+          setSyncStatus("err");
+          return;
+        }
+        setSyncError(error || "");
+        setSyncStatus(error ? "err" : "ok");
+      } finally {
+        syncInFlightRef.current = false;
       }
-
-      const remoteSessions = normalizeSessions(remote.sessions);
-      const remoteWalks = ensureArray(remote.walks).map((item) => ({ ...item, type: normalizeWalkType(item?.type) }));
-      const remotePatterns = ensureArray(remote.patterns);
-      const remoteFeedings = normalizeFeedings(remote.feedings);
-
-      const mergedSessions = mergeSyncedCollection(snapshot.sessions, remoteSessions);
-      const mergedWalks = mergeSyncedCollection(snapshot.walks, remoteWalks);
-      const mergedPatterns = mergeSyncedCollection(snapshot.patterns, remotePatterns);
-      const mergedFeedings = mergeSyncedCollection(snapshot.feedings, remoteFeedings);
-
-      commitSessions(mergedSessions);
-      commitWalks(mergedWalks);
-      commitPatterns(mergedPatterns);
-      commitFeedings(mergedFeedings);
-
-      const currentDog = snapshot.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
-      const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : remoteDog;
-      const pendingEntries = [
-        ...mergedSessions.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "session", entry })),
-        ...mergedWalks.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "walk", entry })),
-        ...mergedPatterns.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "pattern", entry })),
-        ...mergedFeedings.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "feeding", entry })),
-      ];
-
-      let allPendingFlushed = true;
-      for (const { kind, entry } of pendingEntries) {
-        const pushed = await pushPendingEntry(kind, entry, dogSettings);
-        allPendingFlushed = allPendingFlushed && pushed;
-      }
-
-      const syncDog = remoteDog ?? currentDog;
-      setTarget(suggestNextWithContext(mergedSessions, mergedWalks, mergedPatterns, syncDog) ?? suggestNext(mergedSessions, syncDog));
-      if (!allPendingFlushed) {
-        setSyncError("Some local changes are still waiting for confirmation.");
-        setSyncStatus("err");
-        return;
-      }
-      setSyncError(error || "");
-      setSyncStatus(error ? "err" : "ok");
     };
 
     sync();
     const timer = setInterval(sync, 15_000);
-    return () => { live = false; clearInterval(timer); };
+    return () => { live = false; syncInFlightRef.current = false; clearInterval(timer); };
   }, [activeDogId, commitFeedings, commitPatterns, commitSessions, commitWalks, mergeSyncedCollection, setEntrySyncState]);
 
   useEffect(() => {
@@ -636,7 +643,7 @@ export default function PawTimer() {
         {tab === "home" && <HomeScreen name={appData.name} sessions={sessions} target={target} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} />}
         {tab === "history" && <HistoryScreen timeline={appData.timeline} sessions={sessions} name={appData.name} setTab={setTab} patLabels={patLabels} historyModal={historyModal} setHistoryModal={setHistoryModal} actions={historyActions} />}
         {tab === "progress" && <StatsScreen name={appData.name} totalCount={appData.totalCount} setTab={setTab} bestCalm={appData.bestCalm} target={target} relapseTone={appData.relapseTone} chartData={appData.chartData} goalSec={appData.goalSec} CustomDot={CustomDot} distressLabel={appData.distressLabel} chartTrendLabel={appData.chartTrendLabel} aloneLastWeek={appData.aloneLastWeek} avgWalkDuration={appData.avgWalkDuration} avgSessionsPerDay={appData.avgSessionsPerDay} avgWalksPerDay={appData.avgWalksPerDay} currentThreshold={appData.currentThreshold} headlineStatus={appData.headlineStatus} headlineStatusTone={appData.headlineStatusTone} />}
-        {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} nextTargetInfo={appData.nextTargetInfo} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} />}
+        {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} nextTargetInfo={appData.nextTargetInfo} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} setOnboardingState={setOnboardingState} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} />}
       </div>
 
       <div className="tabs">{[{ id: "home", label: "Train", icon: <HomeIcon /> }, { id: "history", label: "History", icon: <HistoryIcon /> }, { id: "progress", label: "Progress", icon: <ChartIcon /> }, { id: "settings", label: "Settings", icon: <SettingsIcon /> }].map((t) => <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>{t.icon}{t.label}</button>)}</div>
