@@ -89,20 +89,65 @@ export function StatsMetricCard({
   onClick = null,
   buttonLabel = null,
   variant = METRIC_VARIANTS.STANDARD,
+  explainer = null,
+  isExplainerOpen = false,
+  onCloseExplainer = null,
+  onAdvanceExplainer = null,
+  isAutoSequence = false,
+  isSequenceComplete = false,
 }) {
   const Tag = onClick ? "button" : "div";
   const variantClass = `metric-surface metric-surface--${variant}`;
   return (
-    <Tag
-      className={`stat-card ${variantClass} ${className}`.trim()}
-      onClick={onClick || undefined}
-      type={onClick ? "button" : undefined}
-      aria-label={buttonLabel || label}
-    >
-      <div className="stat-val stats-metric-value">{value}</div>
-      <div className="stat-lbl stats-metric-label">{label}</div>
-      {detail ? <div className="stats-metric-detail">{detail}</div> : null}
-    </Tag>
+    <div className={`stats-metric-anchor ${isExplainerOpen ? "is-explainer-open" : ""}`.trim()}>
+      <Tag
+        className={`stat-card ${variantClass} ${className}`.trim()}
+        onClick={onClick || undefined}
+        type={onClick ? "button" : undefined}
+        aria-label={buttonLabel || label}
+      >
+        <div className="stat-val stats-metric-value">{value}</div>
+        <div className="stat-lbl stats-metric-label">{label}</div>
+        {detail ? <div className="stats-metric-detail">{detail}</div> : null}
+      </Tag>
+      {isExplainerOpen && explainer ? (
+        <StatsMetricExplainer
+          title={explainer.title}
+          body={explainer.body}
+          onClose={onCloseExplainer}
+          onAdvance={onAdvanceExplainer}
+          isAutoSequence={isAutoSequence}
+          isSequenceComplete={isSequenceComplete}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+export function StatsMetricExplainer({
+  title,
+  body,
+  onClose,
+  onAdvance,
+  isAutoSequence = false,
+  isSequenceComplete = false,
+}) {
+  const ctaLabel = isAutoSequence ? (isSequenceComplete ? "Done" : "Next") : "Got it";
+  return (
+    <div className="metric-explainer surface-card" role="dialog" aria-live="polite">
+      <div className="metric-explainer-title">{title}</div>
+      <div className="metric-explainer-body">{body}</div>
+      <div className="metric-explainer-actions">
+        {isAutoSequence ? (
+          <button className="button-base button-secondary button--sm" onClick={onClose} type="button">
+            Close
+          </button>
+        ) : null}
+        <button className="button-base button-primary button--sm" onClick={onAdvance} type="button">
+          {ctaLabel}
+        </button>
+      </div>
+    </div>
   );
 }
 
