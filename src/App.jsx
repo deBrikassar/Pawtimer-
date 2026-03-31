@@ -33,6 +33,7 @@ export default function PawTimer() {
   const [patterns, setPatterns] = useState([]);
   const [feedings, setFeedings] = useState([]);
   const [tab, setTab] = useState("home");
+  const [onboardingState, setOnboardingState] = useState(null);
   const [phase, setPhase] = useState("idle");
   const [elapsed, setElapsed] = useState(0);
   const [finalElapsed, setFinalElapsed] = useState(0);
@@ -427,7 +428,25 @@ export default function PawTimer() {
     } else { cancelNotif(); setNotifEnabled(false); showToast("Reminder turned off."); }
   };
 
-  const openDog = (dog) => { logSyncDebug("openDog", { dogId: canonicalDogId(dog?.id) }); setActiveDogId(canonicalDogId(dog.id)); setScreen("app"); };
+
+  const clearDogActivityState = useCallback((dogId) => {
+    const normalizedId = canonicalDogId(dogId);
+    if (!normalizedId) return;
+    save(sessKey(normalizedId), []);
+    save(walkKey(normalizedId), []);
+    save(patKey(normalizedId), []);
+    save(feedingKey(normalizedId), []);
+    save(patLblKey(normalizedId), {});
+    save(photoKey(normalizedId), null);
+    setSessions([]);
+    setWalks([]);
+    setPatterns([]);
+    setFeedings([]);
+    setPatLabels({});
+    setDogPhoto(null);
+  }, []);
+
+  const openDog = (dog) => { logSyncDebug("openDog", { dogId: canonicalDogId(dog?.id) }); setOnboardingState(null); setActiveDogId(canonicalDogId(dog.id)); setScreen("app"); };
 
   const handleDogSelect = async (id, isJoin = false) => {
     const normalizedId = canonicalDogId(id);
@@ -457,11 +476,13 @@ export default function PawTimer() {
     const existing = dogs.find((d) => canonicalDogId(d.id) === normalizedId) ?? ensureArray(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === normalizedId);
     if (existing) { openDog(existing); return; }
     if (isJoin) { setSyncStatus("err"); setSyncError(`No shared dog account found for ${normalizedId}`); showToast(`No shared profile found for ${normalizedId}. Check the ID and try again.`); }
-    else { setActiveDogId(normalizedId); setScreen("onboard"); }
+    else { setOnboardingState({ mode: "claim", dogId: normalizedId }); setActiveDogId(normalizedId); setScreen("onboard"); }
   };
 
   const handleOnboardComplete = (data) => {
-    const id = canonicalDogId(activeDogId || generateId(data.dogName));
+    const onboardingDogId = canonicalDogId(onboardingState?.dogId);
+    const id = canonicalDogId(onboardingDogId || activeDogId || generateId(data.dogName));
+    const isFreshProfile = onboardingState?.mode === "new";
     const newDog = {
       ...data,
       id,
@@ -470,8 +491,11 @@ export default function PawTimer() {
       progressMetricOnboardingEligible: true,
       progressMetricOnboardingCompletedAt: null,
     };
+    if (isFreshProfile) clearDogActivityState(id);
     setDogs((prev) => [...prev.filter((d) => d.id !== id), newDog]);
+    setOnboardingState(null);
     setActiveDogId(id);
+    setTab("home");
     setTarget(Math.max(Math.round(data.currentMaxCalm * 0.8), PROTOCOL.startDurationSeconds));
   };
 
@@ -653,8 +677,8 @@ export default function PawTimer() {
     return <circle cx={cx} cy={cy} r={5} fill={c} stroke="white" strokeWidth={2} />;
   };
 
-  if (screen === "select") return <>{toast && <div className="toast">{toast}</div>}<DogSelect dogs={dogs} onSelect={handleDogSelect} onCreateNew={() => setScreen("onboard")} /></>;
-  if (screen === "onboard") return <Onboarding onComplete={handleOnboardComplete} onBack={() => setScreen("select")} />;
+  if (screen === "select") return <>{toast && <div className="toast">{toast}</div>}<DogSelect dogs={dogs} onSelect={handleDogSelect} onCreateNew={() => { setOnboardingState({ mode: "new", dogId: null }); setScreen("onboard"); }} /></>;
+  if (screen === "onboard") return <Onboarding onComplete={handleOnboardComplete} onBack={() => { setOnboardingState(null); setScreen("select"); }} />;
 
   return (
     <>
