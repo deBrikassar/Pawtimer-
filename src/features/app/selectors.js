@@ -169,34 +169,6 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     return getRiskTone("low");
   })();
 
-  const metricExplainers = {
-    nextTarget: {
-      title: "Next target",
-      body: `${nextTargetInfo.summary} PawTimer starts from your dog's current safe-alone estimate and then adapts from recent session outcomes rather than following one fixed percentage step every time.`,
-      detail: nextTargetInfo.factors.join(" · "),
-    },
-    stability: {
-      title: "Stability",
-      body: "How consistent calm-session durations are. Higher stability means your calm sessions are predictable; big swings suggest your dog may still need more repetition at easier levels.",
-      detail: `Median calm · ${calmMedian != null ? fmt(calmMedian) : "—"} · SD ${durationVariability != null ? fmt(durationVariability) : "—"} · ${stabilityTone.label}`,
-    },
-    momentum: {
-      title: "Momentum",
-      body: "Your short-term trend. It compares calm-session rate over the last 7 days against the last 14 days to show whether progress is improving, holding, or slipping.",
-      detail: `7d calm ${calmRate7 != null ? `${calmRate7}%` : "—"} · 14d ${calmRate14 != null ? `${calmRate14}%` : "—"} · ${momentumTone.label}`,
-    },
-    relapseRisk: {
-      title: "Relapse risk",
-      body: "A quick warning signal based on high-distress sessions in your most recent attempts. More active/severe distress in the recent window means a higher chance of setbacks and a need to slow down.",
-      detail: `${recentHighDistress.highDistressCount}/${recentHighDistress.window} recent sessions active/severe distress (${recentHighDistress.severeCount} severe) · ${relapseTone.label}`,
-    },
-    adherence: {
-      title: "Adherence",
-      body: "How well daily pattern breaks keep pace with real departures (walks together). Better adherence means cues are practiced enough to support training progress.",
-      detail: `Pattern breaks vs walks by day · ${adherenceTone.label}`,
-    },
-  };
-
   const chartData = sessions.slice(-25).map((s, i) => ({
     session: i + 1,
     durationSeconds: s.actualDuration,
@@ -271,7 +243,6 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     stabilityTone,
     adherenceTone,
     relapseTone,
-    metricExplainers,
     chartData,
     currentThreshold,
     headlineStatus,
