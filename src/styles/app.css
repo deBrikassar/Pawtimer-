@@ -180,6 +180,8 @@
   .prog-section { margin-top:0; padding:var(--space-surface-compact); }
   .train-main { width:min(100%, 460px); margin:0 auto; display:flex; flex-direction:column; gap:var(--space-section-gap); padding-bottom:var(--space-1); }
   .prog-track {
+    display:block;
+    width:100%;
     height:8px;
     background:var(--progress-track-bg);
     border-radius:99px;
