@@ -36,6 +36,7 @@ export default function SettingsScreen(props) {
     protoOverride,
     setProtoOverride,
     setScreen,
+    setOnboardingState,
     dogsState,
     setDogs,
     save,
@@ -150,7 +151,17 @@ export default function SettingsScreen(props) {
           </div>
 
           <div className="settings-section-label">Account</div>
-          <button className="settings-btn button-size-secondary-pill" onClick={() => { if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) { setDogs((prev) => prev.filter((d) => d.id !== activeDogId)); setScreen("onboard"); } }}>Edit {name}'s profile</button>
+          <button
+            className="settings-btn button-size-secondary-pill"
+            onClick={() => {
+              if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) {
+                setOnboardingState({ mode: "claim", dogId: activeDogId });
+                setScreen("onboard");
+              }
+            }}
+          >
+            Edit {name}'s profile
+          </button>
           <button className="settings-btn settings-btn--icon button-size-secondary-pill" onClick={() => setScreen("select")}>
             <span className="settings-btn__icon" aria-hidden="true"><PawIcon size={18} /></span>
             <span className="settings-btn__label">Switch dog</span>
