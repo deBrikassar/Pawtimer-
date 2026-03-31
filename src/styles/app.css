@@ -179,7 +179,10 @@
   /* ── Progress section ── */
   .prog-section { margin-top:0; padding:var(--space-surface-compact); }
   .train-main { width:min(100%, 460px); margin:0 auto; display:flex; flex-direction:column; gap:var(--space-section-gap); padding-bottom:var(--space-1); }
+  .prog-track-wrap { position:relative; width:100%; }
   .prog-track {
+    display:block;
+    width:100%;
     height:8px;
     background:var(--progress-track-bg);
     border-radius:99px;
@@ -192,16 +195,21 @@
     stroke-width:0.6;
   }
   .prog-track .prog-fill {
-    fill:var(--progress-fill-bg);
+    fill:var(--green-dark);
     stroke:color-mix(in srgb, var(--green-dark) 64%, var(--green));
     stroke-width:0.35;
     filter:drop-shadow(0 1px 2px color-mix(in srgb, var(--green-dark) 26%, transparent));
     transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);
   }
-  .prog-track .prog-thumb {
-    fill:var(--progress-thumb-core-bg);
-    stroke:var(--surf);
-    stroke-width:1.35;
+  .prog-thumb {
+    position:absolute;
+    top:50%;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    transform:translate(-50%, -50%);
+    border:1.35px solid var(--surf);
+    background:var(--progress-thumb-core-bg);
     filter:drop-shadow(0 1px 4px color-mix(in srgb, var(--green-dark) 25%, transparent));
   }
   .prog-meta  { display:flex; justify-content:space-between; margin-top:var(--space-1); font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); font-weight:var(--type-secondary-weight); }
