@@ -51,10 +51,10 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
             <div className="stats-row stats-row-core stats-row-core-trimmed">
               <StatsMetricCard
                 value={fmt(bestCalm)}
-                label="Best calm time"
+                label="Best session"
                 className="stat-card--key-metric"
                 onClick={() => openMetricHelp("bestCalm")}
-                buttonLabel="Open Best calm time explanation"
+                buttonLabel="Open Best session explanation"
                 variant={standardMetricVariant}
                 explainer={metricExplainers.bestCalm}
                 isExplainerOpen={metricHelpKey === "bestCalm"}

@@ -177,8 +177,8 @@ export default function PawTimer() {
       body: `That’s how long "${appData.name}" can safely stay alone.`,
     },
     bestCalm: {
-      title: "Best calm time",
-      body: `"${appData.name}"’s record for staying alone calmly.`,
+      title: "Best session",
+      body: `Your dog’s longest calm session so far.`,
     },
     nextTarget: {
       title: "Next target",
