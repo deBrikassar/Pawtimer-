@@ -510,10 +510,13 @@
 
   /* ── Tabs ── */
   .tabs { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:var(--surface-frost); backdrop-filter:blur(18px); border-top:1px solid var(--border); display:flex; align-items:stretch; z-index:100; padding:0 0 env(safe-area-inset-bottom,0px); box-shadow:var(--surface-dock-shadow); }
-  .tab-btn { flex:1 1 0; min-height:56px; padding:var(--space-density-compact-control-gap) 4px var(--space-1); background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--space-density-compact-control-gap); color:var(--color-text-subtle); transition:color 0.18s; font-size:var(--type-navigation-text-size); font-weight:var(--type-navigation-text-weight); line-height:var(--type-navigation-text-line); letter-spacing:var(--type-navigation-text-track); text-align:center; white-space:nowrap; }
-  .tab-btn.active { color:var(--primaryBlue); font-weight:var(--type-button-weight); }
-  .tab-btn svg { width:24px; height:24px; flex-shrink:0; display:block; color:var(--icon-ink); }
-  .tab-btn.active svg { color:color-mix(in srgb, var(--primaryBlue) 68%, var(--color-warm-accent-strong)); }
+  .tab-btn { flex:1 1 0; min-height:56px; padding:var(--space-density-compact-control-gap) 4px var(--space-1); background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--nav-tab-gap); color:var(--nav-tab-inactive-fg); transition:color 0.18s ease, opacity 0.18s ease; font-size:var(--type-navigation-text-size); font-weight:var(--type-navigation-text-weight); line-height:var(--type-navigation-text-line); letter-spacing:var(--type-navigation-text-track); text-align:center; white-space:nowrap; }
+  .tab-btn.inactive { color:var(--nav-tab-inactive-fg); }
+  .tab-btn.active { color:var(--nav-tab-active-fg); font-weight:var(--type-button-weight); }
+  .tab-icon-wrap { width:var(--nav-icon-container-size); height:var(--nav-icon-container-size); display:grid; place-items:center; }
+  .tab-icon { width:var(--nav-icon-size); height:var(--nav-icon-size); display:block; object-fit:contain; object-position:center; opacity:var(--nav-icon-inactive-opacity); filter:var(--nav-icon-inactive-filter); transition:opacity 0.18s ease, filter 0.18s ease; }
+  .tab-btn.active .tab-icon { opacity:var(--nav-icon-active-opacity); filter:var(--nav-icon-active-filter); }
+  .tab-label { min-height:calc(var(--type-navigation-text-line) * 1em); display:flex; align-items:flex-start; justify-content:center; }
   .tab-btn:focus-visible { outline:2px solid var(--primaryBlue); outline-offset:-2px; border-radius:10px; }
 
   /* ── Sections ── */

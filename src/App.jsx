@@ -4,7 +4,7 @@ import { sortByDateAsc } from "./lib/activityDateTime";
 import { selectAppData } from "./features/app/selectors";
 import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeById, mergeSessionWithDerivedFields, normalizeFeedings, normalizeSessions, patKey, patLblKey, photoKey, save, sessKey, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncUpsertDog, toDateTimeLocalValue, walkKey } from "./features/app/storage";
 import { fmt, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
-import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
+import { CameraIcon, PawIcon } from "./features/app/ui.jsx";
 import { DogSelect, Onboarding } from "./features/setup/SetupScreens";
 import HomeScreen from "./features/home/HomeScreen";
 import StatsScreen from "./features/stats/StatsScreen";
@@ -13,6 +13,13 @@ import { HistoryScreen, useHistoryEditing } from "./features/history/HistoryFeat
 import "./styles/theme.css";
 import "./styles/shared.css";
 import "./styles/app.css";
+
+const BOTTOM_NAV_TABS = [
+  { id: "home", label: "Train", icon: "/icons/nav/train.svg" },
+  { id: "history", label: "History", icon: "/icons/nav/history.svg" },
+  { id: "progress", label: "Progress", icon: "/icons/nav/progress.svg" },
+  { id: "settings", label: "Settings", icon: "/icons/nav/settings.svg" },
+];
 
 const SYNC_STATE = {
   LOCAL: "local",
@@ -572,7 +579,24 @@ export default function PawTimer() {
         {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} nextTargetInfo={appData.nextTargetInfo} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} />}
       </div>
 
-      <div className="tabs">{[{ id: "home", label: "Train", icon: <HomeIcon /> }, { id: "history", label: "History", icon: <HistoryIcon /> }, { id: "progress", label: "Progress", icon: <ChartIcon /> }, { id: "settings", label: "Settings", icon: <SettingsIcon /> }].map((t) => <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>{t.icon}{t.label}</button>)}</div>
+      <div className="tabs">
+        {BOTTOM_NAV_TABS.map((tabItem) => {
+          const isActive = tab === tabItem.id;
+          return (
+            <button
+              key={tabItem.id}
+              className={`tab-btn ${isActive ? "active" : "inactive"}`}
+              onClick={() => setTab(tabItem.id)}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <span className="tab-icon-wrap" aria-hidden="true">
+                <img src={tabItem.icon} alt="" className="tab-icon" />
+              </span>
+              <span className="tab-label">{tabItem.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </>
   );
 }

@@ -190,6 +190,15 @@
     --warm-accent-border: color-mix(in srgb, var(--color-warm-accent-strong) 20%, var(--border));
     --warm-accent-fg: color-mix(in srgb, var(--color-warm-accent-strong) 56%, var(--brown));
     --icon-ink: color-mix(in srgb, var(--brown) 90%, var(--brown-mid));
+    --nav-icon-size: 24px;
+    --nav-icon-container-size: 28px;
+    --nav-tab-gap: var(--space-density-compact-control-gap);
+    --nav-tab-active-fg: color-mix(in srgb, var(--primaryBlue) 68%, var(--color-warm-accent-strong));
+    --nav-tab-inactive-fg: color-mix(in srgb, var(--brown-mid) 72%, var(--brown-muted));
+    --nav-icon-active-opacity: 0.95;
+    --nav-icon-inactive-opacity: 0.72;
+    --nav-icon-active-filter: saturate(0.92) brightness(1.02);
+    --nav-icon-inactive-filter: grayscale(0.16) saturate(0.74);
 
     /* Typography tokens */
     --type-line-display-tight: 1.08;
