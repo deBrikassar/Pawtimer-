@@ -15,6 +15,7 @@ import "./styles/theme.css";
 import "./styles/shared.css";
 import "./styles/app.css";
 
+const LEGACY_SW_PATHS = ["/service-worker.js", "/serviceworker.js", "/workbox-sw.js"];
 const SYNC_STATE = {
   LOCAL: "local",
   SYNCING: "syncing",
@@ -69,6 +70,15 @@ export default function PawTimer() {
     updateServiceWorker,
   } = useRegisterSW({
     immediate: true,
+    onRegisteredSW(_, registration) {
+      if (!registration) return;
+      const runUpdateCheck = () => registration.update().catch(() => {});
+      runUpdateCheck();
+      window.setInterval(runUpdateCheck, 60 * 60 * 1000);
+      window.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") runUpdateCheck();
+      });
+    },
   });
 
   const walkTimerRef = useRef(null);
@@ -76,6 +86,23 @@ export default function PawTimer() {
   const timerRef = useRef(null);
   const startRef = useRef(null);
   const syncSnapshotRef = useRef({ dogs: [], sessions: [], walks: [], patterns: [], feedings: [] });
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => Promise.all(
+        registrations.map(async (registration) => {
+          const swUrl = registration.active?.scriptURL
+            || registration.waiting?.scriptURL
+            || registration.installing?.scriptURL
+            || "";
+          if (LEGACY_SW_PATHS.some((legacyPath) => swUrl.endsWith(legacyPath))) {
+            await registration.unregister();
+          }
+        })
+      ))
+      .catch(() => {});
+  }, []);
 
   const withHydratedSyncState = useCallback((entry) => {
     if (!entry) return entry;
