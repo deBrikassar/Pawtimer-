@@ -4,24 +4,24 @@ const REVIEW_SEGMENT_SECONDS = 6;
 
 const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 
-const rms = (windowSamples) => {
-  if (!windowSamples.length) return 0;
+const rms = (samples, start, end) => {
+  if (end <= start) return 0;
   let sum = 0;
-  for (let i = 0; i < windowSamples.length; i += 1) {
-    sum += windowSamples[i] * windowSamples[i];
+  for (let i = start; i < end; i += 1) {
+    sum += samples[i] * samples[i];
   }
-  return Math.sqrt(sum / windowSamples.length);
+  return Math.sqrt(sum / (end - start));
 };
 
-const zcr = (windowSamples) => {
-  if (windowSamples.length < 2) return 0;
+const zcr = (samples, start, end) => {
+  if (end - start < 2) return 0;
   let crossings = 0;
-  for (let i = 1; i < windowSamples.length; i += 1) {
-    if ((windowSamples[i - 1] >= 0 && windowSamples[i] < 0) || (windowSamples[i - 1] < 0 && windowSamples[i] >= 0)) {
+  for (let i = start + 1; i < end; i += 1) {
+    if ((samples[i - 1] >= 0 && samples[i] < 0) || (samples[i - 1] < 0 && samples[i] >= 0)) {
       crossings += 1;
     }
   }
-  return crossings / windowSamples.length;
+  return crossings / (end - start);
 };
 
 const toTimestamp = (seconds) => {
@@ -90,12 +90,11 @@ export async function analyzeSessionAudio({ audioBlob, durationSeconds }) {
 
     for (let start = 0; start < channelData.length; start += windowSize) {
       const end = Math.min(start + windowSize, channelData.length);
-      const samples = channelData.slice(start, end);
-      const energy = rms(samples);
-      const crossings = zcr(samples);
+      const energy = rms(channelData, start, end);
+      const crossings = zcr(channelData, start, end);
       let peak = 0;
-      for (let index = 0; index < samples.length; index += 1) {
-        const absolute = Math.abs(samples[index]);
+      for (let index = start; index < end; index += 1) {
+        const absolute = Math.abs(channelData[index]);
         if (absolute > peak) peak = absolute;
       }
 
