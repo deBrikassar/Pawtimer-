@@ -1034,3 +1034,28 @@
   .metric-explainer-title { font-size:var(--type-card-heading-size); color:var(--brown); font-weight:var(--type-card-heading-weight); line-height:var(--type-card-heading-line); letter-spacing:var(--type-card-heading-track); margin-bottom:var(--space-card-row-gap); }
   .metric-explainer-body { font-size:var(--type-body-size); color:var(--text-muted); line-height:var(--type-body-line); font-weight:var(--type-body-weight); letter-spacing:var(--type-body-track); }
   .metric-explainer-actions { margin-top:var(--space-control-gap); display:flex; justify-content:flex-end; gap:var(--space-control-gap); }
+
+.update-banner {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: var(--surface-card-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.update-banner-btn {
+  border: 0;
+  border-radius: 999px;
+  background: var(--brand, #d4813a);
+  color: #fff;
+  font-weight: 600;
+  padding: 6px 12px;
+}
