@@ -145,6 +145,20 @@ describe("recommendation engine", () => {
     expect(rec.recommendedDuration).toBe(1200);
   });
 
+  it("uses calm no-distress history even when belowThreshold is false, avoiding a 30s reset after first subtle", () => {
+    const now = new Date();
+    const first = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
+    const second = now.toISOString();
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 1200, actualDuration: 1200, distressLevel: "none", belowThreshold: true },
+      { date: first, plannedDuration: 1500, actualDuration: 1380, distressLevel: "none", belowThreshold: false },
+      { date: second, plannedDuration: 1380, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendationType).toBe("repeat_current_duration");
+    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(1000);
+  });
+
   it("never recommends below 30 seconds even with legacy 15s history", () => {
     const sessions = [
       { date: daysAgo(3), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
