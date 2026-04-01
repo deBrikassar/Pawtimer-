@@ -21,6 +21,8 @@ create table if not exists public.sessions (
   actual_duration integer,
   distress_level text,
   result text,
+  revision bigint not null default 0,
+  updated_at timestamptz not null default now(),
   created_at timestamptz default now()
 );
 
@@ -28,6 +30,8 @@ create table if not exists public.walks (
   id text primary key,
   dog_id text,
   date timestamptz,
+  revision bigint not null default 0,
+  updated_at timestamptz not null default now(),
   created_at timestamptz default now()
 );
 
@@ -36,7 +40,19 @@ create table if not exists public.patterns (
   dog_id text,
   date timestamptz,
   type text,
+  revision bigint not null default 0,
+  updated_at timestamptz not null default now(),
   created_at timestamptz default now()
+);
+
+create table if not exists public.feedings (
+  id text primary key,
+  dog_id text,
+  date timestamptz,
+  food_type text,
+  amount text,
+  revision bigint not null default 0,
+  updated_at timestamptz not null default now()
 );
 
 -- 1) Add missing columns expected by frontend (sessions)
@@ -45,15 +61,27 @@ alter table public.sessions
   add column if not exists symptoms jsonb,
   add column if not exists recovery_seconds integer,
   add column if not exists pre_session jsonb,
-  add column if not exists environment jsonb;
+  add column if not exists environment jsonb,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
 
 -- 2) Add missing columns expected by frontend (walks/patterns)
 alter table public.walks
   add column if not exists duration integer,
-  add column if not exists walk_type text;
+  add column if not exists walk_type text,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
 
 alter table public.patterns
-  add column if not exists type text;
+  add column if not exists type text,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
+
+alter table public.feedings
+  add column if not exists food_type text,
+  add column if not exists amount text,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
 
 -- 3) Backfill/defaults to keep existing rows compatible
 update public.walks
@@ -160,6 +188,7 @@ alter table public.dogs enable row level security;
 alter table public.sessions enable row level security;
 alter table public.walks enable row level security;
 alter table public.patterns enable row level security;
+alter table public.feedings enable row level security;
 
 drop policy if exists "Public dog access" on public.dogs;
 create policy "Public dog access" on public.dogs for all using (true) with check (true);
@@ -172,5 +201,8 @@ create policy "Public walk access" on public.walks for all using (true) with che
 
 drop policy if exists "Public pattern access" on public.patterns;
 create policy "Public pattern access" on public.patterns for all using (true) with check (true);
+
+drop policy if exists "Public feeding access" on public.feedings;
+create policy "Public feeding access" on public.feedings for all using (true) with check (true);
 
 commit;
