@@ -291,13 +291,30 @@
   .stats-rings-card { margin:0; padding:var(--space-surface-card); position:relative; }
   .stats-rings-card--recovery-active {
     cursor:pointer;
-    animation:pulse 2.4s ease-in-out infinite;
-    box-shadow:0 0 0 1px color-mix(in srgb, var(--warning) 30%, transparent), var(--surface-focus-shadow-soft);
+    position:relative;
+    overflow:hidden;
+    animation:recoveryBreath 2.8s ease-in-out infinite;
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--warning) 32%, transparent), var(--surface-focus-shadow-soft);
+  }
+  .stats-rings-card--recovery-active::after {
+    content:"";
+    position:absolute;
+    inset:-20% -40%;
+    background:linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--warning) 16%, transparent) 48%, transparent 78%);
+    transform:translateX(-45%);
+    animation:recoverySweep 3.2s ease-in-out infinite;
+    pointer-events:none;
   }
   .stats-rings-card--recovery-active:focus-visible {
     outline:none;
     box-shadow:0 0 0 3px var(--focus-ring), 0 0 0 1px color-mix(in srgb, var(--warning) 30%, transparent), var(--surface-focus-shadow-soft);
   }
+  .recovery-explain-modal { border:1px solid color-mix(in srgb, var(--warning) 24%, var(--border)); background:linear-gradient(180deg, var(--surface-gradient-soft) 0%, color-mix(in srgb, var(--warm-accent-soft) 14%, var(--surface-muted)) 100%); }
+  .recovery-explain-steps { display:flex; gap:var(--space-control-gap); margin-bottom:var(--space-card-row-gap); }
+  .recovery-step-chip { flex:1; border:1px solid var(--border); border-radius:999px; padding:8px 10px; text-align:center; color:var(--text-muted); background:var(--surf); font-size:var(--type-helper-text-size); }
+  .recovery-step-chip.is-done { border-color:color-mix(in srgb, var(--green-dark) 30%, var(--border)); color:var(--green-dark); background:color-mix(in srgb, var(--green-light) 12%, var(--surf)); }
+  .recovery-explain-copy { margin:0 0 var(--space-card-row-gap); color:var(--brown); font-size:var(--type-list-row-secondary-size); line-height:var(--type-list-row-secondary-line); }
+  .recovery-explain-meta { display:flex; justify-content:space-between; align-items:center; color:var(--text-muted); font-size:var(--type-helper-text-size); border-top:1px solid color-mix(in srgb, var(--border) 88%, white); padding-top:var(--space-card-row-gap); }
   .ring-col { flex:1; display:flex; flex-direction:column; align-items:center; }
   .ring-col-sep { width:1px; background:color-mix(in srgb, var(--border) 88%, white); align-self:stretch; margin:var(--space-control-gap) 0; }
   .ring-wrap {
@@ -568,6 +585,8 @@
   .settings-sync-summary { margin-top:var(--space-control-gap); padding-top:var(--space-control-gap); border-top:1px solid var(--border); display:flex; flex-direction:column; align-items:flex-start; gap:var(--space-card-row-gap); }
   .settings-sync-copy { font-size:var(--type-helper-text-size); color:var(--text-muted); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes recoveryBreath { 0%,100%{transform:translateY(0); filter:saturate(1)} 50%{transform:translateY(-1px); filter:saturate(1.04)} }
+  @keyframes recoverySweep { 0%,100%{transform:translateX(-45%)} 50%{transform:translateX(35%)} }
 
   /* ── History action buttons ── */
   .h-actions {

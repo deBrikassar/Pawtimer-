@@ -144,6 +144,20 @@ describe("recommendation engine", () => {
     expect(rec.recommendationType).toBe("subtle_recovery_mode");
   });
 
+  it("recovery step progression follows 1min then 2min after subtle stress", () => {
+    const subtle = { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false };
+    const step1 = buildRecommendation([subtle], { goalSeconds: 3600 });
+    expect(step1.recommendedDuration).toBe(60);
+    expect(step1.recoveryMode.step).toBe(1);
+
+    const step2 = buildRecommendation([
+      subtle,
+      { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+    ], { goalSeconds: 3600 });
+    expect(step2.recommendedDuration).toBe(120);
+    expect(step2.recoveryMode.step).toBe(2);
+  });
+
   it("does not collapse to 30s on subtle distress when latest actual duration is much longer", () => {
     const sessions = [
       { date: daysAgo(0), plannedDuration: 1380, actualDuration: 1380, distressLevel: "none", belowThreshold: true },
@@ -177,19 +191,41 @@ describe("recommendation engine", () => {
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recoveryMode.active).toBe(true);
     expect(rec.recoveryMode.remainingSessions).toBe(1);
+    expect(rec.recommendedDuration).toBe(120);
+  });
+
+  it("restarts recovery sequence if a recovery session is not calm", () => {
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(2), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 120, actualDuration: 90, distressLevel: "active", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recoveryMode.active).toBe(true);
+    expect(rec.recoveryMode.step).toBe(1);
     expect(rec.recommendedDuration).toBe(60);
   });
 
-  it("resumes normal progression after two calm recovery sessions and ignores them as baseline", () => {
+  it("after 1m and 2m calm recoveries, resumes at subtle-anchor minus 5%", () => {
     const sessions = [
-      { date: daysAgo(3), plannedDuration: 1380, actualDuration: 1380, distressLevel: "none", belowThreshold: true },
       { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
       { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
-      { date: new Date().toISOString(), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: new Date().toISOString(), plannedDuration: 120, actualDuration: 120, distressLevel: "none", belowThreshold: true },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recoveryMode.active).toBe(false);
-    expect(rec.recommendedDuration).toBeGreaterThan(1000);
+    expect(rec.recommendationType).toBe("subtle_recovery_resume");
+    expect(rec.recommendedDuration).toBe(1140);
+  });
+
+  it("does not fall to 30s after subtle->1m calm->2m calm recovery sequence", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: new Date().toISOString(), plannedDuration: 120, actualDuration: 120, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(1140);
   });
 
   it("never recommends below 30 seconds even with legacy 15s history", () => {
@@ -276,6 +312,17 @@ describe("public compatibility APIs", () => {
     expect(next.recoveryMode.active).toBe(true);
     expect(next.recoveryMode.remainingSessions).toBe(2);
     expect(next.recommendedDuration).toBe(60);
+  });
+
+  it("explainNextTarget disables recovery metadata after two calm recovery sessions", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: new Date().toISOString(), plannedDuration: 120, actualDuration: 120, distressLevel: "none", belowThreshold: true },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
+    expect(next.recoveryMode.active).toBe(false);
+    expect(next.recommendationType).toBe("subtle_recovery_resume");
   });
 
   it("handles legacy/runtime-shaped session rows without collapsing to 30s", () => {

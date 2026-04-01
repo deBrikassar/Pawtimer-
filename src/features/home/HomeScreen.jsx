@@ -101,7 +101,7 @@ export default function HomeScreen(props) {
                 value={nextSessionLabel}
                 numericValue={target}
                 formatValue={fmtClock}
-                label="Next session"
+                label={recoveryMode?.active ? "Next session · Tap for why" : "Next session"}
                 progress={goalFrac}
                 fillClassName="ring-fill-1"
                 className="ring-col--next-session"
@@ -119,17 +119,22 @@ export default function HomeScreen(props) {
         })()}
         {showRecoveryInfo && recoveryMode?.active && (
           <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => setShowRecoveryInfo(false)}>
-            <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+            <div className="quick-modal-card modal-card modal-card--dialog-md recovery-explain-modal" onClick={(e) => e.stopPropagation()}>
               <div className="quick-modal-head">
-                <div className="quick-modal-title">Temporary easy sessions</div>
+                <div className="quick-modal-title">Recovery sessions active</div>
                 <ModalCloseButton onClick={() => setShowRecoveryInfo(false)} />
               </div>
-              <p className="status-msg">
-                The next two sessions were temporarily shortened to help your dog have two easy, positive experiences after signs of subtle stress.
+              <div className="recovery-explain-steps">
+                <div className={`recovery-step-chip ${recoveryMode.step >= 1 ? "is-done" : ""}`}>1 min calm</div>
+                <div className={`recovery-step-chip ${recoveryMode.step >= 2 ? "is-done" : ""}`}>2 min calm</div>
+              </div>
+              <p className="recovery-explain-copy">
+                We temporarily shortened sessions after subtle stress so your dog can get two easy, positive wins.
               </p>
-              <p className="status-msg">
-                Remaining easy sessions: <strong>{recoveryMode.remainingSessions}</strong>.
-              </p>
+              <div className="recovery-explain-meta">
+                <span>Step {Math.max(1, recoveryMode.step)} of 2</span>
+                <span>{recoveryMode.remainingSessions} remaining</span>
+              </div>
             </div>
           </div>
         )}
