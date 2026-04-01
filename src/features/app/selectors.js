@@ -34,7 +34,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     }
     if (pattern.behind) {
       const deficit = pattern.needed - pattern.todayPat;
-      return `You've logged ${pattern.todayWalks} walk${pattern.todayWalks !== 1 ? "s" : ""} but only ${pattern.todayPat} pattern break${pattern.todayPat !== 1 ? "s" : ""}. Do ${deficit} more — with ~${pattern.normalizedLeaves} daily departures we add a ${pattern.walkBuffer} extra-cue safety buffer so pattern breaks clearly outnumber full departures.`;
+      return `You've logged ${pattern.todayWalks} walk${pattern.todayWalks !== 1 ? "s" : ""} but only ${pattern.todayPat} pattern break${pattern.todayPat !== 1 ? "s" : ""}. Do ${deficit} more — with ~${pattern.normalizedLeaves} daily departures we add ${pattern.walkBuffer} extra pattern-break cues so pattern breaks clearly outnumber full departures.`;
     }
     if (pattern.todayPat >= pattern.recMax) return `${pattern.todayPat} pattern breaks done today — great work! Cues are losing their power.`;
     return `${pattern.todayPat} of ${pattern.recMin}–${pattern.recMax} pattern breaks done for a ${leaveProfile.desc}. Do a few more at random times — not before walks, just scattered through the day.`;
