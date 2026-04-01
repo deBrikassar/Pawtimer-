@@ -272,7 +272,7 @@ export const syncFetch = async (dogId) => {
 
   let sessRes = sessPrimaryRes;
   let sessionSelectIndex = 0;
-  while (!sessRes.ok && /column sessions\./i.test(String(sessRes.error || "")) && sessionSelectIndex < sessionSelectAttempts.length - 1) {
+  while (!sessRes.ok && sessionSelectIndex < sessionSelectAttempts.length - 1) {
     sessionSelectIndex += 1;
     sessRes = await sbReq(`sessions?${dogFilter}&select=${sessionSelectAttempts[sessionSelectIndex]}&order=date.asc`);
   }
