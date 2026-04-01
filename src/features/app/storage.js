@@ -137,14 +137,58 @@ const normalizeSymptom = (value) => {
   return asBool(value) ? 1 : 0;
 };
 
+const pickFinite = (obj = {}, keys = []) => {
+  for (const key of keys) {
+    const value = Number(obj?.[key]);
+    if (Number.isFinite(value)) return value;
+  }
+  return null;
+};
+
+const resolveDurationSeconds = (row = {}, config = {}) => {
+  const {
+    secondsKeys = [],
+    canonicalKeys = [],
+    minutesKeys = [],
+    ambiguousKeys = [],
+  } = config;
+
+  const explicitSeconds = pickFinite(row, secondsKeys);
+  if (explicitSeconds != null) return Math.max(0, Math.round(explicitSeconds));
+
+  const canonical = pickFinite(row, canonicalKeys);
+  if (canonical != null) return Math.max(0, Math.round(canonical));
+
+  const explicitMinutes = pickFinite(row, minutesKeys);
+  if (explicitMinutes != null) return Math.max(0, Math.round(explicitMinutes * 60));
+
+  const ambiguous = pickFinite(row, ambiguousKeys);
+  if (ambiguous != null) return Math.max(0, Math.round(ambiguous));
+
+  return null;
+};
+
 export const normalizeSession = (row = {}) => {
   const context = row.context ?? {};
   const symptoms = row.symptoms ?? {};
   const preSession = row.preSession ?? row.pre_session ?? {};
   const environment = row.environment ?? {};
+  const actualDuration = resolveDurationSeconds(row, {
+    secondsKeys: ["actualDurationSeconds", "actual_duration_seconds", "durationSeconds", "duration_seconds", "completedDurationSeconds", "completed_duration_seconds"],
+    canonicalKeys: ["actualDuration", "actual_duration"],
+    minutesKeys: ["actualDurationMinutes", "actual_duration_minutes", "durationMinutes", "duration_minutes", "completedDurationMinutes", "completed_duration_minutes"],
+    ambiguousKeys: ["duration", "value"],
+  });
+  const plannedDuration = resolveDurationSeconds(row, {
+    secondsKeys: ["plannedDurationSeconds", "planned_duration_seconds", "targetDurationSeconds", "target_duration_seconds"],
+    canonicalKeys: ["plannedDuration", "planned_duration", "targetDuration", "target_duration"],
+    minutesKeys: ["plannedDurationMinutes", "planned_duration_minutes", "targetDurationMinutes", "target_duration_minutes"],
+  });
 
   const normalized = {
     ...row,
+    actualDuration,
+    plannedDuration,
     distressLevel: normalizeDistressLevel(row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong")),
     context: {
       timeOfDay: context.timeOfDay ?? context.time_of_day ?? null,

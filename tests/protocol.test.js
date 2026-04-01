@@ -117,6 +117,14 @@ describe("recommendation engine", () => {
     expect(rec.recommendedDuration).toBe(57);
   });
 
+  it("never shrinks a 32-minute calm session to a 32-second recommendation", () => {
+    const sessions = [
+      { date: daysAgo(0), plannedDuration: 1920, actualDuration: 1920, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 7200 });
+    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(1800);
+  });
+
   it("does not let older short sessions drag recommendation near minimum", () => {
     const sessions = [
       { date: daysAgo(14), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
@@ -278,6 +286,21 @@ describe("public compatibility APIs", () => {
     const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
     expect(next.recoveryMode.active).toBe(true);
     expect(next.recommendedDuration).toBe(60);
+  });
+
+  it("prefers explicit *_seconds fields over ambiguous duration fields", () => {
+    const sessions = [
+      {
+        date: daysAgo(0),
+        duration: 32,
+        duration_seconds: 1920,
+        planned_duration: 1920,
+        distress_level: "none",
+        result: "success",
+      },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 7200 });
+    expect(next.recommendedDuration).toBeGreaterThanOrEqual(1800);
   });
 
   it("getNextDurationSeconds remains bounded and deterministic", () => {

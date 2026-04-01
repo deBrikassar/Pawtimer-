@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { suggestNextWithContext } from "../src/lib/protocol";
-import { mergeSessionWithDerivedFields } from "../src/features/app/storage";
+import { mergeSessionWithDerivedFields, normalizeSession } from "../src/features/app/storage";
 
 const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
 
@@ -82,5 +82,22 @@ describe("edited sessions and target recomputation", () => {
     const editedTarget = suggestNextWithContext(editedSessions, [], [], { goalSeconds: 3600 });
 
     expect(baselineTarget).toBeGreaterThan(editedTarget);
+  });
+});
+
+describe("duration normalization", () => {
+  it("normalizes mixed-unit legacy session rows to canonical seconds", () => {
+    const normalized = normalizeSession({
+      id: "legacy-1",
+      date: daysAgo(0),
+      duration: 32,
+      duration_seconds: 1920,
+      planned_duration: 1920,
+      distress_level: "none",
+      result: "success",
+    });
+
+    expect(normalized.actualDuration).toBe(1920);
+    expect(normalized.plannedDuration).toBe(1920);
   });
 });
