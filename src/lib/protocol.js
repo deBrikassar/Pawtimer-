@@ -230,7 +230,8 @@ function classifyWindow(sessions = []) {
 function computeSafeAloneTime(sessions = []) {
   const sorted = sortByDateAsc(sessions).map(toRichSession);
   const nowTime = Date.now();
-  const calm = getLatestSessions(sorted, PROTOCOL.confidenceSessionWindow)
+  const recentWindow = getLatestSessions(sorted, PROTOCOL.confidenceSessionWindow);
+  const calmBelowThreshold = recentWindow
     .filter((s) => s.belowThreshold)
     .map((s) => {
       const ageDays = Math.max(0, (nowTime - (toTimestamp(s.date) ?? nowTime)) / DAY_MS);
@@ -244,6 +245,27 @@ function computeSafeAloneTime(sessions = []) {
         recencyWeight,
       };
     });
+
+  const calm = calmBelowThreshold.length
+    ? calmBelowThreshold
+    : recentWindow
+      .filter((s) => s.distressLevel === DISTRESS_LEVELS.NONE)
+      .map((s) => {
+        const ageDays = Math.max(0, (nowTime - (toTimestamp(s.date) ?? nowTime)) / DAY_MS);
+        let recencyWeight = 0.08;
+        if (ageDays <= 1) recencyWeight = 0.85;
+        else if (ageDays <= 3) recencyWeight = 0.6;
+        else if (ageDays <= 7) recencyWeight = 0.35;
+
+        return {
+          ...s,
+          recencyWeight,
+          // If calm sessions are present but marked not below-threshold (often because the
+          // planned duration exceeded what was attempted), still use them as evidence of
+          // tolerated time with a conservative haircut.
+          actualDuration: Math.max(PROTOCOL.minDurationSeconds, Math.round(s.actualDuration * 0.9)),
+        };
+      });
   if (!calm.length) return PROTOCOL.startDurationSeconds;
 
   const weighted = calm.reduce((sum, s) => sum + (s.actualDuration * s.confidence * s.recencyWeight), 0);
