@@ -894,6 +894,9 @@
   .settings-btn__icon svg { inline-size:18px; block-size:18px; display:block; }
 
   .settings-inline-row { display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); flex-wrap:wrap; }
+  .settings-inline-row--tight { justify-content:flex-start; }
+  .settings-row-head { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-control-gap); }
+  .settings-row-status { font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); font-weight:var(--type-field-value-weight); color:var(--text-muted); white-space:nowrap; }
   .settings-summary-list { display:grid; gap:var(--space-card-row-gap); margin-bottom:var(--space-control-gap); }
   .settings-inline-reset-btn { border:none; background:none; cursor:pointer; text-decoration:underline; }
 
@@ -905,6 +908,10 @@
   .settings-collapsible-toggle { width:100%; display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); border:none; background:transparent; padding:0; cursor:pointer; text-align:left; }
   .settings-collapsible-arrow { font-size:var(--type-card-heading-size); line-height:1; color:var(--text-muted); min-width:18px; text-align:center; }
   .settings-collapsible-inner { padding:var(--space-card-row-gap) 0 var(--space-card-padding); display:grid; gap:var(--space-card-row-gap); }
+  .settings-collapsible-sheet { padding:var(--space-card-row-gap) 0; border-top:1px solid color-mix(in srgb, var(--border) 72%, transparent); border-bottom:1px solid color-mix(in srgb, var(--border) 72%, transparent); }
+  .settings-collapsible-sheet .settings-collapsible-inner { padding:var(--space-card-row-gap) 0 0; }
+  .settings-collapsible-sheet .share-title { color:var(--text-muted); font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); }
+  .settings-collapsible-sheet .settings-collapsible-arrow { font-size:var(--type-field-value-size); }
 
 
   .diag-head { display:flex; align-items:center; justify-content:flex-end; gap:var(--space-control-gap); margin-bottom:var(--space-control-gap); }
@@ -1006,6 +1013,7 @@
   .settings-group--primary { gap:var(--space-section-gap); margin-bottom:calc(var(--space-section-gap) + var(--space-control-gap)); }
   .settings-group--support { margin-top:var(--space-control-gap); }
   .settings-group--account { gap:var(--space-control-gap); }
+  .settings-group--danger { gap:var(--space-card-row-gap); }
   .settings-section-label { font-size:var(--type-section-eyebrow-size); color:var(--text-muted); font-weight:var(--type-section-eyebrow-weight); line-height:var(--type-section-eyebrow-line); letter-spacing:var(--type-section-eyebrow-track); margin:0; text-transform:uppercase; }
   .settings-section-label + .share-card { margin-bottom:0; }
   :is(.share-card, .settings-btn, .settings-danger-sep) + .settings-section-label { margin-top:0; }

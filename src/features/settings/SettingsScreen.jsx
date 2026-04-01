@@ -1,7 +1,10 @@
 import { PATTERN_TYPES, fmt } from "../app/helpers";
-import { DeleteIcon, EditIcon, PawIcon, Img, ModalCloseButton, ResetIcon } from "../app/ui";
+import { DeleteIcon, EditIcon, PawIcon, Img, ModalCloseButton } from "../app/ui";
+import { useState } from "react";
 
 export default function SettingsScreen(props) {
+  const [reminderEditorOpen, setReminderEditorOpen] = useState(false);
+  const [diagDetailsOpen, setDiagDetailsOpen] = useState(false);
   const {
     name,
     activeDogId,
@@ -44,6 +47,7 @@ export default function SettingsScreen(props) {
     setActiveDogId,
     clearDogActivityState,
   } = props;
+  const reminderSummary = notifEnabled ? `On · ${notifTime}` : "Off";
 
   return (
     <>
@@ -70,27 +74,46 @@ export default function SettingsScreen(props) {
 
             <div className="settings-section-label">Reminders</div>
             <div className="share-card">
-              <div className="share-title">Daily reminder</div>
-              <div className="settings-inline-row">
+              <div className="settings-row-head">
+                <div>
+                  <div className="share-title">Daily reminder</div>
+                  <div className="share-sub">Get a daily prompt at your chosen time.</div>
+                </div>
+                <div className="settings-row-status">{reminderSummary}</div>
+              </div>
+              <div className="settings-inline-row settings-inline-row--tight">
                 <button className={`notif-toggle secondary-control secondary-control--toggle ${notifEnabled ? "on" : ""}`} onClick={handleToggleNotif}>{notifEnabled ? "On" : "Off"}</button>
-                {notifEnabled && <input type="time" value={notifTime} onChange={async (e) => {
+                <button
+                  type="button"
+                  className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button"
+                  onClick={() => setReminderEditorOpen((prev) => !prev)}
+                >
+                  {reminderEditorOpen ? "Done" : "Edit time"}
+                </button>
+              </div>
+              {notifEnabled && reminderEditorOpen && (
+                <input type="time" value={notifTime} onChange={async (e) => {
                   const nextTime = e.target.value;
                   const dogName = dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase())?.dogName ?? "your dog";
                   const ok = await scheduleNotif(nextTime, dogName);
                   if (ok) setNotifTime(nextTime);
-                }} className="notif-time-input" />}
-              </div>
+                }} className="notif-time-input" />
+              )}
+              {!notifEnabled && reminderEditorOpen && (
+                <div className="share-sub">Turn reminders on first, then choose a time.</div>
+              )}
             </div>
-
             <div className="settings-section-label">Training</div>
             <div className="share-card">
-              <div className="share-title">Training plan</div>
+              <div className="settings-row-head">
+                <div className="share-title">Training plan</div>
+                <button className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit</button>
+              </div>
               <div className="settings-summary-list">
                 <div className="settings-summary-row surface-row info-row"><span className="settings-summary-label surface-row__label info-row__label">Sessions per day</span><span className="settings-summary-value surface-row__value info-row__value">Up to {activeProto.sessionsPerDayMax}/day</span></div>
                 <div className="settings-summary-row surface-row info-row"><span className="settings-summary-label surface-row__label info-row__label">Max alone time</span><span className="settings-summary-value surface-row__value info-row__value">{activeProto.maxDailyAloneMinutes} min/day</span></div>
                 <div className="settings-summary-row surface-row info-row"><span className="settings-summary-label surface-row__label info-row__label">Pattern breaks</span><span className="settings-summary-value surface-row__value info-row__value">{pattern.recMin}–{pattern.recMax}/day</span></div>
               </div>
-              <button className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" type="button" onClick={() => setTrainingSettingsOpen(true)}>Edit training plan</button>
             </div>
           </div>
 
@@ -107,7 +130,7 @@ export default function SettingsScreen(props) {
                     <span className="pat-edit-label">{patLabels[pt.type] || pt.label}</span>
                   )}
                   <button className="pat-edit-btn secondary-control secondary-control--icon" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}><EditIcon /></button>
-                  {patLabels[pt.type] && <button className="pat-edit-reset secondary-control secondary-control--icon" onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default"><ResetIcon /></button>}
+                  {editingPat === pt.type && patLabels[pt.type] && <button className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text" onMouseDown={(e) => e.preventDefault()} onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">Reset</button>}
                 </div>
               ))}
             </div>
@@ -115,7 +138,7 @@ export default function SettingsScreen(props) {
 
           <div className="settings-group settings-group--support">
             <div className="settings-section-label">Support</div>
-            <div className="share-card settings-collapsible-card settings-collapsible-card--quiet">
+            <div className="settings-collapsible-sheet">
               <button className="settings-collapsible-toggle secondary-control secondary-control--toggle" type="button" aria-expanded={settingsDisclosure === "help"} onClick={() => setSettingsDisclosure((prev) => prev === "help" ? null : "help")}>
                 <span className="share-title">Help & guidance</span>
                 <span className="settings-collapsible-arrow">{settingsDisclosure === "help" ? "−" : "+"}</span>
@@ -133,7 +156,7 @@ export default function SettingsScreen(props) {
 
           <div className="settings-group settings-group--support">
             <div className="settings-section-label">Advanced</div>
-            <div className="share-card settings-collapsible-card settings-collapsible-card--quiet">
+            <div className="settings-collapsible-sheet">
               <button className="settings-collapsible-toggle secondary-control secondary-control--toggle" type="button" aria-expanded={settingsDisclosure === "advanced"} onClick={() => setSettingsDisclosure((prev) => prev === "advanced" ? null : "advanced")}>
                 <span className="share-title">Sync diagnostics</span>
                 <span className="settings-collapsible-arrow">{settingsDisclosure === "advanced" ? "−" : "+"}</span>
@@ -143,13 +166,20 @@ export default function SettingsScreen(props) {
                   <div className="diag-head">
                     <button className="diag-run-btn button-size-compact-tertiary secondary-control secondary-control--compact-button" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>{syncDiagRunning ? "Running…" : "Run connection test"}</button>
                   </div>
+                  <div className="share-sub">Connection status and sync readiness.</div>
                   <div className="diag-grid">
+                    <div>Account sync: <strong>{SYNC_ENABLED ? "Available" : "Unavailable"}</strong></div>
+                    <div>Connection test: <strong>{syncDiagResult?.checks?.summary?.ok ? "Passing" : "Not run yet"}</strong></div>
+                  </div>
+                  <button type="button" className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setDiagDetailsOpen((prev) => !prev)}>{diagDetailsOpen ? "Hide technical details" : "Show technical details"}</button>
+                  {diagDetailsOpen && <div className="diag-grid">
                     <div>Sync enabled: <strong>{SYNC_ENABLED ? "Yes" : "No"}</strong></div>
                     <div>VITE_SUPABASE_URL: <strong>{SB_URL ? "Set" : "Missing"}</strong></div>
                     <div>VITE_SUPABASE_ANON_KEY: <strong>{SB_KEY ? "Set" : "Missing"}</strong></div>
                     <div>Supabase base URL: <code>{SB_BASE_URL || "(missing)"}</code></div>
                   </div>
-                  {syncDiagResult && <><div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>{syncDiagResult.checks?.summary?.ok ? "All checks passed" : "Some checks failed"}</div><pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre></>}
+                  }
+                  {diagDetailsOpen && syncDiagResult && <><div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>{syncDiagResult.checks?.summary?.ok ? "All checks passed" : "Some checks failed"}</div><pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre></>}
                 </div>
               </div>
             </div>
@@ -157,6 +187,7 @@ export default function SettingsScreen(props) {
 
           <div className="settings-group settings-group--account">
             <div className="settings-section-label">Account</div>
+            <div className="share-sub">Manage profile and device association.</div>
             <button
               className="settings-btn button-size-secondary-pill"
               onClick={() => {
@@ -175,19 +206,22 @@ export default function SettingsScreen(props) {
           </div>
 
           <div className="settings-danger-sep" />
-          <div className="settings-section-label settings-section-label--danger">Danger zone</div>
-          <button className="settings-btn settings-btn--icon button-danger button-size-secondary-pill" onClick={() => {
-            if (window.confirm(`Remove ${name} from this device? This deletes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.`)) {
-              clearDogActivityState(activeDogId);
-              const newDogs = dogsState.filter((d) => d.id !== activeDogId);
-              setDogs(newDogs);
-              save(ACTIVE_DOG_KEY, null);
-              setActiveDogId(null);
-            }
-          }}>
-            <span className="settings-btn__icon" aria-hidden="true"><DeleteIcon /></span>
-            <span className="settings-btn__label">Remove {name} from this device</span>
-          </button>
+          <div className="settings-group settings-group--danger">
+            <div className="settings-section-label settings-section-label--danger">Danger zone</div>
+            <div className="share-sub">This only removes local data on this device.</div>
+            <button className="settings-btn settings-btn--icon button-danger button-size-secondary-pill" onClick={() => {
+              if (window.confirm(`Remove ${name} from this device? This deletes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.`)) {
+                clearDogActivityState(activeDogId);
+                const newDogs = dogsState.filter((d) => d.id !== activeDogId);
+                setDogs(newDogs);
+                save(ACTIVE_DOG_KEY, null);
+                setActiveDogId(null);
+              }
+            }}>
+              <span className="settings-btn__icon" aria-hidden="true"><DeleteIcon /></span>
+              <span className="settings-btn__label">Remove {name} from this device</span>
+            </button>
+          </div>
         </div>
       </div>
 
