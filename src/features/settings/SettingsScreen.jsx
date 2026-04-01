@@ -1,5 +1,5 @@
 import { PATTERN_TYPES } from "../app/helpers";
-import { DeleteIcon, EditIcon, PawIcon, Img, ModalCloseButton } from "../app/ui";
+import { DeleteIcon, EditIcon, Img, ModalCloseButton } from "../app/ui";
 import { useState } from "react";
 
 const SETTINGS_PANEL = {
@@ -231,21 +231,32 @@ export default function SettingsScreen(props) {
               <ModalCloseButton onClick={() => setActivePanel(null)} />
             </div>
             <div className="settings-modal-stack">
-              <div className="diag-head">
-                <button className="diag-run-btn button-size-compact-tertiary secondary-control secondary-control--compact-button" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>{syncDiagRunning ? "Running…" : "Run connection test"}</button>
+              <div className="settings-advanced-group">
+                <div className="diag-head">
+                  <button className="diag-run-btn button-size-compact-tertiary secondary-control secondary-control--compact-button" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>{syncDiagRunning ? "Running…" : "Run connection test"}</button>
+                </div>
+                <div className="settings-secondary-text">Check sync availability and connection readiness.</div>
               </div>
-              <div className="diag-grid">
-                <div>Account sync: <strong>{SYNC_ENABLED ? "Available" : "Unavailable"}</strong></div>
-                <div>Connection test: <strong>{syncDiagResult?.checks?.summary?.ok ? "Passing" : "Not run yet"}</strong></div>
+              <div className="settings-advanced-group">
+                <div className="settings-simple-title">Status</div>
+                <div className="diag-grid diag-grid--kv">
+                  <div className="diag-kv-row"><span>Account sync</span><strong>{SYNC_ENABLED ? "Available" : "Unavailable"}</strong></div>
+                  <div className="diag-kv-row"><span>Connection test</span><strong>{syncDiagResult?.checks?.summary?.ok ? "Passing" : "Not run yet"}</strong></div>
+                </div>
               </div>
-              <button type="button" className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setDiagDetailsOpen((prev) => !prev)}>{diagDetailsOpen ? "Hide technical details" : "Show technical details"}</button>
-              {diagDetailsOpen && <div className="diag-grid">
-                <div>Sync enabled: <strong>{SYNC_ENABLED ? "Yes" : "No"}</strong></div>
-                <div>VITE_SUPABASE_URL: <strong>{SB_URL ? "Set" : "Missing"}</strong></div>
-                <div>VITE_SUPABASE_ANON_KEY: <strong>{SB_KEY ? "Set" : "Missing"}</strong></div>
-                <div>Supabase base URL: <code>{SB_BASE_URL || "(missing)"}</code></div>
+              <div className="settings-advanced-group">
+                <button type="button" className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setDiagDetailsOpen((prev) => !prev)}>{diagDetailsOpen ? "Hide technical details" : "Show technical details"}</button>
+              </div>
+              {diagDetailsOpen && <div className="settings-advanced-group">
+                <div className="settings-simple-title">Technical details</div>
+                <div className="diag-grid diag-grid--kv">
+                  <div className="diag-kv-row"><span>Sync enabled</span><strong>{SYNC_ENABLED ? "Yes" : "No"}</strong></div>
+                  <div className="diag-kv-row"><span>VITE_SUPABASE_URL</span><strong>{SB_URL ? "Set" : "Missing"}</strong></div>
+                  <div className="diag-kv-row"><span>VITE_SUPABASE_ANON_KEY</span><strong>{SB_KEY ? "Set" : "Missing"}</strong></div>
+                  <div className="diag-kv-row diag-kv-row--code"><span>Supabase base URL</span><code>{SB_BASE_URL || "(missing)"}</code></div>
+                </div>
               </div>}
-              {diagDetailsOpen && syncDiagResult && <><div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>{syncDiagResult.checks?.summary?.ok ? "All checks passed" : "Some checks failed"}</div><pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre></>}
+              {diagDetailsOpen && syncDiagResult && <div className="settings-advanced-group settings-advanced-group--technical"><div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>{syncDiagResult.checks?.summary?.ok ? "All checks passed" : "Some checks failed"}</div><pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre></div>}
             </div>
           </div>
         </div>
@@ -270,8 +281,7 @@ export default function SettingsScreen(props) {
               >
                 Edit {name}&rsquo;s profile
               </button>
-              <button className="settings-btn settings-btn--icon button-size-secondary-pill" onClick={() => setScreen("select")}>
-                <span className="settings-btn__icon" aria-hidden="true"><PawIcon size={18} /></span>
+              <button className="settings-btn button-size-secondary-pill" onClick={() => setScreen("select")}>
                 <span className="settings-btn__label">Switch dog</span>
               </button>
             </div>
