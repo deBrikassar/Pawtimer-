@@ -2,6 +2,7 @@ import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/T
 import { METRIC_VARIANTS, StatsProgressRing } from "../stats/StatsComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton } from "../app/ui";
+import { useState } from "react";
 
 export default function HomeScreen(props) {
   const {
@@ -50,7 +51,9 @@ export default function HomeScreen(props) {
     setFeedingDraft,
     cancelFeedingForm,
     saveFeeding,
+    recoveryMode,
   } = props;
+  const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
 
   return (
     <div className="tab-content train-screen">
@@ -82,7 +85,18 @@ export default function HomeScreen(props) {
           const nextSessionLabel = fmtClock(target);
           const ringMetricVariant = METRIC_VARIANTS.RING;
           return (
-            <div className={`stats-rings-card metric-surface metric-surface--${ringMetricVariant}`}>
+            <div
+              className={`stats-rings-card metric-surface metric-surface--${ringMetricVariant} ${recoveryMode?.active ? "stats-rings-card--recovery-active" : ""}`.trim()}
+              role={recoveryMode?.active ? "button" : undefined}
+              tabIndex={recoveryMode?.active ? 0 : undefined}
+              onClick={recoveryMode?.active ? () => setShowRecoveryInfo(true) : undefined}
+              onKeyDown={recoveryMode?.active ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setShowRecoveryInfo(true);
+                }
+              } : undefined}
+            >
               <StatsProgressRing
                 value={nextSessionLabel}
                 numericValue={target}
@@ -103,6 +117,22 @@ export default function HomeScreen(props) {
             </div>
           );
         })()}
+        {showRecoveryInfo && recoveryMode?.active && (
+          <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => setShowRecoveryInfo(false)}>
+            <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+              <div className="quick-modal-head">
+                <div className="quick-modal-title">Temporary easy sessions</div>
+                <ModalCloseButton onClick={() => setShowRecoveryInfo(false)} />
+              </div>
+              <p className="status-msg">
+                The next two sessions were temporarily shortened to help your dog have two easy, positive experiences after signs of subtle stress.
+              </p>
+              <p className="status-msg">
+                Remaining easy sessions: <strong>{recoveryMode.remainingSessions}</strong>.
+              </p>
+            </div>
+          </div>
+        )}
 
         {daily.count >= Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0)) && (
           <p className="status-msg status-msg--warning">
