@@ -478,7 +478,8 @@ export default function PawTimer() {
   const cancelSession = () => { setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false); setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft(""); clearInterval(timerRef.current); };
 
   const pushWithSyncStatus = async (kind, data) => {
-    if (!SYNC_ENABLED || !activeDogId) return { ok: false, error: "Sync is disabled" };
+    if (!SYNC_ENABLED) return { ok: true, error: null, skipped: "sync_disabled" };
+    if (!activeDogId) return { ok: true, error: null, skipped: "missing_active_dog" };
     const currentDog = syncSnapshotRef.current.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
     const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
     setEntrySyncState(kind, data.id, SYNC_STATE.SYNCING);
@@ -488,13 +489,13 @@ export default function PawTimer() {
       setEntrySyncState(kind, data.id, SYNC_STATE.SYNCED);
       setSyncError("");
       setSyncStatus("ok");
-      return { ok: true, error: null };
+      return { ok: true, error: null, skipped: null };
     }
     const message = error || "Push failed";
     setEntrySyncState(kind, data.id, SYNC_STATE.ERROR, message);
     setSyncError(message);
     setSyncStatus("err");
-    return { ok: false, error: message };
+    return { ok: false, error: message, skipped: null };
   };
 
   const runSyncDiagnostics = async () => {
