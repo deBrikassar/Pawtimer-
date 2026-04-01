@@ -135,6 +135,16 @@ describe("recommendation engine", () => {
     expect(["repeat_current_duration", "insert_easy_sessions", "departure_cues_first"]).toContain(rec.recommendationType);
   });
 
+  it("does not collapse to 30s on subtle distress when latest actual duration is much longer", () => {
+    const sessions = [
+      { date: daysAgo(0), plannedDuration: 1380, actualDuration: 1380, distressLevel: "none", belowThreshold: true },
+      { date: new Date().toISOString(), plannedDuration: 30, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendationType).toBe("repeat_current_duration");
+    expect(rec.recommendedDuration).toBe(1200);
+  });
+
   it("never recommends below 30 seconds even with legacy 15s history", () => {
     const sessions = [
       { date: daysAgo(3), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
