@@ -453,7 +453,10 @@ export function buildRecommendation(sessions = [], options = {}) {
   } else if (recommendationType === "stabilization_block") {
     recommendedDuration = Math.round(safeAlone * 0.6);
   } else if (recommendationType === "repeat_current_duration") {
-    recommendedDuration = Math.round(Math.min(safeAlone, last?.plannedDuration || safeAlone));
+    const lastPlanned = Number(last?.plannedDuration) || 0;
+    const lastActual = Number(last?.actualDuration) || 0;
+    const subtleBaseline = Math.max(lastPlanned, lastActual, PROTOCOL.minDurationSeconds);
+    recommendedDuration = Math.round(Math.min(safeAlone, subtleBaseline));
   } else if (recommendationType === "insert_easy_sessions") {
     recommendedDuration = Math.round(safeAlone * PROTOCOL.easySessionRatio);
   } else {
