@@ -159,7 +159,13 @@ export function StatsProgressRing({
             strokeDashoffset={circumference * (1 - clampedProgress)}
           />
         </svg>
-        <div className="ring-inner">
+        <div className={`ring-inner ${showRecoveryPulse ? "ring-inner--recovery" : ""}`.trim()}>
+          {showRecoveryPulse && (
+            <span className="ring-inner-recovery-layers" aria-hidden="true">
+              <span className="ring-inner-recovery-face" />
+              <span className="ring-inner-recovery-core" />
+            </span>
+          )}
           <div className="ring-val stats-metric-value">
             <span className="ring-val-primary">{displayValue}</span>
           </div>

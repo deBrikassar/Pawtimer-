@@ -369,6 +369,34 @@
     background:var(--surface-ring-inner-bg);
     box-shadow:var(--surface-ring-inner-highlight);
     z-index:3;
+    isolation:isolate;
+  }
+  .ring-inner--recovery { background:color-mix(in srgb, var(--surface-ring-inner-bg) 86%, var(--green-light)); }
+  .ring-inner-recovery-layers {
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    z-index:0;
+  }
+  .ring-inner-recovery-face,
+  .ring-inner-recovery-core {
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    transform-origin:center;
+    pointer-events:none;
+  }
+  .ring-inner-recovery-face {
+    background:
+      radial-gradient(circle at 50% 38%, rgba(235, 252, 242, 0.34) 0%, rgba(220, 245, 230, 0.22) 38%, rgba(197, 234, 214, 0.1) 72%, rgba(197, 234, 214, 0) 100%),
+      linear-gradient(180deg, rgba(239, 252, 245, 0.2) 0%, rgba(208, 239, 222, 0.15) 100%);
+    animation:ringRecoveryFaceBreath 3.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+  .ring-inner-recovery-core {
+    inset:8%;
+    background:radial-gradient(circle, rgba(255, 255, 255, 0.42) 0%, rgba(235, 251, 243, 0.22) 42%, rgba(235, 251, 243, 0) 78%);
+    animation:ringRecoveryCoreBreath 3.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
   .ring-val {
     inline-size:max-content;
@@ -387,6 +415,8 @@
     letter-spacing:var(--type-metric-value-track);
     font-variant-numeric:tabular-nums;
     font-feature-settings:"tnum" 1;
+    position:relative;
+    z-index:1;
   }
   .ring-val-primary {
     color:inherit;
@@ -619,6 +649,16 @@
     22% { opacity:0.34; }
     65% { opacity:0.14; }
     100% { transform:scale(1.22); opacity:0; }
+  }
+  @keyframes ringRecoveryFaceBreath {
+    0%, 100% { opacity:0.68; transform:scale(1); filter:brightness(1); }
+    40% { opacity:0.98; transform:scale(1.02); filter:brightness(1.05); }
+    70% { opacity:0.82; transform:scale(1.01); filter:brightness(1.02); }
+  }
+  @keyframes ringRecoveryCoreBreath {
+    0%, 100% { opacity:0.3; transform:scale(0.9); }
+    40% { opacity:0.58; transform:scale(1.08); }
+    70% { opacity:0.4; transform:scale(1.02); }
   }
 
   /* ── History action buttons ── */
