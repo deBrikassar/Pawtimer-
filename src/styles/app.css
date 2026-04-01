@@ -331,23 +331,26 @@
     isolation:isolate;
     overflow:visible;
   }
-  .ring-wrap--recovery-pulse::before,
-  .ring-wrap--recovery-pulse::after {
-    content:"";
+  .ring-recovery-pulse {
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    z-index:1;
+  }
+  .ring-recovery-pulse__core,
+  .ring-recovery-pulse__bloom {
     position:absolute;
     inset:0;
     border-radius:50%;
-    pointer-events:none;
     transform-origin:center;
-    z-index:1;
   }
-  .ring-wrap--recovery-pulse::before {
-    background:radial-gradient(circle, color-mix(in srgb, var(--green-light) 62%, white 8%) 0%, color-mix(in srgb, var(--green-light) 38%, transparent) 36%, color-mix(in srgb, var(--green-light) 20%, transparent) 56%, transparent 76%);
+  .ring-recovery-pulse__core {
+    background:radial-gradient(circle, rgba(173, 223, 196, 0.42) 0%, rgba(173, 223, 196, 0.26) 34%, rgba(173, 223, 196, 0.12) 56%, rgba(173, 223, 196, 0) 78%);
     animation:ringRecoveryPulseInner 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
-  .ring-wrap--recovery-pulse::after {
+  .ring-recovery-pulse__bloom {
     inset:-14%;
-    background:radial-gradient(circle, color-mix(in srgb, var(--green-light) 30%, transparent) 0%, color-mix(in srgb, var(--green-light) 18%, transparent) 42%, transparent 72%);
+    background:radial-gradient(circle, rgba(173, 223, 196, 0.3) 0%, rgba(173, 223, 196, 0.18) 42%, rgba(173, 223, 196, 0) 72%);
     animation:ringRecoveryPulseBloom 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite 1.1s;
   }
   .ring-svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; z-index:2; }

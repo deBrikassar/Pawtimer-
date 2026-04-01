@@ -106,6 +106,7 @@ export default function HomeScreen(props) {
                 fillClassName="ring-fill-1"
                 className="ring-col--next-session"
                 ringWrapClassName={recoveryMode?.active ? "ring-wrap--recovery-pulse" : ""}
+                showRecoveryPulse={recoveryMode?.active}
               />
               <div className="ring-col-sep" />
               <StatsProgressRing
