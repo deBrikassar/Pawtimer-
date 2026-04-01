@@ -42,6 +42,7 @@ export default function SettingsScreen(props) {
     save,
     ACTIVE_DOG_KEY,
     setActiveDogId,
+    clearDogActivityState,
   } = props;
 
   return (
@@ -175,7 +176,8 @@ export default function SettingsScreen(props) {
           <div className="settings-danger-sep" />
           <div className="settings-section-label settings-section-label--danger">Danger zone</div>
           <button className="settings-btn settings-btn--icon button-danger button-size-secondary-pill" onClick={() => {
-            if (window.confirm(`Remove ${name} from this device? Sessions stored elsewhere are unaffected.`)) {
+            if (window.confirm(`Remove ${name} from this device? This deletes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.`)) {
+              clearDogActivityState(activeDogId);
               const newDogs = dogsState.filter((d) => d.id !== activeDogId);
               setDogs(newDogs);
               save(ACTIVE_DOG_KEY, null);
