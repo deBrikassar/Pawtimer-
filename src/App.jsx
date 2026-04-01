@@ -378,6 +378,22 @@ export default function PawTimer() {
     setTimeout(() => setToast(null), 3200);
   }, []);
 
+  const sendWorkerMessage = useCallback(async (payload) => {
+    if (!("serviceWorker" in navigator)) return { ok: false, error: "service-worker-unsupported" };
+    const reg = await navigator.serviceWorker.ready.catch(() => null);
+    const worker = reg?.active || navigator.serviceWorker.controller;
+    if (!worker) return { ok: false, error: "service-worker-not-ready" };
+    return new Promise((resolve) => {
+      const channel = new MessageChannel();
+      const timeoutId = window.setTimeout(() => resolve({ ok: false, error: "service-worker-timeout" }), 2000);
+      channel.port1.onmessage = (event) => {
+        window.clearTimeout(timeoutId);
+        resolve(event.data || { ok: false, error: "empty-service-worker-response" });
+      };
+      worker.postMessage(payload, [channel.port2]);
+    });
+  }, []);
+
   const scheduleNotif = useCallback(async (time, dogName) => {
     if (!("Notification" in window) || !("serviceWorker" in navigator)) return false;
     if (Notification.permission !== "granted") {
@@ -385,15 +401,30 @@ export default function PawTimer() {
       if (p !== "granted") return false;
     }
     const [h, m] = time.split(":").map(Number);
-    const reg = await navigator.serviceWorker.ready;
-    reg.active?.postMessage({ type: "SCHEDULE_NOTIF", hour: h, minute: m, dogName });
-    return true;
-  }, []);
+    const result = await sendWorkerMessage({ type: "SCHEDULE_NOTIF", hour: h, minute: m, dogName });
+    return Boolean(result?.ok && result?.configSaved);
+  }, [sendWorkerMessage]);
 
   const cancelNotif = useCallback(async () => {
-    const reg = await navigator.serviceWorker.ready.catch(() => null);
-    reg?.active?.postMessage({ type: "CANCEL_NOTIF" });
-  }, []);
+    await sendWorkerMessage({ type: "CANCEL_NOTIF" });
+  }, [sendWorkerMessage]);
+
+  useEffect(() => {
+    if (!notifEnabled) return;
+    const runReminderCheck = () => {
+      sendWorkerMessage({ type: "CHECK_NOTIF", source: "app-visible" }).catch(() => {});
+    };
+    runReminderCheck();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") runReminderCheck();
+    };
+    window.addEventListener("focus", runReminderCheck);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", runReminderCheck);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [notifEnabled, sendWorkerMessage]);
 
   const handleToggleNotif = async () => {
     const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));

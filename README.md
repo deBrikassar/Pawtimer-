@@ -164,9 +164,22 @@ In short: the next target is based on the current safe-alone estimate, recent ca
 
 ---
 
+## Reminder behavior (current web-safe implementation)
+
+PawTimer uses an **in-app reminder prompt**, not guaranteed background alarms.
+
+- When reminders are enabled, your chosen reminder time is saved in persistent browser storage (service-worker IndexedDB).
+- The app checks whether a reminder is due when PawTimer is opened, focused, or brought back to the foreground.
+- If the current time is at/after the configured time and no reminder has fired for that day yet, PawTimer shows a local notification prompt.
+- If PawTimer stays closed all day, the reminder appears the next time you open the app.
+
+This matches current web platform limits on reliable background scheduling across browsers.
+
+---
+
 ## Future improvements
 
-- 🔔 Browser push notifications for daily reminders
+- 🔔 True server-backed push reminders
 - 📤 Export session history to CSV
 - 📷 Photo log per session
 
