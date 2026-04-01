@@ -259,7 +259,7 @@ export const syncFetch = async (dogId) => {
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
   const [dogRes, sessPrimaryRes, walkPrimaryRes, patRes, feedingRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
-    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,latency_to_first_distress,distress_type,context,symptoms,recovery_seconds,pre_session,environment,revision,updated_at&order=date.asc`),
+    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,latency_to_first_distress,distress_type,context,symptoms,recovery_seconds,pre_session,environment,updated_at&order=date.asc`),
     sbReq(`walks?${dogFilter}&select=id,date,duration,walk_type,revision,updated_at&order=date.asc`),
     sbReq(`patterns?${dogFilter}&select=id,date,type,revision,updated_at&order=date.asc`),
     sbReq(`feedings?${dogFilter}&select=id,date,food_type,amount,revision,updated_at&order=date.asc`),
@@ -267,7 +267,7 @@ export const syncFetch = async (dogId) => {
 
   let sessRes = sessPrimaryRes;
   if (!sessRes.ok && /(latency_to_first_distress|distress_type)/i.test(String(sessRes.error || ""))) {
-    sessRes = await sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment,revision,updated_at&order=date.asc`);
+    sessRes = await sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment,updated_at&order=date.asc`);
   }
 
   let walkRes = walkPrimaryRes;
