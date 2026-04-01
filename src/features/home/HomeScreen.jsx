@@ -101,10 +101,11 @@ export default function HomeScreen(props) {
                 value={nextSessionLabel}
                 numericValue={target}
                 formatValue={fmtClock}
-                label={recoveryMode?.active ? "Next session · Tap for why" : "Next session"}
+                label="Next session"
                 progress={goalFrac}
                 fillClassName="ring-fill-1"
                 className="ring-col--next-session"
+                ringWrapClassName={recoveryMode?.active ? "ring-wrap--recovery-pulse" : ""}
               />
               <div className="ring-col-sep" />
               <StatsProgressRing

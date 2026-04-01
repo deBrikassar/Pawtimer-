@@ -292,18 +292,7 @@
   .stats-rings-card--recovery-active {
     cursor:pointer;
     position:relative;
-    overflow:hidden;
-    animation:recoveryBreath 2.8s ease-in-out infinite;
     box-shadow:0 0 0 1px color-mix(in srgb, var(--warning) 32%, transparent), var(--surface-focus-shadow-soft);
-  }
-  .stats-rings-card--recovery-active::after {
-    content:"";
-    position:absolute;
-    inset:-20% -40%;
-    background:linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--warning) 16%, transparent) 48%, transparent 78%);
-    transform:translateX(-45%);
-    animation:recoverySweep 3.2s ease-in-out infinite;
-    pointer-events:none;
   }
   .stats-rings-card--recovery-active:focus-visible {
     outline:none;
@@ -338,6 +327,27 @@
     padding-inline:var(--ring-content-padding-inline);
     flex:0 0 auto;
   }
+  .ring-wrap--recovery-pulse {
+    isolation:isolate;
+  }
+  .ring-wrap--recovery-pulse::before,
+  .ring-wrap--recovery-pulse::after {
+    content:"";
+    position:absolute;
+    inset:var(--ring-inner-padding);
+    border-radius:50%;
+    pointer-events:none;
+    transform-origin:center;
+    z-index:0;
+  }
+  .ring-wrap--recovery-pulse::before {
+    background:radial-gradient(circle, color-mix(in srgb, var(--green-light) 26%, transparent) 0%, color-mix(in srgb, var(--green-light) 14%, transparent) 38%, transparent 72%);
+    animation:ringRecoveryPulse 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+  .ring-wrap--recovery-pulse::after {
+    background:radial-gradient(circle, color-mix(in srgb, var(--green-light) 18%, transparent) 0%, color-mix(in srgb, var(--green-light) 8%, transparent) 48%, transparent 78%);
+    animation:ringRecoveryPulse 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite 1.8s;
+  }
   .ring-svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
   .ring-bg   { fill:none; stroke:color-mix(in srgb, var(--border) 72%, white); stroke-width:7; }
   .ring-fill-1 { fill:none; stroke:var(--green-dark); stroke-width:7; stroke-linecap:round; transition:stroke-dashoffset var(--motion-base) var(--ease-out), stroke var(--motion-base) var(--ease-out); transform:rotate(-90deg); transform-origin:44px 44px; }
@@ -353,6 +363,7 @@
     padding-inline:var(--space-1);
     background:var(--surface-ring-inner-bg);
     box-shadow:var(--surface-ring-inner-highlight);
+    z-index:1;
   }
   .ring-val {
     inline-size:max-content;
@@ -592,8 +603,12 @@
   .settings-sync-summary { margin-top:var(--space-control-gap); padding-top:var(--space-control-gap); border-top:1px solid var(--border); display:flex; flex-direction:column; align-items:flex-start; gap:var(--space-card-row-gap); }
   .settings-sync-copy { font-size:var(--type-helper-text-size); color:var(--text-muted); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  @keyframes recoveryBreath { 0%,100%{transform:translateY(0); filter:saturate(1)} 50%{transform:translateY(-1px); filter:saturate(1.04)} }
-  @keyframes recoverySweep { 0%,100%{transform:translateX(-45%)} 50%{transform:translateX(35%)} }
+  @keyframes ringRecoveryPulse {
+    0% { transform:scale(0.24); opacity:0; }
+    20% { opacity:0.32; }
+    70% { opacity:0.12; }
+    100% { transform:scale(1.22); opacity:0; }
+  }
 
   /* ── History action buttons ── */
   .h-actions {

@@ -123,6 +123,7 @@ export function StatsProgressRing({
   progress,
   fillClassName,
   className = "",
+  ringWrapClassName = "",
 }) {
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
@@ -139,7 +140,7 @@ export function StatsProgressRing({
 
   return (
     <div className={`ring-col ${className}`.trim()}>
-      <div className="ring-wrap">
+      <div className={`ring-wrap ${ringWrapClassName}`.trim()}>
         <svg className="ring-svg" width={88} height={88} viewBox="0 0 88 88" aria-hidden="true">
           <circle cx={44} cy={44} r={radius} className="ring-bg" />
           <circle
