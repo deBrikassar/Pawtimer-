@@ -918,6 +918,12 @@
   .diag-run-btn { border:1px solid var(--primaryBlue); background:transparent; color:var(--primaryBlue); cursor:pointer; gap:var(--space-compact-button-gap); }
   .diag-run-btn:disabled { opacity:0.6; cursor:not-allowed; }
   .diag-grid { display:grid; gap:var(--space-control-gap); font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); color:var(--text-muted); margin-bottom:var(--space-card-row-gap); }
+  .diag-grid--kv { gap:0; margin-bottom:0; border-top:1px solid color-mix(in srgb, var(--border) 72%, transparent); }
+  .diag-kv-row { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:var(--space-control-gap); min-height:40px; border-bottom:1px solid color-mix(in srgb, var(--border) 72%, transparent); }
+  .diag-kv-row > span { color:var(--text-muted); }
+  .diag-kv-row > strong { color:var(--text); font-weight:var(--type-body-lg-weight); text-align:right; }
+  .diag-kv-row--code { align-items:flex-start; padding:10px 0; }
+  .diag-kv-row--code code { justify-self:end; max-width:58%; overflow:auto; }
   .diag-grid code { color:var(--brown); background:var(--surface-muted); padding:2px 6px; border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   .diag-summary { font-size:var(--type-body-size); font-weight:var(--type-body-weight); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); margin-bottom:var(--space-control-gap); }
   .diag-summary.ok { color:var(--green-dark); }
@@ -1048,6 +1054,9 @@
   .settings-nav-row--danger .settings-nav-row__chevron { color:var(--red); }
   .settings-nav-list .settings-nav-row:last-of-type { border-bottom:1px solid color-mix(in srgb, var(--border) 74%, transparent); }
   .settings-modal-stack { display:grid; gap:var(--space-card-row-gap); }
+  .settings-advanced-group { display:grid; gap:var(--space-1); }
+  .settings-advanced-group + .settings-advanced-group { margin-top:var(--space-1); }
+  .settings-advanced-group--technical { padding-top:var(--space-1); border-top:1px solid color-mix(in srgb, var(--border) 72%, transparent); }
   .settings-simple-title { color:var(--text-muted); font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); }
   .settings-id-value { color:var(--text); font-size:var(--type-body-size); line-height:var(--type-body-line); font-weight:var(--type-body-lg-weight); }
   .settings-profile-id-row { display:flex; justify-content:space-between; gap:var(--space-control-gap); align-items:flex-start; }
