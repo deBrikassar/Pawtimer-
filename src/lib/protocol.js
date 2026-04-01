@@ -324,14 +324,18 @@ function computeSafeAloneTime(sessions = []) {
 }
 
 function getSubtleRecoveryContext(trainingSessions = []) {
-  if (!trainingSessions.length) {
-    return {
-      active: false,
-      remainingSessions: 0,
-      subtleIndex: -1,
-      completedRecoveryEndIndex: -1,
-    };
-  }
+  const base = {
+    active: false,
+    remainingSessions: 0,
+    subtleIndex: -1,
+    completedRecoveryEndIndex: -1,
+    recoveryStep: 0,
+    nextRecoveryDuration: PROTOCOL.subtleRecoveryDurationSeconds,
+    anchorDuration: null,
+    postRecoveryDuration: null,
+    justCompleted: false,
+  };
+  if (!trainingSessions.length) return base;
 
   let subtleIndex = -1;
   for (let i = trainingSessions.length - 1; i >= 0; i -= 1) {
@@ -340,35 +344,49 @@ function getSubtleRecoveryContext(trainingSessions = []) {
       break;
     }
   }
+  if (subtleIndex < 0) return base;
 
-  if (subtleIndex < 0) {
-    return {
-      active: false,
-      remainingSessions: 0,
-      subtleIndex: -1,
-      completedRecoveryEndIndex: -1,
-    };
-  }
-
-  let remaining = PROTOCOL.subtleRecoverySessionCount;
+  const subtle = trainingSessions[subtleIndex];
+  const anchorDuration = Math.max(
+    PROTOCOL.minDurationSeconds,
+    Number(subtle?.actualDuration) > 0 ? Number(subtle.actualDuration) : Number(subtle?.plannedDuration || PROTOCOL.minDurationSeconds),
+  );
+  const after = trainingSessions.slice(subtleIndex + 1);
+  let step = 0; // 0 => next is 60s, 1 => next is 120s, 2 => complete
   let completedRecoveryEndIndex = -1;
 
-  for (let i = subtleIndex + 1; i < trainingSessions.length; i += 1) {
-    const level = trainingSessions[i].distressLevel;
-    if (level === DISTRESS_LEVELS.NONE) remaining -= 1;
-    else remaining = PROTOCOL.subtleRecoverySessionCount;
-
-    if (remaining <= 0) {
-      completedRecoveryEndIndex = i;
-      break;
+  for (let offset = 0; offset < after.length; offset += 1) {
+    const session = after[offset];
+    const calm = session.distressLevel === DISTRESS_LEVELS.NONE;
+    if (!calm) {
+      step = 0; // restart sequence after any non-calm recovery attempt
+      continue;
     }
+    if (step === 0) {
+      step = 1;
+      continue;
+    }
+    step = 2;
+    completedRecoveryEndIndex = subtleIndex + 1 + offset;
+    break;
   }
 
+  const completed = step >= 2;
+  const justCompleted = completed && completedRecoveryEndIndex === (trainingSessions.length - 1);
+  const remainingSessions = completed ? 0 : Math.max(0, PROTOCOL.subtleRecoverySessionCount - step);
+
   return {
-    active: remaining > 0,
-    remainingSessions: Math.max(0, remaining),
+    active: !completed,
+    remainingSessions,
     subtleIndex,
     completedRecoveryEndIndex,
+    recoveryStep: Math.min(step + 1, PROTOCOL.subtleRecoverySessionCount),
+    nextRecoveryDuration: step === 0
+      ? PROTOCOL.subtleRecoveryDurationSeconds
+      : (PROTOCOL.subtleRecoveryDurationSeconds * 2),
+    anchorDuration,
+    postRecoveryDuration: Math.max(PROTOCOL.minDurationSeconds, Math.round(anchorDuration * 0.95)),
+    justCompleted,
   };
 }
 
@@ -559,7 +577,7 @@ export function buildRecommendation(sessions = [], options = {}) {
   const rich = sortByDateAsc(sessions).map(toRichSession);
   const training = rich.filter((s) => s.departureType !== "real_life");
   const recovery = getSubtleRecoveryContext(training);
-  const effectiveTraining = (!recovery.active && recovery.completedRecoveryEndIndex > recovery.subtleIndex)
+  const effectiveTraining = (recovery.completedRecoveryEndIndex > recovery.subtleIndex)
     ? training.filter((_, index) => !(index > recovery.subtleIndex && index <= recovery.completedRecoveryEndIndex))
     : training;
   const recent = getLatestSessions(effectiveTraining, PROTOCOL.calmWindow);
@@ -573,7 +591,10 @@ export function buildRecommendation(sessions = [], options = {}) {
 
   if (recovery.active) {
     recommendationType = "subtle_recovery_mode";
-    recommendedDuration = PROTOCOL.subtleRecoveryDurationSeconds;
+    recommendedDuration = recovery.nextRecoveryDuration;
+  } else if (recovery.justCompleted && Number.isFinite(recovery.postRecoveryDuration)) {
+    recommendationType = "subtle_recovery_resume";
+    recommendedDuration = recovery.postRecoveryDuration;
   } else if (calmProgressionBase != null) {
     recommendedDuration = Math.round(calmProgressionBase * 1.15);
   } else if (recommendationType === "reduce_duration") {
@@ -602,7 +623,7 @@ export function buildRecommendation(sessions = [], options = {}) {
 
   const cueStats = buildCueStats(options.cueSessions || []);
   const mostTriggeringCue = cueStats.slice().sort((a, b) => b.sensitivity - a.sensitivity)[0];
-  const focusArea = recommendationType !== "subtle_recovery_mode" && mostTriggeringCue && mostTriggeringCue.sensitivity >= 0.55
+  const focusArea = !["subtle_recovery_mode", "subtle_recovery_resume"].includes(recommendationType) && mostTriggeringCue && mostTriggeringCue.sensitivity >= 0.55
     ? "departure_cues_first"
     : recommendationType;
 
@@ -619,8 +640,11 @@ export function buildRecommendation(sessions = [], options = {}) {
     recoveryMode: {
       active: recovery.active,
       remainingSessions: recovery.remainingSessions,
+      step: recovery.recoveryStep,
       anchorSessionDate: recovery.subtleIndex >= 0 ? training[recovery.subtleIndex]?.date || null : null,
-      recoveryDuration: PROTOCOL.subtleRecoveryDurationSeconds,
+      anchorDuration: recovery.anchorDuration,
+      recoveryDuration: recovery.nextRecoveryDuration,
+      postRecoveryDuration: recovery.postRecoveryDuration,
     },
     stats,
     warnings,
@@ -650,6 +674,8 @@ function describeRecommendationType(type) {
       return "Pattern-break logs suggest cue practice should come first before stretching duration.";
     case "subtle_recovery_mode":
       return "Recent subtle stress triggered two short confidence-recovery sessions before normal progression resumes.";
+    case "subtle_recovery_resume":
+      return "Recovery sessions completed. The next target resumes from the subtle-stress anchor with a 5% step-down.";
     default:
       return "The next target is adjusted from the current safe-alone estimate.";
   }
