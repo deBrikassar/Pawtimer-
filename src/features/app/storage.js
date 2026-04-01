@@ -256,31 +256,47 @@ export const normalizeFeedings = (rows = []) => ensureArray(rows)
 export const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
-  const sessionSelectAttempts = [
-    "id,date,planned_duration,actual_duration,distress_level,result,latency_to_first_distress,distress_type,context,symptoms,recovery_seconds,pre_session,environment,updated_at",
-    "id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment,updated_at",
-    "id,date,planned_duration,actual_duration,distress_level,result,updated_at",
-  ];
+  const sessionsSelect = "id,dog_id,date,planned_duration,actual_duration,distress_level,result";
+  const walksSelect = "id,dog_id,date,duration";
+  const patternsSelect = "id,dog_id,date,type";
+  const feedingsSelect = "id,dog_id,date,food_type,amount";
+  const tableQueryShapes = {
+    dogs: "id,settings",
+    sessions: sessionsSelect,
+    walks: walksSelect,
+    patterns: patternsSelect,
+    feedings: feedingsSelect,
+  };
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
+  logSyncDebug("syncFetch:queryShapes", tableQueryShapes);
   const [dogRes, sessPrimaryRes, walkPrimaryRes, patRes, feedingRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
-    sbReq(`sessions?${dogFilter}&select=${sessionSelectAttempts[0]}&order=date.asc`),
-    sbReq(`walks?${dogFilter}&select=id,date,duration,walk_type,revision,updated_at&order=date.asc`),
-    sbReq(`patterns?${dogFilter}&select=id,date,type,revision,updated_at&order=date.asc`),
-    sbReq(`feedings?${dogFilter}&select=id,date,food_type,amount,revision,updated_at&order=date.asc`),
+    sbReq(`sessions?${dogFilter}&select=${sessionsSelect}&order=date.asc`),
+    sbReq(`walks?${dogFilter}&select=${walksSelect}&order=date.asc`),
+    sbReq(`patterns?${dogFilter}&select=${patternsSelect}&order=date.asc`),
+    sbReq(`feedings?${dogFilter}&select=${feedingsSelect}&order=date.asc`),
   ]);
 
-  let sessRes = sessPrimaryRes;
-  let sessionSelectIndex = 0;
-  while (!sessRes.ok && sessionSelectIndex < sessionSelectAttempts.length - 1) {
-    sessionSelectIndex += 1;
-    sessRes = await sbReq(`sessions?${dogFilter}&select=${sessionSelectAttempts[sessionSelectIndex]}&order=date.asc`);
-  }
+  const sessRes = sessPrimaryRes;
+  const walkRes = walkPrimaryRes;
 
-  let walkRes = walkPrimaryRes;
-  if (!walkRes.ok && /walk_type/i.test(String(walkRes.error || ""))) {
-    walkRes = await sbReq(`walks?${dogFilter}&select=id,date,duration&order=date.asc`);
-  }
+  const parseMissingColumn = (errorText) => {
+    const text = String(errorText || "");
+    const match = text.match(/column\s+([a-zA-Z0-9_."]+)\s+does not exist/i);
+    return match ? match[1] : null;
+  };
+
+  const resourceErrors = [
+    { table: "sessions", res: sessRes, queryShape: sessionsSelect },
+    { table: "walks", res: walkRes, queryShape: walksSelect },
+    { table: "patterns", res: patRes, queryShape: patternsSelect },
+    { table: "feedings", res: feedingRes, queryShape: feedingsSelect },
+  ];
+  resourceErrors.forEach(({ table, res, queryShape }) => {
+    if (res.ok) return;
+    const missingColumn = parseMissingColumn(res.error);
+    logSyncDebug("syncFetch:tableFetchFailed", { table, queryShape, status: res.status, missingColumn, error: res.error });
+  });
 
   if (!dogRes.ok) {
     logSyncDebug("syncFetch:dogLookupFailed", { dogId: id, error: dogRes.error });
