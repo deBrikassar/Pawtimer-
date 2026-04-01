@@ -894,16 +894,20 @@
   .settings-btn__icon svg { inline-size:18px; block-size:18px; display:block; }
 
   .settings-inline-row { display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); flex-wrap:wrap; }
-  .settings-summary-list { display:grid; gap:var(--space-card-row-gap); margin-bottom:var(--space-card-row-gap); }
+  .settings-summary-list { display:grid; gap:var(--space-card-row-gap); margin-bottom:var(--space-control-gap); }
   .settings-inline-reset-btn { border:none; background:none; cursor:pointer; text-decoration:underline; }
 
   .settings-collapsible-card { padding-bottom:0; }
+  .settings-collapsible-card--quiet {
+    background:linear-gradient(180deg, var(--surface-muted) 0%, color-mix(in srgb, var(--surface-muted) 94%, var(--warm-accent-soft)) 100%);
+    border:1px solid color-mix(in srgb, var(--border) 92%, var(--surface-muted));
+  }
   .settings-collapsible-toggle { width:100%; display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); border:none; background:transparent; padding:0; cursor:pointer; text-align:left; }
   .settings-collapsible-arrow { font-size:var(--type-card-heading-size); line-height:1; color:var(--text-muted); min-width:18px; text-align:center; }
   .settings-collapsible-inner { padding:var(--space-card-row-gap) 0 var(--space-card-padding); display:grid; gap:var(--space-card-row-gap); }
 
 
-  .diag-head { display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); margin-bottom:var(--space-control-gap); }
+  .diag-head { display:flex; align-items:center; justify-content:flex-end; gap:var(--space-control-gap); margin-bottom:var(--space-control-gap); }
   .diag-run-btn { border:1px solid var(--primaryBlue); background:transparent; color:var(--primaryBlue); cursor:pointer; gap:var(--space-compact-button-gap); }
   .diag-run-btn:disabled { opacity:0.6; cursor:not-allowed; }
   .diag-grid { display:grid; gap:var(--space-control-gap); font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); color:var(--text-muted); margin-bottom:var(--space-card-row-gap); }
@@ -998,11 +1002,15 @@
   .session-control.is-complete { animation:ringPulse 0.9s ease-in-out 2; }
 
   /* ── Settings section headers ── */
-  .settings-section-label { font-size:var(--type-section-eyebrow-size); color:var(--text-muted); font-weight:var(--type-section-eyebrow-weight); line-height:var(--type-section-eyebrow-line); letter-spacing:var(--type-section-eyebrow-track); margin:0 0 var(--space-control-gap); text-transform:uppercase; }
-  .settings-section-label + .share-card { margin-bottom:var(--space-section-gap); }
-  :is(.share-card, .settings-btn, .settings-danger-sep) + .settings-section-label { margin-top:var(--space-section-gap); }
+  .settings-group { display:grid; gap:var(--space-control-gap); margin-bottom:var(--space-section-gap); }
+  .settings-group--primary { gap:var(--space-section-gap); margin-bottom:calc(var(--space-section-gap) + var(--space-control-gap)); }
+  .settings-group--support { margin-top:var(--space-control-gap); }
+  .settings-group--account { gap:var(--space-control-gap); }
+  .settings-section-label { font-size:var(--type-section-eyebrow-size); color:var(--text-muted); font-weight:var(--type-section-eyebrow-weight); line-height:var(--type-section-eyebrow-line); letter-spacing:var(--type-section-eyebrow-track); margin:0; text-transform:uppercase; }
+  .settings-section-label + .share-card { margin-bottom:0; }
+  :is(.share-card, .settings-btn, .settings-danger-sep) + .settings-section-label { margin-top:0; }
   .settings-section-label--danger { color:var(--red); }
-  .settings-danger-sep { height:1px; background:var(--border); margin:var(--space-section-gap) 0 0; opacity:0.5; }
+  .settings-danger-sep { height:1px; background:var(--border); margin:var(--space-section-gap) 0 var(--space-control-gap); opacity:0.5; }
   .history-food-type { text-transform:capitalize; }
   .icon-img { display:inline-block; flex-shrink:0; object-fit:contain; }
   .paw-icon-img { display:inline-block; object-fit:contain; }
