@@ -3,7 +3,7 @@ import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, Stat
 import { fmt } from "../app/helpers";
 import { SproutIcon } from "../app/ui";
 
-export default function StatsScreen({ name, totalCount, setTab, bestCalm, target, relapseTone, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, currentThreshold, headlineStatus, headlineStatusTone }) {
+export default function StatsScreen({ name, totalCount, setTab, bestCalm, target, relapseTone, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
   const headlineMetricVariant = METRIC_VARIANTS.HEADLINE;
   const standardMetricVariant = METRIC_VARIANTS.STANDARD;
   const ringMetricVariant = METRIC_VARIANTS.RING;
@@ -21,11 +21,11 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, target
               <div
                 className={`stats-headline-card metric-surface metric-surface--${headlineMetricVariant} surface-state--${headlineSurfaceState}`.trim()}
                 data-metric-variant={headlineMetricVariant}
-                aria-label="Current threshold"
+                aria-label="Current recommendation"
               >
-                <span className="stats-headline-label">Current threshold</span>
+                <span className="stats-headline-label">Current recommendation</span>
                 <div className="stats-headline-main">
-                  <span className="stats-headline-value">{fmt(currentThreshold)}</span>
+                  <span className="stats-headline-value">{fmt(target)}</span>
                   <span className="stats-headline-status">{headlineStatus}</span>
                 </div>
               </div>
