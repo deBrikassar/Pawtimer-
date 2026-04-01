@@ -7,6 +7,8 @@ export const PROTOCOL = {
   startDurationSeconds: 30,
   minDurationSeconds: 30,
   goalDurationDefaultSeconds: 7200,
+  subtleRecoveryDurationSeconds: 60,
+  subtleRecoverySessionCount: 2,
   stabilizationDistressThreshold: 2,
   stabilizationWindow: 6,
   calmWindow: 8,
@@ -178,9 +180,23 @@ function confidenceFromSession(session = {}) {
 }
 
 function toRichSession(session = {}) {
-  const planned = Math.max(PROTOCOL.minDurationSeconds, Number(session.plannedDuration || session.targetDuration || 0) || PROTOCOL.startDurationSeconds);
-  const actual = Math.max(0, Number(session.actualDuration || 0));
-  const level = normalizeDistressLevel(session.distressLevel || session.distressSeverity);
+  const planned = Math.max(
+    PROTOCOL.minDurationSeconds,
+    Number(
+      session.plannedDuration
+      || session.planned_duration
+      || session.targetDuration
+      || session.target_duration
+      || 0,
+    ) || PROTOCOL.startDurationSeconds,
+  );
+  const actual = Math.max(0, Number(session.actualDuration || session.actual_duration || 0));
+  const level = normalizeDistressLevel(
+    session.distressLevel
+    || session.distress_level
+    || session.distressSeverity
+    || session.distress_severity,
+  );
   const distressType = getDistressType(level, session.distressType);
   const latency = Number.isFinite(session.latencyToFirstDistress)
     ? Math.max(0, Number(session.latencyToFirstDistress))
@@ -189,11 +205,14 @@ function toRichSession(session = {}) {
       : Math.min(actual, planned);
   const belowThreshold = Boolean(
     session.belowThreshold
+    ?? session.below_threshold
     ?? session.stayedBelowThreshold
     ?? (level === DISTRESS_LEVELS.NONE && ratio(actual, planned) >= 0.98),
   );
 
-  const departureType = session?.context?.departureType || "training";
+  const departureType = session?.context?.departureType
+    || session?.context?.departure_type
+    || "training";
 
   return {
     ...session,
@@ -271,6 +290,55 @@ function computeSafeAloneTime(sessions = []) {
   const weighted = calm.reduce((sum, s) => sum + (s.actualDuration * s.confidence * s.recencyWeight), 0);
   const weight = calm.reduce((sum, s) => sum + (s.confidence * s.recencyWeight), 0);
   return Math.max(PROTOCOL.minDurationSeconds, Math.round(weighted / Math.max(weight, 0.01)));
+}
+
+function getSubtleRecoveryContext(trainingSessions = []) {
+  if (!trainingSessions.length) {
+    return {
+      active: false,
+      remainingSessions: 0,
+      subtleIndex: -1,
+      completedRecoveryEndIndex: -1,
+    };
+  }
+
+  let subtleIndex = -1;
+  for (let i = trainingSessions.length - 1; i >= 0; i -= 1) {
+    if (trainingSessions[i].distressLevel === DISTRESS_LEVELS.SUBTLE) {
+      subtleIndex = i;
+      break;
+    }
+  }
+
+  if (subtleIndex < 0) {
+    return {
+      active: false,
+      remainingSessions: 0,
+      subtleIndex: -1,
+      completedRecoveryEndIndex: -1,
+    };
+  }
+
+  let remaining = PROTOCOL.subtleRecoverySessionCount;
+  let completedRecoveryEndIndex = -1;
+
+  for (let i = subtleIndex + 1; i < trainingSessions.length; i += 1) {
+    const level = trainingSessions[i].distressLevel;
+    if (level === DISTRESS_LEVELS.NONE) remaining -= 1;
+    else remaining = PROTOCOL.subtleRecoverySessionCount;
+
+    if (remaining <= 0) {
+      completedRecoveryEndIndex = i;
+      break;
+    }
+  }
+
+  return {
+    active: remaining > 0,
+    remainingSessions: Math.max(0, remaining),
+    subtleIndex,
+    completedRecoveryEndIndex,
+  };
 }
 
 function hasPriorStressEvent(sessions = []) {
@@ -459,16 +527,23 @@ function getCalmProgressionBase(trainingSessions = []) {
 export function buildRecommendation(sessions = [], options = {}) {
   const rich = sortByDateAsc(sessions).map(toRichSession);
   const training = rich.filter((s) => s.departureType !== "real_life");
-  const recent = getLatestSessions(training, PROTOCOL.calmWindow);
-  const last = training[training.length - 1] || null;
-  const stats = calculateTrainingStats(training, options);
+  const recovery = getSubtleRecoveryContext(training);
+  const effectiveTraining = (!recovery.active && recovery.completedRecoveryEndIndex > recovery.subtleIndex)
+    ? training.filter((_, index) => !(index > recovery.subtleIndex && index <= recovery.completedRecoveryEndIndex))
+    : training;
+  const recent = getLatestSessions(effectiveTraining, PROTOCOL.calmWindow);
+  const last = effectiveTraining[effectiveTraining.length - 1] || null;
+  const stats = calculateTrainingStats(effectiveTraining, options);
   const safeAlone = stats.safeAloneTime || PROTOCOL.startDurationSeconds;
-  const calmProgressionBase = getCalmProgressionBase(training);
+  const calmProgressionBase = getCalmProgressionBase(effectiveTraining);
 
   let recommendedDuration = safeAlone;
-  const recommendationType = chooseRecommendationType(last, stats, recent);
+  let recommendationType = chooseRecommendationType(last, stats, recent);
 
-  if (calmProgressionBase != null) {
+  if (recovery.active) {
+    recommendationType = "subtle_recovery_mode";
+    recommendedDuration = PROTOCOL.subtleRecoveryDurationSeconds;
+  } else if (calmProgressionBase != null) {
     recommendedDuration = Math.round(calmProgressionBase * 1.15);
   } else if (recommendationType === "reduce_duration") {
     recommendedDuration = Math.round(safeAlone * 0.75);
@@ -496,7 +571,7 @@ export function buildRecommendation(sessions = [], options = {}) {
 
   const cueStats = buildCueStats(options.cueSessions || []);
   const mostTriggeringCue = cueStats.slice().sort((a, b) => b.sensitivity - a.sensitivity)[0];
-  const focusArea = mostTriggeringCue && mostTriggeringCue.sensitivity >= 0.55
+  const focusArea = recommendationType !== "subtle_recovery_mode" && mostTriggeringCue && mostTriggeringCue.sensitivity >= 0.55
     ? "departure_cues_first"
     : recommendationType;
 
@@ -510,6 +585,12 @@ export function buildRecommendation(sessions = [], options = {}) {
     recommendedDuration: boundedDuration,
     recommendationType: focusArea,
     stabilizationMode: stats.relapseRisk >= 0.72,
+    recoveryMode: {
+      active: recovery.active,
+      remainingSessions: recovery.remainingSessions,
+      anchorSessionDate: recovery.subtleIndex >= 0 ? training[recovery.subtleIndex]?.date || null : null,
+      recoveryDuration: PROTOCOL.subtleRecoveryDurationSeconds,
+    },
     stats,
     warnings,
     safeAbsenceAlert: Number(options.plannedRealAbsenceSeconds || 0) > safeAlone,
@@ -536,6 +617,8 @@ function describeRecommendationType(type) {
       return "The plan inserts an easier confidence-building session before pushing higher.";
     case "departure_cues_first":
       return "Pattern-break logs suggest cue practice should come first before stretching duration.";
+    case "subtle_recovery_mode":
+      return "Recent subtle stress triggered two short confidence-recovery sessions before normal progression resumes.";
     default:
       return "The next target is adjusted from the current safe-alone estimate.";
   }
@@ -619,6 +702,7 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
     stats: recommendation.stats,
     warnings: recommendation.warnings,
     walkAdjustmentApplied,
+    recoveryMode: recommendation.recoveryMode,
   };
 }
 

@@ -3,6 +3,7 @@ import {
   PROTOCOL,
   calculateTrainingStats,
   buildRecommendation,
+  explainNextTarget,
   mapLegacySession,
   suggestNext,
   suggestNextWithContext,
@@ -131,8 +132,8 @@ describe("recommendation engine", () => {
       { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "subtle", belowThreshold: false },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendedDuration).toBeLessThanOrEqual(60);
-    expect(["repeat_current_duration", "insert_easy_sessions", "departure_cues_first"]).toContain(rec.recommendationType);
+    expect(rec.recommendedDuration).toBe(60);
+    expect(rec.recommendationType).toBe("subtle_recovery_mode");
   });
 
   it("does not collapse to 30s on subtle distress when latest actual duration is much longer", () => {
@@ -141,8 +142,8 @@ describe("recommendation engine", () => {
       { date: new Date().toISOString(), plannedDuration: 30, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendationType).toBe("repeat_current_duration");
-    expect(rec.recommendedDuration).toBe(1200);
+    expect(rec.recommendationType).toBe("subtle_recovery_mode");
+    expect(rec.recommendedDuration).toBe(60);
   });
 
   it("uses calm no-distress history even when belowThreshold is false, avoiding a 30s reset after first subtle", () => {
@@ -155,8 +156,32 @@ describe("recommendation engine", () => {
       { date: second, plannedDuration: 1380, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendationType).toBe("repeat_current_duration");
-    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(1000);
+    expect(rec.recommendationType).toBe("subtle_recovery_mode");
+    expect(rec.recommendedDuration).toBe(60);
+  });
+
+  it("keeps recovery mode active until two calm sessions complete after subtle stress", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 1380, actualDuration: 1380, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+      { date: new Date().toISOString(), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recoveryMode.active).toBe(true);
+    expect(rec.recoveryMode.remainingSessions).toBe(1);
+    expect(rec.recommendedDuration).toBe(60);
+  });
+
+  it("resumes normal progression after two calm recovery sessions and ignores them as baseline", () => {
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 1380, actualDuration: 1380, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: new Date().toISOString(), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recoveryMode.active).toBe(false);
+    expect(rec.recommendedDuration).toBeGreaterThan(1000);
   });
 
   it("never recommends below 30 seconds even with legacy 15s history", () => {
@@ -233,6 +258,26 @@ describe("public compatibility APIs", () => {
 
     const next = suggestNextWithContext(sessions, walks, patterns, { goalSeconds: 3600 });
     expect(next).toBeGreaterThanOrEqual(PROTOCOL.minDurationSeconds);
+  });
+
+  it("explainNextTarget exposes recovery metadata used by train UI", () => {
+    const sessions = [
+      { date: daysAgo(1), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
+    expect(next.recoveryMode.active).toBe(true);
+    expect(next.recoveryMode.remainingSessions).toBe(2);
+    expect(next.recommendedDuration).toBe(60);
+  });
+
+  it("handles legacy/runtime-shaped session rows without collapsing to 30s", () => {
+    const sessions = [
+      { date: daysAgo(1), planned_duration: "1380", actual_duration: "1380", distress_level: "none", result: "success" },
+      { date: new Date().toISOString(), planned_duration: "1380", actual_duration: "1200", distress_level: "mild", result: "distress" },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
+    expect(next.recoveryMode.active).toBe(true);
+    expect(next.recommendedDuration).toBe(60);
   });
 
   it("getNextDurationSeconds remains bounded and deterministic", () => {
