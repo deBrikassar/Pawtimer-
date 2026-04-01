@@ -24,6 +24,8 @@ create table if not exists sessions (
   recovery_seconds integer,
   pre_session      jsonb not null default '{}',
   environment      jsonb not null default '{}',
+  revision         bigint not null default 0,
+  updated_at       timestamptz not null default now(),
   created_at       timestamptz default now()
 );
 
@@ -34,6 +36,8 @@ create table if not exists walks (
   date       timestamptz not null,
   duration   integer not null default 0, -- seconds
   walk_type  text not null default 'regular_walk',
+  revision   bigint not null default 0,
+  updated_at timestamptz not null default now(),
   created_at timestamptz default now()
 );
 
@@ -43,6 +47,8 @@ create table if not exists patterns (
   dog_id     text not null references dogs(id) on delete cascade,
   date       timestamptz not null,
   type       text not null check (type in ('keys', 'shoes', 'jacket')),
+  revision   bigint not null default 0,
+  updated_at timestamptz not null default now(),
   created_at timestamptz default now()
 );
 
@@ -54,11 +60,15 @@ alter table if exists sessions
   add column if not exists symptoms jsonb not null default '{}',
   add column if not exists recovery_seconds integer,
   add column if not exists pre_session jsonb not null default '{}',
-  add column if not exists environment jsonb not null default '{}';
+  add column if not exists environment jsonb not null default '{}',
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
 
 alter table if exists walks
   add column if not exists duration integer not null default 0,
-  add column if not exists walk_type text not null default 'regular_walk';
+  add column if not exists walk_type text not null default 'regular_walk',
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
 
 -- Ensure patterns table exists on older environments
 create table if not exists patterns (
@@ -66,8 +76,14 @@ create table if not exists patterns (
   dog_id     text not null references dogs(id) on delete cascade,
   date       timestamptz not null,
   type       text not null check (type in ('keys', 'shoes', 'jacket')),
+  revision   bigint not null default 0,
+  updated_at timestamptz not null default now(),
   created_at timestamptz default now()
 );
+
+alter table if exists patterns
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
 
 -- Indexes for fast lookups by dog
 create index if not exists sessions_dog_id_idx on sessions(dog_id);

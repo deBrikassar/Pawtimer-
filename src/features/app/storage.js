@@ -247,6 +247,8 @@ export const normalizeFeedings = (rows = []) => ensureArray(rows)
     date: row?.date || new Date().toISOString(),
     foodType: row?.foodType ?? row?.food_type ?? "meal",
     amount: row?.amount ?? "small",
+    revision: Number.isFinite(row?.revision) ? Number(row.revision) : null,
+    updatedAt: row?.updatedAt ?? row?.updated_at ?? null,
   }))
   .filter((row) => row.id)
   .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -257,15 +259,15 @@ export const syncFetch = async (dogId) => {
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
   const [dogRes, sessPrimaryRes, walkPrimaryRes, patRes, feedingRes] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
-    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,latency_to_first_distress,distress_type,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`),
-    sbReq(`walks?${dogFilter}&select=id,date,duration,walk_type&order=date.asc`),
-    sbReq(`patterns?${dogFilter}&select=id,date,type&order=date.asc`),
-    sbReq(`feedings?${dogFilter}&select=id,date,food_type,amount&order=date.asc`),
+    sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,latency_to_first_distress,distress_type,context,symptoms,recovery_seconds,pre_session,environment,revision,updated_at&order=date.asc`),
+    sbReq(`walks?${dogFilter}&select=id,date,duration,walk_type,revision,updated_at&order=date.asc`),
+    sbReq(`patterns?${dogFilter}&select=id,date,type,revision,updated_at&order=date.asc`),
+    sbReq(`feedings?${dogFilter}&select=id,date,food_type,amount,revision,updated_at&order=date.asc`),
   ]);
 
   let sessRes = sessPrimaryRes;
   if (!sessRes.ok && /(latency_to_first_distress|distress_type)/i.test(String(sessRes.error || ""))) {
-    sessRes = await sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment&order=date.asc`);
+    sessRes = await sbReq(`sessions?${dogFilter}&select=id,date,planned_duration,actual_duration,distress_level,result,context,symptoms,recovery_seconds,pre_session,environment,revision,updated_at&order=date.asc`);
   }
 
   let walkRes = walkPrimaryRes;
@@ -322,10 +324,26 @@ export const syncFetch = async (dogId) => {
         recoverySeconds: r.recovery_seconds,
         preSession: r.pre_session,
         environment: r.environment,
+        revision: r.revision,
+        updatedAt: r.updated_at,
       }))),
-      walks: walkRows.map((r) => ({ id: r.id, date: r.date, duration: r.duration, type: normalizeWalkType(r.walk_type) })),
-      patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type })),
-      feedings: normalizeFeedings(feedingRows.map((r) => ({ id: r.id, date: r.date, food_type: r.food_type, amount: r.amount }))),
+      walks: walkRows.map((r) => ({
+        id: r.id,
+        date: r.date,
+        duration: r.duration,
+        type: normalizeWalkType(r.walk_type),
+        revision: r.revision,
+        updatedAt: r.updated_at,
+      })),
+      patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type, revision: r.revision, updatedAt: r.updated_at })),
+      feedings: normalizeFeedings(feedingRows.map((r) => ({
+        id: r.id,
+        date: r.date,
+        food_type: r.food_type,
+        amount: r.amount,
+        revision: r.revision,
+        updatedAt: r.updated_at,
+      }))),
     },
   };
 };
@@ -365,6 +383,8 @@ export const syncPush = async (dogId, kind, data, dogSettings = null) => {
         recovery_seconds: data.recoverySeconds ?? null,
         pre_session: data.preSession ?? null,
         environment: data.environment ?? null,
+        revision: data.revision ?? null,
+        updated_at: data.updatedAt ?? null,
       }
     : kind === "walk"
       ? {
@@ -373,6 +393,8 @@ export const syncPush = async (dogId, kind, data, dogSettings = null) => {
           date: data.date,
           duration: data.duration,
           walk_type: normalizeWalkType(data.type),
+          revision: data.revision ?? null,
+          updated_at: data.updatedAt ?? null,
         }
       : kind === "pattern"
       ? {
@@ -380,6 +402,8 @@ export const syncPush = async (dogId, kind, data, dogSettings = null) => {
           dog_id: id,
           date: data.date,
           type: data.type,
+          revision: data.revision ?? null,
+          updated_at: data.updatedAt ?? null,
         }
       : {
           id: String(data.id),
@@ -387,6 +411,8 @@ export const syncPush = async (dogId, kind, data, dogSettings = null) => {
           date: data.date,
           food_type: data.foodType,
           amount: data.amount,
+          revision: data.revision ?? null,
+          updated_at: data.updatedAt ?? null,
         };
 
   const postRow = (payload) => sbReq(table, {

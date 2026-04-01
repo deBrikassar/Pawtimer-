@@ -21,6 +21,8 @@ create table if not exists public.sessions (
   actual_duration integer not null,
   distress_level text not null,
   result text not null,
+  revision bigint not null default 0,
+  updated_at timestamptz not null default now(),
   created_at timestamptz default now()
 );
 
@@ -30,6 +32,8 @@ create table if not exists public.walks (
   date timestamptz not null,
   duration integer not null default 0,
   walk_type text not null default 'regular_walk',
+  revision bigint not null default 0,
+  updated_at timestamptz not null default now(),
   created_at timestamptz default now()
 );
 
@@ -38,7 +42,19 @@ create table if not exists public.patterns (
   dog_id text not null,
   date timestamptz not null,
   type text not null,
+  revision bigint not null default 0,
+  updated_at timestamptz not null default now(),
   created_at timestamptz default now()
+);
+
+create table if not exists public.feedings (
+  id text primary key,
+  dog_id text not null,
+  date timestamptz not null,
+  food_type text not null,
+  amount text not null,
+  revision bigint not null default 0,
+  updated_at timestamptz not null default now()
 );
 
 -- Add any missing columns on existing tables.
@@ -53,6 +69,8 @@ alter table if exists public.sessions
   add column if not exists actual_duration integer,
   add column if not exists distress_level text,
   add column if not exists result text,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now(),
   add column if not exists created_at timestamptz default now();
 
 alter table if exists public.walks
@@ -60,13 +78,25 @@ alter table if exists public.walks
   add column if not exists date timestamptz,
   add column if not exists duration integer,
   add column if not exists walk_type text,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now(),
   add column if not exists created_at timestamptz default now();
 
 alter table if exists public.patterns
   add column if not exists dog_id text,
   add column if not exists date timestamptz,
   add column if not exists type text,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now(),
   add column if not exists created_at timestamptz default now();
+
+alter table if exists public.feedings
+  add column if not exists dog_id text,
+  add column if not exists date timestamptz,
+  add column if not exists food_type text,
+  add column if not exists amount text,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
 
 -- Normalize column types expected by the app's REST payloads.
 alter table if exists public.dogs
@@ -100,6 +130,13 @@ alter table if exists public.patterns
   alter column date type timestamptz using date::timestamptz,
   alter column type type text using type::text;
 
+alter table if exists public.feedings
+  alter column id type text using id::text,
+  alter column dog_id type text using dog_id::text,
+  alter column date type timestamptz using date::timestamptz,
+  alter column food_type type text using food_type::text,
+  alter column amount type text using amount::text;
+
 -- Enforce not-null columns expected by app writes.
 alter table if exists public.sessions
   alter column dog_id set not null,
@@ -121,6 +158,12 @@ alter table if exists public.patterns
   alter column date set not null,
   alter column type set not null;
 
+alter table if exists public.feedings
+  alter column dog_id set not null,
+  alter column date set not null,
+  alter column food_type set not null,
+  alter column amount set not null;
+
 -- Foreign keys and checks (idempotent).
 do $$
 begin
@@ -131,6 +174,16 @@ begin
   ) then
     alter table public.sessions
       add constraint sessions_dog_id_fkey
+      foreign key (dog_id) references public.dogs(id) on delete cascade;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'feedings_dog_id_fkey'
+      and conrelid = 'public.feedings'::regclass
+  ) then
+    alter table public.feedings
+      add constraint feedings_dog_id_fkey
       foreign key (dog_id) references public.dogs(id) on delete cascade;
   end if;
 
@@ -189,12 +242,14 @@ end $$;
 create index if not exists sessions_dog_id_idx on public.sessions(dog_id);
 create index if not exists walks_dog_id_idx on public.walks(dog_id);
 create index if not exists patterns_dog_id_idx on public.patterns(dog_id);
+create index if not exists feedings_dog_id_idx on public.feedings(dog_id);
 
 -- RLS compatibility with existing anon-key sync model.
 alter table public.dogs enable row level security;
 alter table public.sessions enable row level security;
 alter table public.walks enable row level security;
 alter table public.patterns enable row level security;
+alter table public.feedings enable row level security;
 
 do $$
 begin
@@ -224,6 +279,13 @@ begin
     where schemaname = 'public' and tablename = 'patterns' and policyname = 'Public pattern access'
   ) then
     create policy "Public pattern access" on public.patterns for all using (true) with check (true);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'feedings' and policyname = 'Public feeding access'
+  ) then
+    create policy "Public feeding access" on public.feedings for all using (true) with check (true);
   end if;
 end $$;
 

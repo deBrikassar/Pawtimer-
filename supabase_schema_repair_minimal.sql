@@ -9,14 +9,26 @@ create table if not exists public.patterns (
 );
 
 alter table if exists public.walks
-  add column if not exists duration integer;
+  add column if not exists duration integer,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
 
 alter table if exists public.sessions
   add column if not exists context jsonb,
   add column if not exists symptoms jsonb,
   add column if not exists recovery_seconds integer,
   add column if not exists pre_session jsonb,
-  add column if not exists environment jsonb;
+  add column if not exists environment jsonb,
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
+
+alter table if exists public.patterns
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
+
+alter table if exists public.feedings
+  add column if not exists revision bigint not null default 0,
+  add column if not exists updated_at timestamptz not null default now();
 
 commit;
 
