@@ -914,7 +914,7 @@
   .settings-collapsible-sheet .settings-collapsible-arrow { font-size:var(--type-field-value-size); }
 
 
-  .diag-head { display:flex; align-items:center; justify-content:flex-end; gap:var(--space-control-gap); margin-bottom:var(--space-control-gap); }
+  .diag-head { display:flex; align-items:center; justify-content:center; gap:var(--space-control-gap); margin-bottom:var(--space-control-gap); }
   .diag-run-btn { border:1px solid var(--primaryBlue); background:transparent; color:var(--primaryBlue); cursor:pointer; gap:var(--space-compact-button-gap); }
   .diag-run-btn:disabled { opacity:0.6; cursor:not-allowed; }
   .diag-grid { display:grid; gap:var(--space-control-gap); font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); color:var(--text-muted); margin-bottom:var(--space-card-row-gap); }
