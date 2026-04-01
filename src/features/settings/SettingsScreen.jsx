@@ -70,11 +70,16 @@ export default function SettingsScreen(props) {
 
           <div className="settings-section-label">Reminders</div>
           <div className="share-card">
-            <div className="share-title">Daily training reminder</div>
-            <div className="share-sub">Set a gentle daily prompt so sessions stay consistent.</div>
+            <div className="share-title">Daily in-app reminder prompt</div>
+            <div className="share-sub">PawTimer checks reminder time when the app is opened or becomes active, then shows a local prompt if due.</div>
             <div className="settings-inline-row">
               <button className={`notif-toggle secondary-control secondary-control--toggle ${notifEnabled ? "on" : ""}`} onClick={handleToggleNotif}>{notifEnabled ? "On" : "Off"}</button>
-              {notifEnabled && <input type="time" value={notifTime} onChange={(e) => { setNotifTime(e.target.value); scheduleNotif(e.target.value, dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase())?.dogName ?? "your dog"); }} className="notif-time-input" />}
+              {notifEnabled && <input type="time" value={notifTime} onChange={async (e) => {
+                const nextTime = e.target.value;
+                const dogName = dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase())?.dogName ?? "your dog";
+                const ok = await scheduleNotif(nextTime, dogName);
+                if (ok) setNotifTime(nextTime);
+              }} className="notif-time-input" />}
             </div>
           </div>
 
