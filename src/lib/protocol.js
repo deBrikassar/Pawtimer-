@@ -179,18 +179,49 @@ function confidenceFromSession(session = {}) {
   return 0.65;
 }
 
+function pickFinite(session = {}, keys = []) {
+  for (const key of keys) {
+    const value = Number(session?.[key]);
+    if (Number.isFinite(value)) return value;
+  }
+  return null;
+}
+
+function resolveDurationSeconds(session = {}, config = {}) {
+  const {
+    secondsKeys = [],
+    canonicalKeys = [],
+    minutesKeys = [],
+    ambiguousKeys = [],
+  } = config;
+
+  const explicitSeconds = pickFinite(session, secondsKeys);
+  if (explicitSeconds != null) return Math.max(0, Math.round(explicitSeconds));
+
+  const canonical = pickFinite(session, canonicalKeys);
+  if (canonical != null) return Math.max(0, Math.round(canonical));
+
+  const explicitMinutes = pickFinite(session, minutesKeys);
+  if (explicitMinutes != null) return Math.max(0, Math.round(explicitMinutes * 60));
+
+  const ambiguous = pickFinite(session, ambiguousKeys);
+  if (ambiguous != null) return Math.max(0, Math.round(ambiguous));
+
+  return null;
+}
+
 function toRichSession(session = {}) {
-  const planned = Math.max(
-    PROTOCOL.minDurationSeconds,
-    Number(
-      session.plannedDuration
-      || session.planned_duration
-      || session.targetDuration
-      || session.target_duration
-      || 0,
-    ) || PROTOCOL.startDurationSeconds,
-  );
-  const actual = Math.max(0, Number(session.actualDuration || session.actual_duration || 0));
+  const planned = Math.max(PROTOCOL.minDurationSeconds, resolveDurationSeconds(session, {
+    secondsKeys: ["plannedDurationSeconds", "planned_duration_seconds", "targetDurationSeconds", "target_duration_seconds"],
+    canonicalKeys: ["plannedDuration", "planned_duration", "targetDuration", "target_duration"],
+    minutesKeys: ["plannedDurationMinutes", "planned_duration_minutes", "targetDurationMinutes", "target_duration_minutes"],
+  }) ?? PROTOCOL.startDurationSeconds);
+  const actual = resolveDurationSeconds(session, {
+    secondsKeys: ["actualDurationSeconds", "actual_duration_seconds", "durationSeconds", "duration_seconds", "completedDurationSeconds", "completed_duration_seconds"],
+    canonicalKeys: ["actualDuration", "actual_duration"],
+    minutesKeys: ["actualDurationMinutes", "actual_duration_minutes", "durationMinutes", "duration_minutes", "completedDurationMinutes", "completed_duration_minutes"],
+    ambiguousKeys: ["duration", "value"],
+  }) ?? 0;
   const level = normalizeDistressLevel(
     session.distressLevel
     || session.distress_level
