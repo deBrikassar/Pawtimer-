@@ -175,7 +175,8 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     durationMinutes: Math.round(s.actualDuration / 60 * 10) / 10,
     distressLevel: s.distressLevel,
   }));
-  const currentThreshold = Number.isFinite(lastSess?.plannedDuration) ? lastSess.plannedDuration : target;
+  const currentThreshold = target;
+  const lastPlannedDuration = Number.isFinite(lastSess?.plannedDuration) ? lastSess.plannedDuration : null;
   const headlineStatus = (() => {
     if (recentHighDistress.relapseRisk || recentHighDistress.severeCount > 0 || momentumTone.label === "Watch closely") return "Needs attention";
     if ((calmRate7 != null && calmRate14 != null && calmRate7 > calmRate14) || streak >= 3 || bestCalm >= currentThreshold) return "Improving";
@@ -245,6 +246,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     relapseTone,
     chartData,
     currentThreshold,
+    lastPlannedDuration,
     headlineStatus,
     headlineStatusTone,
     chartTrendLabel,
