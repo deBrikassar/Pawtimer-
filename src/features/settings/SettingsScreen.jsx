@@ -127,7 +127,7 @@ export default function SettingsScreen(props) {
                 <div className="proto-section"><div className="proto-title">Progress rules</div><div className="proto-row">PawTimer starts from a weighted safe-alone estimate built from recent calm sessions. Five calm sessions in a row usually earn a +15% step. Subtle stress usually repeats the same duration, active distress shortens the next target, and severe distress triggers a deeper stabilization step.</div></div>
                 <div className="proto-section"><div className="proto-title">Next target factors</div><div className="proto-row">{nextTargetInfo.summary} Right now it uses {nextTargetInfo.factors.join(" ")}</div></div>
                 <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions and {activeProto.maxDailyAloneMinutes} min alone/day, with {pattern.recMin}–{pattern.recMax} pattern breaks for about {pattern.normalizedLeaves} departures/day and {activeProto.restDaysPerWeekRecommended} rest days/week.</div></div>
-                <div className="proto-section"><div className="proto-title">Walk buffer</div><div className="proto-row">Use walks plus a {pattern.walkBuffer}-minute buffer before counting a departure toward pattern-break practice.</div></div>
+                <div className="proto-section"><div className="proto-title">Walk buffer</div><div className="proto-row">For ~{pattern.normalizedLeaves} departures/day, add {pattern.walkBuffer} extra pattern-break cues on top of walks so cues stay ahead of real departures.</div></div>
               </div>
             </div>
           </div>
