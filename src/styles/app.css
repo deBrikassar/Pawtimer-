@@ -394,12 +394,14 @@
       linear-gradient(180deg, rgba(255, 250, 243, 0.24) 0%, rgba(242, 221, 196, 0.16) 100%);
   }
   .ring-inner-recovery-wave {
-    inset:7%;
+    inset:0;
     background:radial-gradient(circle,
-      rgba(255, 244, 229, 0.5) 0%,
-      rgba(255, 236, 210, 0.34) 22%,
-      rgba(255, 229, 199, 0.14) 48%,
-      rgba(255, 229, 199, 0) 74%);
+      rgba(255, 240, 220, 0.28) 0%,
+      rgba(255, 234, 206, 0.22) 34%,
+      rgba(255, 228, 198, 0.28) 62%,
+      rgba(255, 221, 189, 0.2) 84%,
+      rgba(255, 221, 189, 0.1) 95%,
+      rgba(255, 221, 189, 0) 100%);
     animation:ringRecoveryWaveTravel 2.05s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
   .ring-inner-recovery-core {
@@ -660,10 +662,11 @@
     100% { transform:scale(1.22); opacity:0; }
   }
   @keyframes ringRecoveryWaveTravel {
-    0% { transform:scale(0.18); opacity:0.78; filter:brightness(0.98); }
-    38% { opacity:0.62; }
-    78% { opacity:0.24; }
-    100% { transform:scale(1.14); opacity:0; filter:brightness(1.05); }
+    0% { transform:scale(0.08); opacity:0.78; filter:brightness(0.98); }
+    52% { opacity:0.62; }
+    88% { opacity:0.42; }
+    97% { opacity:0.22; }
+    100% { transform:scale(1.04); opacity:0; filter:brightness(1.05); }
   }
   @keyframes ringRecoveryCoreSeed {
     0% { transform:scale(0.68); opacity:0.82; filter:saturate(1.04) brightness(0.9); }
