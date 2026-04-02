@@ -163,6 +163,7 @@ export function StatsProgressRing({
           {showRecoveryPulse && (
             <span className="ring-inner-recovery-layers" aria-hidden="true">
               <span className="ring-inner-recovery-face" />
+              <span className="ring-inner-recovery-wave" />
               <span className="ring-inner-recovery-core" />
             </span>
           )}

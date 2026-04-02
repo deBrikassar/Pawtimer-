@@ -380,6 +380,7 @@
     z-index:0;
   }
   .ring-inner-recovery-face,
+  .ring-inner-recovery-wave,
   .ring-inner-recovery-core {
     position:absolute;
     inset:0;
@@ -389,14 +390,22 @@
   }
   .ring-inner-recovery-face {
     background:
-      radial-gradient(circle at 50% 38%, rgba(255, 247, 236, 0.62) 0%, rgba(252, 227, 200, 0.36) 34%, rgba(232, 194, 156, 0.18) 70%, rgba(228, 192, 154, 0) 100%),
-      linear-gradient(180deg, rgba(255, 250, 243, 0.3) 0%, rgba(242, 221, 196, 0.2) 100%);
-    animation:ringRecoveryFaceBreath 2.7s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+      radial-gradient(circle at 50% 38%, rgba(255, 247, 236, 0.52) 0%, rgba(249, 223, 193, 0.3) 42%, rgba(232, 194, 156, 0.14) 76%, rgba(228, 192, 154, 0) 100%),
+      linear-gradient(180deg, rgba(255, 250, 243, 0.24) 0%, rgba(242, 221, 196, 0.16) 100%);
+  }
+  .ring-inner-recovery-wave {
+    inset:7%;
+    background:radial-gradient(circle,
+      rgba(255, 244, 229, 0.5) 0%,
+      rgba(255, 236, 210, 0.34) 22%,
+      rgba(255, 229, 199, 0.14) 48%,
+      rgba(255, 229, 199, 0) 74%);
+    animation:ringRecoveryWaveTravel 2.05s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
   .ring-inner-recovery-core {
-    inset:8%;
-    background:radial-gradient(circle, rgba(255, 254, 249, 0.72) 0%, rgba(255, 236, 210, 0.4) 40%, rgba(255, 234, 207, 0.08) 68%, rgba(255, 234, 207, 0) 82%);
-    animation:ringRecoveryCoreBreath 2.7s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    inset:24%;
+    background:radial-gradient(circle, rgba(177, 105, 38, 0.48) 0%, rgba(202, 129, 62, 0.36) 38%, rgba(233, 174, 119, 0.12) 66%, rgba(233, 174, 119, 0) 100%);
+    animation:ringRecoveryCoreSeed 2.05s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
   .ring-val {
     inline-size:max-content;
@@ -650,15 +659,16 @@
     62% { opacity:0.16; }
     100% { transform:scale(1.22); opacity:0; }
   }
-  @keyframes ringRecoveryFaceBreath {
-    0%, 100% { opacity:0.76; transform:scale(1); filter:brightness(1.01); }
-    38% { opacity:1; transform:scale(1.026); filter:brightness(1.08); }
-    68% { opacity:0.86; transform:scale(1.012); filter:brightness(1.03); }
+  @keyframes ringRecoveryWaveTravel {
+    0% { transform:scale(0.18); opacity:0.78; filter:brightness(0.98); }
+    38% { opacity:0.62; }
+    78% { opacity:0.24; }
+    100% { transform:scale(1.14); opacity:0; filter:brightness(1.05); }
   }
-  @keyframes ringRecoveryCoreBreath {
-    0%, 100% { opacity:0.38; transform:scale(0.9); }
-    38% { opacity:0.7; transform:scale(1.1); }
-    68% { opacity:0.48; transform:scale(1.03); }
+  @keyframes ringRecoveryCoreSeed {
+    0% { transform:scale(0.68); opacity:0.82; filter:saturate(1.04) brightness(0.9); }
+    28% { opacity:0.56; }
+    100% { transform:scale(1.04); opacity:0; filter:saturate(1) brightness(1.02); }
   }
 
   /* ── History action buttons ── */
