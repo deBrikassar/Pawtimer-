@@ -3,7 +3,7 @@ import EmptyState from "../../components/EmptyState";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
 import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, sessionDetailBadges, walkTypeLabel } from "../app/helpers";
-import { ClockIcon, DeleteIcon, EditIcon, FoodIcon, Img, ModalCloseButton, TrendIcon } from "../app/ui";
+import { ClockIcon, DeleteIcon, EditIcon, ModalCloseButton, TrendIcon } from "../app/ui";
 import { mergeSessionWithDerivedFields, normalizeSession } from "../app/storage";
 
 function HistoryActionGroup({ actions }) {
@@ -220,7 +220,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
     setExpandedItemKey((prev) => (prev === itemKey ? null : itemKey));
   };
 
-  const renderHistoryCard = ({ itemKey, iconClassName, markerClassName, icon, title, date, value, badge, syncBadge, expandedContent }) => {
+  const renderHistoryCard = ({ itemKey, title, date, value, badge, syncBadge, expandedContent }) => {
     const isExpanded = expandedItemKey === itemKey;
     const detailsId = `history-details-${itemKey}`;
 
@@ -239,7 +239,6 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
           toggleExpandedItem(itemKey);
         }}
       >
-        <div className={`h-dot ${iconClassName} ${markerClassName}`.trim()}>{icon}</div>
         <div className="h-body">
           <div className="h-content">
             <div className="h-info">
@@ -279,13 +278,9 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
             if (item.kind === "session") {
               const s = item.data;
               const lv = normalizeDistressLevel(s.distressLevel ?? (s.result === "success" ? "none" : "strong"));
-              const icon = lv === "none" ? "result-calm.png" : lv === "subtle" ? "result-mild.png" : "result-strong.png";
               const detailBadges = sessionDetailBadges(s);
               return renderHistoryCard({
                 itemKey: `s-${s.id}`,
-                iconClassName: `dot-${lv}`,
-                markerClassName: "marker-session",
-                icon: <Img src={icon} size={22} />,
                 title: "Training session",
                 date: fmtDate(s.date),
                 value: fmt(s.actualDuration),
@@ -315,9 +310,6 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               const w = item.data;
               return renderHistoryCard({
                 itemKey: `w-${w.id}`,
-                iconClassName: "dot-walk",
-                markerClassName: "marker-walk",
-                icon: <Img src="walk.png" size={22} />,
                 title: `${walkTypeLabel(w.type)} with ${name}`,
                 date: fmtDate(w.date),
                 value: w.duration ? fmt(w.duration) : "—",
@@ -348,9 +340,6 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               const pt = PATTERN_TYPES.find((x) => x.type === p.type) ?? PATTERN_TYPES[0];
               return renderHistoryCard({
                 itemKey: `p-${p.id}`,
-                iconClassName: "dot-pat",
-                markerClassName: "marker-pat",
-                icon: <Img src={pt.icon} size={22} />,
                 title: patLabels[pt.type] || pt.label,
                 date: fmtDate(p.date),
                 badge: <span className="h-badge badge-pat">Pattern break</span>,
@@ -377,9 +366,6 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               const f = item.data;
               return renderHistoryCard({
                 itemKey: `f-${f.id}`,
-                iconClassName: "dot-feed",
-                markerClassName: "marker-feed",
-                icon: <FoodIcon />,
                 title: <span className="history-food-type">{f.foodType}</span>,
                 date: fmtDate(f.date),
                 value: f.amount,

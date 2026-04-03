@@ -738,32 +738,8 @@
   .pat-edit-btn:hover { color:var(--blue-darker); }
   .h-item { margin-bottom:var(--space-card-row-gap); align-items:flex-start; animation:surfaceEnter var(--motion-enter) var(--ease-out); }
   .h-item.is-expanded { box-shadow:var(--shadow-lg); }
-  .h-dot { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:var(--type-button-size); flex-shrink:0; position:relative; }
-  .h-dot svg { width:22px; height:22px; display:block; }
-  .h-dot::after {
-    content:"";
-    position:absolute;
-    right:4px;
-    bottom:4px;
-    width:8px;
-    height:8px;
-    background:var(--surf);
-    border:1.5px solid var(--brown-mid);
-    box-sizing:border-box;
-  }
-  .marker-session::after { border-radius:50%; }
-  .marker-walk::after { border-radius:2px; }
-  .marker-pat::after { border-radius:1px; transform:rotate(45deg); }
-  .marker-feed::after { width:10px; height:6px; border-radius:999px; }
   .h-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--space-control-gap); }
   .h-content { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-control-gap); min-width:0; }
-  .dot-none   { background:var(--status-success-bg); }
-  .dot-subtle { background:color-mix(in srgb, var(--warning) 16%, transparent); }
-  .dot-active { background:var(--status-attention-bg); }
-  .dot-severe { background:var(--status-danger-bg); }
-  .dot-walk   { background:color-mix(in srgb, var(--success) 20%, transparent); }
-  .dot-feed   { background:var(--status-warning-bg-strong); color:var(--brown); }
-  .dot-pat    { background:var(--status-neutral-bg); }
   .h-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--row-gap-dense); padding-top:1px; }
   .h-main { font-size:var(--type-list-row-title-size); font-weight:var(--type-list-row-title-weight); line-height:var(--type-list-row-title-line); letter-spacing:var(--type-list-row-title-track); color:var(--brown); }
   .h-meta-line { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; }
