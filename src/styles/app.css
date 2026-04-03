@@ -328,6 +328,7 @@
     flex:0 0 auto;
   }
   .ring-wrap--recovery-pulse {
+    --recovery-cycle:1.72s;
     isolation:isolate;
     overflow:visible;
   }
@@ -338,12 +339,21 @@
     z-index:1;
   }
   .ring-recovery-pulse__core,
-  .ring-recovery-pulse__bloom {
+  .ring-recovery-pulse__bloom,
+  .ring-recovery-pulse__core::before,
+  .ring-recovery-pulse__bloom::before {
     position:absolute;
     inset:0;
     border-radius:50%;
     transform-origin:center;
     will-change:transform, opacity;
+  }
+  .ring-recovery-pulse__core::before,
+  .ring-recovery-pulse__bloom::before,
+  .ring-inner-recovery-wave::before,
+  .ring-inner-recovery-core::before {
+    content:"";
+    pointer-events:none;
   }
   .ring-recovery-pulse__core {
     inset:6%;
@@ -354,7 +364,12 @@
       color-mix(in srgb, var(--warm-accent-soft) 30%, transparent) 76%,
       transparent 92%);
     filter:saturate(1.1) brightness(1.08);
-    animation:ringRecoveryPulseInner 1.72s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+    animation:ringRecoveryPulseInner var(--recovery-cycle) linear infinite;
+  }
+  .ring-recovery-pulse__core::before {
+    background:inherit;
+    filter:inherit;
+    animation:ringRecoveryPulseInner var(--recovery-cycle) linear infinite calc(var(--recovery-cycle) * -0.5);
   }
   .ring-recovery-pulse__bloom {
     inset:-22%;
@@ -364,7 +379,12 @@
       color-mix(in srgb, var(--color-warm-accent) 26%, transparent) 70%,
       transparent 88%);
     filter:blur(0.2px) saturate(1.06) brightness(1.06);
-    animation:ringRecoveryPulseBloom 1.72s cubic-bezier(0.22, 0.61, 0.36, 1) infinite 0.22s;
+    animation:ringRecoveryPulseBloom var(--recovery-cycle) linear infinite -0.14s;
+  }
+  .ring-recovery-pulse__bloom::before {
+    background:inherit;
+    filter:inherit;
+    animation:ringRecoveryPulseBloom var(--recovery-cycle) linear infinite calc(var(--recovery-cycle) * -0.64);
   }
   .ring-svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; z-index:2; }
   .ring-bg   { fill:none; stroke:color-mix(in srgb, var(--border) 72%, white); stroke-width:7; }
@@ -394,7 +414,9 @@
   }
   .ring-inner-recovery-face,
   .ring-inner-recovery-wave,
-  .ring-inner-recovery-core {
+  .ring-inner-recovery-core,
+  .ring-inner-recovery-wave::before,
+  .ring-inner-recovery-core::before {
     position:absolute;
     inset:0;
     border-radius:inherit;
@@ -417,12 +439,23 @@
       rgba(255, 216, 178, 0.24) 94%,
       rgba(255, 221, 189, 0) 100%);
     filter:saturate(1.12) brightness(1.06);
-    animation:ringRecoveryWaveTravel 1.72s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+    animation:ringRecoveryWaveTravel var(--recovery-cycle) linear infinite;
+  }
+  .ring-inner-recovery-wave::before {
+    background:inherit;
+    filter:inherit;
+    animation:ringRecoveryWaveTravel var(--recovery-cycle) linear infinite calc(var(--recovery-cycle) * -0.5);
   }
   .ring-inner-recovery-core {
     inset:24%;
     background:radial-gradient(circle, rgba(177, 105, 38, 0.62) 0%, rgba(202, 129, 62, 0.48) 40%, rgba(233, 174, 119, 0.24) 72%, rgba(233, 174, 119, 0) 100%);
-    animation:ringRecoveryCoreSeed 1.72s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+    filter:blur(0.25px);
+    animation:ringRecoveryCoreSeed var(--recovery-cycle) linear infinite;
+  }
+  .ring-inner-recovery-core::before {
+    background:inherit;
+    filter:inherit;
+    animation:ringRecoveryCoreSeed var(--recovery-cycle) linear infinite calc(var(--recovery-cycle) * -0.48);
   }
   .ring-val {
     inline-size:max-content;
@@ -665,39 +698,39 @@
   .settings-sync-copy { font-size:var(--type-helper-text-size); color:var(--text-muted); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
   @keyframes ringRecoveryPulseInner {
-    0% { transform:scale(0.22); opacity:0.08; }
-    10% { transform:scale(0.34); opacity:0.54; }
-    24% { transform:scale(0.5); opacity:0.84; }
-    44% { transform:scale(0.72); opacity:0.78; }
-    66% { transform:scale(0.92); opacity:0.58; }
-    84% { transform:scale(1.06); opacity:0.34; }
-    100% { transform:scale(1.16); opacity:0.08; }
+    0% { transform:scale(0.28); opacity:0.16; }
+    12% { transform:scale(0.42); opacity:0.52; }
+    28% { transform:scale(0.58); opacity:0.78; }
+    46% { transform:scale(0.76); opacity:0.72; }
+    64% { transform:scale(0.92); opacity:0.56; }
+    82% { transform:scale(1.06); opacity:0.34; }
+    100% { transform:scale(1.18); opacity:0.16; }
   }
   @keyframes ringRecoveryPulseBloom {
-    0% { transform:scale(0.62); opacity:0.08; }
-    18% { transform:scale(0.78); opacity:0.34; }
-    40% { transform:scale(0.96); opacity:0.44; }
-    64% { transform:scale(1.14); opacity:0.36; }
-    84% { transform:scale(1.26); opacity:0.22; }
-    100% { transform:scale(1.34); opacity:0.08; }
+    0% { transform:scale(0.68); opacity:0.12; }
+    18% { transform:scale(0.84); opacity:0.3; }
+    38% { transform:scale(1.02); opacity:0.4; }
+    58% { transform:scale(1.16); opacity:0.34; }
+    78% { transform:scale(1.28); opacity:0.24; }
+    100% { transform:scale(1.38); opacity:0.12; }
   }
   @keyframes ringRecoveryWaveTravel {
-    0% { transform:scale(0.14); opacity:0.08; }
-    12% { transform:scale(0.28); opacity:0.64; }
-    28% { transform:scale(0.46); opacity:0.82; }
-    50% { transform:scale(0.7); opacity:0.78; }
-    72% { transform:scale(0.9); opacity:0.62; }
-    88% { transform:scale(1.04); opacity:0.44; }
-    100% { transform:scale(1.14); opacity:0.08; }
+    0% { transform:scale(0.2); opacity:0.14; }
+    14% { transform:scale(0.34); opacity:0.56; }
+    30% { transform:scale(0.5); opacity:0.8; }
+    48% { transform:scale(0.68); opacity:0.78; }
+    66% { transform:scale(0.84); opacity:0.66; }
+    84% { transform:scale(0.98); opacity:0.5; }
+    100% { transform:scale(1.14); opacity:0.14; }
   }
   @keyframes ringRecoveryCoreSeed {
-    0% { transform:scale(0.5); opacity:0.12; }
-    10% { transform:scale(0.62); opacity:0.66; }
-    24% { transform:scale(0.74); opacity:0.9; }
-    42% { transform:scale(0.86); opacity:0.82; }
-    62% { transform:scale(0.96); opacity:0.62; }
-    82% { transform:scale(1.05); opacity:0.34; }
-    100% { transform:scale(1.12); opacity:0.12; }
+    0% { transform:scale(0.56); opacity:0.2; }
+    12% { transform:scale(0.66); opacity:0.62; }
+    28% { transform:scale(0.76); opacity:0.88; }
+    46% { transform:scale(0.86); opacity:0.82; }
+    64% { transform:scale(0.94); opacity:0.66; }
+    82% { transform:scale(1.02); opacity:0.42; }
+    100% { transform:scale(1.1); opacity:0.2; }
   }
 
   /* ── History action buttons ── */
