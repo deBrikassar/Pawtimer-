@@ -766,7 +766,7 @@
 }
 
 
-:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .pat-edit-reset, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta):active:not(:disabled) {
+:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta):active:not(:disabled) {
   transform: scale(0.96);
 }
 
