@@ -1,5 +1,5 @@
 import { PATTERN_TYPES } from "../app/helpers";
-import { DeleteIcon, EditIcon, Img, ModalCloseButton } from "../app/ui";
+import { DeleteIcon, ModalCloseButton } from "../app/ui";
 import { useState } from "react";
 
 const SETTINGS_PANEL = {
@@ -191,14 +191,15 @@ export default function SettingsScreen(props) {
             <div className="settings-modal-stack">
               {PATTERN_TYPES.map((pt) => (
                 <div key={pt.type} className="pat-edit-row">
-                  <Img src={pt.icon} size={28} alt={pt.label} />
                   {editingPat === pt.type ? (
                     <input className="pat-edit-input" autoFocus aria-label={`Rename ${pt.label}`} defaultValue={patLabels[pt.type] || pt.label} onBlur={(e) => { const val = e.target.value.trim(); if (val) setPatLabels((prev) => ({ ...prev, [pt.type]: val })); setEditingPat(null); }} onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") setEditingPat(null); }} />
                   ) : (
                     <span className="pat-edit-label">{patLabels[pt.type] || pt.label}</span>
                   )}
-                  <button className="pat-edit-btn secondary-control secondary-control--icon" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}><EditIcon /></button>
-                  {editingPat === pt.type && patLabels[pt.type] && <button className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text" onMouseDown={(e) => e.preventDefault()} onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">Reset</button>}
+                  <div className="pat-edit-actions">
+                    <button className="pat-edit-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}>Edit</button>
+                    {editingPat === pt.type && patLabels[pt.type] && <button className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text" onMouseDown={(e) => e.preventDefault()} onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">Reset</button>}
+                  </div>
                 </div>
               ))}
             </div>
