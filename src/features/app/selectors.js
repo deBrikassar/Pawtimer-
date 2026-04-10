@@ -1,4 +1,4 @@
-import { PROTOCOL, explainNextTarget, getCalmStreak, getDistressCounts, getRecentHighDistressSummary, normalizeDistressLevel } from "../../lib/protocol";
+import { PROTOCOL, explainNextTarget, getCalmStreak, getDistressCounts, getRecentHighDistressSummary } from "../../lib/protocol";
 import { dailyInfo, distressLabel, fmt, getInformationalTone, getLeaveProfile, getRiskTone, isToday, patternInfo, toDayKey } from "./helpers";
 
 const hasValue = (value) => value !== null && value !== undefined;
@@ -114,24 +114,14 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   })();
 
   const recentHighDistress = getRecentHighDistressSummary(sessions);
+  const decisionState = nextTargetInfo.decisionState || null;
 
   const trainingReadiness = (() => {
-    const now = Date.now();
-    const lastWalk = walks.length ? walks[walks.length - 1] : null;
-    const lastWalkTs = lastWalk ? new Date(lastWalk.date).getTime() : NaN;
-    const walkToday = walks.some((w) => isToday(w.date));
-    const walkWithinTwoHours = Number.isFinite(lastWalkTs) && ((now - lastWalkTs) <= (2 * 60 * 60 * 1000));
-    const lastSession = sessions.length ? sessions[sessions.length - 1] : null;
-    const lastSessionLevel = normalizeDistressLevel(lastSession?.distressLevel);
-    const lastSessionTs = lastSession ? new Date(lastSession.date).getTime() : NaN;
-    const minutesSinceLastSession = Number.isFinite(lastSessionTs) ? ((now - lastSessionTs) / 60000) : null;
-    if (!walkToday || ["active", "severe"].includes(lastSessionLevel) || (minutesSinceLastSession != null && minutesSinceLastSession < 5)) {
-      return { level: "LOW", ...getRiskTone("low") };
-    }
-    if (walkWithinTwoHours && lastSessionLevel === "none" && (minutesSinceLastSession == null || minutesSinceLastSession >= 10)) {
-      return { level: "HIGH", ...getRiskTone("high") };
-    }
-    return { level: "MEDIUM", ...getRiskTone("medium") };
+    if (decisionState?.readiness === "high") return { level: "HIGH", ...getInformationalTone("improving") };
+    if (decisionState?.readiness === "moderate") return { level: "MEDIUM", ...getInformationalTone("stable") };
+    if (decisionState?.readiness === "guarded") return { level: "GUARDED", ...getRiskTone("medium"), label: "Guarded" };
+    if (decisionState?.readiness === "low") return { level: "LOW", ...getRiskTone("high") };
+    return { level: "BUILDING", ...getInformationalTone("neutral"), label: "Building baseline" };
   })();
 
   const adherenceByDay = (() => {
@@ -162,11 +152,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   const stabilityTone = statusTone(durationVariability, { good: 120, warn: 240, invert: true });
   const adherenceTone = statusTone(adherenceByDay, { good: 85, warn: 65 });
   const relapseTone = (() => {
-    if (recentHighDistress.relapseRisk) return getRiskTone("high");
-    if (recentHighDistress.highDistressCount === 1 || recentHighDistress.recentSessions.length < recentHighDistress.window) {
-      return getRiskTone("medium");
-    }
-    return getRiskTone("low");
+    return getRiskTone(decisionState?.riskLevel || "medium");
   })();
 
   const chartData = sessions.slice(-25).map((s, i) => ({
@@ -178,13 +164,11 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   const currentThreshold = target;
   const lastPlannedDuration = Number.isFinite(lastSess?.plannedDuration) ? lastSess.plannedDuration : null;
   const headlineStatus = (() => {
-    if (recentHighDistress.relapseRisk || recentHighDistress.severeCount > 0 || momentumTone.label === "Watch closely") return "Needs attention";
-    if ((calmRate7 != null && calmRate14 != null && calmRate7 > calmRate14) || streak >= 3 || bestCalm >= currentThreshold) return "Improving";
-    return "Stable";
+    return decisionState?.statusLabel || "Stable";
   })();
-  const headlineStatusTone = headlineStatus === "Needs attention"
+  const headlineStatusTone = decisionState?.uiTone === "risk_high"
     ? { ...getRiskTone("high"), label: headlineStatus, surfaceState: "overdue" }
-    : headlineStatus === "Improving"
+    : decisionState?.uiTone === "informational_improving"
       ? { ...getInformationalTone("improving"), surfaceState: "upcoming" }
       : { ...getInformationalTone("stable"), surfaceState: "today" };
   const chartTrendLabel = (() => {

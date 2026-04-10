@@ -535,6 +535,56 @@ function labelRelapseRisk(risk = 0) {
   return "low";
 }
 
+function buildDecisionState({ recommendedDuration, recommendationType, stats, recoveryMode, factors = [], hasHistory }) {
+  if (!hasHistory || !stats) {
+    return {
+      targetSeconds: recommendedDuration,
+      riskLevel: "medium",
+      readiness: "building",
+      statusLabel: "Stable",
+      uiTone: "informational_stable",
+      reasonTags: ["baseline_start"],
+      factors,
+    };
+  }
+
+  const riskLevel = labelRelapseRisk(stats.relapseRisk);
+  const cautionType = ["stabilization_block", "reduce_duration", "subtle_recovery_mode"].includes(recommendationType);
+  const guardedType = ["repeat_current_duration", "insert_easy_sessions", "departure_cues_first"].includes(recommendationType);
+  const readiness = cautionType
+    ? "low"
+    : (riskLevel === "high" || recoveryMode?.active || guardedType)
+      ? "guarded"
+      : riskLevel === "medium"
+        ? "moderate"
+        : "high";
+  const statusLabel = cautionType || riskLevel === "high"
+    ? "Needs attention"
+    : (readiness === "high" || recommendationType === "subtle_recovery_resume")
+      ? "Improving"
+      : "Stable";
+  const uiTone = statusLabel === "Needs attention"
+    ? "risk_high"
+    : statusLabel === "Improving"
+      ? "informational_improving"
+      : "informational_stable";
+  const reasonTags = [
+    `risk_${riskLevel}`,
+    `type_${recommendationType}`,
+    recoveryMode?.active ? "recovery_active" : "recovery_inactive",
+  ];
+
+  return {
+    targetSeconds: recommendedDuration,
+    riskLevel,
+    readiness,
+    statusLabel,
+    uiTone,
+    reasonTags,
+    factors,
+  };
+}
+
 function getStepMultiplier(stats, latestSessions = [], allSessions = []) {
   const calmStreak = countStreak(latestSessions, (s) => s.belowThreshold);
 
@@ -708,6 +758,19 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
       stats: null,
       warnings: [],
       walkAdjustmentApplied: false,
+      decisionState: buildDecisionState({
+        recommendedDuration,
+        recommendationType: "baseline_start",
+        stats: null,
+        recoveryMode: null,
+        factors: [
+          baseline > 0
+            ? `Current calm-alone estimate: ${Math.round(baseline)} sec.`
+            : "No calm-alone baseline logged yet.",
+          "Opening sessions stay conservative before the app has enough history to adapt.",
+        ],
+        hasHistory: false,
+      }),
     };
   }
 
@@ -760,6 +823,14 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
     warnings: recommendation.warnings,
     walkAdjustmentApplied,
     recoveryMode: recommendation.recoveryMode,
+    decisionState: buildDecisionState({
+      recommendedDuration,
+      recommendationType: recommendation.recommendationType,
+      stats: recommendation.stats,
+      recoveryMode: recommendation.recoveryMode,
+      factors,
+      hasHistory: trainingSessions.length > 0,
+    }),
   };
 }
 

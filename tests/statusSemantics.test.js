@@ -41,6 +41,49 @@ describe("semantic status mapping", () => {
 
     expect(appData.headlineStatus).toBe("Improving");
     expect(appData.headlineStatusTone.color).toBe("var(--blue-dark)");
-    expect(appData.relapseTone.color).toBe("var(--orange)");
+    expect(appData.relapseTone.color).toBe("var(--green-dark)");
+  });
+
+  it("keeps stats headline and risk in sync with recommendation decision state", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 45, actualDuration: 12, distressLevel: "active", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 40, actualDuration: 8, distressLevel: "severe", belowThreshold: false },
+    ];
+
+    const appData = selectAppData({
+      dogs: [{ id: "DOG-1", dogName: "Milo", goalSeconds: 1200, leavesPerDay: 3 }],
+      activeDogId: "DOG-1",
+      sessions,
+      walks: [],
+      patterns: [],
+      feedings: [],
+      target: 30,
+      protoOverride: {},
+    });
+
+    const toneByRisk = {
+      low: "Low",
+      medium: "Medium",
+      high: "High",
+    };
+    expect(appData.relapseTone.label).toBe(toneByRisk[appData.nextTargetInfo.decisionState.riskLevel]);
+    expect(appData.headlineStatus).toBe(appData.nextTargetInfo.decisionState.statusLabel);
+  });
+
+  it("shares baseline decision state across recommendation and stats with no history", () => {
+    const appData = selectAppData({
+      dogs: [{ id: "DOG-1", dogName: "Milo", goalSeconds: 1200, leavesPerDay: 3 }],
+      activeDogId: "DOG-1",
+      sessions: [],
+      walks: [],
+      patterns: [],
+      feedings: [],
+      target: 30,
+      protoOverride: {},
+    });
+
+    expect(appData.nextTargetInfo.decisionState.readiness).toBe("building");
+    expect(appData.relapseTone.label).toBe("Medium");
+    expect(appData.headlineStatus).toBe("Stable");
   });
 });

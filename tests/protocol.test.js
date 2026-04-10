@@ -355,4 +355,25 @@ describe("public compatibility APIs", () => {
     expect(next).toBeLessThanOrEqual(180);
     expect(next).toBeGreaterThanOrEqual(PROTOCOL.minDurationSeconds);
   });
+
+  it("explainNextTarget returns a decision state aligned with recommendation stats", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 60, actualDuration: 12, distressLevel: "active", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 40, actualDuration: 9, distressLevel: "severe", belowThreshold: false },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
+    expect(next.decisionState).toBeTruthy();
+    expect(next.decisionState.targetSeconds).toBe(next.recommendedDuration);
+    expect(["low", "medium", "high"]).toContain(next.decisionState.riskLevel);
+    if (next.decisionState.riskLevel === "high") {
+      expect(next.decisionState.statusLabel).toBe("Needs attention");
+    }
+  });
+
+  it("explainNextTarget provides sensible baseline decision state with empty history", () => {
+    const next = explainNextTarget([], [], [], { goalSeconds: 3600 });
+    expect(next.decisionState.riskLevel).toBe("medium");
+    expect(next.decisionState.readiness).toBe("building");
+    expect(next.decisionState.statusLabel).toBe("Stable");
+  });
 });
