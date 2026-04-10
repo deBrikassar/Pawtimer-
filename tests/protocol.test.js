@@ -158,6 +158,20 @@ describe("recommendation engine", () => {
     expect(step2.recoveryMode.step).toBe(2);
   });
 
+  it("does not let stale subtle anchors re-trigger recovery after clear calm closure", () => {
+    const sessions = [
+      { date: daysAgo(14), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(3), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(2), plannedDuration: 1000, actualDuration: 1000, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 1100, actualDuration: 1100, distressLevel: "none", belowThreshold: true },
+    ];
+
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recoveryMode.active).toBe(false);
+    expect(rec.recommendationType).not.toBe("subtle_recovery_mode");
+    expect(rec.recommendationType).not.toBe("subtle_recovery_resume");
+  });
+
   it("does not collapse to 30s on subtle distress when latest actual duration is much longer", () => {
     const sessions = [
       { date: daysAgo(0), plannedDuration: 1380, actualDuration: 1380, distressLevel: "none", belowThreshold: true },
@@ -247,6 +261,30 @@ describe("recommendation engine", () => {
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recommendedDuration).toBeGreaterThanOrEqual(30);
     expect(rec.recommendationType).not.toBe("stabilization_block");
+  });
+
+  it("handles mixed unsorted history and still applies fresh subtle recovery steps", () => {
+    const sessions = [
+      { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 180, actualDuration: 180, distressLevel: "none", belowThreshold: true, context: { departureType: "real_life" } },
+      { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+    ];
+
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recoveryMode.active).toBe(true);
+    expect(rec.recoveryMode.step).toBe(2);
+    expect(rec.recommendedDuration).toBe(120);
+  });
+
+  it("does not break on empty or incomplete subtle history", () => {
+    const recEmpty = buildRecommendation([], { goalSeconds: 3600 });
+    expect(recEmpty.recommendedDuration).toBeGreaterThanOrEqual(30);
+
+    const recIncomplete = buildRecommendation([
+      { distressLevel: "subtle", plannedDuration: null, actualDuration: null },
+    ], { goalSeconds: 3600 });
+    expect(recIncomplete.recoveryMode.active).toBe(false);
+    expect(recIncomplete.recommendationType).not.toBe("subtle_recovery_mode");
   });
 
   it("rolls back and enters stabilization mode after repeated active distress", () => {

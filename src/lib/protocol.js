@@ -9,6 +9,8 @@ export const PROTOCOL = {
   goalDurationDefaultSeconds: 7200,
   subtleRecoveryDurationSeconds: 60,
   subtleRecoverySessionCount: 2,
+  subtleRecoveryAnchorClosureCalmSessions: 3,
+  subtleRecoveryAnchorMaxAgeDays: 7,
   stabilizationDistressThreshold: 2,
   stabilizationWindow: 6,
   calmWindow: 8,
@@ -347,6 +349,20 @@ function getSubtleRecoveryContext(trainingSessions = []) {
   if (subtleIndex < 0) return base;
 
   const subtle = trainingSessions[subtleIndex];
+  const nowTime = Date.now();
+  const subtleTime = toTimestamp(subtle?.date);
+  const anchorIsRecent = Number.isFinite(subtleTime)
+    && (nowTime - subtleTime) <= (PROTOCOL.subtleRecoveryAnchorMaxAgeDays * DAY_MS);
+
+  let trailingCalmAfterSubtle = 0;
+  for (let i = trainingSessions.length - 1; i > subtleIndex; i -= 1) {
+    if (trainingSessions[i].distressLevel !== DISTRESS_LEVELS.NONE) break;
+    trailingCalmAfterSubtle += 1;
+  }
+  const anchorHasCalmClosure = trailingCalmAfterSubtle >= PROTOCOL.subtleRecoveryAnchorClosureCalmSessions;
+  const anchorStillValid = anchorIsRecent && !anchorHasCalmClosure;
+  if (!anchorStillValid) return base;
+
   const anchorDuration = Math.max(
     PROTOCOL.minDurationSeconds,
     Number(subtle?.actualDuration) > 0 ? Number(subtle.actualDuration) : Number(subtle?.plannedDuration || PROTOCOL.minDurationSeconds),
