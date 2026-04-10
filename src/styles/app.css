@@ -289,6 +289,28 @@
 
   /* ── Stats rings card ── */
   .stats-rings-card { margin:0; padding:var(--space-surface-card); position:relative; }
+  .train-next-target-metric-row { display:flex; width:100%; }
+  .train-next-target-why {
+    margin-top:var(--space-card-row-gap);
+    padding-top:var(--space-control-gap);
+    border-top:1px solid color-mix(in srgb, var(--border) 84%, white);
+  }
+  .train-next-target-why__label {
+    display:block;
+    margin-bottom:4px;
+    color:color-mix(in srgb, var(--text-muted) 92%, var(--text));
+    font-size:var(--type-helper-text-size);
+    font-weight:var(--type-helper-text-weight);
+    line-height:var(--type-helper-text-line);
+    letter-spacing:var(--type-helper-text-track);
+  }
+  .train-next-target-why__text {
+    margin:0;
+    color:color-mix(in srgb, var(--text) 92%, var(--brown));
+    font-size:var(--type-list-row-secondary-size);
+    line-height:var(--type-list-row-secondary-line);
+    letter-spacing:var(--type-list-row-secondary-track);
+  }
   .stats-rings-card--recovery-active {
     cursor:pointer;
     position:relative;

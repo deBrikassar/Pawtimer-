@@ -4,6 +4,33 @@ import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToda
 import { Img, ModalCloseButton } from "../app/ui";
 import { useState } from "react";
 
+function getNextTargetReason(nextTargetInfo) {
+  if (!nextTargetInfo) {
+    return "We’re keeping this session gentle while your plan builds.";
+  }
+
+  switch (nextTargetInfo.recommendationType) {
+    case "baseline_start":
+      return "We’re starting with an easy win so your dog can settle into training.";
+    case "subtle_recovery_mode":
+      return "Last session showed subtle stress, so we’re keeping this one short for a safer win.";
+    case "subtle_recovery_resume":
+      return "Recovery sessions went well, so we’re easing back toward your prior level.";
+    case "repeat_current_duration":
+      return "Recent stress signs suggest staying at this level to rebuild confidence.";
+    case "reduce_duration":
+      return "Recent stress signals suggest stepping back a bit for a calmer success.";
+    case "stabilization_block":
+      return "Recent stronger stress signs mean a bigger reset to protect confidence.";
+    case "insert_easy_sessions":
+      return "You’re close to a jump, so we’re adding an easier session to keep progress smooth.";
+    case "departure_cues_first":
+      return "Departure cues look sensitive right now, so we’re keeping duration steady for now.";
+    default:
+      return nextTargetInfo.summary || "This target is based on your recent sessions and safety-first progress.";
+  }
+}
+
 export default function HomeScreen(props) {
   const {
     name,
@@ -52,8 +79,10 @@ export default function HomeScreen(props) {
     cancelFeedingForm,
     saveFeeding,
     recoveryMode,
+    nextTargetInfo,
   } = props;
   const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
+  const nextTargetReason = getNextTargetReason(nextTargetInfo);
 
   return (
     <div className="tab-content train-screen">
@@ -97,25 +126,31 @@ export default function HomeScreen(props) {
                 }
               } : undefined}
             >
-              <StatsProgressRing
-                value={nextSessionLabel}
-                numericValue={target}
-                formatValue={fmtClock}
-                label="Next session"
-                progress={goalFrac}
-                fillClassName="ring-fill-1"
-                className="ring-col--next-session"
-                ringWrapClassName={recoveryMode?.active ? "ring-wrap--recovery-pulse" : ""}
-                showRecoveryPulse={recoveryMode?.active}
-              />
-              <div className="ring-col-sep" />
-              <StatsProgressRing
-                value={daily.count}
-                numericValue={daily.count}
-                label="Sessions today"
-                progress={sessFrac}
-                fillClassName="ring-fill-2"
-              />
+              <div className="train-next-target-metric-row">
+                <StatsProgressRing
+                  value={nextSessionLabel}
+                  numericValue={target}
+                  formatValue={fmtClock}
+                  label="Next session"
+                  progress={goalFrac}
+                  fillClassName="ring-fill-1"
+                  className="ring-col--next-session"
+                  ringWrapClassName={recoveryMode?.active ? "ring-wrap--recovery-pulse" : ""}
+                  showRecoveryPulse={recoveryMode?.active}
+                />
+                <div className="ring-col-sep" />
+                <StatsProgressRing
+                  value={daily.count}
+                  numericValue={daily.count}
+                  label="Sessions today"
+                  progress={sessFrac}
+                  fillClassName="ring-fill-2"
+                />
+              </div>
+              <div className="train-next-target-why" aria-live="polite">
+                <span className="train-next-target-why__label">Why this target</span>
+                <p className="train-next-target-why__text">{nextTargetReason}</p>
+              </div>
             </div>
           );
         })()}
