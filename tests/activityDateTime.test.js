@@ -35,4 +35,22 @@ describe("activity date/time helpers", () => {
 
     expect(reordered.map((entry) => entry.id)).toEqual(["walk-1", "walk-3", "walk-2"]);
   });
+
+  it("pushes invalid dates to the end while keeping stable order for ties", () => {
+    const reordered = sortByDateAsc([
+      { id: "same-time-a", date: "2026-03-17T10:00:00.000Z" },
+      { id: "invalid-a", date: "not-a-date" },
+      { id: "same-time-b", date: "2026-03-17T10:00:00.000Z" },
+      { id: "invalid-b", date: null },
+      { id: "earliest", date: "2026-03-16T10:00:00.000Z" },
+    ]);
+
+    expect(reordered.map((entry) => entry.id)).toEqual([
+      "earliest",
+      "same-time-a",
+      "same-time-b",
+      "invalid-a",
+      "invalid-b",
+    ]);
+  });
 });

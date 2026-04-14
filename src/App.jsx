@@ -163,7 +163,8 @@ export default function PawTimer() {
     [activeDogId, dogs],
   );
   const recommendation = useMemo(() => {
-    const nextTargetInfo = explainNextTarget(sessions, walks, patterns, activeDog || {});
+    const sortedSessions = sortByDateAsc(sessions);
+    const nextTargetInfo = explainNextTarget(sortedSessions, walks, patterns, activeDog || {});
     return {
       duration: target,
       decisionState: nextTargetInfo?.decisionState ?? null,
@@ -171,7 +172,8 @@ export default function PawTimer() {
       details: nextTargetInfo,
     };
   }, [activeDog, patterns, sessions, target, walks]);
-  const appData = selectAppData({ dogs, activeDogId, sessions, walks, patterns, feedings, target, protoOverride, recommendation });
+  const sortedSessions = useMemo(() => sortByDateAsc(sessions), [sessions]);
+  const appData = selectAppData({ dogs, activeDogId, sessions: sortedSessions, walks, patterns, feedings, target, protoOverride, recommendation });
 
   const recomputeTarget = useCallback((nextSessions, nextWalks = walks, nextPatterns = patterns, nextDog = appData.dog) => {
     const nextTarget = suggestNextWithContext(nextSessions, nextWalks, nextPatterns, nextDog) ?? suggestNext(nextSessions, nextDog);
@@ -183,7 +185,7 @@ export default function PawTimer() {
     let committed = [];
     setSessions((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
-      const normalized = normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState);
+      const normalized = sortByDateAsc(normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState));
       if (activeDogId) save(sessKey(activeDogId), normalized);
       recomputeTarget(normalized);
       committed = normalized;
@@ -251,7 +253,7 @@ export default function PawTimer() {
     const dog = dogs.find((d) => canonicalDogId(d.id) === normalizedId) ?? ensureArray(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === normalizedId);
     if (!dog) { setScreen("select"); return; }
     const local = hydrateDogFromLocal(normalizedId);
-    const hydratedSessions = normalizeSessions(local.sessions).map(withHydratedSyncState);
+    const hydratedSessions = sortByDateAsc(normalizeSessions(local.sessions).map(withHydratedSyncState));
     const hydratedWalks = sortByDateAsc(ensureArray(local.walks).map((item) => ({ ...withHydratedSyncState(item), type: normalizeWalkType(item?.type) })));
     const hydratedPatterns = sortByDateAsc(ensureArray(local.patterns).map(withHydratedSyncState));
     const hydratedFeedings = normalizeFeedings(local.feedings).map(withHydratedSyncState);
@@ -477,7 +479,7 @@ export default function PawTimer() {
       if (!remote?.dog) { setSyncStatus("err"); setSyncError(error || `No shared dog account found for ${normalizedId}`); showToast(`No shared profile found for ${normalizedId} yet.`); return; }
       const sharedDog = { ...remote.dog, id: normalizedId };
       setDogs((prev) => [...prev.filter((d) => canonicalDogId(d.id) !== normalizedId), sharedDog]);
-      const joinedSessions = normalizeSessions(remote.sessions).map(markRemoteEntryConfirmed);
+      const joinedSessions = sortByDateAsc(normalizeSessions(remote.sessions).map(markRemoteEntryConfirmed));
       const joinedWalks = sortByDateAsc(ensureArray(remote.walks).map((item) => markRemoteEntryConfirmed({ ...item, type: normalizeWalkType(item?.type) })));
       const joinedPatterns = sortByDateAsc(ensureArray(remote.patterns).map(markRemoteEntryConfirmed));
       const joinedFeedings = normalizeFeedings(remote.feedings).map(markRemoteEntryConfirmed);
