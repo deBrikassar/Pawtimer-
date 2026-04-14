@@ -622,6 +622,50 @@ function getLastCalmSession(sessions = []) {
   return null;
 }
 
+function getHoursSinceLastSession(lastSession) {
+  const lastTime = toTimestamp(lastSession?.date);
+  if (!Number.isFinite(lastTime)) return 0;
+  return (Date.now() - lastTime) / (60 * 60 * 1000);
+}
+
+function isUnstableSession(session = null) {
+  if (!session) return false;
+  const distress = normalizeDistressLevel(session.distressLevel);
+  return distress !== DISTRESS_LEVELS.NONE || session.belowThreshold === false;
+}
+
+function hasThreeSessionInstability(window = []) {
+  const lastThree = getLatestSessions(window, 3);
+  return lastThree.length === 3 && lastThree.every(isUnstableSession);
+}
+
+function getPlateauDuration(window = []) {
+  const lastFive = getLatestSessions(window, 5);
+  if (lastFive.length < 5) return null;
+  const durations = lastFive.map((session) => getSessionDurationAnchor(session));
+  if (durations.some((value) => !Number.isFinite(value) || value <= 0)) return null;
+  const [first] = durations;
+  return durations.every((value) => value === first) ? first : null;
+}
+
+function getMostRecentSubtleIndex(window = []) {
+  for (let i = window.length - 1; i >= 0; i -= 1) {
+    if (window[i].distressLevel === DISTRESS_LEVELS.SUBTLE) return i;
+  }
+  return -1;
+}
+
+function hasConsecutivePostSubtleIncrease(window = []) {
+  const subtleIndex = getMostRecentSubtleIndex(window);
+  if (subtleIndex < 0) return false;
+  const postSubtle = window.slice(subtleIndex + 1);
+  if (postSubtle.length < 2) return false;
+  const first = getSessionDurationAnchor(postSubtle[postSubtle.length - 2]);
+  const second = getSessionDurationAnchor(postSubtle[postSubtle.length - 1]);
+  if (!Number.isFinite(first) || !Number.isFinite(second)) return false;
+  return second > first;
+}
+
 function clampRateChange(nextDuration, referenceDuration) {
   if (!Number.isFinite(referenceDuration) || referenceDuration <= 0) return Math.round(nextDuration);
   const minAllowed = referenceDuration * 0.75; // Smoothing guard: never decrease by more than 25% in one step.
@@ -770,6 +814,30 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
   const activePersistentRecovery = evaluatePersistentRecoveryMode(normalizedTraining, existingRecoveryState, goalSeconds);
   if (activePersistentRecovery) return activePersistentRecovery;
 
+  const gapHours = getHoursSinceLastSession(lastSession);
+  const gapReduction = gapHours > 48 ? 0.12 : 0;
+
+  if (hasThreeSessionInstability(recentWindow)) {
+    const lastReferenceDuration = getSessionDurationAnchor(lastSession) ?? PROTOCOL.startDurationSeconds;
+    const heldDuration = gapReduction > 0
+      ? Math.round(lastReferenceDuration * (1 - gapReduction))
+      : lastReferenceDuration;
+    return {
+      recommendedDuration: clamp(heldDuration, PROTOCOL.minDurationSeconds, goalSeconds),
+      recommendationType: 'repeat_current_duration',
+      recoveryMode: {
+        active: false,
+        remainingSessions: 0,
+        step: 0,
+        anchorSessionDate: lastSession?.date || null,
+        anchorDuration: getSessionDurationAnchor(lastSession) ?? null,
+        recoveryDuration: null,
+        postRecoveryDuration: null,
+      },
+      recoveryState: existingRecoveryState,
+    };
+  }
+
   if (!existingRecoveryState?.active && [DISTRESS_LEVELS.SUBTLE, DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(lastSession.distressLevel)) {
     const anchorDuration = getSessionDurationAnchor(getLastCalmSession(normalizedTraining.slice(0, -1)))
       ?? getSessionDurationAnchor(lastSession)
@@ -847,7 +915,10 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
       // If we already observed a sustained calm closure (3+ calm sessions), the subtle marker is closed out.
       if (afterStress.length >= 3 && afterStress.slice(-3).every((session) => session.distressLevel === DISTRESS_LEVELS.NONE)) {
         const closureBase = getSessionDurationAnchor(getLastCalmSession(recentWindow)) ?? PROTOCOL.startDurationSeconds;
-        const closureNext = clampRateChange(computeProgressiveIncrease(closureBase, 3), closureBase);
+        let closureNext = clampRateChange(computeProgressiveIncrease(closureBase, 3), closureBase);
+        if (hasConsecutivePostSubtleIncrease(recentWindow) && closureNext > closureBase) {
+          closureNext = closureBase;
+        }
         return {
           recommendedDuration: clamp(closureNext, PROTOCOL.minDurationSeconds, goalSeconds),
           recommendationType: "keep_same_duration",
@@ -982,8 +1053,37 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
   const anchorDuration = getSessionDurationAnchor(lastCalmSession) ?? PROTOCOL.startDurationSeconds;
   const lastReferenceDuration = getSessionDurationAnchor(lastSession) ?? anchorDuration;
 
+  const plateauDuration = getPlateauDuration(recentWindow);
+  if (Number.isFinite(plateauDuration) && plateauDuration > 0) {
+    const microIncrease = clampRateChange(Math.round(plateauDuration * 1.05), lastReferenceDuration);
+    const adjustedForGap = gapReduction > 0
+      ? Math.round(microIncrease * (1 - gapReduction))
+      : microIncrease;
+    return {
+      recommendedDuration: clamp(adjustedForGap, PROTOCOL.minDurationSeconds, goalSeconds),
+      recommendationType: 'keep_same_duration',
+      recoveryMode: {
+        active: false,
+        remainingSessions: 0,
+        step: 0,
+        anchorSessionDate: lastCalmSession?.date || null,
+        anchorDuration,
+        recoveryDuration: null,
+        postRecoveryDuration: null,
+      },
+    };
+  }
+
   const stepped = computeProgressiveIncrease(anchorDuration, calmStreak);
-  const smoothed = clampRateChange(stepped, lastReferenceDuration);
+  let smoothed = clampRateChange(stepped, lastReferenceDuration);
+
+  if (hasConsecutivePostSubtleIncrease(recentWindow) && smoothed > lastReferenceDuration) {
+    smoothed = lastReferenceDuration;
+  }
+
+  if (gapReduction > 0) {
+    smoothed = Math.round(smoothed * (1 - gapReduction));
+  }
 
   return {
     recommendedDuration: clamp(smoothed, PROTOCOL.minDurationSeconds, goalSeconds),
