@@ -375,6 +375,7 @@ describe("public compatibility APIs", () => {
     expect(next.recoveryMode.active).toBe(true);
     expect(next.recoveryMode.remainingSessions).toBe(2);
     expect(next.recommendedDuration).toBe(60);
+    expect(next.explanation).toMatch(/Short recovery sessions after stress/i);
   });
 
   it("explainNextTarget disables recovery metadata after two calm recovery sessions", () => {
@@ -469,5 +470,7 @@ describe("public compatibility APIs", () => {
     expect(next.decisionState.riskLevel).toBe("medium");
     expect(next.decisionState.readiness).toBe("building");
     expect(next.decisionState.statusLabel).toBe("Stable");
+    expect(next.explanation).toBeTruthy();
+    expect(next.explanation).toMatch(/Starting with a short first session/i);
   });
 });

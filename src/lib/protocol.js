@@ -1088,6 +1088,53 @@ function describeRecommendationType(type) {
   }
 }
 
+function buildRecommendationExplanation({
+  recommendationType,
+  recommendedDuration,
+  previousDuration,
+  lastTraining,
+  hasHistory,
+}) {
+  if (!hasHistory) {
+    return "Starting with a short first session to build confidence.";
+  }
+
+  const prev = Number(previousDuration) || 0;
+  const next = Number(recommendedDuration) || 0;
+  const changePct = prev > 0 ? Math.round(Math.abs(((next - prev) / prev) * 100)) : 0;
+  const distress = normalizeDistressLevel(lastTraining?.distressLevel);
+  const calmLabel = distress === DISTRESS_LEVELS.NONE ? "calm session" : "calmer session";
+
+  switch (recommendationType) {
+    case "recovery_mode_active":
+    case "subtle_recovery_mode":
+      return "Short recovery sessions after stress to rebuild confidence.";
+    case "stabilization_block":
+      return "Reduced after signs of distress to rebuild confidence.";
+    case "reduce_duration":
+      return "Holding shorter sessions due to stress signs.";
+    case "subtle_recovery_resume":
+    case "recovery_mode_resume":
+      return "Recovery sessions went well, so we are carefully stepping back up.";
+    case "departure_cues_first":
+      return "Holding duration while cue practice catches up.";
+    case "keep_same_duration":
+    case "repeat_current_duration":
+    case "insert_easy_sessions":
+      if (prev > 0 && next > prev && changePct > 0) {
+        return `Increased by ${changePct}% after ${calmLabel}.`;
+      }
+      if (prev > 0 && next < prev && changePct > 0) {
+        return `Reduced by ${changePct}% after stress signs.`;
+      }
+      return distress === DISTRESS_LEVELS.SUBTLE
+        ? "Holding duration due to mild stress."
+        : "Holding duration while your dog stays steady.";
+    default:
+      return "Adjusted from recent results to keep progress steady.";
+  }
+}
+
 export function explainNextTarget(sessions = [], walks = [], patterns = [], dog = {}) {
   const sortedSessions = sortByDateAsc(sessions).map(toRichSession);
   const trainingSessions = sortedSessions.filter((s) => s.departureType !== "real_life");
@@ -1103,6 +1150,13 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
     return {
       recommendedDuration,
       recommendationType: "baseline_start",
+      explanation: buildRecommendationExplanation({
+        recommendationType: "baseline_start",
+        recommendedDuration,
+        previousDuration: 0,
+        lastTraining: null,
+        hasHistory: false,
+      }),
       summary: baseline > 0
         ? "The first target starts at about 80% of your dog's current calm-alone estimate so the opening sessions stay easy."
         : "With no history yet, PawTimer starts with the default 30-second confidence-building target.",
@@ -1175,6 +1229,13 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
   return {
     recommendedDuration,
     recommendationType: recommendation.recommendationType,
+    explanation: buildRecommendationExplanation({
+      recommendationType: recommendation.recommendationType,
+      recommendedDuration,
+      previousDuration: lastTraining?.plannedDuration || 0,
+      lastTraining,
+      hasHistory: true,
+    }),
     summary: describeRecommendationType(recommendation.recommendationType),
     factors,
     stats: recommendation.stats,
