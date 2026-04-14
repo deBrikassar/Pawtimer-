@@ -25,3 +25,28 @@ export const formatClockDuration = (seconds) => {
   const secs = totalSeconds % 60;
   return `${totalMinutes}:${String(secs).padStart(2, "0")}`;
 };
+
+export const parseHumanDurationSeconds = (value) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+
+  if (!raw.includes(":")) {
+    const asSeconds = Number(raw);
+    if (!Number.isFinite(asSeconds) || asSeconds < 0) return null;
+    return Math.round(asSeconds);
+  }
+
+  const parts = raw.split(":");
+  // Accept only m:ss, mm:ss, or h:mm:ss. Empty segments (e.g. 1::2) are invalid.
+  if (parts.length < 2 || parts.length > 3 || parts.some((part) => !/^\d+$/.test(part))) return null;
+
+  if (parts.length === 2) {
+    const [minutes, seconds] = parts.map((part) => Number(part));
+    if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || seconds >= 60) return null;
+    return minutes * 60 + seconds;
+  }
+
+  const [hours, minutes, seconds] = parts.map((part) => Number(part));
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes) || !Number.isFinite(seconds) || minutes >= 60 || seconds >= 60) return null;
+  return hours * 3600 + minutes * 60 + seconds;
+};

@@ -133,7 +133,7 @@ export function useHistoryEditing({
       const parsedDuration = parseDurationInput(historyModal.value);
       const requiresPositive = historyModal.kind === "session";
       if (!Number.isFinite(parsedDuration) || (requiresPositive ? parsedDuration <= 0 : parsedDuration < 0)) {
-        showToast(requiresPositive ? "Invalid duration. Use a positive value (seconds or mm:ss)" : "Invalid duration. Use seconds or mm:ss");
+        showToast(requiresPositive ? "Invalid duration. Use a positive value (seconds, m:ss, or h:mm:ss)" : "Invalid duration. Use seconds, m:ss, or h:mm:ss");
         return;
       }
       if (historyModal.kind === "walk") {
@@ -215,6 +215,12 @@ const renderSyncBadge = (entry) => {
 
 export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
   const [expandedItemKey, setExpandedItemKey] = useState(null);
+  const parsedDuration = historyModal?.mode === "duration" ? parseDurationInput(historyModal.value) : null;
+  const requiresPositiveDuration = historyModal?.kind === "session";
+  const durationHasInput = historyModal?.mode === "duration" && String(historyModal.value ?? "").trim().length > 0;
+  const durationIsValid = historyModal?.mode === "duration"
+    ? Number.isFinite(parsedDuration) && (requiresPositiveDuration ? parsedDuration > 0 : parsedDuration >= 0)
+    : true;
 
   const toggleExpandedItem = (itemKey) => {
     setExpandedItemKey((prev) => (prev === itemKey ? null : itemKey));
@@ -421,14 +427,19 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
             </>}
 
             {historyModal.mode === "duration" && <>
-              <div className="t-helper activity-time-hint">Enter seconds or <code>mm:ss</code>.</div>
+              <div className="t-helper activity-time-hint">Enter seconds, <code>m:ss</code>, or <code>h:mm:ss</code>.</div>
               <label className="activity-time-field">
                 <span className="t-helper">Duration</span>
-                <input type="text" inputMode="numeric" placeholder="e.g. 90 or 1:30" value={historyModal.value} onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, value: e.target.value } : prev))} />
+                <input type="text" inputMode="text" placeholder="e.g. 90, 1:37, or 0:22:57" value={historyModal.value} onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, value: e.target.value } : prev))} />
               </label>
+              {durationHasInput && !durationIsValid ? (
+                <div className="t-helper" role="alert">
+                  Invalid duration. Use seconds, m:ss, or h:mm:ss.
+                </div>
+              ) : null}
               <div className="feeding-actions">
                 <button className="walk-cancel-btn button-base button-ghost button--md button--pill" type="button" onClick={() => setHistoryModal(null)}>Cancel</button>
-                <button className="walk-end-btn button-base button-primary button--md button--pill" type="button" onClick={() => actions.saveEditedActivityDuration(historyModal, setHistoryModal)}>Save</button>
+                <button className="walk-end-btn button-base button-primary button--md button--pill" type="button" disabled={!durationIsValid} onClick={() => actions.saveEditedActivityDuration(historyModal, setHistoryModal)}>Save</button>
               </div>
             </>}
 
