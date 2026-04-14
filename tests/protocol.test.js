@@ -12,6 +12,7 @@ import {
 } from "../src/lib/protocol";
 
 const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
+const hoursAgo = (n) => new Date(Date.now() - n * 3600000).toISOString();
 
 describe("legacy migration", () => {
   it("maps mild->subtle and strong->active", () => {
@@ -182,6 +183,48 @@ describe("recommendation engine", () => {
     expect(rec.recommendedDuration).toBe(60);
   });
 
+  it("holds after three unstable sessions to prevent oscillation", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 300, actualDuration: 180, distressLevel: "active", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 300, actualDuration: 170, distressLevel: "subtle", belowThreshold: false },
+      { date: hoursAgo(2), plannedDuration: 300, actualDuration: 160, distressLevel: "active", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendationType).toBe("repeat_current_duration");
+    expect(rec.recommendedDuration).toBe(160);
+  });
+
+  it("allows a small increase after five-session plateau", () => {
+    const sessions = [
+      { date: daysAgo(4), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(3), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(2), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+      { date: hoursAgo(2), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(630);
+  });
+
+  it("does not chain more than one consecutive increase after subtle stress", () => {
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 1000, actualDuration: 950, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(2), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 120, actualDuration: 120, distressLevel: "none", belowThreshold: true },
+      { date: hoursAgo(2), plannedDuration: 950, actualDuration: 950, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(950);
+  });
+
+  it("reduces recommendation after a 48h+ gap", () => {
+    const sessions = [
+      { date: daysAgo(4), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(602);
+  });
+
   it("uses calm no-distress history even when belowThreshold is false, avoiding a 30s reset after first subtle", () => {
     const now = new Date();
     const first = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
@@ -296,8 +339,8 @@ describe("recommendation engine", () => {
       { date: daysAgo(0), plannedDuration: 30, actualDuration: 6, distressLevel: "severe", belowThreshold: false },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(["stabilization_block", "departure_cues_first", "recovery_mode_active"]).toContain(rec.recommendationType);
-    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(60);
+    expect(["stabilization_block", "departure_cues_first", "recovery_mode_active", "repeat_current_duration"]).toContain(rec.recommendationType);
+    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(30);
     expect(rec.recommendedDuration).toBeLessThanOrEqual(90);
   });
 
@@ -430,7 +473,7 @@ describe("public compatibility APIs", () => {
       { date: daysAgo(0), plannedDuration: 1300, actualDuration: 300, distressLevel: "active", belowThreshold: false },
     ];
     const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
-    expect(next.recommendedDuration).toBe(60);
+    expect(next.recommendedDuration).toBe(300);
   });
 
   it("keeps decision risk level aligned with stats relapse risk bands", () => {
