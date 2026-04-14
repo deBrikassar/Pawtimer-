@@ -342,9 +342,56 @@ export const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
   const sessionsSelect = SESSION_SYNC_FETCH_SELECT;
-  const walksSelect = "id,dog_id,date,duration";
-  const patternsSelect = "id,dog_id,date,type";
-  const feedingsSelect = "id,dog_id,date,food_type,amount";
+  const walksSelect = "id,dog_id,date,duration,walk_type,revision,updated_at";
+  const patternsSelect = "id,dog_id,date,type,revision,updated_at";
+  const feedingsSelect = "id,dog_id,date,food_type,amount,revision,updated_at";
+  const parseMissingColumn = (errorText) => {
+    const text = String(errorText || "");
+    const match = text.match(/column\s+([a-zA-Z0-9_."]+)\s+does not exist/i);
+    return match ? match[1].replace(/^.*\./, "").replace(/"/g, "") : null;
+  };
+  const extractErrorMessage = (errorText) => {
+    const raw = String(errorText || "");
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.message === "string") return parsed.message;
+    } catch {}
+    return raw;
+  };
+  const isMissingTableError = (errorText) => /relation\s+["']?[a-zA-Z0-9_.]+["']?\s+does not exist/i.test(extractErrorMessage(errorText));
+  const fetchTableWithFallback = async ({ table, baseColumns, optional = false }) => {
+    let selectedColumns = [...baseColumns];
+    let attempt = 0;
+    while (attempt < 12) {
+      const select = selectedColumns.join(",");
+      const res = await sbReq(`${table}?${dogFilter}&select=${select}&order=date.asc`);
+      if (res.ok) return { table, ok: true, res, select, droppedColumns: [], degraded: false };
+
+      if (optional && isMissingTableError(res.error)) {
+        logSyncDebug("syncFetch:optionalTableMissing", { table, error: res.error });
+        return { table, ok: true, res: { ok: true, data: [], error: null, status: res.status }, select, droppedColumns: [], degraded: true };
+      }
+
+      const missingColumn = parseMissingColumn(res.error);
+      if (!missingColumn) return { table, ok: false, res, select, droppedColumns: [], degraded: false };
+
+      const nextColumns = selectedColumns.filter((column) => column !== missingColumn);
+      if (nextColumns.length === selectedColumns.length) {
+        return { table, ok: false, res, select, droppedColumns: [], degraded: false };
+      }
+      logSyncDebug("syncFetch:retryWithoutMissingColumn", { table, missingColumn, previousSelect: select });
+      selectedColumns = nextColumns;
+      attempt += 1;
+    }
+    return {
+      table,
+      ok: false,
+      res: { ok: false, data: null, error: `Exceeded retry attempts for ${table}`, status: 0 },
+      select: selectedColumns.join(","),
+      droppedColumns: [],
+      degraded: false,
+    };
+  };
   const tableQueryShapes = {
     dogs: "id,settings",
     sessions: sessionsSelect,
@@ -354,30 +401,46 @@ export const syncFetch = async (dogId) => {
   };
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
   logSyncDebug("syncFetch:queryShapes", tableQueryShapes);
-  const [dogRes, sessPrimaryRes, walkPrimaryRes, patRes, feedingRes] = await Promise.all([
+  const [dogRes, sessionsFetch, walksFetch, patternsFetch, feedingsFetch] = await Promise.all([
     sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
-    sbReq(`sessions?${dogFilter}&select=${sessionsSelect}&order=date.asc`),
-    sbReq(`walks?${dogFilter}&select=${walksSelect}&order=date.asc`),
-    sbReq(`patterns?${dogFilter}&select=${patternsSelect}&order=date.asc`),
-    sbReq(`feedings?${dogFilter}&select=${feedingsSelect}&order=date.asc`),
+    fetchTableWithFallback({
+      table: "sessions",
+      baseColumns: sessionsSelect.split(","),
+      optional: false,
+    }),
+    fetchTableWithFallback({
+      table: "walks",
+      baseColumns: walksSelect.split(","),
+      optional: false,
+    }),
+    fetchTableWithFallback({
+      table: "patterns",
+      baseColumns: patternsSelect.split(","),
+      optional: true,
+    }),
+    fetchTableWithFallback({
+      table: "feedings",
+      baseColumns: feedingsSelect.split(","),
+      optional: true,
+    }),
   ]);
 
-  const sessRes = sessPrimaryRes;
-  const walkRes = walkPrimaryRes;
-
-  const parseMissingColumn = (errorText) => {
-    const text = String(errorText || "");
-    const match = text.match(/column\s+([a-zA-Z0-9_."]+)\s+does not exist/i);
-    return match ? match[1] : null;
-  };
+  const sessRes = sessionsFetch.res;
+  const walkRes = walksFetch.res;
+  const patRes = patternsFetch.res;
+  const feedingRes = feedingsFetch.res;
 
   const resourceErrors = [
-    { table: "sessions", res: sessRes, queryShape: sessionsSelect },
-    { table: "walks", res: walkRes, queryShape: walksSelect },
-    { table: "patterns", res: patRes, queryShape: patternsSelect },
-    { table: "feedings", res: feedingRes, queryShape: feedingsSelect },
+    { table: "sessions", res: sessRes, queryShape: sessionsFetch.select },
+    { table: "walks", res: walkRes, queryShape: walksFetch.select },
+    { table: "patterns", res: patRes, queryShape: patternsFetch.select, degraded: patternsFetch.degraded },
+    { table: "feedings", res: feedingRes, queryShape: feedingsFetch.select, degraded: feedingsFetch.degraded },
   ];
-  resourceErrors.forEach(({ table, res, queryShape }) => {
+  resourceErrors.forEach(({ table, res, queryShape, degraded = false }) => {
+    if (degraded) {
+      logSyncDebug("syncFetch:tableFetchDegraded", { table, queryShape });
+      return;
+    }
     if (res.ok) return;
     const missingColumn = parseMissingColumn(res.error);
     logSyncDebug("syncFetch:tableFetchFailed", { table, queryShape, status: res.status, missingColumn, error: res.error });
