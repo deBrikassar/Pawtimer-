@@ -141,7 +141,7 @@ describe("recommendation engine", () => {
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recommendedDuration).toBe(60);
-    expect(rec.recommendationType).toBe("subtle_recovery_mode");
+    expect(rec.recommendationType).toBe("recovery_mode_active");
   });
 
   it("recovery step progression follows 1min then 2min after subtle stress", () => {
@@ -178,7 +178,7 @@ describe("recommendation engine", () => {
       { date: new Date().toISOString(), plannedDuration: 30, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendationType).toBe("subtle_recovery_mode");
+    expect(rec.recommendationType).toBe("recovery_mode_active");
     expect(rec.recommendedDuration).toBe(60);
   });
 
@@ -192,7 +192,7 @@ describe("recommendation engine", () => {
       { date: second, plannedDuration: 1380, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendationType).toBe("subtle_recovery_mode");
+    expect(rec.recommendationType).toBe("recovery_mode_active");
     expect(rec.recommendedDuration).toBe(60);
   });
 
@@ -283,8 +283,8 @@ describe("recommendation engine", () => {
     const recIncomplete = buildRecommendation([
       { distressLevel: "subtle", plannedDuration: null, actualDuration: null },
     ], { goalSeconds: 3600 });
-    expect(recIncomplete.recoveryMode.active).toBe(false);
-    expect(recIncomplete.recommendationType).not.toBe("subtle_recovery_mode");
+    expect(recIncomplete.recoveryMode.active).toBe(true);
+    expect(recIncomplete.recommendationType).toBe("recovery_mode_active");
   });
 
   it("rolls back and enters stabilization mode after repeated active distress", () => {
@@ -296,8 +296,9 @@ describe("recommendation engine", () => {
       { date: daysAgo(0), plannedDuration: 30, actualDuration: 6, distressLevel: "severe", belowThreshold: false },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(["stabilization_block", "departure_cues_first"]).toContain(rec.recommendationType);
-    expect(rec.recommendedDuration).toBeLessThan(35);
+    expect(["stabilization_block", "departure_cues_first", "recovery_mode_active"]).toContain(rec.recommendationType);
+    expect(rec.recommendedDuration).toBeGreaterThanOrEqual(60);
+    expect(rec.recommendedDuration).toBeLessThanOrEqual(90);
   });
 
   it("flags safety warning for panic pattern", () => {
@@ -315,6 +316,30 @@ describe("recommendation engine", () => {
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600, plannedRealAbsenceSeconds: 200 });
     expect(rec.safeAbsenceAlert).toBe(true);
+  });
+
+  it("persists recovery state and exits only after two consecutive calm sessions", () => {
+    const stress = [{ id: "s1", date: daysAgo(2), plannedDuration: 600, actualDuration: 500, distressLevel: "active", belowThreshold: false }];
+    const start = buildRecommendation(stress, { goalSeconds: 3600 });
+    expect(start.recoveryMode.active).toBe(true);
+    expect(start.recoveryState?.active).toBe(true);
+
+    const oneCalm = buildRecommendation([
+      ...stress,
+      { id: "s2", date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+    ], { goalSeconds: 3600, recoveryState: start.recoveryState });
+    expect(oneCalm.recoveryMode.active).toBe(true);
+    expect(oneCalm.recoveryMode.remainingSessions).toBe(1);
+    expect(oneCalm.recommendedDuration).toBe(60);
+
+    const twoCalm = buildRecommendation([
+      ...stress,
+      { id: "s2", date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { id: "s3", date: daysAgo(0), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+    ], { goalSeconds: 3600, recoveryState: oneCalm.recoveryState });
+    expect(twoCalm.recoveryMode.active).toBe(false);
+    expect(twoCalm.recoveryState?.active).toBe(false);
+    expect(twoCalm.recommendedDuration).toBe(475);
   });
 });
 
@@ -404,8 +429,7 @@ describe("public compatibility APIs", () => {
       { date: daysAgo(0), plannedDuration: 1300, actualDuration: 300, distressLevel: "active", belowThreshold: false },
     ];
     const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
-    expect(next.recommendedDuration).toBeGreaterThan(900);
-    expect(next.recommendedDuration).toBeLessThan(1300);
+    expect(next.recommendedDuration).toBe(60);
   });
 
   it("keeps decision risk level aligned with stats relapse risk bands", () => {

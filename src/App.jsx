@@ -539,6 +539,15 @@ export default function PawTimer() {
     } finally { setSyncDiagRunning(false); }
   };
 
+  const persistRecoveryState = useCallback((nextRecoveryState) => {
+    if (!activeDogId) return;
+    setDogs((prev) => prev.map((dog) => (
+      canonicalDogId(dog?.id) === canonicalDogId(activeDogId)
+        ? { ...dog, recoveryState: nextRecoveryState ?? null }
+        : dog
+    )));
+  }, [activeDogId]);
+
   const recordResult = (distressLevelInput, options = {}) => {
     const distressLevel = normalizeDistressLevel(distressLevelInput);
     const dog = appData.dog;
@@ -552,7 +561,9 @@ export default function PawTimer() {
     const session = stampLocalEntry(rawSession);
     const updated = commitSessions((prev) => [...prev, session]);
     pushWithSyncStatus("session", session).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
-    const next = suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog);
+    const nextTarget = explainNextTarget(updated, walks, patterns, dog);
+    persistRecoveryState(nextTarget?.recoveryState ?? null);
+    const next = nextTarget?.recommendedDuration ?? (suggestNextWithContext(updated, walks, patterns, dog) ?? suggestNext(updated, dog));
     cancelSession();
     const n = dog?.dogName ?? "your dog";
     if (distressLevel === "none") showToast(`${n} was calm. Next: ${fmt(next)}`);
