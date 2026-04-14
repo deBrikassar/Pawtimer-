@@ -5,15 +5,11 @@ import {
 } from "../src/features/app/storage";
 
 describe("syncFetch sessions projection shape", () => {
-  it("select includes every referenced sessions field", () => {
-    const selectedFields = new Set(SESSION_SYNC_FETCH_SELECT.split(",").map((field) => field.trim()));
+  it("select exactly matches the mapped sessions fields", () => {
+    const selectedFields = SESSION_SYNC_FETCH_SELECT.split(",").map((field) => field.trim());
+    const expectedFields = ["id", "dog_id", "date", ...Object.values(SESSION_SYNC_FETCH_FIELD_MAP)];
 
-    expect(selectedFields.has("id")).toBe(true);
-    expect(selectedFields.has("dog_id")).toBe(true);
-    expect(selectedFields.has("date")).toBe(true);
-
-    Object.values(SESSION_SYNC_FETCH_FIELD_MAP).forEach((field) => {
-      expect(selectedFields.has(field)).toBe(true);
-    });
+    expect(new Set(selectedFields).size).toBe(selectedFields.length);
+    expect([...selectedFields].sort()).toEqual([...expectedFields].sort());
   });
 });
