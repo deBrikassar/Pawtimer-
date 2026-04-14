@@ -125,4 +125,44 @@ describe("syncFetch runtime fallbacks", () => {
     expect(result.sessions.some((session) => session.id === "s-activity")).toBe(true);
     expect(result.walks.some((walk) => walk.id === "w-activity")).toBe(true);
   });
+
+  it("requests walk sync metadata and preserves non-default walk types", async () => {
+    const walkSelectAttempts = [];
+    global.fetch = vi.fn(async (url) => {
+      const { path, params } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(200, [{ id: "DOG3", settings: { dogName: "Luna" } }]);
+      if (path === "sessions") return jsonResponse(200, []);
+      if (path === "walks") {
+        walkSelectAttempts.push(params.get("select") || "");
+        return jsonResponse(200, [{
+          id: "w-training",
+          dog_id: "DOG3",
+          date: "2026-03-01T03:00:00.000Z",
+          duration: 1200,
+          walk_type: "training_walk",
+          revision: 7,
+          updated_at: "2026-03-01T03:01:00.000Z",
+        }]);
+      }
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, []);
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncFetch } = await setupStorageModule();
+    const { result, error } = await syncFetch("DOG3");
+
+    expect(error).toBeNull();
+    expect(walkSelectAttempts[0]).toContain("walk_type");
+    expect(walkSelectAttempts[0]).toContain("revision");
+    expect(walkSelectAttempts[0]).toContain("updated_at");
+    expect(result.walks).toEqual([{
+      id: "w-training",
+      date: "2026-03-01T03:00:00.000Z",
+      duration: 1200,
+      type: "training_walk",
+      revision: 7,
+      updatedAt: "2026-03-01T03:01:00.000Z",
+    }]);
+  });
 });
