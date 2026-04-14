@@ -127,14 +127,15 @@ export default function HomeScreen(props) {
                 <ModalCloseButton onClick={() => setShowRecoveryInfo(false)} />
               </div>
               <div className="recovery-explain-steps">
-                <div className={`recovery-step-chip ${recoveryMode.step >= 1 ? "is-done" : ""}`}>1 min calm</div>
-                <div className={`recovery-step-chip ${recoveryMode.step >= 2 ? "is-done" : ""}`}>2 min calm</div>
+                {(recoveryMode.stepLabels || []).map((label, idx) => (
+                  <div key={`${label}-${idx}`} className={`recovery-step-chip ${recoveryMode.step >= (idx + 1) ? "is-done" : ""}`}>{label}</div>
+                ))}
               </div>
               <p className="recovery-explain-copy">
-                We temporarily shortened sessions after subtle stress so your dog can get two easy, positive wins.
+                {recoveryMode.planCopy}
               </p>
               <div className="recovery-explain-meta">
-                <span>Step {Math.max(1, recoveryMode.step)} of 2</span>
+                <span>{recoveryMode.currentStepLabel || `Step ${Math.max(1, recoveryMode.step)} of ${recoveryMode.totalSessions || 2}`}</span>
                 <span>{recoveryMode.remainingSessions} remaining</span>
               </div>
             </div>

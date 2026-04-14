@@ -698,6 +698,36 @@ function computeFallbackFromCalmHistory(recentWindow = [], anchorDuration = null
   };
 }
 
+function formatRecoveryStepLabel(seconds = PROTOCOL.subtleRecoveryDurationSeconds) {
+  const roundedSeconds = Math.max(PROTOCOL.minDurationSeconds, Math.round(Number(seconds) || PROTOCOL.subtleRecoveryDurationSeconds));
+  const minutes = Math.round(roundedSeconds / 60);
+  return `${minutes} min calm`;
+}
+
+function buildRecoveryModeDetails({
+  stressLevel = DISTRESS_LEVELS.SUBTLE,
+  step = 0,
+  recoveryDurations = [],
+} = {}) {
+  const planDurations = recoveryDurations.length
+    ? recoveryDurations
+    : [PROTOCOL.subtleRecoveryDurationSeconds, PROTOCOL.subtleRecoveryDurationSeconds * 2];
+  const totalSessions = planDurations.length;
+  const safeStep = clamp(Math.round(Number(step) || 0), 0, totalSessions);
+  const stepLabels = planDurations.map((duration) => formatRecoveryStepLabel(duration));
+  const planCopy = [DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(stressLevel)
+    ? `We temporarily switched to a ${totalSessions}-step confidence rebuild so your dog can stack calm wins before progression resumes.`
+    : `We temporarily shortened sessions after subtle stress so your dog can complete this ${totalSessions}-step confidence reset.`;
+
+  return {
+    step: safeStep,
+    totalSessions,
+    stepLabels,
+    planCopy,
+    currentStepLabel: `Step ${Math.max(1, safeStep)} of ${totalSessions}`,
+  };
+}
+
 function computeProgressiveIncrease(anchorDuration, calmStreak = 1) {
   if (!Number.isFinite(anchorDuration) || anchorDuration <= 0) return PROTOCOL.startDurationSeconds;
 
@@ -832,7 +862,11 @@ function evaluatePersistentRecoveryMode(
         active: true,
         recoveryActive: true,
         remainingSessions: Math.max(1, recoveryDurations.length - consecutiveCalm),
-        step: Math.min(recoveryDurations.length, consecutiveCalm + 1),
+        ...buildRecoveryModeDetails({
+          stressLevel,
+          step: Math.min(recoveryDurations.length, consecutiveCalm + 1),
+          recoveryDurations,
+        }),
         anchorSessionDate: trainingSessions[resolvedTriggerIndex]?.date || null,
         anchorDuration: normalized.anchorDuration,
         recoveryDuration: recommendedDuration,
@@ -850,7 +884,11 @@ function evaluatePersistentRecoveryMode(
       active: false,
       recoveryActive: false,
       remainingSessions: 0,
-      step: recoveryDurations.length,
+      ...buildRecoveryModeDetails({
+        stressLevel,
+        step: recoveryDurations.length,
+        recoveryDurations,
+      }),
       anchorSessionDate: trainingSessions[resolvedTriggerIndex]?.date || null,
       anchorDuration: normalized.anchorDuration,
       recoveryDuration: null,
@@ -876,7 +914,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
       recoveryMode: {
         active: false,
         remainingSessions: 0,
-        step: 0,
+        ...buildRecoveryModeDetails({ step: 0 }),
         anchorSessionDate: null,
         anchorDuration: null,
         recoveryDuration: null,
@@ -909,7 +947,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
       recoveryMode: {
         active: false,
         remainingSessions: 0,
-        step: 0,
+        ...buildRecoveryModeDetails({ step: 0 }),
         anchorSessionDate: lastSession?.date || null,
         anchorDuration: getSessionDurationAnchor(lastSession) ?? null,
         recoveryDuration: null,
@@ -936,7 +974,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
       recoveryMode: {
         active: false,
         remainingSessions: 0,
-        step: 0,
+        ...buildRecoveryModeDetails({ step: 0 }),
         anchorSessionDate: lastCalmSession?.date || null,
         anchorDuration,
         recoveryDuration: null,
@@ -962,7 +1000,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
     recoveryMode: {
       active: false,
       remainingSessions: 0,
-      step: 0,
+      ...buildRecoveryModeDetails({ step: 0 }),
       anchorSessionDate: lastCalmSession?.date || null,
       anchorDuration,
       recoveryDuration: null,
