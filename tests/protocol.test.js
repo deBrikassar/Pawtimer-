@@ -388,6 +388,38 @@ describe("public compatibility APIs", () => {
     expect(next.recommendedDuration).toBeGreaterThanOrEqual(1800);
   });
 
+  it("normalizes recommendation inputs to seconds for runtime-shaped rows", () => {
+    const sessions = [
+      { date: daysAgo(1), planned_duration_minutes: 20, actual_duration_minutes: 20, distress_level: "none", below_threshold: true },
+      { date: daysAgo(0), planned_duration_minutes: 20, actual_duration_minutes: 20, distress_level: "none", below_threshold: true },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 7200 });
+    expect(next.recommendedDuration).toBeGreaterThan(1000);
+  });
+
+  it("uses calm evidence fallback with risk-based 10-20% reduction instead of hard reset", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 1500, actualDuration: 1200, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 1600, actualDuration: 1300, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(0), plannedDuration: 1300, actualDuration: 300, distressLevel: "active", belowThreshold: false },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
+    expect(next.recommendedDuration).toBeGreaterThan(900);
+    expect(next.recommendedDuration).toBeLessThan(1300);
+  });
+
+  it("keeps decision risk level aligned with stats relapse risk bands", () => {
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 1200, actualDuration: 200, distressLevel: "severe", belowThreshold: false },
+      { date: daysAgo(2), plannedDuration: 1000, actualDuration: 180, distressLevel: "active", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 800, actualDuration: 120, distressLevel: "severe", belowThreshold: false },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
+    const risk = next.stats.relapseRisk;
+    const expected = risk >= 0.72 ? "high" : risk >= 0.58 ? "medium" : "low";
+    expect(next.decisionState.riskLevel).toBe(expected);
+  });
+
   it("getNextDurationSeconds remains bounded and deterministic", () => {
     const next = getNextDurationSeconds(120, { goalSeconds: 180 });
     expect(next).toBeLessThanOrEqual(180);
