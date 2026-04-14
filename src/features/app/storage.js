@@ -173,6 +173,13 @@ export const normalizeSession = (row = {}) => {
   const symptoms = row.symptoms ?? {};
   const preSession = row.preSession ?? row.pre_session ?? {};
   const environment = row.environment ?? {};
+  const normalizedDistressType = row.distressType ?? row.distress_type ?? null;
+  const normalizedDistressSeverity = row.distressSeverity ?? row.distress_severity ?? null;
+  const restoredLegacyDistress = decodeLegacyDistressFields({
+    distressLevel: row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong"),
+    distressType: normalizedDistressType,
+    distressSeverity: normalizedDistressSeverity,
+  });
   const actualDuration = resolveDurationSeconds(row, {
     secondsKeys: ["actualDurationSeconds", "actual_duration_seconds", "durationSeconds", "duration_seconds", "completedDurationSeconds", "completed_duration_seconds"],
     canonicalKeys: ["actualDuration", "actual_duration"],
@@ -189,7 +196,7 @@ export const normalizeSession = (row = {}) => {
     ...row,
     actualDuration,
     plannedDuration,
-    distressLevel: normalizeDistressLevel(row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong")),
+    distressLevel: restoredLegacyDistress.distressLevel,
     context: {
       timeOfDay: context.timeOfDay ?? context.time_of_day ?? null,
       departureType: context.departureType ?? context.departure_type ?? "training",
@@ -213,8 +220,8 @@ export const normalizeSession = (row = {}) => {
       : hasValue(row.below_threshold)
         ? asBool(row.below_threshold)
         : undefined,
-    distressType: row.distressType ?? row.distress_type ?? null,
-    distressSeverity: row.distressSeverity ?? row.distress_severity ?? null,
+    distressType: restoredLegacyDistress.distressType,
+    distressSeverity: normalizedDistressSeverity,
     videoReview: {
       recorded: hasValue((row.videoReview || {}).recorded) ? !!row.videoReview.recorded : asBool((row.video_review || {}).recorded),
       firstSubtleDistressTs: (row.videoReview || {}).firstSubtleDistressTs ?? (row.video_review || {}).first_subtle_distress_ts ?? null,
@@ -283,6 +290,39 @@ const LEGACY_DISTRESS_LEVEL_MAP = {
 };
 
 const mapDistressForLegacySupabase = (level) => LEGACY_DISTRESS_LEVEL_MAP[normalizeDistressLevel(level)] ?? "none";
+const LEGACY_SEVERITY_TYPE_PREFIX = "__severity:";
+
+const encodeLegacyDistressType = (distressType, distressLevel) => {
+  const type = distressType == null ? null : String(distressType).trim();
+  if (normalizeDistressLevel(distressLevel) !== "severe") return type || null;
+  const payload = type ? `severe|${type}` : "severe";
+  return `${LEGACY_SEVERITY_TYPE_PREFIX}${payload}`;
+};
+
+const decodeLegacyDistressFields = ({ distressLevel, distressType, distressSeverity }) => {
+  const typeRaw = distressType == null ? "" : String(distressType);
+  const decodeTypeFromRaw = () => {
+    if (!typeRaw.startsWith(LEGACY_SEVERITY_TYPE_PREFIX)) return distressType;
+    const encodedPayload = typeRaw.slice(LEGACY_SEVERITY_TYPE_PREFIX.length);
+    const [, ...rest] = encodedPayload.split("|");
+    return rest.length ? rest.join("|") : null;
+  };
+  const explicitSeverity = normalizeDistressLevel(distressSeverity);
+  const normalizedLevel = normalizeDistressLevel(distressLevel);
+  if (explicitSeverity === "severe") {
+    return { distressLevel: "severe", distressType: decodeTypeFromRaw() };
+  }
+  if (!typeRaw.startsWith(LEGACY_SEVERITY_TYPE_PREFIX)) {
+    return { distressLevel: normalizedLevel, distressType };
+  }
+  const encodedPayload = typeRaw.slice(LEGACY_SEVERITY_TYPE_PREFIX.length);
+  const [encodedLevel, ...rest] = encodedPayload.split("|");
+  const decodedType = rest.length ? rest.join("|") : null;
+  if (normalizeDistressLevel(encodedLevel) === "severe") {
+    return { distressLevel: "severe", distressType: decodedType };
+  }
+  return { distressLevel: normalizedLevel, distressType };
+};
 
 export const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
 const normalizeRevision = (value) => {
@@ -322,6 +362,7 @@ export const SESSION_SYNC_FETCH_FIELD_MAP = {
   result: "result",
   latencyToFirstDistress: "latency_to_first_distress",
   distressType: "distress_type",
+  distressSeverity: "distress_severity",
   context: "context",
   symptoms: "symptoms",
   recoverySeconds: "recovery_seconds",
@@ -360,6 +401,7 @@ const mapSyncFetchSessionRow = (r) => ({
   result: r[SESSION_SYNC_FETCH_FIELD_MAP.result],
   latencyToFirstDistress: r[SESSION_SYNC_FETCH_FIELD_MAP.latencyToFirstDistress],
   distressType: r[SESSION_SYNC_FETCH_FIELD_MAP.distressType],
+  distressSeverity: r[SESSION_SYNC_FETCH_FIELD_MAP.distressSeverity],
   context: r[SESSION_SYNC_FETCH_FIELD_MAP.context],
   symptoms: r[SESSION_SYNC_FETCH_FIELD_MAP.symptoms],
   recoverySeconds: r[SESSION_SYNC_FETCH_FIELD_MAP.recoverySeconds],
@@ -570,6 +612,7 @@ export const syncPush = async (dogId, kind, data, dogSettings = null) => {
         result: data.result,
         latency_to_first_distress: data.latencyToFirstDistress ?? null,
         distress_type: data.distressType ?? null,
+        distress_severity: normalizeDistressLevel(data.distressSeverity ?? data.distressLevel ?? null),
         context: data.context ?? null,
         symptoms: data.symptoms ?? null,
         recovery_seconds: data.recoverySeconds ?? null,
@@ -634,13 +677,23 @@ export const syncPush = async (dogId, kind, data, dogSettings = null) => {
         continue;
       }
 
+      if (/distress_severity/i.test(errorText)) {
+        delete sessionPayload.distress_severity;
+        res = await postRow(sessionPayload);
+        continue;
+      }
+
       if (/(distress_level|sessions_distress_level_check|check constraint)/i.test(errorText)) {
         const mappedDistressLevel = mapDistressForLegacySupabase(data.distressLevel);
+        const encodedLegacyType = encodeLegacyDistressType(data.distressType, data.distressLevel);
         if (sessionPayload.distress_level !== mappedDistressLevel) {
           sessionPayload.distress_level = mappedDistressLevel;
-          res = await postRow(sessionPayload);
-          continue;
         }
+        if (sessionPayload.distress_type !== encodedLegacyType) {
+          sessionPayload.distress_type = encodedLegacyType;
+        }
+        res = await postRow(sessionPayload);
+        continue;
       }
 
       break;
