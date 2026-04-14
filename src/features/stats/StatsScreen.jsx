@@ -3,7 +3,8 @@ import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, Stat
 import { fmt } from "../app/helpers";
 import { SproutIcon } from "../app/ui";
 
-export default function StatsScreen({ name, totalCount, setTab, bestCalm, target, relapseTone, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
+export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
+  const target = recommendation?.duration ?? 0;
   const headlineMetricVariant = METRIC_VARIANTS.HEADLINE;
   const standardMetricVariant = METRIC_VARIANTS.STANDARD;
   const ringMetricVariant = METRIC_VARIANTS.RING;

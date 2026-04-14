@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { selectAppData } from "../src/features/app/selectors";
 import { getInformationalTone, getOutcomeTone, getRiskTone } from "../src/features/app/helpers";
+import { explainNextTarget } from "../src/lib/protocol";
 
 const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
+const buildRecommendation = ({ sessions, walks, patterns, dog, target }) => {
+  const details = explainNextTarget(sessions, walks, patterns, dog);
+  return {
+    duration: target,
+    decisionState: details.decisionState,
+    explanation: details.summary,
+    details,
+  };
+};
 
 describe("semantic status mapping", () => {
   it("maps outcome statuses by session meaning", () => {
@@ -28,8 +38,9 @@ describe("semantic status mapping", () => {
       { date: daysAgo(0), plannedDuration: 40, actualDuration: 40, distressLevel: "none", belowThreshold: true },
     ];
 
+    const dog = { id: "DOG-1", dogName: "Milo", goalSeconds: 1200, leavesPerDay: 3 };
     const appData = selectAppData({
-      dogs: [{ id: "DOG-1", dogName: "Milo", goalSeconds: 1200, leavesPerDay: 3 }],
+      dogs: [dog],
       activeDogId: "DOG-1",
       sessions,
       walks: [],
@@ -37,6 +48,7 @@ describe("semantic status mapping", () => {
       feedings: [],
       target: 45,
       protoOverride: {},
+      recommendation: buildRecommendation({ sessions, walks: [], patterns: [], dog, target: 45 }),
     });
 
     expect(appData.headlineStatus).toBe("Improving");
@@ -50,8 +62,9 @@ describe("semantic status mapping", () => {
       { date: daysAgo(1), plannedDuration: 40, actualDuration: 8, distressLevel: "severe", belowThreshold: false },
     ];
 
+    const dog = { id: "DOG-1", dogName: "Milo", goalSeconds: 1200, leavesPerDay: 3 };
     const appData = selectAppData({
-      dogs: [{ id: "DOG-1", dogName: "Milo", goalSeconds: 1200, leavesPerDay: 3 }],
+      dogs: [dog],
       activeDogId: "DOG-1",
       sessions,
       walks: [],
@@ -59,6 +72,7 @@ describe("semantic status mapping", () => {
       feedings: [],
       target: 30,
       protoOverride: {},
+      recommendation: buildRecommendation({ sessions, walks: [], patterns: [], dog, target: 30 }),
     });
 
     const toneByRisk = {
@@ -66,13 +80,14 @@ describe("semantic status mapping", () => {
       medium: "Medium",
       high: "High",
     };
-    expect(appData.relapseTone.label).toBe(toneByRisk[appData.nextTargetInfo.decisionState.riskLevel]);
-    expect(appData.headlineStatus).toBe(appData.nextTargetInfo.decisionState.statusLabel);
+    expect(appData.relapseTone.label).toBe(toneByRisk[appData.recommendation.decisionState.riskLevel]);
+    expect(appData.headlineStatus).toBe(appData.recommendation.decisionState.statusLabel);
   });
 
   it("shares baseline decision state across recommendation and stats with no history", () => {
+    const dog = { id: "DOG-1", dogName: "Milo", goalSeconds: 1200, leavesPerDay: 3 };
     const appData = selectAppData({
-      dogs: [{ id: "DOG-1", dogName: "Milo", goalSeconds: 1200, leavesPerDay: 3 }],
+      dogs: [dog],
       activeDogId: "DOG-1",
       sessions: [],
       walks: [],
@@ -80,9 +95,10 @@ describe("semantic status mapping", () => {
       feedings: [],
       target: 30,
       protoOverride: {},
+      recommendation: buildRecommendation({ sessions: [], walks: [], patterns: [], dog, target: 30 }),
     });
 
-    expect(appData.nextTargetInfo.decisionState.readiness).toBe("building");
+    expect(appData.recommendation.decisionState.readiness).toBe("building");
     expect(appData.relapseTone.label).toBe("Medium");
     expect(appData.headlineStatus).toBe("Stable");
   });

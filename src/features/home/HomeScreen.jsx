@@ -8,7 +8,7 @@ export default function HomeScreen(props) {
   const {
     name,
     sessions,
-    target,
+    recommendation,
     goalPct,
     goalSec,
     phase,
@@ -51,8 +51,9 @@ export default function HomeScreen(props) {
     setFeedingDraft,
     cancelFeedingForm,
     saveFeeding,
-    recoveryMode,
   } = props;
+  const target = recommendation?.duration ?? 0;
+  const recoveryMode = recommendation?.details?.recoveryMode;
   const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
 
   return (

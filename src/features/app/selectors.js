@@ -1,4 +1,4 @@
-import { PROTOCOL, explainNextTarget, getCalmStreak, getDistressCounts, getRecentHighDistressSummary } from "../../lib/protocol";
+import { PROTOCOL, getCalmStreak, getDistressCounts, getRecentHighDistressSummary } from "../../lib/protocol";
 import { dailyInfo, distressLabel, fmt, getInformationalTone, getLeaveProfile, getRiskTone, isToday, patternInfo, toDayKey } from "./helpers";
 
 const hasValue = (value) => value !== null && value !== undefined;
@@ -15,7 +15,7 @@ const statusTone = (value, { good, warn, invert = false }) => {
   return { ...getRiskTone("high"), label: "Unsteady", surfaceState: "overdue" };
 };
 
-export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, feedings, target, protoOverride }) {
+export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, feedings, target, protoOverride, recommendation }) {
   const dog = dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase());
   const name = dog?.dogName ?? "your dog";
   const goalSec = dog?.goalSeconds ?? 2400;
@@ -26,7 +26,12 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   const capPct = Math.min((daily.usedSec / daily.capSec) * 100, 100);
   const leaveProfile = getLeaveProfile(dog?.leavesPerDay);
   const pattern = patternInfo(patterns, walks, dog?.leavesPerDay, activeProto);
-  const nextTargetInfo = explainNextTarget(sessions, walks, patterns, dog || {});
+  const unifiedRecommendation = recommendation || {
+    duration: target,
+    decisionState: null,
+    explanation: "",
+    details: {},
+  };
 
   const patReminderText = (() => {
     if (pattern.todayPat === 0) {
@@ -114,7 +119,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   })();
 
   const recentHighDistress = getRecentHighDistressSummary(sessions);
-  const decisionState = nextTargetInfo.decisionState || null;
+  const decisionState = unifiedRecommendation.decisionState || null;
 
   const trainingReadiness = (() => {
     if (decisionState?.readiness === "high") return { level: "HIGH", ...getInformationalTone("improving") };
@@ -203,7 +208,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     capPct,
     leaveProfile,
     pattern,
-    nextTargetInfo,
+    recommendation: unifiedRecommendation,
     patReminderText,
     totalCount,
     bestCalm,
