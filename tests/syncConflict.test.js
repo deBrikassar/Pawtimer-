@@ -41,4 +41,15 @@ describe("mergeById concurrent edits", () => {
     expect(merged[0].type).toBe("jacket");
     expect(merged[0].updatedAt).toBe(iso(12));
   });
+
+  it("preserves non-default walk type when higher revision wins", () => {
+    const localWalks = [{ id: "walk-1", date: iso(8), revision: 3, updatedAt: iso(8), type: "training_walk", duration: 900 }];
+    const remoteWalks = [{ id: "walk-1", date: iso(8), revision: 2, updatedAt: iso(10), type: "regular_walk", duration: 900 }];
+
+    const merged = mergeById(localWalks, remoteWalks);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].revision).toBe(3);
+    expect(merged[0].type).toBe("training_walk");
+  });
 });

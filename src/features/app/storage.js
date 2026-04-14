@@ -320,6 +320,16 @@ export const SESSION_SYNC_FETCH_SELECT = [
   ...Object.values(SESSION_SYNC_FETCH_FIELD_MAP),
 ].join(",");
 
+export const WALKS_SYNC_FETCH_SELECT = [
+  "id",
+  "dog_id",
+  "date",
+  "duration",
+  "walk_type",
+  "revision",
+  "updated_at",
+].join(",");
+
 const mapSyncFetchSessionRow = (r) => ({
   id: r.id,
   date: r.date,
@@ -342,7 +352,7 @@ export const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
   const sessionsSelect = SESSION_SYNC_FETCH_SELECT;
-  const walksSelect = "id,dog_id,date,duration,walk_type,revision,updated_at";
+  const walksSelect = WALKS_SYNC_FETCH_SELECT;
   const patternsSelect = "id,dog_id,date,type,revision,updated_at";
   const feedingsSelect = "id,dog_id,date,food_type,amount,revision,updated_at";
   const parseMissingColumn = (errorText) => {
