@@ -1,3 +1,5 @@
+import { sortByDateAsc as sortByDateAscShared } from "./dateSort";
+
 const pad = (value) => String(value).padStart(2, "0");
 
 export const toDateInputValue = (value) => {
@@ -40,21 +42,6 @@ export const buildEditedActivityIso = (dateValue, timeValue) => {
   return nextDate.toISOString();
 };
 
-const toTimestamp = (value) => {
-  if (value == null || value === "") return Number.POSITIVE_INFINITY;
-  const timestamp = new Date(value).getTime();
-  return Number.isFinite(timestamp) ? timestamp : Number.POSITIVE_INFINITY;
-};
-
-export const sortByDateAsc = (items = []) => ensureArray(items)
-  .map((item, index) => ({ item, index }))
-  .sort((a, b) => {
-    const byDate = toTimestamp(a.item?.date) - toTimestamp(b.item?.date);
-    if (byDate !== 0) return byDate;
-    return a.index - b.index;
-  })
-  .map(({ item }) => item);
-
-function ensureArray(value) {
-  return Array.isArray(value) ? value : [];
-}
+export const sortByDateAsc = (items = []) => sortByDateAscShared(items, {
+  invalidPolicy: "push-to-end",
+});

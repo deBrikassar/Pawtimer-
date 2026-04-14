@@ -1,3 +1,5 @@
+import { sortByDateAsc as sortByDateAscShared } from "./dateSort";
+
 export const PROTOCOL = {
   sessionsPerDayDefault: 1,
   sessionsPerDayMax: 5,
@@ -110,16 +112,8 @@ function getLatestSessions(sessions, count) {
   return sessions.slice(-count);
 }
 
-function sortByDateAsc(sessions = []) {
-  return [...sessions].sort((a, b) => {
-    const timeA = toTimestamp(a?.date);
-    const timeB = toTimestamp(b?.date);
-    if (timeA == null && timeB == null) return 0;
-    if (timeA == null) return -1;
-    if (timeB == null) return 1;
-    return timeA - timeB;
-  });
-}
+const sortByDateAsc = (sessions = []) => sortByDateAscShared(sessions, { invalidPolicy: "drop" });
+
 
 function countStreak(items, predicate) {
   let streak = 0;

@@ -42,6 +42,8 @@ describe("activity date/time helpers", () => {
       { id: "invalid-a", date: "not-a-date" },
       { id: "same-time-b", date: "2026-03-17T10:00:00.000Z" },
       { id: "invalid-b", date: null },
+      { id: "invalid-c", date: "" },
+      { id: "invalid-d" },
       { id: "earliest", date: "2026-03-16T10:00:00.000Z" },
     ]);
 
@@ -51,6 +53,8 @@ describe("activity date/time helpers", () => {
       "same-time-b",
       "invalid-a",
       "invalid-b",
+      "invalid-c",
+      "invalid-d",
     ]);
   });
 });

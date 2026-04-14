@@ -126,6 +126,17 @@ describe("recommendation engine", () => {
     expect(rec.recommendedDuration).toBeGreaterThanOrEqual(1800);
   });
 
+  it("drops malformed date rows before computing recommendations", () => {
+    const sessions = [
+      { date: daysAgo(0), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+      { date: "not-a-date", plannedDuration: 50, actualDuration: 10, distressLevel: "severe", belowThreshold: false },
+    ];
+
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(57);
+    expect(rec.recommendationType).toBe("keep_same_duration");
+  });
+
   it("does not let older short sessions drag recommendation near minimum", () => {
     const sessions = [
       { date: daysAgo(14), plannedDuration: 15, actualDuration: 15, distressLevel: "none", belowThreshold: true },
@@ -319,15 +330,21 @@ describe("recommendation engine", () => {
     expect(rec.recommendedDuration).toBe(120);
   });
 
-  it("does not break on empty or incomplete subtle history", () => {
+  it("drops malformed rows and still handles incomplete subtle history safely", () => {
     const recEmpty = buildRecommendation([], { goalSeconds: 3600 });
     expect(recEmpty.recommendedDuration).toBeGreaterThanOrEqual(30);
 
     const recIncomplete = buildRecommendation([
       { distressLevel: "subtle", plannedDuration: null, actualDuration: null },
     ], { goalSeconds: 3600 });
-    expect(recIncomplete.recoveryMode.active).toBe(true);
-    expect(recIncomplete.recommendationType).toBe("recovery_mode_active");
+    expect(recIncomplete.recoveryMode.active).toBe(false);
+    expect(recIncomplete.recommendedDuration).toBeGreaterThanOrEqual(30);
+
+    const recDated = buildRecommendation([
+      { date: daysAgo(0), distressLevel: "subtle", plannedDuration: null, actualDuration: null },
+    ], { goalSeconds: 3600 });
+    expect(recDated.recoveryMode.active).toBe(true);
+    expect(recDated.recommendationType).toBe("recovery_mode_active");
   });
 
   it("rolls back and enters stabilization mode after repeated active distress", () => {
