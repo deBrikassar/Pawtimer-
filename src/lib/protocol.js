@@ -830,6 +830,23 @@ function evaluatePersistentRecoveryMode(
   }
 
   const completed = consecutiveCalm >= recoveryDurations.length;
+  const beforeTrigger = trainingSessions.slice(0, resolvedTriggerIndex);
+  const anchorDuration = normalized.anchorDuration ?? getSessionDurationAnchor(getLastCalmSession(beforeTrigger));
+  const fallbackInfo = [DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(stressLevel)
+    ? computeFallbackFromCalmHistory(recentWindow, anchorDuration)
+    : null;
+  const reducedFallback = fallbackInfo?.usedRelaxedCalmEvidence
+    ? Math.max(PROTOCOL.minDurationSeconds, Math.round(fallbackInfo.fallbackBase * (1 - reductionPercent)))
+    : fallbackInfo?.fallbackBase;
+  const fallbackDuration = Number.isFinite(reducedFallback)
+    ? clampRateChange(
+      clamp(reducedFallback, PROTOCOL.minDurationSeconds, goalSeconds),
+      Number.isFinite(anchorDuration) ? anchorDuration : getSessionDurationAnchor(triggerSession),
+    )
+    : null;
+  const postRecoveryDuration = Number.isFinite(fallbackDuration)
+    ? fallbackDuration
+    : Math.max(PROTOCOL.minDurationSeconds, Math.round((normalized.anchorDuration || PROTOCOL.startDurationSeconds) * 0.95));
   const persistedState = {
     ...normalized,
     active: !completed,
@@ -838,25 +855,8 @@ function evaluatePersistentRecoveryMode(
 
   if (!completed) {
     const recoveryDuration = recoveryDurations[Math.min(consecutiveCalm, recoveryDurations.length - 1)];
-    const beforeTrigger = trainingSessions.slice(0, resolvedTriggerIndex);
-    const anchorDuration = normalized.anchorDuration ?? getSessionDurationAnchor(getLastCalmSession(beforeTrigger));
-    const fallbackInfo = [DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(stressLevel)
-      ? computeFallbackFromCalmHistory(recentWindow, anchorDuration)
-      : null;
-    const reducedFallback = fallbackInfo?.usedRelaxedCalmEvidence
-      ? Math.max(PROTOCOL.minDurationSeconds, Math.round(fallbackInfo.fallbackBase * (1 - reductionPercent)))
-      : fallbackInfo?.fallbackBase;
-    const fallbackDuration = Number.isFinite(reducedFallback)
-      ? clampRateChange(
-        clamp(reducedFallback, PROTOCOL.minDurationSeconds, goalSeconds),
-        Number.isFinite(anchorDuration) ? anchorDuration : getSessionDurationAnchor(triggerSession),
-      )
-      : recoveryDuration;
-    const recommendedDuration = [DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(stressLevel) && afterTrigger.length === 0
-      ? fallbackDuration
-      : recoveryDuration;
     return {
-      recommendedDuration: clamp(recommendedDuration, PROTOCOL.minDurationSeconds, goalSeconds),
+      recommendedDuration: clamp(recoveryDuration, PROTOCOL.minDurationSeconds, goalSeconds),
       recommendationType: "recovery_mode_active",
       recoveryMode: {
         active: true,
@@ -869,14 +869,14 @@ function evaluatePersistentRecoveryMode(
         }),
         anchorSessionDate: trainingSessions[resolvedTriggerIndex]?.date || null,
         anchorDuration: normalized.anchorDuration,
-        recoveryDuration: recommendedDuration,
-        postRecoveryDuration: normalized.anchorDuration ? Math.max(PROTOCOL.minDurationSeconds, Math.round(normalized.anchorDuration * 0.95)) : null,
+        recoveryDuration,
+        postRecoveryDuration,
       },
       recoveryState: persistedState,
     };
   }
 
-  const resumeDuration = Math.max(PROTOCOL.minDurationSeconds, Math.round((normalized.anchorDuration || PROTOCOL.startDurationSeconds) * 0.95));
+  const resumeDuration = postRecoveryDuration;
   return {
     recommendedDuration: clamp(resumeDuration, PROTOCOL.minDurationSeconds, goalSeconds),
     recommendationType: "recovery_mode_resume",

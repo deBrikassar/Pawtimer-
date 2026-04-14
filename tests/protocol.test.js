@@ -382,7 +382,7 @@ describe("recommendation engine", () => {
     ], { goalSeconds: 3600, recoveryState: oneCalm.recoveryState });
     expect(twoCalm.recoveryMode.active).toBe(false);
     expect(twoCalm.recoveryState?.active).toBe(false);
-    expect(twoCalm.recommendedDuration).toBe(475);
+    expect(twoCalm.recommendedDuration).toBe(375);
   });
 });
 
@@ -466,7 +466,7 @@ describe("public compatibility APIs", () => {
     expect(next.recommendedDuration).toBeGreaterThan(1000);
   });
 
-  it("uses unified recovery fallback logic for active distress", () => {
+  it("starts active-distress recovery at first step and keeps fallback for post-recovery resume", () => {
     const sessions = [
       { date: daysAgo(2), plannedDuration: 1500, actualDuration: 1200, distressLevel: "none", belowThreshold: false },
       { date: daysAgo(1), plannedDuration: 1600, actualDuration: 1300, distressLevel: "none", belowThreshold: false },
@@ -474,7 +474,20 @@ describe("public compatibility APIs", () => {
     ];
     const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
     expect(next.recommendationType).toBe("recovery_mode_active");
-    expect(next.recommendedDuration).toBe(1125);
+    expect(next.recommendedDuration).toBe(60);
+    expect(next.recoveryMode.postRecoveryDuration).toBe(1125);
+  });
+
+  it("starts severe-distress recovery at first step and keeps fallback for post-recovery resume", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 1800, actualDuration: 1500, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 1700, actualDuration: 1400, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(0), plannedDuration: 1500, actualDuration: 120, distressLevel: "severe", belowThreshold: false },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
+    expect(next.recommendationType).toBe("recovery_mode_active");
+    expect(next.recommendedDuration).toBe(60);
+    expect(next.recoveryMode.postRecoveryDuration).toBe(1260);
   });
 
   it("keeps decision risk level aligned with stats relapse risk bands", () => {
