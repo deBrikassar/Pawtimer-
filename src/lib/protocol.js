@@ -601,6 +601,278 @@ function buildDecisionState({ recommendedDuration, recommendationType, stats, re
   };
 }
 
+
+function getRecentTrainingWindow(trainingSessions = [], window = 7) {
+  return getLatestSessions(trainingSessions, window);
+}
+
+function getSessionDurationAnchor(session = null) {
+  if (!session) return null;
+  const actual = Number(session.actualDuration);
+  if (Number.isFinite(actual) && actual > 0) return actual;
+  const planned = Number(session.plannedDuration);
+  if (Number.isFinite(planned) && planned > 0) return planned;
+  return null;
+}
+
+function getLastCalmSession(sessions = []) {
+  for (let i = sessions.length - 1; i >= 0; i -= 1) {
+    if (sessions[i].distressLevel === DISTRESS_LEVELS.NONE) return sessions[i];
+  }
+  return null;
+}
+
+function clampRateChange(nextDuration, referenceDuration) {
+  if (!Number.isFinite(referenceDuration) || referenceDuration <= 0) return Math.round(nextDuration);
+  const minAllowed = referenceDuration * 0.75; // Smoothing guard: never decrease by more than 25% in one step.
+  const maxAllowed = referenceDuration * 1.2; // Smoothing guard: never increase by more than 20% in one step.
+  return Math.round(clamp(nextDuration, minAllowed, maxAllowed));
+}
+
+function computeProgressiveIncrease(anchorDuration, calmStreak = 1) {
+  if (!Number.isFinite(anchorDuration) || anchorDuration <= 0) return PROTOCOL.startDurationSeconds;
+
+  // Before 40 minutes, scale up by 10-15% based on how steady the current calm streak is.
+  if (anchorDuration < 40 * 60) {
+    const percentIncrease = clamp(0.12 + (Math.max(0, calmStreak - 1) * 0.015), 0.1, 0.15);
+    return Math.round(anchorDuration * (1 + percentIncrease));
+  }
+
+  // At/after 40 minutes, switch to fixed +3 to +5 minute steps.
+  const fixedStepSeconds = anchorDuration >= 60 * 60 ? 5 * 60 : 3 * 60;
+  return Math.round(anchorDuration + fixedStepSeconds);
+}
+
+function computeFallbackFromCalmHistory(recentWindow = [], anchorDuration = null) {
+  const calmDurations = recentWindow
+    .filter((session) => session.distressLevel === DISTRESS_LEVELS.NONE)
+    .map((session) => getSessionDurationAnchor(session))
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  const calmAverage = calmDurations.length
+    ? calmDurations.reduce((sum, value) => sum + value, 0) / calmDurations.length
+    : null;
+
+  const baseCandidates = [anchorDuration, calmAverage].filter((value) => Number.isFinite(value) && value > 0);
+  if (!baseCandidates.length) return PROTOCOL.minDurationSeconds;
+
+  // Bug fix rule: fallback is based on calm evidence, not a hard floor reset.
+  const fallbackBase = Math.min(...baseCandidates);
+  return Math.round(fallbackBase * 0.8);
+}
+
+export function computeNextTarget(trainingSessions = [], options = {}) {
+  const recentWindow = getRecentTrainingWindow(trainingSessions, 7);
+  const lastSession = recentWindow[recentWindow.length - 1] || null;
+  const goalSeconds = Number(options.goalSeconds || PROTOCOL.goalDurationDefaultSeconds);
+
+  if (!lastSession) {
+    return {
+      recommendedDuration: PROTOCOL.startDurationSeconds,
+      recommendationType: 'baseline_start',
+      recoveryMode: {
+        active: false,
+        remainingSessions: 0,
+        step: 0,
+        anchorSessionDate: null,
+        anchorDuration: null,
+        recoveryDuration: null,
+        postRecoveryDuration: null,
+      },
+    };
+  }
+
+  const stressIndex = Math.max(
+    recentWindow.map((session) => session.distressLevel).lastIndexOf(DISTRESS_LEVELS.SUBTLE),
+    recentWindow.map((session) => session.distressLevel).lastIndexOf(DISTRESS_LEVELS.ACTIVE),
+    recentWindow.map((session) => session.distressLevel).lastIndexOf(DISTRESS_LEVELS.SEVERE),
+  );
+
+  if (stressIndex >= 0) {
+    const stressSession = recentWindow[stressIndex];
+    const stressLevel = stressSession.distressLevel;
+    const beforeStress = recentWindow.slice(0, stressIndex);
+    const afterStress = recentWindow.slice(stressIndex + 1);
+    const lastFullyCalm = getLastCalmSession(beforeStress);
+    const anchorDuration = getSessionDurationAnchor(lastFullyCalm);
+
+    if (stressLevel === DISTRESS_LEVELS.SUBTLE) {
+      const recoveryDurations = [60, 120];
+      let calmRecoveryCount = 0;
+
+      // Recovery progress only advances on consecutive calm sessions after the subtle marker.
+      for (const session of afterStress) {
+        if (session.distressLevel === DISTRESS_LEVELS.NONE) calmRecoveryCount += 1;
+        else calmRecoveryCount = 0;
+      }
+
+      // If we already observed a sustained calm closure (3+ calm sessions), the subtle marker is closed out.
+      if (afterStress.length >= 3 && afterStress.slice(-3).every((session) => session.distressLevel === DISTRESS_LEVELS.NONE)) {
+        const closureBase = getSessionDurationAnchor(getLastCalmSession(recentWindow)) ?? PROTOCOL.startDurationSeconds;
+        const closureNext = clampRateChange(computeProgressiveIncrease(closureBase, 3), closureBase);
+        return {
+          recommendedDuration: clamp(closureNext, PROTOCOL.minDurationSeconds, goalSeconds),
+          recommendationType: "keep_same_duration",
+          recoveryMode: {
+            active: false,
+            remainingSessions: 0,
+            step: 0,
+            anchorSessionDate: lastFullyCalm?.date || null,
+            anchorDuration: anchorDuration ?? null,
+            recoveryDuration: null,
+            postRecoveryDuration: null,
+          },
+        };
+      }
+
+      // Without a prior fully calm anchor we cannot run subtle recovery safely, so fall back to baseline progression.
+      if (!Number.isFinite(anchorDuration) || anchorDuration <= 0) {
+        const baseline = getSessionDurationAnchor(lastSession) ?? PROTOCOL.startDurationSeconds;
+        return {
+          recommendedDuration: clamp(Math.max(PROTOCOL.minDurationSeconds, Math.round(baseline)), PROTOCOL.minDurationSeconds, goalSeconds),
+          recommendationType: "keep_same_duration",
+          recoveryMode: {
+            active: false,
+            remainingSessions: 0,
+            step: 0,
+            anchorSessionDate: null,
+            anchorDuration: null,
+            recoveryDuration: null,
+            postRecoveryDuration: null,
+          },
+        };
+      }
+
+      if (calmRecoveryCount < 2) {
+        return {
+          recommendedDuration: recoveryDurations[Math.min(calmRecoveryCount, recoveryDurations.length - 1)],
+          recommendationType: 'subtle_recovery_mode',
+          recoveryMode: {
+            active: true,
+            remainingSessions: Math.max(0, 2 - calmRecoveryCount),
+            step: Math.min(2, calmRecoveryCount + 1),
+            anchorSessionDate: lastFullyCalm?.date || null,
+            anchorDuration: anchorDuration ?? null,
+            recoveryDuration: recoveryDurations[Math.min(calmRecoveryCount, recoveryDurations.length - 1)],
+            postRecoveryDuration: Number.isFinite(anchorDuration) ? Math.max(PROTOCOL.minDurationSeconds, Math.round(anchorDuration * 0.95)) : null,
+          },
+        };
+      }
+
+      const resumeDuration = Number.isFinite(anchorDuration)
+        ? Math.max(PROTOCOL.minDurationSeconds, Math.round(anchorDuration * 0.95))
+        : PROTOCOL.minDurationSeconds;
+
+      return {
+        recommendedDuration: clamp(resumeDuration, PROTOCOL.minDurationSeconds, goalSeconds),
+        recommendationType: 'subtle_recovery_resume',
+        recoveryMode: {
+          active: false,
+          remainingSessions: 0,
+          step: 2,
+          anchorSessionDate: lastFullyCalm?.date || null,
+          anchorDuration: anchorDuration ?? null,
+          recoveryDuration: null,
+          postRecoveryDuration: resumeDuration,
+        },
+      };
+    }
+
+    if ([DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(stressLevel)) {
+      const recoveryDurations = stressLevel === DISTRESS_LEVELS.SEVERE ? [60, 120, 120] : [60, 120];
+      let calmRecoveryCount = 0;
+      for (const session of afterStress) {
+        const sessionDuration = getSessionDurationAnchor(session);
+        const looksLikeRecovery = Number.isFinite(sessionDuration) && sessionDuration <= 120;
+        if (session.distressLevel === DISTRESS_LEVELS.NONE && looksLikeRecovery) calmRecoveryCount += 1;
+        else calmRecoveryCount = 0;
+      }
+
+      const fallbackRaw = computeFallbackFromCalmHistory(recentWindow, anchorDuration);
+      const fallbackReference = Number.isFinite(anchorDuration) ? anchorDuration : getSessionDurationAnchor(lastSession);
+      const fallbackDuration = clampRateChange(
+        clamp(fallbackRaw, PROTOCOL.minDurationSeconds, goalSeconds),
+        fallbackReference,
+      );
+
+      // First recommendation after active/severe stress is an immediate anchored fallback.
+      if (!afterStress.length) {
+        return {
+          recommendedDuration: fallbackDuration,
+          recommendationType: stressLevel === DISTRESS_LEVELS.SEVERE ? 'stabilization_block' : 'reduce_duration',
+          recoveryMode: {
+            active: true,
+            remainingSessions: recoveryDurations.length,
+            step: 1,
+            anchorSessionDate: lastFullyCalm?.date || null,
+            anchorDuration: anchorDuration ?? null,
+            recoveryDuration: recoveryDurations[0],
+            postRecoveryDuration: Math.max(PROTOCOL.minDurationSeconds, Math.round(fallbackDuration * 0.95)),
+          },
+        };
+      }
+
+      if (calmRecoveryCount < recoveryDurations.length) {
+        const nextRecovery = recoveryDurations[Math.min(calmRecoveryCount, recoveryDurations.length - 1)];
+        return {
+          recommendedDuration: nextRecovery,
+          recommendationType: stressLevel === DISTRESS_LEVELS.SEVERE ? 'stabilization_block' : 'reduce_duration',
+          recoveryMode: {
+            active: true,
+            remainingSessions: Math.max(0, recoveryDurations.length - calmRecoveryCount),
+            step: Math.min(recoveryDurations.length, calmRecoveryCount + 1),
+            anchorSessionDate: lastFullyCalm?.date || null,
+            anchorDuration: anchorDuration ?? null,
+            recoveryDuration: nextRecovery,
+            postRecoveryDuration: Math.max(PROTOCOL.minDurationSeconds, Math.round(fallbackDuration * 0.95)),
+          },
+        };
+      }
+
+      const resumeDuration = clampRateChange(
+        Math.max(PROTOCOL.minDurationSeconds, Math.round(fallbackDuration * 0.95)),
+        getSessionDurationAnchor(lastSession),
+      );
+
+      return {
+        recommendedDuration: clamp(resumeDuration, PROTOCOL.minDurationSeconds, goalSeconds),
+        recommendationType: 'keep_same_duration',
+        recoveryMode: {
+          active: false,
+          remainingSessions: 0,
+          step: recoveryDurations.length,
+          anchorSessionDate: lastFullyCalm?.date || null,
+          anchorDuration: anchorDuration ?? null,
+          recoveryDuration: null,
+          postRecoveryDuration: resumeDuration,
+        },
+      };
+    }
+  }
+
+  const calmStreak = countStreak(recentWindow, (session) => session.distressLevel === DISTRESS_LEVELS.NONE);
+  const lastCalmSession = getLastCalmSession(recentWindow);
+  const anchorDuration = getSessionDurationAnchor(lastCalmSession) ?? PROTOCOL.startDurationSeconds;
+  const lastReferenceDuration = getSessionDurationAnchor(lastSession) ?? anchorDuration;
+
+  const stepped = computeProgressiveIncrease(anchorDuration, calmStreak);
+  const smoothed = clampRateChange(stepped, lastReferenceDuration);
+
+  return {
+    recommendedDuration: clamp(smoothed, PROTOCOL.minDurationSeconds, goalSeconds),
+    recommendationType: 'keep_same_duration',
+    recoveryMode: {
+      active: false,
+      remainingSessions: 0,
+      step: 0,
+      anchorSessionDate: lastCalmSession?.date || null,
+      anchorDuration,
+      recoveryDuration: null,
+      postRecoveryDuration: null,
+    },
+  };
+}
+
 function getStepMultiplier(stats, latestSessions = [], allSessions = []) {
   const calmStreak = countStreak(latestSessions, (s) => s.belowThreshold);
 
@@ -642,42 +914,12 @@ function getCalmProgressionBase(trainingSessions = []) {
 export function buildRecommendation(sessions = [], options = {}) {
   const rich = sortByDateAsc(sessions).map(toRichSession);
   const training = rich.filter((s) => s.departureType !== "real_life");
-  const recovery = getSubtleRecoveryContext(training);
-  const effectiveTraining = (recovery.completedRecoveryEndIndex > recovery.subtleIndex)
-    ? training.filter((_, index) => !(index > recovery.subtleIndex && index <= recovery.completedRecoveryEndIndex))
-    : training;
-  const recent = getLatestSessions(effectiveTraining, PROTOCOL.calmWindow);
-  const last = effectiveTraining[effectiveTraining.length - 1] || null;
-  const stats = calculateTrainingStats(effectiveTraining, options);
+  const stats = calculateTrainingStats(training, options);
+  const nextTarget = computeNextTarget(training, options);
   const safeAlone = stats.safeAloneTime || PROTOCOL.startDurationSeconds;
-  const calmProgressionBase = getCalmProgressionBase(effectiveTraining);
 
-  let recommendedDuration = safeAlone;
-  let recommendationType = chooseRecommendationType(last, stats, recent);
-
-  if (recovery.active) {
-    recommendationType = "subtle_recovery_mode";
-    recommendedDuration = recovery.nextRecoveryDuration;
-  } else if (recovery.justCompleted && Number.isFinite(recovery.postRecoveryDuration)) {
-    recommendationType = "subtle_recovery_resume";
-    recommendedDuration = recovery.postRecoveryDuration;
-  } else if (calmProgressionBase != null) {
-    recommendedDuration = Math.round(calmProgressionBase * 1.15);
-  } else if (recommendationType === "reduce_duration") {
-    recommendedDuration = Math.round(safeAlone * 0.75);
-  } else if (recommendationType === "stabilization_block") {
-    recommendedDuration = Math.round(safeAlone * 0.6);
-  } else if (recommendationType === "repeat_current_duration") {
-    const lastPlanned = Number(last?.plannedDuration) || 0;
-    const lastActual = Number(last?.actualDuration) || 0;
-    const subtleBaseline = Math.max(lastPlanned, lastActual, PROTOCOL.minDurationSeconds);
-    recommendedDuration = Math.round(Math.min(safeAlone, subtleBaseline));
-  } else if (recommendationType === "insert_easy_sessions") {
-    recommendedDuration = Math.round(safeAlone * PROTOCOL.easySessionRatio);
-  } else {
-    const multiplier = getStepMultiplier(stats, recent, training);
-    recommendedDuration = Math.round(safeAlone * (1 + multiplier));
-  }
+  let recommendedDuration = nextTarget.recommendedDuration;
+  let recommendationType = nextTarget.recommendationType;
 
   const panicPattern = getLatestSessions(training, 8).filter((s) => s.distressLevel === DISTRESS_LEVELS.SEVERE).length >= 2;
   const uncontrolledRealAbsence = rich.filter((s) => s.departureType === "real_life" && !s.belowThreshold).slice(-3).length >= 1;
@@ -703,15 +945,7 @@ export function buildRecommendation(sessions = [], options = {}) {
     recommendedDuration: boundedDuration,
     recommendationType: focusArea,
     stabilizationMode: stats.relapseRisk >= 0.72,
-    recoveryMode: {
-      active: recovery.active,
-      remainingSessions: recovery.remainingSessions,
-      step: recovery.recoveryStep,
-      anchorSessionDate: recovery.subtleIndex >= 0 ? training[recovery.subtleIndex]?.date || null : null,
-      anchorDuration: recovery.anchorDuration,
-      recoveryDuration: recovery.nextRecoveryDuration,
-      postRecoveryDuration: recovery.postRecoveryDuration,
-    },
+    recoveryMode: nextTarget.recoveryMode,
     stats,
     warnings,
     safeAbsenceAlert: Number(options.plannedRealAbsenceSeconds || 0) > safeAlone,
