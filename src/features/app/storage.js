@@ -285,14 +285,32 @@ const LEGACY_DISTRESS_LEVEL_MAP = {
 const mapDistressForLegacySupabase = (level) => LEGACY_DISTRESS_LEVEL_MAP[normalizeDistressLevel(level)] ?? "none";
 
 export const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
+const normalizeRevision = (value) => {
+  const revision = Number(value);
+  return Number.isFinite(revision) ? revision : null;
+};
+
+const normalizeUpdatedAt = (row = {}) => row?.updatedAt ?? row?.updated_at ?? null;
+
+export const normalizePatterns = (rows = []) => ensureArray(rows)
+  .map((row) => ({
+    id: String(row?.id || ""),
+    date: row?.date || new Date().toISOString(),
+    type: row?.type || "",
+    revision: normalizeRevision(row?.revision),
+    updatedAt: normalizeUpdatedAt(row),
+  }))
+  .filter((row) => row.id)
+  .sort((a, b) => new Date(a.date) - new Date(b.date));
+
 export const normalizeFeedings = (rows = []) => ensureArray(rows)
   .map((row) => ({
     id: String(row?.id || ""),
     date: row?.date || new Date().toISOString(),
     foodType: row?.foodType ?? row?.food_type ?? "meal",
     amount: row?.amount ?? "small",
-    revision: Number.isFinite(row?.revision) ? Number(row.revision) : null,
-    updatedAt: row?.updatedAt ?? row?.updated_at ?? null,
+    revision: normalizeRevision(row?.revision),
+    updatedAt: normalizeUpdatedAt(row),
   }))
   .filter((row) => row.id)
   .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -330,6 +348,9 @@ export const WALKS_SYNC_FETCH_SELECT = [
   "updated_at",
 ].join(",");
 
+export const PATTERNS_SYNC_FETCH_SELECT = "id,dog_id,date,type,revision,updated_at";
+export const FEEDINGS_SYNC_FETCH_SELECT = "id,dog_id,date,food_type,amount,revision,updated_at";
+
 const mapSyncFetchSessionRow = (r) => ({
   id: r.id,
   date: r.date,
@@ -353,8 +374,8 @@ export const syncFetch = async (dogId) => {
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
   const sessionsSelect = SESSION_SYNC_FETCH_SELECT;
   const walksSelect = WALKS_SYNC_FETCH_SELECT;
-  const patternsSelect = "id,dog_id,date,type,revision,updated_at";
-  const feedingsSelect = "id,dog_id,date,food_type,amount,revision,updated_at";
+  const patternsSelect = PATTERNS_SYNC_FETCH_SELECT;
+  const feedingsSelect = FEEDINGS_SYNC_FETCH_SELECT;
   const parseMissingColumn = (errorText) => {
     const text = String(errorText || "");
     const match = text.match(/column\s+([a-zA-Z0-9_."]+)\s+does not exist/i);
@@ -500,7 +521,13 @@ export const syncFetch = async (dogId) => {
         revision: r.revision,
         updatedAt: r.updated_at,
       })),
-      patterns: patRows.map((r) => ({ id: r.id, date: r.date, type: r.type, revision: r.revision, updatedAt: r.updated_at })),
+      patterns: normalizePatterns(patRows.map((r) => ({
+        id: r.id,
+        date: r.date,
+        type: r.type,
+        revision: r.revision,
+        updatedAt: r.updated_at,
+      }))),
       feedings: normalizeFeedings(feedingRows.map((r) => ({
         id: r.id,
         date: r.date,
@@ -659,7 +686,7 @@ export const hydrateDogFromLocal = (dogId) => {
   return {
     sessions: localSessions,
     walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: normalizeWalkType(w?.type) })),
-    patterns: ensureArray(load(patKey(id), [])),
+    patterns: normalizePatterns(load(patKey(id), [])),
     feedings: normalizeFeedings(load(feedingKey(id), [])),
     patLabels: ensureObject(load(patLblKey(id), {})),
     photo: load(photoKey(id), null),
