@@ -297,10 +297,33 @@ export const normalizeFeedings = (rows = []) => ensureArray(rows)
   .filter((row) => row.id)
   .sort((a, b) => new Date(a.date) - new Date(b.date));
 
+export const SESSION_SYNC_FETCH_FIELD_MAP = {
+  plannedDuration: "planned_duration",
+  actualDuration: "actual_duration",
+  distressLevel: "distress_level",
+  result: "result",
+  latencyToFirstDistress: "latency_to_first_distress",
+  distressType: "distress_type",
+  context: "context",
+  symptoms: "symptoms",
+  recoverySeconds: "recovery_seconds",
+  preSession: "pre_session",
+  environment: "environment",
+  revision: "revision",
+  updatedAt: "updated_at",
+};
+
+export const SESSION_SYNC_FETCH_SELECT = [
+  "id",
+  "dog_id",
+  "date",
+  ...Object.values(SESSION_SYNC_FETCH_FIELD_MAP),
+].join(",");
+
 export const syncFetch = async (dogId) => {
   const id = canonicalDogId(dogId);
   const dogFilter = `dog_id=eq.${encodeURIComponent(id)}`;
-  const sessionsSelect = "id,dog_id,date,planned_duration,actual_duration,distress_level,result";
+  const sessionsSelect = SESSION_SYNC_FETCH_SELECT;
   const walksSelect = "id,dog_id,date,duration";
   const patternsSelect = "id,dog_id,date,type";
   const feedingsSelect = "id,dog_id,date,food_type,amount";
@@ -380,19 +403,19 @@ export const syncFetch = async (dogId) => {
       sessions: normalizeSessions(sessRows.map((r) => ({
         id: r.id,
         date: r.date,
-        plannedDuration: r.planned_duration,
-        actualDuration: r.actual_duration,
-        distressLevel: r.distress_level,
-        result: r.result,
-        latencyToFirstDistress: r.latency_to_first_distress,
-        distressType: r.distress_type,
-        context: r.context,
-        symptoms: r.symptoms,
-        recoverySeconds: r.recovery_seconds,
-        preSession: r.pre_session,
-        environment: r.environment,
-        revision: r.revision,
-        updatedAt: r.updated_at,
+        plannedDuration: r[SESSION_SYNC_FETCH_FIELD_MAP.plannedDuration],
+        actualDuration: r[SESSION_SYNC_FETCH_FIELD_MAP.actualDuration],
+        distressLevel: r[SESSION_SYNC_FETCH_FIELD_MAP.distressLevel],
+        result: r[SESSION_SYNC_FETCH_FIELD_MAP.result],
+        latencyToFirstDistress: r[SESSION_SYNC_FETCH_FIELD_MAP.latencyToFirstDistress],
+        distressType: r[SESSION_SYNC_FETCH_FIELD_MAP.distressType],
+        context: r[SESSION_SYNC_FETCH_FIELD_MAP.context],
+        symptoms: r[SESSION_SYNC_FETCH_FIELD_MAP.symptoms],
+        recoverySeconds: r[SESSION_SYNC_FETCH_FIELD_MAP.recoverySeconds],
+        preSession: r[SESSION_SYNC_FETCH_FIELD_MAP.preSession],
+        environment: r[SESSION_SYNC_FETCH_FIELD_MAP.environment],
+        revision: r[SESSION_SYNC_FETCH_FIELD_MAP.revision],
+        updatedAt: r[SESSION_SYNC_FETCH_FIELD_MAP.updatedAt],
       }))),
       walks: walkRows.map((r) => ({
         id: r.id,
