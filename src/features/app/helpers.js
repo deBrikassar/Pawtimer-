@@ -28,8 +28,12 @@ export function dailyInfo(sessions) {
   const usedSec = today.reduce((sum, s) => sum + (s.actualDuration || 0), 0);
   const count = today.length;
   const capSec = PROTOCOL.maxDailyAloneMinutes * 60;
-  const canAdd = true;
-  return { count, usedSec, capSec, canAdd, maxCount: PROTOCOL.sessionsPerDayMax };
+  const maxCount = PROTOCOL.sessionsPerDayMax;
+  const underCap = usedSec < capSec;
+  const underSessionMax = count < maxCount;
+  const canAdd = underCap && underSessionMax;
+  const blockReason = !underCap ? "cap" : !underSessionMax ? "max_sessions" : null;
+  return { count, usedSec, capSec, canAdd, blockReason, maxCount };
 }
 
 export function patternInfo(patterns, walks, leavesPerDay = 3, protocol = PROTOCOL) {
