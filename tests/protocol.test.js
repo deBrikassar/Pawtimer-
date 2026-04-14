@@ -190,8 +190,8 @@ describe("recommendation engine", () => {
       { date: hoursAgo(2), plannedDuration: 300, actualDuration: 160, distressLevel: "active", belowThreshold: false },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendationType).toBe("repeat_current_duration");
-    expect(rec.recommendedDuration).toBe(160);
+    expect(rec.recommendationType).toBe("recovery_mode_active");
+    expect(rec.recoveryMode.active).toBe(true);
   });
 
   it("allows a small increase after five-session plateau", () => {
@@ -271,7 +271,7 @@ describe("recommendation engine", () => {
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recoveryMode.active).toBe(false);
-    expect(rec.recommendationType).toBe("subtle_recovery_resume");
+    expect(rec.recommendationType).toBe("recovery_mode_resume");
     expect(rec.recommendedDuration).toBe(1140);
   });
 
@@ -373,7 +373,7 @@ describe("recommendation engine", () => {
     ], { goalSeconds: 3600, recoveryState: start.recoveryState });
     expect(oneCalm.recoveryMode.active).toBe(true);
     expect(oneCalm.recoveryMode.remainingSessions).toBe(1);
-    expect(oneCalm.recommendedDuration).toBe(60);
+    expect(oneCalm.recommendedDuration).toBe(120);
 
     const twoCalm = buildRecommendation([
       ...stress,
@@ -429,7 +429,7 @@ describe("public compatibility APIs", () => {
     ];
     const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
     expect(next.recoveryMode.active).toBe(false);
-    expect(next.recommendationType).toBe("subtle_recovery_resume");
+    expect(next.recommendationType).toBe("recovery_mode_resume");
   });
 
   it("handles legacy/runtime-shaped session rows without collapsing to 30s", () => {
@@ -466,14 +466,15 @@ describe("public compatibility APIs", () => {
     expect(next.recommendedDuration).toBeGreaterThan(1000);
   });
 
-  it("uses calm evidence fallback with risk-based 10-20% reduction instead of hard reset", () => {
+  it("uses unified recovery fallback logic for active distress", () => {
     const sessions = [
       { date: daysAgo(2), plannedDuration: 1500, actualDuration: 1200, distressLevel: "none", belowThreshold: false },
       { date: daysAgo(1), plannedDuration: 1600, actualDuration: 1300, distressLevel: "none", belowThreshold: false },
       { date: daysAgo(0), plannedDuration: 1300, actualDuration: 300, distressLevel: "active", belowThreshold: false },
     ];
     const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
-    expect(next.recommendedDuration).toBe(300);
+    expect(next.recommendationType).toBe("recovery_mode_active");
+    expect(next.recommendedDuration).toBe(1125);
   });
 
   it("keeps decision risk level aligned with stats relapse risk bands", () => {
