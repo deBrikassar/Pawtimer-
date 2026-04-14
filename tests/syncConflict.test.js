@@ -42,6 +42,28 @@ describe("mergeById concurrent edits", () => {
     expect(merged[0].updatedAt).toBe(iso(12));
   });
 
+  it("prefers higher pattern revision over newer updatedAt", () => {
+    const localPatterns = [{ id: "pattern-2", date: iso(8), revision: 10, updatedAt: iso(9), type: "keys" }];
+    const remotePatterns = [{ id: "pattern-2", date: iso(8), revision: 9, updatedAt: iso(12), type: "jacket" }];
+
+    const merged = mergeById(localPatterns, remotePatterns);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].revision).toBe(10);
+    expect(merged[0].type).toBe("keys");
+  });
+
+  it("prefers higher feeding revision over newer updatedAt", () => {
+    const localFeedings = [{ id: "feeding-1", date: iso(8), revision: 6, updatedAt: iso(9), foodType: "meal", amount: "small" }];
+    const remoteFeedings = [{ id: "feeding-1", date: iso(8), revision: 5, updatedAt: iso(12), foodType: "snack", amount: "large" }];
+
+    const merged = mergeById(localFeedings, remoteFeedings);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].revision).toBe(6);
+    expect(merged[0].foodType).toBe("meal");
+  });
+
   it("preserves non-default walk type when higher revision wins", () => {
     const localWalks = [{ id: "walk-1", date: iso(8), revision: 3, updatedAt: iso(8), type: "training_walk", duration: 900 }];
     const remoteWalks = [{ id: "walk-1", date: iso(8), revision: 2, updatedAt: iso(10), type: "regular_walk", duration: 900 }];
