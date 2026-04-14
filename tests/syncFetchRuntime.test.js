@@ -165,4 +165,50 @@ describe("syncFetch runtime fallbacks", () => {
       updatedAt: "2026-03-01T03:01:00.000Z",
     }]);
   });
+
+  it("round-trips severe distress via legacy distress_level constraints without collapsing to active", async () => {
+    const persistedSessions = [];
+    global.fetch = vi.fn(async (url, options = {}) => {
+      const { path } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(200, []);
+      if (path === "sessions" && (options.method || "GET") === "POST") {
+        const payload = JSON.parse(options.body || "{}");
+        persistedSessions.push(payload);
+        if (payload.distress_level === "severe") {
+          return jsonResponse(400, { message: "new row for relation \"sessions\" violates check constraint \"sessions_distress_level_check\"" });
+        }
+        return jsonResponse(201, {});
+      }
+      if (path === "sessions") {
+        const latest = persistedSessions.at(-1);
+        return jsonResponse(200, latest ? [latest] : []);
+      }
+      if (path === "walks") return jsonResponse(200, []);
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, []);
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncFetch, syncPush } = await setupStorageModule();
+    const pushResult = await syncPush("dog4", "session", {
+      id: "s-severe",
+      date: "2026-04-01T00:00:00.000Z",
+      plannedDuration: 120,
+      actualDuration: 20,
+      distressLevel: "severe",
+      distressType: "vocalization",
+      result: "distress",
+    }, { id: "DOG4", dogName: "Nova" });
+
+    expect(pushResult.ok).toBe(true);
+    expect(persistedSessions).toHaveLength(2);
+    expect(persistedSessions[1].distress_level).toBe("strong");
+    expect(persistedSessions[1].distress_type).toBe("__severity:severe|vocalization");
+
+    const { result, error } = await syncFetch("DOG4");
+    expect(error).toBeNull();
+    expect(result.sessions).toHaveLength(1);
+    expect(result.sessions[0].distressLevel).toBe("severe");
+    expect(result.sessions[0].distressType).toBe("vocalization");
+  });
 });

@@ -20,6 +20,8 @@ create table if not exists public.sessions (
   planned_duration integer,
   actual_duration integer,
   distress_level text,
+  distress_type text,
+  distress_severity text,
   result text,
   revision bigint not null default 0,
   updated_at timestamptz not null default now(),
@@ -59,6 +61,8 @@ create table if not exists public.feedings (
 alter table public.sessions
   add column if not exists context jsonb,
   add column if not exists symptoms jsonb,
+  add column if not exists distress_type text,
+  add column if not exists distress_severity text,
   add column if not exists recovery_seconds integer,
   add column if not exists pre_session jsonb,
   add column if not exists environment jsonb,
@@ -108,6 +112,19 @@ update public.sessions
 set environment = '{}'::jsonb
 where environment is null;
 
+update public.sessions
+set distress_level = case
+  when lower(distress_level) = 'mild' then 'subtle'
+  when lower(distress_level) = 'strong' then 'active'
+  when lower(distress_level) = 'panic' then 'severe'
+  else lower(distress_level)
+end
+where distress_level is not null;
+
+update public.sessions
+set distress_severity = coalesce(nullif(lower(distress_severity), ''), distress_level)
+where distress_level is not null;
+
 -- 4) Tighten nullability/defaults only after backfill
 alter table public.walks
   alter column duration set default 0,
@@ -118,6 +135,25 @@ alter table public.sessions
   alter column symptoms set default '{}'::jsonb,
   alter column pre_session set default '{}'::jsonb,
   alter column environment set default '{}'::jsonb;
+
+do $$
+begin
+  if exists (
+    select 1
+    from pg_constraint
+    where conname = 'sessions_distress_level_check'
+      and conrelid = 'public.sessions'::regclass
+  ) then
+    alter table public.sessions drop constraint sessions_distress_level_check;
+  end if;
+end $$;
+
+alter table public.sessions
+  add constraint sessions_distress_level_check
+  check (
+    distress_level is null
+    or distress_level in ('none', 'subtle', 'active', 'severe')
+  );
 
 -- 5) Foreign keys/indexes required for dog-scoped sync queries
 -- Add FK constraints defensively (skip if already present by name)
