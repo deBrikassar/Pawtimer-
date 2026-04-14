@@ -171,13 +171,16 @@ export default function PawTimer() {
   }, [appData.dog, patterns, walks]);
 
   const commitSessions = useCallback((updater) => {
-    const previous = ensureArray(syncSnapshotRef.current?.sessions);
-    const resolved = typeof updater === "function" ? updater(previous) : updater;
-    const normalized = normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState);
-    setSessions(normalized);
-    if (activeDogId) save(sessKey(activeDogId), normalized);
-    recomputeTarget(normalized);
-    return normalized;
+    let committed = [];
+    setSessions((prev) => {
+      const resolved = typeof updater === "function" ? updater(prev) : updater;
+      const normalized = normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState);
+      if (activeDogId) save(sessKey(activeDogId), normalized);
+      recomputeTarget(normalized);
+      committed = normalized;
+      return normalized;
+    });
+    return committed;
   }, [activeDogId, recomputeTarget, withHydratedSyncState]);
 
   const commitWalks = useCallback((updater) => {
