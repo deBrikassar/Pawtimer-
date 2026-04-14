@@ -55,13 +55,29 @@ export default function HomeScreen(props) {
   const target = recommendation?.duration ?? 0;
   const recoveryMode = recommendation?.details?.recoveryMode;
   const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
+  const sessionBlockedMessage = daily.blockReason === "cap"
+    ? `Daily alone-time cap reached (${fmtClock(daily.capSec)}). Log more sessions tomorrow.`
+    : daily.blockReason === "max_sessions"
+      ? `Daily session max reached (${daily.maxCount}). Log more sessions tomorrow.`
+      : "";
 
   return (
     <div className="tab-content train-screen">
       <div className="train-main">
         <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} />
 
-        <SessionControl phase={phase} elapsed={elapsed} target={target} onStart={startSession} onEnd={endSession} onCancel={cancelSession} completed={sessionCompleted} fmt={fmt} />
+        <SessionControl
+          phase={phase}
+          elapsed={elapsed}
+          target={target}
+          onStart={startSession}
+          onEnd={endSession}
+          onCancel={cancelSession}
+          completed={sessionCompleted}
+          fmt={fmt}
+          canStart={daily.canAdd}
+          startBlockedMessage={sessionBlockedMessage}
+        />
 
         <SessionRatingPanel
           phase={phase}
@@ -143,7 +159,13 @@ export default function HomeScreen(props) {
           </div>
         )}
 
-        {daily.count >= Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0)) && (
+        {!daily.canAdd && (
+          <p className="status-msg status-msg--warning">
+            {sessionBlockedMessage}
+          </p>
+        )}
+
+        {daily.canAdd && daily.count >= Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0)) && (
           <p className="status-msg status-msg--warning">
             {daily.count} sessions today — for ~{pattern.normalizedLeaves} departures/day, keep it around {Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0))} to avoid overloading real departures.
           </p>
