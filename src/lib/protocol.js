@@ -670,6 +670,77 @@ function computeFallbackFromCalmHistory(recentWindow = [], anchorDuration = null
   };
 }
 
+function normalizeRecoveryState(state = null) {
+  if (!state || typeof state !== "object") return null;
+  const anchorDuration = Number(state.anchorDuration);
+  const fixedDuration = Number(state.fixedDuration);
+  const consecutiveCalm = Number(state.consecutiveCalm);
+  return {
+    active: state.active === true,
+    triggerSessionId: state.triggerSessionId || null,
+    anchorDuration: Number.isFinite(anchorDuration) && anchorDuration > 0 ? Math.round(anchorDuration) : null,
+    fixedDuration: Number.isFinite(fixedDuration) && fixedDuration >= 60 && fixedDuration <= 90 ? Math.round(fixedDuration) : 60,
+    consecutiveCalm: Number.isFinite(consecutiveCalm) ? clamp(Math.round(consecutiveCalm), 0, 2) : 0,
+  };
+}
+
+function evaluatePersistentRecoveryMode(trainingSessions = [], recoveryState = null, goalSeconds = PROTOCOL.goalDurationDefaultSeconds) {
+  const normalized = normalizeRecoveryState(recoveryState);
+  if (!normalized?.active) return null;
+  const triggerIndex = trainingSessions.findIndex((session) => session.id && session.id === normalized.triggerSessionId);
+  if (triggerIndex < 0) return null;
+
+  const afterTrigger = trainingSessions.slice(triggerIndex + 1);
+  let consecutiveCalm = 0;
+  for (const session of afterTrigger) {
+    if (session.distressLevel === DISTRESS_LEVELS.NONE) consecutiveCalm += 1;
+    else consecutiveCalm = 0;
+  }
+
+  const completed = consecutiveCalm >= 2;
+  const persistedState = {
+    ...normalized,
+    active: !completed,
+    consecutiveCalm: clamp(consecutiveCalm, 0, 2),
+  };
+
+  if (!completed) {
+    const fixedDuration = clamp(normalized.fixedDuration, 60, 90);
+    return {
+      recommendedDuration: clamp(fixedDuration, PROTOCOL.minDurationSeconds, goalSeconds),
+      recommendationType: "recovery_mode_active",
+      recoveryMode: {
+        active: true,
+        recoveryActive: true,
+        remainingSessions: Math.max(1, 2 - consecutiveCalm),
+        step: Math.min(2, consecutiveCalm + 1),
+        anchorSessionDate: trainingSessions[triggerIndex]?.date || null,
+        anchorDuration: normalized.anchorDuration,
+        recoveryDuration: fixedDuration,
+        postRecoveryDuration: normalized.anchorDuration ? Math.max(PROTOCOL.minDurationSeconds, Math.round(normalized.anchorDuration * 0.95)) : null,
+      },
+      recoveryState: persistedState,
+    };
+  }
+
+  const resumeDuration = Math.max(PROTOCOL.minDurationSeconds, Math.round((normalized.anchorDuration || PROTOCOL.startDurationSeconds) * 0.95));
+  return {
+    recommendedDuration: clamp(resumeDuration, PROTOCOL.minDurationSeconds, goalSeconds),
+    recommendationType: "recovery_mode_resume",
+    recoveryMode: {
+      active: false,
+      recoveryActive: false,
+      remainingSessions: 0,
+      step: 2,
+      anchorSessionDate: trainingSessions[triggerIndex]?.date || null,
+      anchorDuration: normalized.anchorDuration,
+      recoveryDuration: null,
+      postRecoveryDuration: resumeDuration,
+    },
+    recoveryState: persistedState,
+  };
+}
+
 export function computeNextTarget(trainingSessions = [], options = {}) {
   const normalizedTraining = sortByDateAsc(trainingSessions).map(toRichSession);
   const recentWindow = getRecentTrainingWindow(normalizedTraining, 7);
@@ -677,6 +748,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
   const goalSeconds = Number(options.goalSeconds || PROTOCOL.goalDurationDefaultSeconds);
   const relapseRisk = clamp01(Number(options.relapseRisk));
   const reductionPercent = relapseRisk >= 0.72 ? 0.2 : relapseRisk >= 0.58 ? 0.15 : 0.1;
+  const existingRecoveryState = normalizeRecoveryState(options.recoveryState);
 
   if (!lastSession) {
     return {
@@ -691,6 +763,38 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
         recoveryDuration: null,
         postRecoveryDuration: null,
       },
+      recoveryState: existingRecoveryState,
+    };
+  }
+
+  const activePersistentRecovery = evaluatePersistentRecoveryMode(normalizedTraining, existingRecoveryState, goalSeconds);
+  if (activePersistentRecovery) return activePersistentRecovery;
+
+  if (!existingRecoveryState?.active && [DISTRESS_LEVELS.SUBTLE, DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(lastSession.distressLevel)) {
+    const anchorDuration = getSessionDurationAnchor(getLastCalmSession(normalizedTraining.slice(0, -1)))
+      ?? getSessionDurationAnchor(lastSession)
+      ?? PROTOCOL.startDurationSeconds;
+    const recoveryState = {
+      active: true,
+      triggerSessionId: lastSession.id || null,
+      anchorDuration: Math.max(PROTOCOL.minDurationSeconds, Math.round(anchorDuration)),
+      fixedDuration: 60,
+      consecutiveCalm: 0,
+    };
+    return {
+      recommendedDuration: 60,
+      recommendationType: "recovery_mode_active",
+      recoveryMode: {
+        active: true,
+        recoveryActive: true,
+        remainingSessions: 2,
+        step: 1,
+        anchorSessionDate: lastSession.date || null,
+        anchorDuration: recoveryState.anchorDuration,
+        recoveryDuration: 60,
+        postRecoveryDuration: Math.max(PROTOCOL.minDurationSeconds, Math.round(recoveryState.anchorDuration * 0.95)),
+      },
+      recoveryState,
     };
   }
 
@@ -944,6 +1048,7 @@ export function buildRecommendation(sessions = [], options = {}) {
     recommendationType: focusArea,
     stabilizationMode: stats.relapseRisk >= 0.72,
     recoveryMode: nextTarget.recoveryMode,
+    recoveryState: nextTarget.recoveryState ?? normalizeRecoveryState(options.recoveryState),
     stats,
     warnings,
     safeAbsenceAlert: Number(options.plannedRealAbsenceSeconds || 0) > safeAlone,
@@ -974,6 +1079,10 @@ function describeRecommendationType(type) {
       return "Recent subtle stress triggered two short confidence-recovery sessions before normal progression resumes.";
     case "subtle_recovery_resume":
       return "Recovery sessions completed. The next target resumes from the subtle-stress anchor with a 5% step-down.";
+    case "recovery_mode_active":
+      return "Recovery mode is active: progression is paused and short confidence sessions are required.";
+    case "recovery_mode_resume":
+      return "Two calm recovery sessions were completed, so progression resumes at 95% of the anchor.";
     default:
       return "The next target is adjusted from the current safe-alone estimate.";
   }
@@ -1025,6 +1134,7 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
   const recommendation = buildRecommendation(sortedSessions, {
     goalSeconds: dog?.goalSeconds,
     plannedRealAbsenceSeconds: dog?.plannedRealAbsenceSeconds,
+    recoveryState: dog?.recoveryState,
     cueSessions,
     plan: {
       recommendedDuration: lastTraining?.plannedDuration || null,
@@ -1071,6 +1181,7 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
     warnings: recommendation.warnings,
     walkAdjustmentApplied,
     recoveryMode: recommendation.recoveryMode,
+    recoveryState: recommendation.recoveryState ?? null,
     decisionState: buildDecisionState({
       recommendedDuration,
       recommendationType: recommendation.recommendationType,
