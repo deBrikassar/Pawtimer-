@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { selectAppData } from "../src/features/app/selectors";
 import { getInformationalTone, getOutcomeTone, getRiskTone } from "../src/features/app/helpers";
 import { explainNextTarget } from "../src/lib/protocol";
+import { sortByDateAsc } from "../src/lib/activityDateTime";
 
 const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
 const buildRecommendation = ({ sessions, walks, patterns, dog, target }) => {
@@ -101,5 +102,44 @@ describe("semantic status mapping", () => {
     expect(appData.recommendation.decisionState.readiness).toBe("building");
     expect(appData.relapseTone.label).toBe("Medium");
     expect(appData.headlineStatus).toBe("Stable");
+  });
+
+  it("keeps chart trend, calm streak, and risk stable when input sessions arrive unsorted", () => {
+    const unsortedSessions = [
+      { date: "2026-04-17T09:00:00.000Z", plannedDuration: 360, actualDuration: 360, distressLevel: "none", belowThreshold: true },
+      { date: "2026-04-10T09:00:00.000Z", plannedDuration: 120, actualDuration: 120, distressLevel: "active", belowThreshold: false },
+      { date: "2026-04-14T09:00:00.000Z", plannedDuration: 210, actualDuration: 210, distressLevel: "none", belowThreshold: true },
+      { date: "2026-04-12T09:00:00.000Z", plannedDuration: 150, actualDuration: 150, distressLevel: "none", belowThreshold: true },
+      { date: "2026-04-16T09:00:00.000Z", plannedDuration: 300, actualDuration: 300, distressLevel: "none", belowThreshold: true },
+      { date: "2026-04-15T09:00:00.000Z", plannedDuration: 240, actualDuration: 240, distressLevel: "none", belowThreshold: true },
+      { date: "2026-04-13T09:00:00.000Z", plannedDuration: 180, actualDuration: 180, distressLevel: "none", belowThreshold: true },
+      { date: "2026-04-11T09:00:00.000Z", plannedDuration: 130, actualDuration: 130, distressLevel: "active", belowThreshold: false },
+    ];
+    const sortedSessions = sortByDateAsc(unsortedSessions);
+    const dog = { id: "DOG-1", dogName: "Milo", goalSeconds: 1800, leavesPerDay: 3 };
+
+    const recommendation = buildRecommendation({
+      sessions: sortedSessions,
+      walks: [],
+      patterns: [],
+      dog,
+      target: 40,
+    });
+    const appData = selectAppData({
+      dogs: [dog],
+      activeDogId: "DOG-1",
+      sessions: sortedSessions,
+      walks: [],
+      patterns: [],
+      feedings: [],
+      target: 40,
+      protoOverride: {},
+      recommendation,
+    });
+
+    expect(appData.chartData.map((entry) => entry.durationSeconds)).toEqual([120, 130, 150, 180, 210, 240, 300, 360]);
+    expect(appData.chartTrendLabel).toBe("Trend: Improving");
+    expect(appData.streak).toBe(6);
+    expect(appData.relapseTone.label).toBe(recommendation.decisionState.riskLevel === "low" ? "Low" : recommendation.decisionState.riskLevel === "high" ? "High" : "Medium");
   });
 });
