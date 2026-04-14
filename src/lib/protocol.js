@@ -634,7 +634,7 @@ function computeProgressiveIncrease(anchorDuration, calmStreak = 1) {
 
   // Before 40 minutes, scale up by 10-15% based on how steady the current calm streak is.
   if (anchorDuration < 40 * 60) {
-    const percentIncrease = clamp(0.12 + (Math.max(0, calmStreak - 1) * 0.015), 0.1, 0.15);
+    const percentIncrease = clamp(0.14 + (Math.max(0, calmStreak - 1) * 0.01), 0.1, 0.15);
     return Math.round(anchorDuration * (1 + percentIncrease));
   }
 
@@ -644,8 +644,14 @@ function computeProgressiveIncrease(anchorDuration, calmStreak = 1) {
 }
 
 function computeFallbackFromCalmHistory(recentWindow = [], anchorDuration = null) {
-  const calmDurations = recentWindow
-    .filter((session) => session.distressLevel === DISTRESS_LEVELS.NONE)
+  const calmBelowThresholdDurations = recentWindow
+    .filter((session) => session.distressLevel === DISTRESS_LEVELS.NONE && session.belowThreshold)
+    .map((session) => getSessionDurationAnchor(session))
+    .filter((value) => Number.isFinite(value) && value > 0);
+  const calmDurations = calmBelowThresholdDurations.length
+    ? calmBelowThresholdDurations
+    : recentWindow
+      .filter((session) => session.distressLevel === DISTRESS_LEVELS.NONE)
     .map((session) => getSessionDurationAnchor(session))
     .filter((value) => Number.isFinite(value) && value > 0);
 
@@ -654,17 +660,23 @@ function computeFallbackFromCalmHistory(recentWindow = [], anchorDuration = null
     : null;
 
   const baseCandidates = [anchorDuration, calmAverage].filter((value) => Number.isFinite(value) && value > 0);
-  if (!baseCandidates.length) return PROTOCOL.minDurationSeconds;
+  if (!baseCandidates.length) return null;
 
-  // Bug fix rule: fallback is based on calm evidence, not a hard floor reset.
+  // Fallback is based on calm evidence, not a hard floor reset.
   const fallbackBase = Math.min(...baseCandidates);
-  return Math.round(fallbackBase * 0.8);
+  return {
+    fallbackBase: Math.round(fallbackBase),
+    usedRelaxedCalmEvidence: calmBelowThresholdDurations.length === 0 && calmDurations.length > 0,
+  };
 }
 
 export function computeNextTarget(trainingSessions = [], options = {}) {
-  const recentWindow = getRecentTrainingWindow(trainingSessions, 7);
+  const normalizedTraining = sortByDateAsc(trainingSessions).map(toRichSession);
+  const recentWindow = getRecentTrainingWindow(normalizedTraining, 7);
   const lastSession = recentWindow[recentWindow.length - 1] || null;
   const goalSeconds = Number(options.goalSeconds || PROTOCOL.goalDurationDefaultSeconds);
+  const relapseRisk = clamp01(Number(options.relapseRisk));
+  const reductionPercent = relapseRisk >= 0.72 ? 0.2 : relapseRisk >= 0.58 ? 0.15 : 0.1;
 
   if (!lastSession) {
     return {
@@ -694,11 +706,33 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
     const beforeStress = recentWindow.slice(0, stressIndex);
     const afterStress = recentWindow.slice(stressIndex + 1);
     const lastFullyCalm = getLastCalmSession(beforeStress);
-    const anchorDuration = getSessionDurationAnchor(lastFullyCalm);
+    const anchorDuration = getSessionDurationAnchor(lastFullyCalm)
+      ?? (
+        stressLevel === DISTRESS_LEVELS.SUBTLE && Number(stressSession?.actualDuration) > 0
+          ? getSessionDurationAnchor(stressSession)
+          : null
+      );
 
     if (stressLevel === DISTRESS_LEVELS.SUBTLE) {
       const recoveryDurations = [60, 120];
       let calmRecoveryCount = 0;
+
+      if (!Number.isFinite(anchorDuration) || anchorDuration <= 0) {
+        const baseline = getSessionDurationAnchor(lastSession) ?? PROTOCOL.startDurationSeconds;
+        return {
+          recommendedDuration: clamp(Math.max(PROTOCOL.minDurationSeconds, Math.round(baseline)), PROTOCOL.minDurationSeconds, goalSeconds),
+          recommendationType: "keep_same_duration",
+          recoveryMode: {
+            active: false,
+            remainingSessions: 0,
+            step: 0,
+            anchorSessionDate: null,
+            anchorDuration: null,
+            recoveryDuration: null,
+            postRecoveryDuration: null,
+          },
+        };
+      }
 
       // Recovery progress only advances on consecutive calm sessions after the subtle marker.
       for (const session of afterStress) {
@@ -725,24 +759,6 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
         };
       }
 
-      // Without a prior fully calm anchor we cannot run subtle recovery safely, so fall back to baseline progression.
-      if (!Number.isFinite(anchorDuration) || anchorDuration <= 0) {
-        const baseline = getSessionDurationAnchor(lastSession) ?? PROTOCOL.startDurationSeconds;
-        return {
-          recommendedDuration: clamp(Math.max(PROTOCOL.minDurationSeconds, Math.round(baseline)), PROTOCOL.minDurationSeconds, goalSeconds),
-          recommendationType: "keep_same_duration",
-          recoveryMode: {
-            active: false,
-            remainingSessions: 0,
-            step: 0,
-            anchorSessionDate: null,
-            anchorDuration: null,
-            recoveryDuration: null,
-            postRecoveryDuration: null,
-          },
-        };
-      }
-
       if (calmRecoveryCount < 2) {
         return {
           recommendedDuration: recoveryDurations[Math.min(calmRecoveryCount, recoveryDurations.length - 1)],
@@ -759,8 +775,9 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
         };
       }
 
-      const resumeDuration = Number.isFinite(anchorDuration)
-        ? Math.max(PROTOCOL.minDurationSeconds, Math.round(anchorDuration * 0.95))
+      const resumeAnchor = anchorDuration;
+      const resumeDuration = Number.isFinite(resumeAnchor)
+        ? Math.max(PROTOCOL.minDurationSeconds, Math.round(resumeAnchor * 0.95))
         : PROTOCOL.minDurationSeconds;
 
       return {
@@ -788,10 +805,16 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
         else calmRecoveryCount = 0;
       }
 
-      const fallbackRaw = computeFallbackFromCalmHistory(recentWindow, anchorDuration);
+      const fallbackInfo = computeFallbackFromCalmHistory(recentWindow, anchorDuration);
+      const reducedFallback = fallbackInfo?.usedRelaxedCalmEvidence
+        ? Math.max(PROTOCOL.minDurationSeconds, Math.round(fallbackInfo.fallbackBase * (1 - reductionPercent)))
+        : fallbackInfo?.fallbackBase;
+      const evidenceBasedFallback = Number.isFinite(reducedFallback)
+        ? reducedFallback
+        : null;
       const fallbackReference = Number.isFinite(anchorDuration) ? anchorDuration : getSessionDurationAnchor(lastSession);
       const fallbackDuration = clampRateChange(
-        clamp(fallbackRaw, PROTOCOL.minDurationSeconds, goalSeconds),
+        clamp(evidenceBasedFallback ?? PROTOCOL.startDurationSeconds, PROTOCOL.minDurationSeconds, goalSeconds),
         fallbackReference,
       );
 
@@ -886,36 +909,11 @@ function getStepMultiplier(stats, latestSessions = [], allSessions = []) {
   return 0.03;
 }
 
-function chooseRecommendationType(last, stats, recent) {
-  if (!last) return "keep_same_duration";
-  if (last.distressLevel === DISTRESS_LEVELS.SEVERE) return "stabilization_block";
-  if (last.distressLevel === DISTRESS_LEVELS.ACTIVE) return "reduce_duration";
-  if (last.distressLevel === DISTRESS_LEVELS.SUBTLE) return "repeat_current_duration";
-  if (stats.relapseRisk >= 0.68) return "insert_easy_sessions";
-  if (countStreak(recent, (s) => s.belowThreshold) % PROTOCOL.easySessionFrequency === 0) return "insert_easy_sessions";
-  return "keep_same_duration";
-}
-
-function getCalmProgressionBase(trainingSessions = []) {
-  const recent = getLatestSessions(trainingSessions, 5);
-  if (!recent.length) return null;
-
-  const allRecentCalm = recent.every((session) => session.distressLevel === DISTRESS_LEVELS.NONE);
-  if (!allRecentCalm) return null;
-
-  const latestCalm = recent[recent.length - 1];
-  const baseDuration = Number(latestCalm.actualDuration) > 0
-    ? Number(latestCalm.actualDuration)
-    : Number(latestCalm.plannedDuration);
-
-  return Number.isFinite(baseDuration) && baseDuration > 0 ? baseDuration : null;
-}
-
 export function buildRecommendation(sessions = [], options = {}) {
   const rich = sortByDateAsc(sessions).map(toRichSession);
   const training = rich.filter((s) => s.departureType !== "real_life");
   const stats = calculateTrainingStats(training, options);
-  const nextTarget = computeNextTarget(training, options);
+  const nextTarget = computeNextTarget(training, { ...options, relapseRisk: stats.relapseRisk });
   const safeAlone = stats.safeAloneTime || PROTOCOL.startDurationSeconds;
 
   let recommendedDuration = nextTarget.recommendedDuration;
