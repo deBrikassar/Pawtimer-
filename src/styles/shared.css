@@ -789,3 +789,67 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Premium refresh overrides: systemic components */
+.surface-card,
+.surface-card-default,
+.surface-card-elevated,
+.modal-card,
+.surface-card-modal,
+.surface-card-panel,
+.surface-card-inset,
+.stats-rings-card,
+.tool-group-card,
+.stat-card,
+.share-card {
+  border-color: color-mix(in srgb, var(--border) 88%, #ffffff);
+  box-shadow: var(--shadow);
+}
+
+.shared-button,
+.button-base {
+  border-width: 1.5px;
+  font-weight: 600;
+  letter-spacing: var(--type-button-track);
+}
+
+.button-primary,
+.button-base.button-primary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--green-dark) 86%, #3aa686) 0%, var(--green-dark) 100%);
+  box-shadow: 0 10px 24px rgba(23, 106, 83, 0.28);
+}
+
+.button-primary:hover:not(:disabled),
+.button-base.button-primary:hover:not(:disabled) {
+  box-shadow: 0 14px 30px rgba(23, 106, 83, 0.34);
+}
+
+.button-secondary,
+.button-secondary-filled,
+.button-secondary-outline,
+:is(.settings-inline-btn, .settings-btn, .notif-toggle) {
+  border-color: color-mix(in srgb, var(--primaryBlue) 16%, var(--border));
+}
+
+.shared-button:focus-visible,
+.button-base:focus-visible,
+.secondary-control:focus-visible,
+.surface-card-interactive:focus-visible,
+.surface-row--interactive:focus-visible,
+.interactive-row-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus-ring), var(--shadow);
+}
+
+:is(input, select, textarea, .text-input, .ob-input, .ds-join-input, .proto-field-input, .notif-time-input, .feeding-field input, .feeding-field select, .activity-time-field input) {
+  border-color: color-mix(in srgb, var(--border) 88%, #fff);
+  background: color-mix(in srgb, var(--surf) 92%, var(--surface-muted));
+  transition: border-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard), background var(--motion-base) var(--ease-standard);
+}
+
+:is(input, select, textarea, .text-input, .ob-input, .ds-join-input, .proto-field-input, .notif-time-input, .feeding-field input, .feeding-field select, .activity-time-field input):focus-visible {
+  border-color: color-mix(in srgb, var(--primaryBlue) 65%, var(--border));
+  box-shadow: 0 0 0 4px var(--focus-ring);
+  background: var(--surf);
+}

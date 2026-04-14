@@ -1201,3 +1201,153 @@
   font-weight: 600;
   padding: 6px 12px;
 }
+
+
+/* Premium refresh overrides: composition, rhythm, and visual hierarchy. */
+.app {
+  max-width: 520px;
+  padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px));
+}
+
+.app::before,
+.app::after,
+.app-decor,
+.app-decor span {
+  display: none;
+}
+
+.header,
+.ds-hero,
+.ob-hero {
+  background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--bg) 75%, #ffffff) 100%);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, #fff);
+}
+
+.app-title {
+  font-size: clamp(1.45rem, 4.8vw, 1.95rem);
+  letter-spacing: -0.03em;
+}
+
+.app-subtitle {
+  color: var(--text-muted);
+}
+
+.train-main {
+  width: min(100%, 484px);
+  gap: var(--space-3);
+}
+
+.tool-group-card {
+  padding: var(--space-2);
+}
+
+.quick-actions-row {
+  gap: 12px;
+}
+
+.quick-action-btn {
+  min-height: 112px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, var(--surface-muted) 70%, #fff) 100%);
+  border-color: color-mix(in srgb, var(--border) 82%, #fff);
+}
+
+.quick-action-label {
+  font-size: var(--type-card-title-size);
+  font-weight: var(--type-card-title-weight);
+}
+
+.quick-action-meta {
+  font-size: var(--type-secondary-size);
+}
+
+.quick-modal-overlay,
+.feeding-overlay,
+.activity-time-overlay,
+.rating-overlay {
+  backdrop-filter: blur(8px);
+}
+
+.quick-modal-card,
+.feeding-card,
+.activity-time-card,
+.history-modal-card,
+.rating-screen {
+  border-radius: 22px;
+}
+
+.status-msg {
+  max-width: 420px;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: color-mix(in srgb, var(--status-warning-bg) 72%, #fff);
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, var(--border));
+}
+
+.empty-state {
+  max-width: 360px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-2);
+}
+
+.empty-state .es-media {
+  background: linear-gradient(180deg, #fff 0%, var(--surface-muted) 100%);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, #fff);
+  border-radius: 16px;
+}
+
+.tabs {
+  max-width: 520px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 86%, #fff);
+  background: color-mix(in srgb, var(--surface-frost) 90%, #fff);
+  backdrop-filter: blur(22px);
+}
+
+.tab-btn {
+  min-height: 62px;
+  gap: 6px;
+  color: var(--text-subtle);
+  transition: color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard);
+}
+
+.tab-btn.active {
+  color: var(--primaryBlue);
+}
+
+.tab-btn.active svg {
+  color: var(--primaryBlue);
+}
+
+.tab-btn:hover {
+  transform: translateY(-1px);
+}
+
+.toast {
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  padding: 10px 16px;
+}
+
+.update-banner {
+  background: color-mix(in srgb, #ffffff 84%, var(--surface-frost));
+  border-color: color-mix(in srgb, var(--border) 84%, #fff);
+}
+
+.update-banner-btn {
+  background: var(--primaryBlue);
+}
+
+@media (max-width: 420px) {
+  .train-main {
+    width: min(100%, 100%);
+    padding-inline: 10px;
+  }
+
+  .quick-actions-row {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-action-btn {
+    min-height: 88px;
+    grid-template-rows: auto auto;
+  }
+}
