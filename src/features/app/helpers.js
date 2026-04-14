@@ -1,20 +1,11 @@
 import { PROTOCOL } from "../../lib/protocol";
-import { formatClockDuration, formatDuration } from "../../lib/time";
+import { formatClockDuration, formatDuration, parseHumanDurationSeconds } from "../../lib/time";
 
 export const fmt = formatDuration;
 export const fmtClock = formatClockDuration;
 
 export const parseDurationInput = (value) => {
-  const raw = String(value ?? "").trim();
-  if (!raw) return null;
-  if (raw.includes(":")) {
-    const [mm, ss] = raw.split(":").map((part) => Number(part));
-    if (!Number.isFinite(mm) || !Number.isFinite(ss) || mm < 0 || ss < 0 || ss >= 60) return null;
-    return Math.round(mm * 60 + ss);
-  }
-  const asSeconds = Number(raw);
-  if (!Number.isFinite(asSeconds) || asSeconds < 0) return null;
-  return Math.round(asSeconds);
+  return parseHumanDurationSeconds(value);
 };
 
 export const fmtDate = (iso) => {
