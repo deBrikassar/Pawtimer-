@@ -711,13 +711,14 @@ function buildRecoveryModeDetails({
   const stepLabels = planDurations.map((duration) => formatRecoveryStepLabel(duration));
   const planCopy = [DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(stressLevel)
     ? `We temporarily switched to a ${totalSessions}-step confidence rebuild so your dog can stack calm wins before progression resumes.`
-    : `We temporarily shortened sessions after subtle stress so your dog can complete this ${totalSessions}-step confidence reset.`;
+    : `We temporarily shortened sessions after subtle stress so your dog can complete this ${totalSessions}-step confidence reset. Any calm session counts toward completion.`;
 
   return {
     step: safeStep,
     totalSessions,
     stepLabels,
     planCopy,
+    acceptsAnyCalmSession: stressLevel === DISTRESS_LEVELS.SUBTLE,
     currentStepLabel: `Step ${Math.max(1, safeStep)} of ${totalSessions}`,
   };
 }
@@ -796,6 +797,9 @@ function evaluatePersistentRecoveryMode(
     recentWindow = [],
   } = {},
 ) {
+  // Policy decision: for subtle-trigger recovery, count any calm session toward completion.
+  // We still keep duration-bound checks for active/severe triggers.
+  const subtleRecoveryAcceptsAnyCalmSession = true;
   const normalized = normalizeRecoveryState(recoveryState);
   if (!normalized?.active) return null;
   const triggerIndex = trainingSessions.findIndex((session) => (
@@ -818,7 +822,7 @@ function evaluatePersistentRecoveryMode(
     const sessionDuration = getSessionDurationAnchor(session);
     const looksLikeRecovery = [DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(stressLevel)
       ? Number.isFinite(sessionDuration) && sessionDuration <= 120
-      : true;
+      : subtleRecoveryAcceptsAnyCalmSession;
     if (session.distressLevel === DISTRESS_LEVELS.NONE && looksLikeRecovery) consecutiveCalm += 1;
     else consecutiveCalm = 0;
   }

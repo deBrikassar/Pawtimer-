@@ -218,6 +218,7 @@ export default function SettingsScreen(props) {
               <div className="proto-section u-mt-none"><div className="proto-title">Sync devices</div><div className="proto-row">Share your Dog ID, then join with the same ID on the other device.</div></div>
               <div className="proto-section"><div className="proto-title">Session flow</div><div className="proto-row">Start a session, return before distress escalates, then rate how {name} did.</div></div>
               <div className="proto-section"><div className="proto-title">Next target</div><div className="proto-row">{recommendation?.explanation} It currently weighs {(recommendation?.details?.factors || []).join(" ")}</div></div>
+              <div className="proto-section"><div className="proto-title">Subtle recovery</div><div className="proto-row">After a subtle-distress trigger, any calm follow-up session counts toward recovery completion, even if the duration is longer than the suggested step.</div></div>
               <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions, {activeProto.maxDailyAloneMinutes} min/day, and {pattern.recMin}–{pattern.recMax} pattern breaks.</div></div>
             </div>
           </div>

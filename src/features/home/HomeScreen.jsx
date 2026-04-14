@@ -151,6 +151,11 @@ export default function HomeScreen(props) {
               <p className="recovery-explain-copy">
                 {recoveryMode.planCopy}
               </p>
+              {recoveryMode.acceptsAnyCalmSession && (
+                <p className="recovery-explain-copy">
+                  For subtle recovery, calm sessions can be any length—you do not need to match the exact step duration.
+                </p>
+              )}
               <div className="recovery-explain-meta">
                 <span>{recoveryMode.currentStepLabel || `Step ${Math.max(1, recoveryMode.step)} of ${recoveryMode.totalSessions || 2}`}</span>
                 <span>{recoveryMode.remainingSessions} remaining</span>

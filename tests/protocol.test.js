@@ -286,6 +286,31 @@ describe("recommendation engine", () => {
     expect(rec.recommendedDuration).toBe(1140);
   });
 
+  it("counts long calm sessions toward subtle recovery completion", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 960, actualDuration: 960, distressLevel: "none", belowThreshold: true },
+    ];
+
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recoveryMode.active).toBe(false);
+    expect(rec.recommendationType).toBe("recovery_mode_resume");
+    expect(rec.recommendedDuration).toBe(1140);
+  });
+
+  it("keeps subtle recovery active until two calm sessions, even when those sessions are long", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+    ];
+
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recoveryMode.active).toBe(true);
+    expect(rec.recoveryMode.remainingSessions).toBe(1);
+    expect(rec.recommendedDuration).toBe(120);
+  });
+
   it("does not fall to 30s after subtle->1m calm->2m calm recovery sequence", () => {
     const sessions = [
       { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
@@ -434,6 +459,7 @@ describe("public compatibility APIs", () => {
     const next = explainNextTarget(sessions, [], [], { goalSeconds: 3600 });
     expect(next.recoveryMode.active).toBe(true);
     expect(next.recoveryMode.remainingSessions).toBe(2);
+    expect(next.recoveryMode.acceptsAnyCalmSession).toBe(true);
     expect(next.recommendedDuration).toBe(60);
     expect(next.explanation).toMatch(/Short recovery sessions after stress/i);
   });
