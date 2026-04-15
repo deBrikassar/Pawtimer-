@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { applyTombstonesToCollection, mergeMutationSafeSyncCollection, mergeTombstonesByEntityKey, pruneTombstonesForRetention, resolveDogSettingsConflict, resolveSyncConflict, TOMBSTONE_RETENTION_MS } from "../src/features/app/storage";
+import { applyAuthoritativeTombstonesAtCommit, applyTombstonesToCollection, mergeMutationSafeSyncCollection, mergeTombstonesByEntityKey, pruneTombstonesForRetention, resolveDogSettingsConflict, resolveSyncConflict, TOMBSTONE_RETENTION_MS } from "../src/features/app/storage";
+import { selectAppData } from "../src/features/app/selectors";
 
 const iso = (hour) => `2026-04-01T${String(hour).padStart(2, "0")}:00:00.000Z`;
 
@@ -232,6 +233,64 @@ describe("mergeMutationSafeSyncCollection concurrent edits", () => {
     });
 
     expect(merged).toEqual([]);
+  });
+
+  it("applies authoritative tombstones at commit so late local deletes cannot be bypassed", () => {
+    const staleTombstones = [];
+    const mergedSessions = mergeMutationSafeSyncCollection({
+      currentItems: [],
+      remoteItems: [{ id: "session-race", date: iso(8), revision: 2, updatedAt: iso(8), result: "success", actualDuration: 240 }],
+      tombstones: staleTombstones,
+      kind: "session",
+    });
+    expect(mergedSessions.map((row) => row.id)).toEqual(["session-race"]);
+
+    const authoritativeTombstones = [{ id: "session-race", kind: "session", deletedAt: iso(10), revision: 3, updatedAt: iso(10), pendingSync: true }];
+    const committed = applyAuthoritativeTombstonesAtCommit({
+      sessions: mergedSessions,
+      walks: [],
+      patterns: [],
+      feedings: [],
+      tombstones: authoritativeTombstones,
+    });
+
+    expect(committed.sessions).toEqual([]);
+  });
+
+  it("keeps downstream recompute delete-consistent when tombstone is created after merge stage", () => {
+    const staleMergedSessions = [{
+      id: "session-recompute",
+      date: iso(8),
+      revision: 4,
+      updatedAt: iso(8),
+      distressLevel: "none",
+      actualDuration: 300,
+      plannedDuration: 300,
+      result: "success",
+    }];
+    const authoritativeTombstones = [{ id: "session-recompute", kind: "session", deletedAt: iso(10), revision: 5, updatedAt: iso(10), pendingSync: true }];
+
+    const committed = applyAuthoritativeTombstonesAtCommit({
+      sessions: staleMergedSessions,
+      walks: [],
+      patterns: [],
+      feedings: [],
+      tombstones: authoritativeTombstones,
+    });
+    const appData = selectAppData({
+      dogs: [{ id: "DOG-RACE", dogName: "Race Dog", goalSeconds: 2400 }],
+      activeDogId: "DOG-RACE",
+      sessions: committed.sessions,
+      walks: [],
+      patterns: [],
+      feedings: [],
+      target: 2400,
+      protoOverride: {},
+      recommendation: { duration: 2400, decisionState: null, explanation: "", details: {} },
+    });
+
+    expect(committed.sessions).toEqual([]);
+    expect(appData.daily.count).toBe(0);
   });
 
 
