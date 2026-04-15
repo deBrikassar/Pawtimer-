@@ -583,7 +583,11 @@ function getHoursSinceLastSession(lastSession) {
 function isUnstableSession(session = null) {
   if (!session) return false;
   const distress = normalizeDistressLevel(session.distressLevel);
-  return distress !== DISTRESS_LEVELS.NONE || session.belowThreshold === false;
+  if (distress !== DISTRESS_LEVELS.NONE) return true;
+  if (!session.belowThreshold) {
+    return isCalmVeryShortSession(session);
+  }
+  return false;
 }
 
 function hasThreeSessionInstability(window = []) {
@@ -616,6 +620,36 @@ function hasConsecutivePostSubtleIncrease(window = []) {
   const second = getSessionDurationAnchor(postSubtle[postSubtle.length - 1]);
   if (!Number.isFinite(first) || !Number.isFinite(second)) return false;
   return second > first;
+}
+
+function getCompletionRatio(session = null) {
+  if (!session) return 0;
+  const planned = Number(session.plannedDuration);
+  const actual = Number(session.actualDuration);
+  if (!Number.isFinite(planned) || planned <= 0 || !Number.isFinite(actual) || actual < 0) return 0;
+  return clamp01(actual / planned);
+}
+
+function isCalmShortSession(session = null) {
+  if (!session) return false;
+  if (normalizeDistressLevel(session.distressLevel) !== DISTRESS_LEVELS.NONE) return false;
+  return getCompletionRatio(session) < 0.85;
+}
+
+function isCalmVeryShortSession(session = null) {
+  if (!session) return false;
+  if (normalizeDistressLevel(session.distressLevel) !== DISTRESS_LEVELS.NONE) return false;
+  return getCompletionRatio(session) < 0.5;
+}
+
+function getProgressionReferenceDuration(session = null) {
+  if (!session) return null;
+  const planned = Number(session.plannedDuration);
+  const anchor = getSessionDurationAnchor(session);
+  if (isCalmShortSession(session) && Number.isFinite(planned) && planned > 0) {
+    return planned;
+  }
+  return anchor;
 }
 
 function clampRateChange(nextDuration, referenceDuration) {
@@ -927,9 +961,10 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
 
   const gapHours = getHoursSinceLastSession(lastSession);
   const gapReduction = gapHours > 48 ? 0.12 : 0;
+  const trailingCalmShortStreak = countStreak(recentWindow, isCalmShortSession);
 
   if (hasThreeSessionInstability(recentWindow)) {
-    const lastReferenceDuration = getSessionDurationAnchor(lastSession) ?? PROTOCOL.startDurationSeconds;
+    const lastReferenceDuration = getProgressionReferenceDuration(lastSession) ?? PROTOCOL.startDurationSeconds;
     const heldDuration = gapReduction > 0
       ? Math.round(lastReferenceDuration * (1 - gapReduction))
       : lastReferenceDuration;
@@ -949,10 +984,33 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
     };
   }
 
+  if (trailingCalmShortStreak >= 1) {
+    const holdBase = getProgressionReferenceDuration(lastSession)
+      ?? getSessionDurationAnchor(lastSession)
+      ?? PROTOCOL.startDurationSeconds;
+    const adjustedForGap = gapReduction > 0
+      ? Math.round(holdBase * (1 - gapReduction))
+      : holdBase;
+    return {
+      recommendedDuration: clamp(adjustedForGap, PROTOCOL.minDurationSeconds, goalSeconds),
+      recommendationType: 'keep_same_duration',
+      recoveryMode: {
+        active: false,
+        remainingSessions: 0,
+        ...buildRecoveryModeDetails({ step: 0 }),
+        anchorSessionDate: lastSession?.date || null,
+        anchorDuration: getProgressionReferenceDuration(lastSession) ?? null,
+        recoveryDuration: null,
+        postRecoveryDuration: null,
+      },
+      recoveryState: existingRecoveryState,
+    };
+  }
+
   const calmStreak = countStreak(recentWindow, (session) => session.distressLevel === DISTRESS_LEVELS.NONE);
   const lastCalmSession = getLastCalmSession(recentWindow);
-  const anchorDuration = getSessionDurationAnchor(lastCalmSession) ?? PROTOCOL.startDurationSeconds;
-  const lastReferenceDuration = getSessionDurationAnchor(lastSession) ?? anchorDuration;
+  const anchorDuration = getProgressionReferenceDuration(lastCalmSession) ?? PROTOCOL.startDurationSeconds;
+  const lastReferenceDuration = getProgressionReferenceDuration(lastSession) ?? anchorDuration;
 
   const plateauDuration = getPlateauDuration(recentWindow);
   if (Number.isFinite(plateauDuration) && plateauDuration > 0) {

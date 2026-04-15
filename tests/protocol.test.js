@@ -232,6 +232,59 @@ describe("recommendation engine", () => {
     expect(rec.recommendationType).toBe("recovery_mode_active");
   });
 
+  it("holds the target after a single short but calm session", () => {
+    const sessions = [
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(900);
+    expect(rec.recommendationType).toBe("keep_same_duration");
+  });
+
+  it("holds instead of regressing across repeated short calm sessions", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(0), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(900);
+    expect(rec.recommendationType).toBe("repeat_current_duration");
+  });
+
+  it("keeps distress-driven recovery for short sessions with distress", () => {
+    const sessions = [
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 900, actualDuration: 300, distressLevel: "active", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendationType).toBe("recovery_mode_active");
+    expect(rec.recommendedDuration).toBe(60);
+  });
+
+  it("still progresses after a full calm session at target", () => {
+    const sessions = [
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeGreaterThan(900);
+    expect(rec.recommendationType).toBe("keep_same_duration");
+  });
+
+  it("does not let one short calm session erase prior calm history", () => {
+    const sessions = [
+      { date: daysAgo(3), plannedDuration: 720, actualDuration: 720, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(2), plannedDuration: 840, actualDuration: 840, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(900);
+    expect(rec.recommendationType).toBe("keep_same_duration");
+  });
+
   it("recovery step progression follows 1min then 2min after subtle stress", () => {
     const subtle = { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false };
     const step1 = buildRecommendation([subtle], { goalSeconds: 3600 });
@@ -594,9 +647,9 @@ describe("public compatibility APIs", () => {
     expect(keepSameDuration.recommendationType).toBe("keep_same_duration");
 
     const repeatCurrent = explainNextTarget([
-      { date: daysAgo(2), plannedDuration: 300, actualDuration: 260, distressLevel: "none", belowThreshold: false },
-      { date: daysAgo(1), plannedDuration: 300, actualDuration: 250, distressLevel: "none", belowThreshold: false },
-      { date: hoursAgo(2), plannedDuration: 300, actualDuration: 240, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(2), plannedDuration: 300, actualDuration: 120, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 300, actualDuration: 110, distressLevel: "none", belowThreshold: false },
+      { date: hoursAgo(2), plannedDuration: 300, actualDuration: 100, distressLevel: "none", belowThreshold: false },
     ], [], [], { goalSeconds: 3600 });
     expect(repeatCurrent.recommendationType).toBe("repeat_current_duration");
 
