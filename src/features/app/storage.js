@@ -265,8 +265,14 @@ export const normalizeSession = (row = {}) => {
   const environment = row.environment ?? {};
   const normalizedDistressType = row.distressType ?? row.distress_type ?? null;
   const normalizedDistressSeverity = row.distressSeverity ?? row.distress_severity ?? null;
+  const rawDistressLevel = row.distressLevel ?? row.distress_level;
+  const rawResult = row.result == null ? "" : String(row.result).trim().toLowerCase();
+  const inferredDistressLevel = rawDistressLevel
+    ?? (rawResult === "success"
+      ? "none"
+      : (rawResult === "distress" ? "strong" : null));
   const restoredLegacyDistress = decodeLegacyDistressFields({
-    distressLevel: row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong"),
+    distressLevel: inferredDistressLevel,
     distressType: normalizedDistressType,
     distressSeverity: normalizedDistressSeverity,
   });

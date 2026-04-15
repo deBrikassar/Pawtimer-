@@ -100,4 +100,64 @@ describe("duration normalization", () => {
     expect(normalized.actualDuration).toBe(1920);
     expect(normalized.plannedDuration).toBe(1920);
   });
+
+  it("keeps known distress rows when distressLevel is missing but result is distress", () => {
+    const normalized = normalizeSession({
+      id: "legacy-distress-only-result",
+      date: daysAgo(0),
+      plannedDuration: 120,
+      actualDuration: 40,
+      result: "distress",
+    });
+
+    expect(normalized.distressLevel).toBe("active");
+  });
+
+  it("uses explicit distress level when result is missing", () => {
+    const normalized = normalizeSession({
+      id: "legacy-missing-result",
+      date: daysAgo(0),
+      plannedDuration: 120,
+      actualDuration: 80,
+      distress_level: "mild",
+    });
+
+    expect(normalized.distressLevel).toBe("subtle");
+  });
+
+  it("defaults malformed rows with both distressLevel and result missing to no-distress", () => {
+    const normalized = normalizeSession({
+      id: "legacy-missing-both",
+      date: daysAgo(0),
+      plannedDuration: 120,
+      actualDuration: 80,
+    });
+
+    expect(normalized.distressLevel).toBe("none");
+  });
+
+  it("preserves known legacy distress aliases", () => {
+    const normalized = normalizeSession({
+      id: "legacy-alias",
+      date: daysAgo(0),
+      plannedDuration: 120,
+      actualDuration: 40,
+      distress_level: "strong",
+      result: "distress",
+    });
+
+    expect(normalized.distressLevel).toBe("active");
+  });
+
+  it("preserves known success rows", () => {
+    const normalized = normalizeSession({
+      id: "legacy-success",
+      date: daysAgo(0),
+      plannedDuration: 120,
+      actualDuration: 120,
+      result: "success",
+    });
+
+    expect(normalized.distressLevel).toBe("none");
+  });
 });
