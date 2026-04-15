@@ -426,6 +426,29 @@ describe("recommendation engine", () => {
     expect(twoCalm.recoveryState?.active).toBe(false);
     expect(twoCalm.recommendedDuration).toBe(375);
   });
+
+  it("uses the same persisted recovery state machine for subtle-trigger recovery", () => {
+    const subtleStress = [{ id: "subtle-1", date: daysAgo(2), plannedDuration: 1200, actualDuration: 1100, distressLevel: "subtle", belowThreshold: false }];
+    const start = buildRecommendation(subtleStress, { goalSeconds: 3600 });
+    expect(start.recommendationType).toBe("recovery_mode_active");
+    expect(start.recoveryState?.active).toBe(true);
+
+    const oneCalm = buildRecommendation([
+      ...subtleStress,
+      { id: "subtle-2", date: daysAgo(1), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+    ], { goalSeconds: 3600, recoveryState: start.recoveryState });
+    expect(oneCalm.recommendationType).toBe("recovery_mode_active");
+    expect(oneCalm.recoveryMode.remainingSessions).toBe(1);
+    expect(oneCalm.recoveryState?.active).toBe(true);
+
+    const twoCalm = buildRecommendation([
+      ...subtleStress,
+      { id: "subtle-2", date: daysAgo(1), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+      { id: "subtle-3", date: daysAgo(0), plannedDuration: 700, actualDuration: 700, distressLevel: "none", belowThreshold: true },
+    ], { goalSeconds: 3600, recoveryState: oneCalm.recoveryState });
+    expect(twoCalm.recommendationType).toBe("recovery_mode_resume");
+    expect(twoCalm.recoveryState?.active).toBe(false);
+  });
 });
 
 describe("public compatibility APIs", () => {
