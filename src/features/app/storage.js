@@ -958,6 +958,52 @@ export const syncDelete = async (kind, id) => {
   return res.ok;
 };
 
+const buildSchemaCompatibleTombstonePayload = (kind, dogId, tombstone) => {
+  const deletedAt = tombstone.deletedAt;
+  const updatedAt = tombstone.updatedAt ?? deletedAt;
+  const revision = Number.isFinite(tombstone.revision) ? tombstone.revision : 0;
+  const base = {
+    id: String(tombstone.id),
+    dog_id: dogId,
+    deleted_at: deletedAt,
+    revision,
+    updated_at: updatedAt,
+  };
+  if (kind === "session") {
+    return {
+      ...base,
+      date: deletedAt,
+      planned_duration: 0,
+      actual_duration: 0,
+      distress_level: "none",
+      result: "success",
+    };
+  }
+  if (kind === "walk") {
+    return {
+      ...base,
+      date: deletedAt,
+      duration: 0,
+      walk_type: "regular_walk",
+    };
+  }
+  if (kind === "pattern") {
+    return {
+      ...base,
+      date: deletedAt,
+      type: "keys",
+    };
+  }
+  return {
+    ...base,
+    date: deletedAt,
+    food_type: "tombstone",
+    amount: "0",
+  };
+};
+
+const isStrictSchemaNotNullError = (errorText = "") => /null value in column .* violates not-null constraint/i.test(errorText);
+
 export const syncPushTombstone = async (dogId, tombstone, dogSettings = null) => {
   const id = canonicalDogId(dogId);
   const dogReady = await syncUpsertDog(dogSettings && typeof dogSettings === "object" ? { ...dogSettings, id } : { id });
@@ -965,18 +1011,26 @@ export const syncPushTombstone = async (dogId, tombstone, dogSettings = null) =>
   const kind = normalizeTombstoneKind(tombstone?.kind);
   if (!kind || !tombstone?.id || !tombstone?.deletedAt) return { ok: false, error: "Invalid tombstone payload" };
   const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : kind === "pattern" ? "patterns" : "feedings";
-  const payload = {
+  const metadataOnlyPayload = {
     id: String(tombstone.id),
     dog_id: id,
     deleted_at: tombstone.deletedAt,
-    revision: tombstone.revision ?? null,
+    revision: Number.isFinite(tombstone.revision) ? tombstone.revision : 0,
     updated_at: tombstone.updatedAt ?? tombstone.deletedAt,
   };
-  const res = await sbReq(table, {
+
+  const pushPayload = (payload) => sbReq(table, {
     method: "POST",
     body: JSON.stringify(payload),
     prefer: "resolution=merge-duplicates,return=minimal",
   });
+
+  let res = await pushPayload(metadataOnlyPayload);
+  if (!res.ok && isStrictSchemaNotNullError(String(res.error || ""))) {
+    const strictPayload = buildSchemaCompatibleTombstonePayload(kind, id, tombstone);
+    res = await pushPayload(strictPayload);
+  }
+
   return res.ok ? { ok: true, error: null } : { ok: false, error: `${kind} tombstone push failed: ${res.error}` };
 };
 
