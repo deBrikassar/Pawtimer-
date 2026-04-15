@@ -150,17 +150,46 @@ This app is based on the gradual desensitisation method for separation anxiety:
 
 PawTimer uses the progression engine in `src/lib/protocol.js` as the source of truth.
 
-1. **First session starts conservatively** — with no history yet, the app starts at about **80% of the dog's current calm-alone estimate** from onboarding, with a 30-second minimum.
-2. **Safe-alone time is recalculated from recent calm sessions** — calm sessions are weighted by recency and confidence so newer successful reps matter most.
-3. **All-calm streaks unlock the clearest increase** — when the latest 5 training sessions are fully calm, the next target is usually **+15%** from the latest calm duration.
-4. **Distress slows or reverses progression**:
-   - **Subtle stress** → usually repeat the same duration.
-   - **Active distress** → shorten the next target by about **25%**.
-   - **Severe distress / panic** → move into a deeper stabilization step at about **60%** of the safe-alone estimate.
-5. **Risk management can insert easier sessions** — higher relapse risk or regular “easy session” checkpoints can temporarily drop the target to **80%** of the safe-alone estimate instead of pushing forward.
-6. **Context can trim the target further** — if recent walks are mostly intense and stability is still low, the final recommendation can be reduced by another **5%**.
+### Current emitted recommendation states
 
-In short: the next target is based on the current safe-alone estimate, recent calm streaks, distress severity, relapse risk, and a small amount of walk/cue context — not on one fixed step rule every time.
+The app currently emits these recommendation types:
+
+- `baseline_start`
+- `keep_same_duration`
+- `repeat_current_duration`
+- `departure_cues_first`
+- `recovery_mode_active`
+- `recovery_mode_resume`
+
+### How those states are decided
+
+1. **`baseline_start` (no training history)**  
+   The first target starts conservatively (about 80% of current calm-alone estimate, minimum 30 seconds).
+
+2. **`recovery_mode_active` (after subtle/active/severe distress trigger)**  
+   Recovery becomes the first-priority branch and pauses normal progression.  
+   - Typical fixed recovery steps are **60s → 120s**.  
+   - Severe triggers can extend to **60s → 120s → 120s**.  
+   - For subtle-trigger recovery, **any calm follow-up session length counts** toward completion.
+
+3. **`recovery_mode_resume` (recovery completed)**  
+   After the required calm recovery sessions, the app emits a cautious resume recommendation once, then returns to normal progression logic.
+
+4. **`repeat_current_duration` (instability hold)**  
+   If recent sessions are unstable, the next target holds around the latest reference duration (with possible gap-based trimming).
+
+5. **`keep_same_duration` (steady progression path)**  
+   Outside recovery/instability states, targets follow the recent calm baseline with bounded step changes and smoothing.
+
+6. **`departure_cues_first` (cue sensitivity override)**  
+   When cue/pattern data suggests strong trigger sensitivity, recommendation type is relabeled to prioritize cue practice before duration expansion.
+
+### Additional context adjustments
+
+- **Walk context trim:** when recent walks are mostly intense and stability is low, the final recommended duration can be trimmed by ~5%.
+- **Risk/stability signals:** safe-alone estimate, calm streak, stability score, and relapse risk are always included in the explanation factors.
+
+In short: progression is state-driven, with recovery state machine decisions taking precedence over normal duration growth.
 
 ---
 

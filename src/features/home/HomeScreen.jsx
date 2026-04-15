@@ -57,9 +57,7 @@ export default function HomeScreen(props) {
   const recommendationType = recommendation?.details?.recommendationType;
   const recoveryModalTitle = (() => {
     if (!recoveryMode?.active) return "Recovery plan";
-    if (recommendationType === "stabilization_block") return "Recovery rebuild sessions";
-    if (recommendationType === "reduce_duration") return "Recovery support sessions";
-    if (recommendationType === "repeat_current_duration" || recommendationType === "subtle_recovery_mode") return "Recovery reset sessions";
+    if (recommendationType === "recovery_mode_active") return "Recovery reset sessions";
     return "Recovery sessions active";
   })();
   const recoveryModalCopy = recoveryMode?.planCopy
