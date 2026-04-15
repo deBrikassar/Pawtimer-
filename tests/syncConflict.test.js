@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyTombstonesToCollection, mergeMutationSafeSyncCollection, mergeTombstonesByEntityKey, resolveSyncConflict } from "../src/features/app/storage";
+import { applyTombstonesToCollection, mergeMutationSafeSyncCollection, mergeTombstonesByEntityKey, resolveDogSettingsConflict, resolveSyncConflict } from "../src/features/app/storage";
 
 const iso = (hour) => `2026-04-01T${String(hour).padStart(2, "0")}:00:00.000Z`;
 
@@ -203,5 +203,32 @@ describe("mergeMutationSafeSyncCollection concurrent edits", () => {
 
     expect(filteredSessions.map((row) => row.id)).toEqual(["session-live"]);
     expect(filteredFeedings.map((row) => row.id)).toEqual(["shared-2"]);
+  });
+});
+
+describe("resolveDogSettingsConflict", () => {
+  it("keeps local settings when local metadata is newer", () => {
+    const localDog = { id: "DOG-A", dogName: "Luna", revision: 5, updatedAt: iso(11) };
+    const remoteDog = { id: "DOG-A", dogName: "Luna Remote", revision: 4, updatedAt: iso(12) };
+
+    expect(resolveDogSettingsConflict(localDog, remoteDog)).toEqual(localDog);
+  });
+
+  it("uses remote settings when remote metadata is newer", () => {
+    const localDog = { id: "DOG-B", dogName: "Milo", revision: 3, updatedAt: iso(9) };
+    const remoteDog = { id: "DOG-B", dogName: "Milo Remote", revision: 3, updatedAt: iso(10) };
+
+    expect(resolveDogSettingsConflict(localDog, remoteDog)).toEqual(remoteDog);
+  });
+
+  it("resolves concurrent same-metadata edits deterministically", () => {
+    const localDog = { id: "DOG-C", dogName: "Nova", goalSeconds: 1800, revision: 7, updatedAt: iso(13) };
+    const remoteDog = { id: "DOG-C", dogName: "Nova", goalSeconds: 2400, revision: 7, updatedAt: iso(13) };
+
+    const winnerFromLocalFirst = resolveDogSettingsConflict(localDog, remoteDog);
+    const winnerFromRemoteFirst = resolveDogSettingsConflict(remoteDog, localDog);
+
+    expect(winnerFromLocalFirst).toEqual(winnerFromRemoteFirst);
+    expect(winnerFromLocalFirst).toEqual(remoteDog);
   });
 });

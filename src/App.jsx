@@ -4,7 +4,7 @@ import { PROTOCOL, explainNextTarget, normalizeDistressLevel, suggestNext, sugge
 import { sortByDateAsc } from "./lib/activityDateTime";
 import { sortValidDateAsc } from "./lib/dateSort";
 import { selectAppData } from "./features/app/selectors";
-import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, save, sessKey, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
+import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
 import { fmt, fmtClock, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
 import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
 import { DogSelect, Onboarding } from "./features/setup/SetupScreens";
@@ -433,10 +433,14 @@ export default function PawTimer() {
         if (!remote) { setSyncStatus("err"); setSyncError(error || "Unknown sync fetch error"); return; }
 
         const snapshot = syncSnapshotRef.current;
-        const remoteDog = remote.dog ? { ...remote.dog, id: canonicalDogId(remote.dog.id || activeDogId) } : null;
+        const remoteDog = remote.dog ? normalizeDogSyncMetadata({ ...remote.dog, id: canonicalDogId(remote.dog.id || activeDogId) }) : null;
         if (remoteDog) {
           setDogs((prev) => {
-            const next = [...prev.filter((d) => canonicalDogId(d.id) !== remoteDog.id), remoteDog];
+            const existingDog = prev.find((d) => canonicalDogId(d.id) === remoteDog.id) ?? null;
+            const resolvedDog = existingDog
+              ? resolveDogSettingsConflict(normalizeDogSyncMetadata(existingDog), remoteDog)
+              : remoteDog;
+            const next = [...prev.filter((d) => canonicalDogId(d.id) !== remoteDog.id), resolvedDog];
             save(DOGS_KEY, next);
             return next;
           });
@@ -643,8 +647,14 @@ export default function PawTimer() {
       const { result: remote, error } = await syncFetch(normalizedId);
       setSyncDegradation(getSyncDegradationState());
       if (!remote?.dog) { setSyncStatus("err"); setSyncError(error || `No shared dog account found for ${normalizedId}`); showToast(`No shared profile found for ${normalizedId} yet.`); return; }
-      const sharedDog = { ...remote.dog, id: normalizedId };
-      setDogs((prev) => [...prev.filter((d) => canonicalDogId(d.id) !== normalizedId), sharedDog]);
+      const sharedDog = normalizeDogSyncMetadata({ ...remote.dog, id: normalizedId });
+      setDogs((prev) => {
+        const existing = prev.find((d) => canonicalDogId(d.id) === normalizedId) ?? null;
+        const resolvedDog = existing
+          ? resolveDogSettingsConflict(normalizeDogSyncMetadata(existing), sharedDog)
+          : sharedDog;
+        return [...prev.filter((d) => canonicalDogId(d.id) !== normalizedId), resolvedDog];
+      });
       const joinedSessions = sortByDateAsc(normalizeSessions(remote.sessions).map(markRemoteEntryConfirmed));
       const joinedWalks = sortByDateAsc(ensureArray(remote.walks).map((item) => markRemoteEntryConfirmed({ ...item, type: normalizeWalkType(item?.type) })));
       const joinedPatterns = sortByDateAsc(ensureArray(remote.patterns).map(markRemoteEntryConfirmed));
@@ -679,14 +689,15 @@ export default function PawTimer() {
     const onboardingDogId = canonicalDogId(onboardingState?.dogId);
     const id = canonicalDogId(onboardingDogId || activeDogId || generateId(data.dogName));
     const isFreshProfile = onboardingState?.mode === "new";
-    const newDog = {
+    const previousDog = dogs.find((d) => canonicalDogId(d.id) === id) ?? null;
+    const newDog = stampLocalDogSettings({
       ...data,
       id,
       dogName: data.dogName,
       createdAt: new Date().toISOString(),
-    };
+    }, previousDog);
     if (isFreshProfile) clearDogActivityState(id);
-    setDogs((prev) => [...prev.filter((d) => d.id !== id), newDog]);
+    setDogs((prev) => [...prev.filter((d) => canonicalDogId(d.id) !== id), newDog]);
     setOnboardingState(null);
     setActiveDogId(id);
     setTab("home");
@@ -814,7 +825,7 @@ export default function PawTimer() {
         if (canonicalDogId(dog?.id) !== canonicalDogId(activeDogId)) return dog;
         if (recoveryStateEqual(dog?.recoveryState, nextRecoveryState)) return dog;
         changed = true;
-        return { ...dog, recoveryState: nextRecoveryState };
+        return stampLocalDogSettings({ ...dog, recoveryState: nextRecoveryState }, dog);
       });
       return changed ? updated : prev;
     });
