@@ -235,6 +235,84 @@ describe("mergeMutationSafeSyncCollection concurrent edits", () => {
     expect(merged).toEqual([]);
   });
 
+  it("suppresses stale remote sessions when local tombstone is pending even if remote revision is higher", () => {
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: [],
+      remoteItems: [{
+        id: "session-rollback",
+        date: iso(8),
+        revision: 9,
+        updatedAt: iso(8),
+        distressLevel: "none",
+        actualDuration: 300,
+        plannedDuration: 300,
+        result: "success",
+      }],
+      tombstones: [{
+        id: "session-rollback",
+        kind: "session",
+        deletedAt: iso(10),
+        revision: 2,
+        updatedAt: iso(10),
+        pendingSync: true,
+        syncState: "local",
+      }],
+      kind: "session",
+    });
+
+    expect(merged).toEqual([]);
+  });
+
+  it("keeps activity timeline populated after single-delete sync merge instead of collapsing to empty", () => {
+    const mergedSessions = mergeMutationSafeSyncCollection({
+      currentItems: [{ id: "session-keep", date: iso(9), revision: 2, updatedAt: iso(9), distressLevel: "none", actualDuration: 240, plannedDuration: 240, result: "success" }],
+      remoteItems: [{ id: "session-deleted", date: iso(8), revision: 9, updatedAt: iso(8), distressLevel: "none", actualDuration: 300, plannedDuration: 300, result: "success" }],
+      tombstones: [{
+        id: "session-deleted",
+        kind: "session",
+        deletedAt: iso(10),
+        revision: 2,
+        updatedAt: iso(10),
+        pendingSync: true,
+        syncState: "local",
+      }],
+      kind: "session",
+    });
+
+    const appData = selectAppData({
+      dogs: [{ id: "DOG-LOG", dogName: "Log Dog", goalSeconds: 2400 }],
+      activeDogId: "DOG-LOG",
+      sessions: mergedSessions,
+      walks: [],
+      patterns: [],
+      feedings: [],
+      target: 2400,
+      protoOverride: {},
+      recommendation: { duration: 2400, decisionState: null, explanation: "", details: {} },
+    });
+
+    expect(mergedSessions.map((row) => row.id)).toEqual(["session-keep"]);
+    expect(appData.timeline).toHaveLength(1);
+    expect(appData.timeline[0].data.id).toBe("session-keep");
+  });
+
+  it("suppresses stale remote sessions for batched pending tombstones", () => {
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: [],
+      remoteItems: [
+        { id: "session-a", date: iso(8), revision: 10, updatedAt: iso(8), distressLevel: "none", actualDuration: 300, plannedDuration: 300, result: "success" },
+        { id: "session-b", date: iso(9), revision: 11, updatedAt: iso(9), distressLevel: "none", actualDuration: 360, plannedDuration: 360, result: "success" },
+      ],
+      tombstones: [
+        { id: "session-a", kind: "session", deletedAt: iso(10), revision: 2, updatedAt: iso(10), pendingSync: true, syncState: "local" },
+        { id: "session-b", kind: "session", deletedAt: iso(11), revision: 2, updatedAt: iso(11), pendingSync: true, syncState: "local" },
+      ],
+      kind: "session",
+    });
+
+    expect(merged).toEqual([]);
+  });
+
   it("applies authoritative tombstones at commit so late local deletes cannot be bypassed", () => {
     const staleTombstones = [];
     const mergedSessions = mergeMutationSafeSyncCollection({
