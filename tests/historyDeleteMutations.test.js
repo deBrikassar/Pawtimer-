@@ -25,6 +25,7 @@ const buildDeleteActions = ({
   commitPatterns,
   commitFeedings,
   syncDelete = vi.fn(() => Promise.resolve(true)),
+  syncDeleteSessionsForDog = vi.fn(() => Promise.resolve(true)),
   addTombstone = vi.fn(),
   showToast = vi.fn(),
 } = {}) => {
@@ -37,7 +38,7 @@ const buildDeleteActions = ({
     showToast,
     pushWithSyncStatus: vi.fn(() => Promise.resolve({ ok: true })),
     syncDelete,
-    syncDeleteSessionsForDog: vi.fn(() => Promise.resolve(true)),
+    syncDeleteSessionsForDog,
     addTombstone,
     commitSessions: commitSessions ?? vi.fn(),
     setWalks: commitWalks ?? vi.fn(),
@@ -51,6 +52,7 @@ const buildDeleteActions = ({
     actions,
     showToast,
     syncDelete,
+    syncDeleteSessionsForDog,
     addTombstone,
     commitSessions: commitSessions ?? vi.fn(),
     commitWalks: commitWalks ?? vi.fn(),
@@ -63,6 +65,7 @@ describe("history delete mutations", () => {
   it("creates tombstones for every session during bulk clear", () => {
     const commitSessions = vi.fn();
     const addTombstone = vi.fn();
+    const syncDeleteSessionsForDog = vi.fn(() => Promise.resolve(true));
     const originalWindow = globalThis.window;
     globalThis.window = { confirm: vi.fn(() => true) };
     const { actions } = buildDeleteActions({
@@ -72,6 +75,7 @@ describe("history delete mutations", () => {
       ],
       commitSessions,
       addTombstone,
+      syncDeleteSessionsForDog,
     });
 
     actions.clearSessions();
@@ -80,6 +84,7 @@ describe("history delete mutations", () => {
     expect(clearUpdater([{ ...baseSession, id: "sess-1" }, { ...baseSession, id: "sess-2" }])).toEqual([]);
     expect(addTombstone).toHaveBeenCalledTimes(2);
     expect(addTombstone.mock.calls.map((call) => call[0])).toEqual(["session", "session"]);
+    expect(syncDeleteSessionsForDog).not.toHaveBeenCalled();
     globalThis.window = originalWindow;
   });
 

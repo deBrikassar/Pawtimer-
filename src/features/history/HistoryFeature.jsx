@@ -213,7 +213,6 @@ export function useHistoryEditing({
           prev.forEach((entry) => addTombstone("session", entry));
           return [];
         });
-        syncDeleteSessionsForDog(activeDogId).then(() => {});
         showToast("Sessions cleared");
       }
     },
