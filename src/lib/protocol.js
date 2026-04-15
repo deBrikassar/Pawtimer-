@@ -130,13 +130,6 @@ export function inferBelowThreshold(session = {}) {
     return null;
   };
 
-  const explicit = toExplicitBool(
-    session?.belowThreshold
-    ?? session?.below_threshold
-    ?? session?.stayedBelowThreshold,
-  );
-  if (explicit != null) return explicit;
-
   const distress = normalizeDistressLevel(
     session?.distressLevel
     ?? session?.distress_level
@@ -144,6 +137,13 @@ export function inferBelowThreshold(session = {}) {
     ?? session?.distress_severity,
   );
   if (distress !== DISTRESS_LEVELS.NONE) return false;
+
+  const explicit = toExplicitBool(
+    session?.belowThreshold
+    ?? session?.below_threshold
+    ?? session?.stayedBelowThreshold,
+  );
+  if (explicit != null) return explicit;
 
   const actual = Number(session?.actualDuration);
   const planned = Number(session?.plannedDuration);
@@ -154,6 +154,13 @@ export function inferBelowThreshold(session = {}) {
 function getLatestSessions(sessions, count) {
   if (!Array.isArray(sessions)) return [];
   return sessions.slice(-count);
+}
+
+function isCalmBelowThreshold(session = {}) {
+  return (
+    normalizeDistressLevel(session?.distressLevel) === DISTRESS_LEVELS.NONE
+    && session?.belowThreshold === true
+  );
 }
 
 const sortByDateAsc = (sessions = []) => sortByDateAscShared(sessions, { invalidPolicy: "drop" });
@@ -294,7 +301,9 @@ function toRichSession(session = {}) {
     actualDuration: actual,
     plannedDuration: hasReliablePlan ? planned : null,
   });
-  const belowThreshold = hasReliablePlan ? inferredBelowThreshold : false;
+  const belowThreshold = (hasReliablePlan && level === DISTRESS_LEVELS.NONE)
+    ? inferredBelowThreshold
+    : false;
   const progressionActualDuration = hasReliablePlan
     ? actual
     : Math.min(actual, PROTOCOL.startDurationSeconds);
@@ -342,7 +351,7 @@ function computeSafeAloneTime(sessions = []) {
   const nowTime = Date.now();
   const recentWindow = getLatestSessions(sorted, PROTOCOL.confidenceSessionWindow);
   const calmBelowThreshold = recentWindow
-    .filter((s) => s.belowThreshold)
+    .filter((s) => isCalmBelowThreshold(s))
     .map((s) => {
       const ageDays = Math.max(0, (nowTime - (toTimestamp(s.date) ?? nowTime)) / DAY_MS);
       let recencyWeight = 0.1;
@@ -394,7 +403,7 @@ function computeStability(sessions = []) {
   const recent = getLatestSessions(sessions.map(toRichSession), PROTOCOL.calmWindow);
   if (!recent.length) return 0;
 
-  const calmConsistency = recent.filter((s) => s.belowThreshold).length / recent.length;
+  const calmConsistency = recent.filter((s) => isCalmBelowThreshold(s)).length / recent.length;
   const subtlePenalty = recent.filter((s) => s.distressLevel === DISTRESS_LEVELS.SUBTLE).length / recent.length;
   const severePenalty = recent.filter((s) => [DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(s.distressLevel)).length / recent.length;
   const completion = recent.reduce((sum, s) => sum + ratio(s.actualDuration, s.plannedDuration), 0) / recent.length;
@@ -491,7 +500,7 @@ export function calculateTrainingStats(sessions = [], options = {}) {
   const safeAloneTime = computeSafeAloneTime(trainingSessions);
 
   const calmRate = trainingSessions.length
-    ? trainingSessions.filter((s) => s.belowThreshold).length / trainingSessions.length
+    ? trainingSessions.filter((s) => isCalmBelowThreshold(s)).length / trainingSessions.length
     : 0;
   const subtleRate = trainingSessions.length
     ? trainingSessions.filter((s) => s.distressLevel === DISTRESS_LEVELS.SUBTLE).length / trainingSessions.length
@@ -1345,7 +1354,7 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
     }
   }
 
-  const calmStreak = countStreak(trainingSessions, (session) => session.belowThreshold);
+  const calmStreak = countStreak(trainingSessions, (session) => isCalmBelowThreshold(session));
   const factors = [
     `Safe-alone estimate: ${Math.round(recommendation.stats.safeAloneTime)} sec, weighted toward recent calm sessions.`,
     `Last training result: ${lastTraining ? normalizeDistressLevel(lastTraining.distressLevel) : "none"}.`,

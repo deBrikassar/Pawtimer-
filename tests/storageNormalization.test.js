@@ -134,4 +134,38 @@ describe("storage normalization", () => {
     expect(trueSession.belowThreshold).toBe(true);
     expect(falseSession.belowThreshold).toBe(false);
   });
+
+  it("overrides explicit below-threshold truthy flags when distress is present", () => {
+    const activeSession = normalizeSession({
+      id: "s-active-contradict",
+      plannedDuration: 120,
+      actualDuration: 120,
+      distressLevel: "active",
+      below_threshold: true,
+    });
+    const severeSession = normalizeSession({
+      id: "s-severe-contradict",
+      plannedDuration: 120,
+      actualDuration: 120,
+      distress_level: "severe",
+      belowThreshold: "true",
+    });
+
+    expect(activeSession.belowThreshold).toBe(false);
+    expect(severeSession.belowThreshold).toBe(false);
+  });
+
+  it("forces contradictory legacy rows to non-below-threshold when distress metadata indicates stress", () => {
+    const legacyContradictory = normalizeSession({
+      id: "s-legacy-contradict",
+      result: "success",
+      distress_level: "strong",
+      plannedDuration: 180,
+      actualDuration: 180,
+      below_threshold: 1,
+    });
+
+    expect(legacyContradictory.distressLevel).toBe("active");
+    expect(legacyContradictory.belowThreshold).toBe(false);
+  });
 });

@@ -64,6 +64,21 @@ describe("below-threshold inference", () => {
     })).toBe(true);
   });
 
+  it("never treats distressed sessions as below-threshold even with explicit true", () => {
+    expect(inferBelowThreshold({
+      distressLevel: "active",
+      plannedDuration: 600,
+      actualDuration: 590,
+      belowThreshold: true,
+    })).toBe(false);
+    expect(inferBelowThreshold({
+      distressLevel: "severe",
+      plannedDuration: 600,
+      actualDuration: 600,
+      belowThreshold: "true",
+    })).toBe(false);
+  });
+
   it("accepts supported canonical explicit string values", () => {
     expect(inferBelowThreshold({
       distressLevel: "none",
@@ -140,6 +155,19 @@ describe("training stats", () => {
     ];
     const stats = calculateTrainingStats(sessions);
     expect(stats.safeAloneTime).toBeGreaterThanOrEqual(40);
+  });
+
+  it("does not let distressed sessions with contradictory below-threshold flags inflate safe-alone time", () => {
+    const calmOnly = calculateTrainingStats([
+      { date: daysAgo(1), plannedDuration: 300, actualDuration: 300, distressLevel: "none", belowThreshold: true },
+    ]);
+    const withContradictoryDistress = calculateTrainingStats([
+      { date: daysAgo(1), plannedDuration: 300, actualDuration: 300, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 1200, actualDuration: 1200, distressLevel: "active", belowThreshold: true },
+    ]);
+
+    expect(withContradictoryDistress.safeAloneTime).toBeLessThanOrEqual(calmOnly.safeAloneTime);
+    expect(withContradictoryDistress.calmSessionRate).toBeLessThan(calmOnly.calmSessionRate);
   });
 
   it("raises relapse risk after recent severe and uncontrolled real-life absence", () => {
