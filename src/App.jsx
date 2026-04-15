@@ -4,7 +4,7 @@ import { PROTOCOL, explainNextTarget, normalizeDistressLevel, suggestNext, sugge
 import { sortByDateAsc } from "./lib/activityDateTime";
 import { sortValidDateAsc } from "./lib/dateSort";
 import { selectAppData } from "./features/app/selectors";
-import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyAuthoritativeTombstonesAtCommit, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, pruneTombstonesForRetention, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
+import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyAuthoritativeTombstonesAtCommit, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, pruneTombstonesForRetention, repairDuplicateSessionIds, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
 import { markCollectionStorageError, persistJoinedDogState, persistValue } from "./features/app/persistence";
 import { buildPartialCapabilitySyncMessage, partitionPendingOutboundByCapability } from "./features/app/syncCapability";
 import { computeSyncSummary } from "./features/app/syncSummary";
@@ -273,12 +273,19 @@ export default function PawTimer() {
         ids: normalized.map((entry) => entry.id),
       });
     }
-    let committed = normalized;
+    const repairedSessions = repairDuplicateSessionIds(normalized, canonicalDogId(activeDogId));
+    if (repairedSessions.didRepair) {
+      logSyncDebug("commitSessions:repairedIds", {
+        activeDogId: canonicalDogId(activeDogId),
+        repairedIds: repairedSessions.rows.map((entry) => entry.id),
+      });
+    }
+    let committed = repairedSessions.rows;
     if (activeDogId) {
-      const writeResult = persistValue(sessKey(activeDogId), normalized, save);
+      const writeResult = persistValue(sessKey(activeDogId), committed, save);
       if (!writeResult.ok) {
         reportLocalWriteFailure(writeResult.error);
-        committed = markCollectionStorageError(normalized, writeResult.error);
+        committed = markCollectionStorageError(committed, writeResult.error);
       }
     }
     sessionsRef.current = committed;

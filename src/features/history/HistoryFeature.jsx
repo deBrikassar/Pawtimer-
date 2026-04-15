@@ -80,10 +80,25 @@ export function useHistoryEditing({
     editSessionDuration: (sessionId, setHistoryModal) => openHistoryDurationEditor("session", sessions.find((s) => s.id === sessionId), setHistoryModal),
     requestHistoryDelete: (kind, entry, setHistoryModal) => {
       if (!entry) return;
+      logSyncDebug("history:delete:request", {
+        kind,
+        id: entry.id,
+        date: entry.date ?? null,
+        actualDuration: entry.actualDuration ?? null,
+        plannedDuration: entry.plannedDuration ?? null,
+        revision: entry.revision ?? null,
+        updatedAt: entry.updatedAt ?? null,
+        entry,
+      });
       setHistoryModal({
         mode: "delete",
         kind,
         id: entry.id,
+        targetDate: entry.date ?? null,
+        targetActualDuration: Number.isFinite(entry.actualDuration) ? entry.actualDuration : null,
+        targetPlannedDuration: Number.isFinite(entry.plannedDuration) ? entry.plannedDuration : null,
+        targetRevision: Number.isFinite(entry.revision) ? entry.revision : null,
+        targetUpdatedAt: entry.updatedAt ?? null,
         label: kind === "session"
           ? `Training session · ${fmtDate(entry.date)}`
           : kind === "walk"
@@ -178,20 +193,75 @@ export function useHistoryEditing({
       if (!historyModal || historyModal.mode !== "delete") return;
       if (historyModal.kind === "session") {
         commitSessions((prev) => {
-          const matching = prev.filter((item) => item.id === historyModal.id);
+          const matchingById = prev.filter((item) => item.id === historyModal.id);
+          const hasDetailedIdentity = Boolean(
+            historyModal.targetDate
+            || Number.isFinite(historyModal.targetActualDuration)
+            || Number.isFinite(historyModal.targetPlannedDuration)
+            || Number.isFinite(historyModal.targetRevision)
+            || historyModal.targetUpdatedAt,
+          );
+          const matching = hasDetailedIdentity
+            ? prev.filter((item) => (
+              item.id === historyModal.id
+              && (historyModal.targetDate ? item.date === historyModal.targetDate : true)
+              && (Number.isFinite(historyModal.targetActualDuration) ? item.actualDuration === historyModal.targetActualDuration : true)
+              && (Number.isFinite(historyModal.targetPlannedDuration) ? item.plannedDuration === historyModal.targetPlannedDuration : true)
+              && (Number.isFinite(historyModal.targetRevision) ? item.revision === historyModal.targetRevision : true)
+              && (historyModal.targetUpdatedAt ? item.updatedAt === historyModal.targetUpdatedAt : true)
+            ))
+            : matchingById;
           const existing = matching[0] ?? null;
           logSyncDebug("history:delete:session", {
             targetId: historyModal.id,
+            targetDate: historyModal.targetDate ?? null,
+            targetActualDuration: historyModal.targetActualDuration ?? null,
+            targetPlannedDuration: historyModal.targetPlannedDuration ?? null,
+            targetRevision: historyModal.targetRevision ?? null,
+            targetUpdatedAt: historyModal.targetUpdatedAt ?? null,
+            matchingByIdCount: matchingById.length,
             matchingCount: matching.length,
             beforeCount: prev.length,
-            beforeIds: prev.map((item) => item.id),
+            beforeRows: prev.map((item) => ({
+              id: item.id,
+              date: item.date,
+              actualDuration: item.actualDuration ?? null,
+              plannedDuration: item.plannedDuration ?? null,
+              revision: item.revision ?? null,
+              updatedAt: item.updatedAt ?? null,
+            })),
           });
-          if (existing) addTombstone("session", existing);
-          const next = prev.filter((item) => item.id !== historyModal.id);
+          if (existing && matchingById.length <= 1) addTombstone("session", existing);
+          const next = hasDetailedIdentity
+            ? prev.filter((item) => !(
+              item.id === historyModal.id
+              && (historyModal.targetDate ? item.date === historyModal.targetDate : true)
+              && (Number.isFinite(historyModal.targetActualDuration) ? item.actualDuration === historyModal.targetActualDuration : true)
+              && (Number.isFinite(historyModal.targetPlannedDuration) ? item.plannedDuration === historyModal.targetPlannedDuration : true)
+              && (Number.isFinite(historyModal.targetRevision) ? item.revision === historyModal.targetRevision : true)
+              && (historyModal.targetUpdatedAt ? item.updatedAt === historyModal.targetUpdatedAt : true)
+            ))
+            : prev.filter((item) => item.id !== historyModal.id);
           logSyncDebug("history:delete:session:result", {
             targetId: historyModal.id,
             afterCount: next.length,
-            afterIds: next.map((item) => item.id),
+            removedRows: prev.filter((item) => !next.includes(item)).map((item) => ({
+              id: item.id,
+              date: item.date,
+              actualDuration: item.actualDuration ?? null,
+              plannedDuration: item.plannedDuration ?? null,
+              revision: item.revision ?? null,
+              updatedAt: item.updatedAt ?? null,
+            })),
+            keptRows: next.map((item) => ({
+              id: item.id,
+              date: item.date,
+              actualDuration: item.actualDuration ?? null,
+              plannedDuration: item.plannedDuration ?? null,
+              revision: item.revision ?? null,
+              updatedAt: item.updatedAt ?? null,
+            })),
+            tombstoneSkippedDueToDuplicateId: Boolean(existing && matchingById.length > 1),
           });
           return next;
         });

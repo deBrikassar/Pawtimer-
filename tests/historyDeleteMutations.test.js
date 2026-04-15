@@ -251,4 +251,63 @@ describe("history delete mutations", () => {
 
     expect(recommendationAfterDelete).not.toBe(recommendationIfInterveningChangeWereDropped);
   });
+
+  it("deletes only the targeted visible row when duplicate ids exist and avoids tombstoning ambiguous duplicates", () => {
+    const commitSessions = vi.fn();
+    const addTombstone = vi.fn();
+    const duplicateId = "sess-dup";
+    const duplicateSessions = [
+      {
+        ...baseSession,
+        id: duplicateId,
+        date: makeIso("2026-04-09T10:00:00Z"),
+        actualDuration: 90,
+        plannedDuration: 90,
+        revision: 3,
+        updatedAt: makeIso("2026-04-09T10:00:00Z"),
+      },
+      {
+        ...baseSession,
+        id: duplicateId,
+        date: makeIso("2026-04-10T10:00:00Z"),
+        actualDuration: 110,
+        plannedDuration: 110,
+        revision: 4,
+        updatedAt: makeIso("2026-04-10T10:00:00Z"),
+      },
+      {
+        ...baseSession,
+        id: "sess-keep",
+        date: makeIso("2026-04-11T10:00:00Z"),
+        actualDuration: 140,
+        plannedDuration: 140,
+      },
+    ];
+    const { actions } = buildDeleteActions({
+      sessions: duplicateSessions,
+      commitSessions,
+      addTombstone,
+    });
+
+    actions.confirmHistoryDelete({
+      mode: "delete",
+      kind: "session",
+      id: duplicateId,
+      targetDate: makeIso("2026-04-10T10:00:00Z"),
+      targetActualDuration: 110,
+      targetPlannedDuration: 110,
+      targetRevision: 4,
+      targetUpdatedAt: makeIso("2026-04-10T10:00:00Z"),
+      label: "Duplicate session",
+    }, vi.fn());
+
+    const deleteUpdater = commitSessions.mock.calls[0][0];
+    const afterDelete = deleteUpdater(duplicateSessions);
+    expect(afterDelete).toHaveLength(2);
+    expect(afterDelete).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: duplicateId, actualDuration: 90 }),
+      expect.objectContaining({ id: "sess-keep" }),
+    ]));
+    expect(addTombstone).not.toHaveBeenCalled();
+  });
 });
