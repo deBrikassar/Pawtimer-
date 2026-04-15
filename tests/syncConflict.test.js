@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyTombstonesToCollection, mergeMutationSafeSyncCollection, mergeTombstonesByEntityKey, resolveDogSettingsConflict, resolveSyncConflict } from "../src/features/app/storage";
+import { applyTombstonesToCollection, mergeMutationSafeSyncCollection, mergeTombstonesByEntityKey, pruneTombstonesForRetention, resolveDogSettingsConflict, resolveSyncConflict, TOMBSTONE_RETENTION_MS } from "../src/features/app/storage";
 
 const iso = (hour) => `2026-04-01T${String(hour).padStart(2, "0")}:00:00.000Z`;
 
@@ -203,6 +203,60 @@ describe("mergeMutationSafeSyncCollection concurrent edits", () => {
 
     expect(filteredSessions.map((row) => row.id)).toEqual(["session-live"]);
     expect(filteredFeedings.map((row) => row.id)).toEqual(["shared-2"]);
+  });
+});
+
+describe("tombstone retention/GC policy", () => {
+  it("retains confirmed tombstones until retention TTL elapses", () => {
+    const now = Date.parse("2026-05-15T00:00:00.000Z");
+    const tombstones = [
+      {
+        id: "session-ttl",
+        kind: "session",
+        deletedAt: new Date(now - TOMBSTONE_RETENTION_MS + 10_000).toISOString(),
+        updatedAt: new Date(now - TOMBSTONE_RETENTION_MS + 10_000).toISOString(),
+        revision: 4,
+        replicationConfirmed: true,
+        pendingSync: false,
+        syncState: "synced",
+      },
+    ];
+
+    const retained = pruneTombstonesForRetention(tombstones, { now });
+    expect(retained).toHaveLength(1);
+    expect(retained[0].id).toBe("session-ttl");
+  });
+
+  it("prunes only confirmed + synced tombstones after retention TTL", () => {
+    const now = Date.parse("2026-06-20T00:00:00.000Z");
+    const oldDate = new Date(now - TOMBSTONE_RETENTION_MS - 1_000).toISOString();
+    const tombstones = [
+      { id: "session-old-confirmed", kind: "session", deletedAt: oldDate, updatedAt: oldDate, revision: 7, replicationConfirmed: true, pendingSync: false, syncState: "synced" },
+      { id: "session-old-unconfirmed", kind: "session", deletedAt: oldDate, updatedAt: oldDate, revision: 7, replicationConfirmed: false, pendingSync: false, syncState: "synced" },
+      { id: "session-old-pending", kind: "session", deletedAt: oldDate, updatedAt: oldDate, revision: 7, replicationConfirmed: true, pendingSync: true, syncState: "syncing" },
+    ];
+
+    const retained = pruneTombstonesForRetention(tombstones, { now });
+    expect(retained.map((entry) => entry.id)).toEqual(["session-old-unconfirmed", "session-old-pending"]);
+  });
+
+  it("prevents resurrection by keeping tombstone when same id is still present in active collection", () => {
+    const now = Date.parse("2026-06-20T00:00:00.000Z");
+    const oldDate = new Date(now - TOMBSTONE_RETENTION_MS - 1_000).toISOString();
+    const tombstones = [
+      { id: "walk-restore-risk", kind: "walk", deletedAt: oldDate, updatedAt: oldDate, revision: 3, replicationConfirmed: true, pendingSync: false, syncState: "synced" },
+    ];
+    const activeWalks = [{ id: "walk-restore-risk", date: iso(10), revision: 1, updatedAt: iso(10), duration: 300 }];
+
+    const retained = pruneTombstonesForRetention(tombstones, {
+      now,
+      activityByKind: {
+        walk: activeWalks,
+      },
+    });
+
+    expect(retained).toHaveLength(1);
+    expect(retained[0].id).toBe("walk-restore-risk");
   });
 });
 
