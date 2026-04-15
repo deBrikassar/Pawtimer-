@@ -671,4 +671,35 @@ describe("public compatibility APIs", () => {
     expect(next.explanation).toBeTruthy();
     expect(next.explanation).toMatch(/Starting with a short first session/i);
   });
+
+  it("keeps recommendation duration and details aligned when walk/pattern context changes without session changes", () => {
+    const sessions = [
+      { date: hoursAgo(30), plannedDuration: 1200, actualDuration: 1200, distressLevel: "none", belowThreshold: true },
+      { date: hoursAgo(24), plannedDuration: 1380, actualDuration: 1380, distressLevel: "none", belowThreshold: true },
+      { date: hoursAgo(8), plannedDuration: 1380, actualDuration: 420, distressLevel: "active", belowThreshold: false },
+    ];
+    const patterns = [{ id: "p-1", date: hoursAgo(7), type: "keys" }];
+    const baseWalks = [{ id: "w-1", date: hoursAgo(7), duration: 1800, type: "regular_walk" }];
+    const dog = { goalSeconds: 3600 };
+
+    const withTrainingWalk = [...baseWalks, { id: "w-2", date: hoursAgo(2), duration: 900, type: "training_walk" }];
+    const editedPattern = [{ ...patterns[0], type: "jacket" }];
+    const deletedWalks = [];
+    const deletedPatterns = [];
+    const scenarios = [
+      { walks: withTrainingWalk, pats: patterns }, // add walk
+      { walks: [{ ...withTrainingWalk[0], duration: 1200 }, withTrainingWalk[1]], pats: patterns }, // edit walk
+      { walks: deletedWalks, pats: patterns }, // delete walk
+      { walks: baseWalks, pats: [...patterns, { id: "p-2", date: hoursAgo(1), type: "shoes" }] }, // add pattern
+      { walks: baseWalks, pats: editedPattern }, // edit pattern
+      { walks: baseWalks, pats: deletedPatterns }, // delete pattern
+    ];
+
+    scenarios.forEach(({ walks, pats }) => {
+      const explained = explainNextTarget(sessions, walks, pats, dog);
+      const suggested = suggestNextWithContext(sessions, walks, pats, dog);
+      expect(explained.recommendedDuration).toBe(suggested);
+      expect(explained.decisionState.targetSeconds).toBe(explained.recommendedDuration);
+    });
+  });
 });
