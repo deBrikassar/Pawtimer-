@@ -9,6 +9,7 @@ import {
   suggestNext,
   suggestNextWithContext,
   getNextDurationSeconds,
+  inferBelowThreshold,
   normalizeDistressLevel,
 } from "../src/lib/protocol";
 
@@ -26,6 +27,41 @@ describe("legacy migration", () => {
     expect(mapped.distressSeverity).toBe("subtle");
     expect(mapped.latencyToFirstDistress).toBe(45);
     expect(mapped.belowThreshold).toBe(false);
+  });
+});
+
+describe("below-threshold inference", () => {
+  it("treats an exact calm threshold hit as below-threshold", () => {
+    expect(inferBelowThreshold({
+      distressLevel: "none",
+      plannedDuration: 300,
+      actualDuration: 300,
+    })).toBe(true);
+  });
+
+  it("treats calm sessions slightly below the target as not below-threshold", () => {
+    expect(inferBelowThreshold({
+      distressLevel: "none",
+      plannedDuration: 300,
+      actualDuration: 299,
+    })).toBe(false);
+  });
+
+  it("does not apply a 0.98 tolerance fallback for inferred below-threshold", () => {
+    expect(inferBelowThreshold({
+      distressLevel: "none",
+      plannedDuration: 100,
+      actualDuration: 98,
+    })).toBe(false);
+  });
+
+  it("uses explicit below-threshold when provided", () => {
+    expect(inferBelowThreshold({
+      distressLevel: "none",
+      plannedDuration: 600,
+      actualDuration: 590,
+      belowThreshold: true,
+    })).toBe(true);
   });
 });
 
