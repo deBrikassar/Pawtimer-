@@ -233,14 +233,16 @@ export function useHistoryEditing({
               updatedAt: item.updatedAt ?? null,
             })),
           });
-          const shouldTreatAsRemotePersisted = Boolean(
+          const hasUncertainRemotePersistence = Boolean(
             existing
-            && !existing.pendingSync
-            && existing.syncState !== "local"
-            && existing.syncState !== "syncing"
-            && existing.syncState !== "error",
+            && (existing.syncState === "syncing" || existing.syncState === "error"),
           );
-          if (existing && matchingById.length <= 1 && shouldTreatAsRemotePersisted) {
+          const shouldCreateDeleteTombstone = Boolean(
+            existing
+            && matchingById.length <= 1
+            && (!existing.pendingSync || hasUncertainRemotePersistence),
+          );
+          if (shouldCreateDeleteTombstone) {
             tombstoneToPush = addTombstone("session", existing);
           }
           const next = hasDetailedIdentity
@@ -273,7 +275,7 @@ export function useHistoryEditing({
               updatedAt: item.updatedAt ?? null,
             })),
             tombstoneSkippedDueToDuplicateId: Boolean(existing && matchingById.length > 1),
-            tombstoneSkippedAsLocalOnly: Boolean(existing && !shouldTreatAsRemotePersisted),
+            tombstoneSkippedAsLocalOnly: Boolean(existing && !shouldCreateDeleteTombstone),
           });
           return next;
         });

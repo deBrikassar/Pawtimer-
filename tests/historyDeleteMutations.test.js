@@ -313,6 +313,60 @@ describe("history delete mutations", () => {
     expect(addTombstone).not.toHaveBeenCalled();
   });
 
+  it("deletes immediately-created local sessions without remote tombstones", async () => {
+    const commitSessions = vi.fn();
+    const addTombstone = vi.fn();
+    const pushTombstoneWithSyncStatus = vi.fn(() => Promise.resolve({ ok: true }));
+    const justCreatedSession = {
+      ...baseSession,
+      id: "sess-new",
+      revision: 1,
+      pendingSync: true,
+      syncState: "local",
+      date: makeIso("2026-04-14T10:00:00Z"),
+    };
+    const { actions } = buildDeleteActions({
+      sessions: [justCreatedSession],
+      commitSessions,
+      addTombstone,
+      pushTombstoneWithSyncStatus,
+    });
+
+    actions.confirmHistoryDelete({ mode: "delete", kind: "session", id: "sess-new", label: "New local session" }, vi.fn());
+    const deleteUpdater = commitSessions.mock.calls[0][0];
+    expect(deleteUpdater([justCreatedSession])).toEqual([]);
+    await Promise.resolve();
+    expect(addTombstone).not.toHaveBeenCalled();
+    expect(pushTombstoneWithSyncStatus).not.toHaveBeenCalled();
+  });
+
+  it("deletes pre-first-sync sessions without unnecessary remote writes", async () => {
+    const commitSessions = vi.fn();
+    const addTombstone = vi.fn();
+    const pushTombstoneWithSyncStatus = vi.fn(() => Promise.resolve({ ok: true }));
+    const preFirstSyncSession = {
+      ...baseSession,
+      id: "sess-pre-first-sync",
+      revision: 3,
+      pendingSync: true,
+      syncState: "local",
+      date: makeIso("2026-04-14T11:00:00Z"),
+    };
+    const { actions } = buildDeleteActions({
+      sessions: [preFirstSyncSession],
+      commitSessions,
+      addTombstone,
+      pushTombstoneWithSyncStatus,
+    });
+
+    actions.confirmHistoryDelete({ mode: "delete", kind: "session", id: "sess-pre-first-sync", label: "Pre-sync session" }, vi.fn());
+    const deleteUpdater = commitSessions.mock.calls[0][0];
+    expect(deleteUpdater([preFirstSyncSession])).toEqual([]);
+    await Promise.resolve();
+    expect(addTombstone).not.toHaveBeenCalled();
+    expect(pushTombstoneWithSyncStatus).not.toHaveBeenCalled();
+  });
+
   it("deletes local-only rows without creating or pushing tombstones", async () => {
     const commitSessions = vi.fn();
     const addTombstone = vi.fn();
@@ -337,6 +391,59 @@ describe("history delete mutations", () => {
     await Promise.resolve();
     expect(addTombstone).not.toHaveBeenCalled();
     expect(pushTombstoneWithSyncStatus).not.toHaveBeenCalled();
+  });
+
+
+
+  it("creates tombstones for syncing sessions to preserve delete intent during in-flight pushes", async () => {
+    const tombstone = { id: "sess-syncing", kind: "session", deletedAt: makeIso("2026-04-13T11:30:00Z") };
+    const addTombstone = vi.fn(() => tombstone);
+    const pushTombstoneWithSyncStatus = vi.fn(() => Promise.resolve({ ok: true }));
+    const syncingSession = {
+      ...baseSession,
+      id: "sess-syncing",
+      pendingSync: true,
+      syncState: "syncing",
+      date: makeIso("2026-04-13T10:30:00Z"),
+    };
+    const commitSessions = vi.fn((updater) => (typeof updater === "function" ? updater([syncingSession]) : updater));
+    const { actions } = buildDeleteActions({
+      sessions: [syncingSession],
+      commitSessions,
+      addTombstone,
+      pushTombstoneWithSyncStatus,
+    });
+
+    actions.confirmHistoryDelete({ mode: "delete", kind: "session", id: "sess-syncing", label: "Syncing session" }, vi.fn());
+    await Promise.resolve();
+    expect(addTombstone).toHaveBeenCalledWith("session", expect.objectContaining({ id: "sess-syncing" }));
+    expect(pushTombstoneWithSyncStatus).toHaveBeenCalledWith(tombstone);
+  });
+
+  it("creates tombstones for error-state sessions to prevent remote resurrection after retries", async () => {
+    const tombstone = { id: "sess-error", kind: "session", deletedAt: makeIso("2026-04-13T12:30:00Z") };
+    const addTombstone = vi.fn(() => tombstone);
+    const pushTombstoneWithSyncStatus = vi.fn(() => Promise.resolve({ ok: true }));
+    const erroredSession = {
+      ...baseSession,
+      id: "sess-error",
+      pendingSync: true,
+      syncState: "error",
+      syncError: "network",
+      date: makeIso("2026-04-13T11:30:00Z"),
+    };
+    const commitSessions = vi.fn((updater) => (typeof updater === "function" ? updater([erroredSession]) : updater));
+    const { actions } = buildDeleteActions({
+      sessions: [erroredSession],
+      commitSessions,
+      addTombstone,
+      pushTombstoneWithSyncStatus,
+    });
+
+    actions.confirmHistoryDelete({ mode: "delete", kind: "session", id: "sess-error", label: "Errored session" }, vi.fn());
+    await Promise.resolve();
+    expect(addTombstone).toHaveBeenCalledWith("session", expect.objectContaining({ id: "sess-error" }));
+    expect(pushTombstoneWithSyncStatus).toHaveBeenCalledWith(tombstone);
   });
 
   it("creates and pushes tombstones immediately for remotely persisted rows", async () => {
