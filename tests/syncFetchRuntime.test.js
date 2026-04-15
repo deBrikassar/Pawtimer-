@@ -146,6 +146,28 @@ describe("syncFetch runtime fallbacks", () => {
     expect(result.syncCapability.tableSupport.feedings.supported).toBe(true);
   });
 
+  it("degrades gracefully when only feedings table is missing", async () => {
+    global.fetch = vi.fn(async (url) => {
+      const { path } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(200, [{ id: "DOG2B", settings: { dogName: "Milo" } }]);
+      if (path === "sessions") return jsonResponse(200, []);
+      if (path === "walks") return jsonResponse(200, []);
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(400, { message: "relation \"feedings\" does not exist" });
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncFetch } = await setupStorageModule();
+    const { result, error } = await syncFetch("DOG2B");
+
+    expect(error).toBeNull();
+    expect(result.feedings).toEqual([]);
+    expect(result.syncCapability.mode).toBe("partial");
+    expect(result.syncCapability.missingOptionalTables).toEqual(["feedings"]);
+    expect(result.syncCapability.tableSupport.feedings.supported).toBe(false);
+    expect(result.syncCapability.tableSupport.patterns.supported).toBe(true);
+  });
+
   it("requests walk sync metadata and preserves non-default walk types", async () => {
     const walkSelectAttempts = [];
     global.fetch = vi.fn(async (url) => {

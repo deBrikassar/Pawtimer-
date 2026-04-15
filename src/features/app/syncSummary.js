@@ -3,6 +3,7 @@ export const SYNC_STATE = {
   SYNCING: "syncing",
   SYNCED: "synced",
   ERROR: "error",
+  UNSUPPORTED: "unsupported",
 };
 
 export const computeSyncSummary = ({
@@ -20,7 +21,7 @@ export const computeSyncSummary = ({
     const state = entry?.syncState || (entry?.pendingSync ? SYNC_STATE.LOCAL : SYNC_STATE.SYNCED);
     acc[state] = (acc[state] || 0) + 1;
     return acc;
-  }, { [SYNC_STATE.LOCAL]: 0, [SYNC_STATE.SYNCING]: 0, [SYNC_STATE.SYNCED]: 0, [SYNC_STATE.ERROR]: 0 });
+  }, { [SYNC_STATE.LOCAL]: 0, [SYNC_STATE.SYNCING]: 0, [SYNC_STATE.SYNCED]: 0, [SYNC_STATE.ERROR]: 0, [SYNC_STATE.UNSUPPORTED]: 0 });
 
   if (!syncEnabled) {
     return {
@@ -46,19 +47,19 @@ export const computeSyncSummary = ({
     };
   }
 
+  if (syncStatus === "partial" || counts[SYNC_STATE.UNSUPPORTED] > 0) {
+    return {
+      badgeState: "idle",
+      label: "Partial sync",
+      detail: syncError || "Some optional activity tables are unavailable on the server, so sync coverage is incomplete.",
+    };
+  }
+
   if (counts[SYNC_STATE.LOCAL] > 0) {
     return {
       badgeState: "idle",
       label: `${counts[SYNC_STATE.LOCAL]} local only`,
       detail: "These changes are stored locally and will stay visible until the server confirms them.",
-    };
-  }
-
-  if (syncStatus === "partial") {
-    return {
-      badgeState: "idle",
-      label: "Partial sync",
-      detail: syncError || "Some optional activity tables are unavailable on the server, so sync coverage is incomplete.",
     };
   }
 

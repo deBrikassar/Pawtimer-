@@ -6,6 +6,7 @@ import { sortValidDateAsc } from "./lib/dateSort";
 import { selectAppData } from "./features/app/selectors";
 import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, pruneTombstonesForRetention, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
 import { markCollectionStorageError, persistJoinedDogState, persistValue } from "./features/app/persistence";
+import { buildPartialCapabilitySyncMessage, partitionPendingOutboundByCapability } from "./features/app/syncCapability";
 import { computeSyncSummary } from "./features/app/syncSummary";
 import { fmt, fmtClock, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
 import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
@@ -24,6 +25,7 @@ const SYNC_STATE = {
   SYNCING: "syncing",
   SYNCED: "synced",
   ERROR: "error",
+  UNSUPPORTED: "unsupported",
 };
 
 function recoveryStateEqual(a, b) {
@@ -388,7 +390,7 @@ export default function PawTimer() {
       ...item,
       pendingSync: nextSyncState !== SYNC_STATE.SYNCED,
       syncState: nextSyncState,
-      syncError: nextSyncState === SYNC_STATE.ERROR ? errorMessage : "",
+      syncError: (nextSyncState === SYNC_STATE.ERROR || nextSyncState === SYNC_STATE.UNSUPPORTED) ? errorMessage : "",
     }));
   }, [updateCollectionEntry]);
 
@@ -549,8 +551,18 @@ export default function PawTimer() {
           ...mergedFeedings.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "feeding", entry })),
         ];
 
+        const { supported: supportedPendingEntries, unsupported: unsupportedPendingEntries } = partitionPendingOutboundByCapability(pendingEntries, remote?.syncCapability);
+        unsupportedPendingEntries.forEach(({ kind, entry }) => {
+          syncHelpersRef.current.setEntrySyncState(
+            kind,
+            entry.id,
+            SYNC_STATE.UNSUPPORTED,
+            "Unsupported in current backend capability profile; retained locally until table support is available.",
+          );
+        });
+
         let allPendingFlushed = true;
-        for (const { kind, entry } of pendingEntries) {
+        for (const { kind, entry } of supportedPendingEntries) {
           const pushed = await pushPendingEntry(kind, entry, dogSettings);
           allPendingFlushed = allPendingFlushed && pushed;
         }
@@ -575,9 +587,7 @@ export default function PawTimer() {
           },
         }));
         const isPartialSync = remote?.syncCapability?.mode === "partial";
-        const partialSyncMessage = isPartialSync
-          ? `Partial sync active: ${ensureArray(remote?.syncCapability?.missingOptionalTables).join(", ")} unavailable.`
-          : "";
+        const partialSyncMessage = buildPartialCapabilitySyncMessage(remote?.syncCapability, unsupportedPendingEntries.length);
         setSyncError(error || partialSyncMessage);
         setSyncStatus(error ? "err" : isPartialSync ? "partial" : "ok");
       } finally {
