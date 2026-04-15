@@ -4,7 +4,7 @@ import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputVal
 import { normalizeDistressLevel } from "../../lib/protocol";
 import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, sessionDetailBadges, walkTypeLabel } from "../app/helpers";
 import { ClockIcon, DeleteIcon, EditIcon, ModalCloseButton, TrendIcon } from "../app/ui";
-import { mergeSessionWithDerivedFields, normalizeSession } from "../app/storage";
+import { logSyncDebug, mergeSessionWithDerivedFields, normalizeSession } from "../app/storage";
 
 function HistoryActionGroup({ actions }) {
   return (
@@ -178,9 +178,22 @@ export function useHistoryEditing({
       if (!historyModal || historyModal.mode !== "delete") return;
       if (historyModal.kind === "session") {
         commitSessions((prev) => {
-          const existing = prev.find((item) => item.id === historyModal.id);
+          const matching = prev.filter((item) => item.id === historyModal.id);
+          const existing = matching[0] ?? null;
+          logSyncDebug("history:delete:session", {
+            targetId: historyModal.id,
+            matchingCount: matching.length,
+            beforeCount: prev.length,
+            beforeIds: prev.map((item) => item.id),
+          });
           if (existing) addTombstone("session", existing);
-          return prev.filter((item) => item.id !== historyModal.id);
+          const next = prev.filter((item) => item.id !== historyModal.id);
+          logSyncDebug("history:delete:session:result", {
+            targetId: historyModal.id,
+            afterCount: next.length,
+            afterIds: next.map((item) => item.id),
+          });
+          return next;
         });
       } else if (historyModal.kind === "walk") {
         setWalks((prev) => {

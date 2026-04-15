@@ -259,6 +259,20 @@ export default function PawTimer() {
     const previous = ensureArray(sessionsRef.current);
     const resolved = typeof updater === "function" ? updater(previous) : updater;
     const normalized = sortByDateAsc(normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState));
+    const duplicateSessionIds = normalized.reduce((acc, entry) => {
+      const id = String(entry?.id || "");
+      if (!id) return acc;
+      acc.set(id, (acc.get(id) || 0) + 1);
+      return acc;
+    }, new Map());
+    const duplicateIds = Array.from(duplicateSessionIds.entries()).filter(([, count]) => count > 1).map(([id]) => id);
+    if (duplicateIds.length) {
+      logSyncDebug("commitSessions:duplicateIds", {
+        activeDogId: canonicalDogId(activeDogId),
+        duplicateIds,
+        ids: normalized.map((entry) => entry.id),
+      });
+    }
     let committed = normalized;
     if (activeDogId) {
       const writeResult = persistValue(sessKey(activeDogId), normalized, save);
@@ -441,6 +455,12 @@ export default function PawTimer() {
     setFeedings(feedingsRef.current);
     setPatLabels(local.patLabels);
     setDogPhoto(local.photo);
+    logSyncDebug("hydrate:dogState", {
+      dogId: normalizedId,
+      hydratedSessionIds: hydratedSessions.map((entry) => entry.id),
+      hydratedTombstones: hydratedTombstones.map((entry) => ({ id: entry.id, kind: entry.kind, pendingSync: entry.pendingSync })),
+      visibleSessionIds: sessionsRef.current.map((entry) => entry.id),
+    });
     recomputeTarget(
       applyTombstonesToCollection(hydratedSessions, hydratedTombstones, "session"),
       applyTombstonesToCollection(hydratedWalks, hydratedTombstones, "walk"),
