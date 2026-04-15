@@ -1247,8 +1247,19 @@ export const syncPushTombstone = async (dogId, tombstone, dogSettings = null) =>
     const strictPayload = buildSchemaCompatibleTombstonePayload(kind, id, tombstone);
     res = await pushPayload(strictPayload);
   }
+  if (!res.ok) return { ok: false, error: `${kind} tombstone push failed: ${res.error}` };
 
-  return res.ok ? { ok: true, error: null } : { ok: false, error: `${kind} tombstone push failed: ${res.error}` };
+  const verifyRes = await sbReq(
+    `${table}?dog_id=eq.${encodeURIComponent(id)}&id=eq.${encodeURIComponent(String(tombstone.id))}&select=id,deleted_at,revision,updated_at&limit=1`,
+    { trigger: `syncPushTombstone:verify:${table}` },
+  );
+  if (!verifyRes.ok) {
+    return { ok: false, error: `${kind} tombstone verification failed: ${verifyRes.error}` };
+  }
+  const verifyRows = Array.isArray(verifyRes.data) ? verifyRes.data : [];
+  const remoteRow = verifyRows[0] ?? null;
+  if (!remoteRow || remoteRow.deleted_at) return { ok: true, error: null };
+  return { ok: false, error: `${kind} tombstone verification failed: remote row is still active` };
 };
 
 export const hydrateDogFromLocal = (dogId) => {
