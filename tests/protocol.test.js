@@ -210,7 +210,7 @@ describe("recommendation engine", () => {
 
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recommendedDuration).toBe(57);
-    expect(rec.recommendationType).toBe("keep_same_duration");
+    expect(rec.recommendationType).toBe("increase_duration");
   });
 
   it("does not let older short sessions drag recommendation near minimum", () => {
@@ -270,7 +270,7 @@ describe("recommendation engine", () => {
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recommendedDuration).toBeGreaterThan(900);
-    expect(rec.recommendationType).toBe("keep_same_duration");
+    expect(rec.recommendationType).toBe("increase_duration");
   });
 
   it("holds on repeated near-threshold calm sessions", () => {
@@ -303,7 +303,7 @@ describe("recommendation engine", () => {
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recommendedDuration).toBeGreaterThan(900);
-    expect(rec.recommendationType).toBe("keep_same_duration");
+    expect(rec.recommendationType).toBe("increase_duration");
   });
 
   it("still falls back to recovery mode for distress sessions", () => {
@@ -377,7 +377,7 @@ describe("recommendation engine", () => {
     expect(rec.recoveryMode.active).toBe(true);
   });
 
-  it("allows a small increase after five-session plateau", () => {
+  it("uses non-hold recommendation type for a small increase after five-session plateau", () => {
     const sessions = [
       { date: daysAgo(4), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
       { date: daysAgo(3), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
@@ -387,6 +387,19 @@ describe("recommendation engine", () => {
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recommendedDuration).toBe(630);
+    expect(rec.recommendationType).toBe("increase_duration");
+    expect(rec.recommendationType).not.toBe("keep_same_duration");
+  });
+
+  it("keeps exact duration and hold type in near-threshold plateau hold branch", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 855, distressLevel: "none", belowThreshold: false },
+      { date: hoursAgo(1), plannedDuration: 900, actualDuration: 855, distressLevel: "none", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(900);
+    expect(rec.recommendationType).toBe("keep_same_duration");
   });
 
   it("applies deterministic high/medium/low risk step multipliers in computeNextTarget", () => {
@@ -652,7 +665,7 @@ describe("recommendation engine", () => {
       { id: "c2", date: daysAgo(0), plannedDuration: 760, actualDuration: 760, distressLevel: "none", belowThreshold: true },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600, recoveryState: staleRecoveryState });
-    expect(rec.recommendationType).toBe("keep_same_duration");
+    expect(rec.recommendationType).toBe("increase_duration");
     expect(rec.recoveryMode.active).toBe(false);
     expect(rec.recoveryState?.active).toBe(false);
     expect(rec.recoveryState?.triggerSessionId).toBe(null);
@@ -684,10 +697,17 @@ describe("public compatibility APIs", () => {
     expect(noHistory.recommendationType).toBe("baseline_start");
 
     const keepSameDuration = explainNextTarget([
-      { date: daysAgo(1), plannedDuration: 70, actualDuration: 70, distressLevel: "none", belowThreshold: true },
-      { date: daysAgo(0), plannedDuration: 72, actualDuration: 72, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
     ], [], [], { goalSeconds: 3600 });
     expect(keepSameDuration.recommendationType).toBe("keep_same_duration");
+
+    const increaseDuration = explainNextTarget([
+      { date: daysAgo(2), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+    ], [], [], { goalSeconds: 3600 });
+    expect(increaseDuration.recommendationType).toBe("increase_duration");
 
     const repeatCurrent = explainNextTarget([
       { date: daysAgo(2), plannedDuration: 300, actualDuration: 120, distressLevel: "none", belowThreshold: false },
@@ -718,11 +738,12 @@ describe("public compatibility APIs", () => {
     ], { goalSeconds: 3600 });
     expect(cueFirst.recommendationType).toBe("departure_cues_first");
 
-    const results = [noHistory, keepSameDuration, repeatCurrent, recoveryActive, recoveryResume, cueFirst];
+    const results = [noHistory, keepSameDuration, increaseDuration, repeatCurrent, recoveryActive, recoveryResume, cueFirst];
     const emittedTypes = new Set(results.map((result) => result.recommendationType));
     expect(emittedTypes).toEqual(new Set([
       "baseline_start",
       "keep_same_duration",
+      "increase_duration",
       "repeat_current_duration",
       "recovery_mode_active",
       "recovery_mode_resume",
