@@ -81,6 +81,7 @@ describe("storage normalization", () => {
     });
 
     expect(session.distressLevel).toBe("active");
+    expect(session.distressSeverity).toBe("active");
   });
 
   it("keeps known success rows calm", () => {
@@ -101,6 +102,45 @@ describe("storage normalization", () => {
     });
 
     expect(session.distressLevel).toBe("severe");
+    expect(session.distressSeverity).toBe("severe");
+  });
+
+  it("keeps malformed rows canonical and consistent", () => {
+    const session = normalizeSession({
+      id: "s-malformed-distress",
+      distressLevel: "unknown-value",
+      distressSeverity: "invalid-value",
+      result: "not-a-real-result",
+    });
+
+    expect(session.distressLevel).toBe("none");
+    expect(session.distressSeverity).toBe("none");
+  });
+
+  it("canonicalizes explicit distress rows from distressLevel", () => {
+    const session = normalizeSession({
+      id: "s-explicit-active",
+      distressLevel: "active",
+      distressSeverity: "none",
+      result: "success",
+    });
+
+    expect(session.distressLevel).toBe("active");
+    expect(session.distressSeverity).toBe("active");
+  });
+
+  it("prefers reconstructed legacy severe level over conflicting raw severity", () => {
+    const session = normalizeSession({
+      id: "s-legacy-reconstructed-severe",
+      distressLevel: "active",
+      distressSeverity: "none",
+      distressType: "__severity:severe|panic",
+      result: "distress",
+    });
+
+    expect(session.distressLevel).toBe("severe");
+    expect(session.distressSeverity).toBe("severe");
+    expect(session.distressType).toBe("panic");
   });
 
   it("does not allow malformed explicit below-threshold values to override inference", () => {
