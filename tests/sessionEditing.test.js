@@ -159,5 +159,16 @@ describe("duration normalization", () => {
     });
 
     expect(normalized.distressLevel).toBe("none");
+  it("infers belowThreshold when explicit field is missing", () => {
+    const normalized = normalizeSession({
+      id: "legacy-2",
+      date: daysAgo(0),
+      planned_duration: 120,
+      actual_duration: 120,
+      distress_level: "none",
+      result: "success",
+    });
+
+    expect(normalized.belowThreshold).toBe(true);
   });
 });

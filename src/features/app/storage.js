@@ -1,4 +1,4 @@
-import { PROTOCOL, normalizeDistressLevel } from "../../lib/protocol";
+import { PROTOCOL, inferBelowThreshold, normalizeDistressLevel } from "../../lib/protocol";
 import { sortByDateAsc } from "../../lib/activityDateTime";
 import { normalizeWalkType } from "./helpers";
 
@@ -311,11 +311,12 @@ export const normalizeSession = (row = {}) => {
       salivation: normalizeSymptom(symptoms.salivation),
     },
     latencyToFirstDistress: Number.isFinite(row.latencyToFirstDistress) ? row.latencyToFirstDistress : (Number.isFinite(row.latency_to_first_distress) ? row.latency_to_first_distress : null),
-    belowThreshold: hasValue(row.belowThreshold)
-      ? !!row.belowThreshold
-      : hasValue(row.below_threshold)
-        ? asBool(row.below_threshold)
-        : undefined,
+    belowThreshold: inferBelowThreshold({
+      ...row,
+      distressLevel: restoredLegacyDistress.distressLevel,
+      actualDuration,
+      plannedDuration,
+    }),
     distressType: restoredLegacyDistress.distressType,
     distressSeverity: normalizedDistressSeverity,
     videoReview: {
@@ -371,7 +372,7 @@ export const mergeSessionWithDerivedFields = (session = {}, updates = {}) => {
       ? "none"
       : merged.distressType || null,
     result: distressLevel === "none" ? "success" : "distress",
-    belowThreshold: distressLevel === "none" && actualDuration >= plannedDuration,
+    belowThreshold: inferBelowThreshold({ distressLevel, actualDuration, plannedDuration }),
     latencyToFirstDistress,
     recoverySeconds: distressLevel === "none"
       ? 0

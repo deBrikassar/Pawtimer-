@@ -107,6 +107,40 @@ function ratio(actual, planned) {
   return clamp01((Number(actual) || 0) / p);
 }
 
+export function inferBelowThreshold(session = {}) {
+  const toExplicitBool = (value) => {
+    if (value == null) return null;
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return value !== 0;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["true", "1", "yes"].includes(normalized)) return true;
+      if (["false", "0", "no"].includes(normalized)) return false;
+    }
+    return Boolean(value);
+  };
+
+  const explicit = toExplicitBool(
+    session?.belowThreshold
+    ?? session?.below_threshold
+    ?? session?.stayedBelowThreshold,
+  );
+  if (explicit != null) return explicit;
+
+  const distress = normalizeDistressLevel(
+    session?.distressLevel
+    ?? session?.distress_level
+    ?? session?.distressSeverity
+    ?? session?.distress_severity,
+  );
+  if (distress !== DISTRESS_LEVELS.NONE) return false;
+
+  const actual = Number(session?.actualDuration);
+  const planned = Number(session?.plannedDuration);
+  if (!Number.isFinite(actual) || !Number.isFinite(planned)) return false;
+  return actual >= planned;
+}
+
 function getLatestSessions(sessions, count) {
   if (!Array.isArray(sessions)) return [];
   return sessions.slice(-count);
@@ -230,12 +264,12 @@ function toRichSession(session = {}) {
     : level === DISTRESS_LEVELS.NONE
       ? actual
       : Math.min(actual, planned);
-  const belowThreshold = Boolean(
-    session.belowThreshold
-    ?? session.below_threshold
-    ?? session.stayedBelowThreshold
-    ?? (level === DISTRESS_LEVELS.NONE && ratio(actual, planned) >= 0.98),
-  );
+  const belowThreshold = inferBelowThreshold({
+    ...session,
+    distressLevel: level,
+    actualDuration: actual,
+    plannedDuration: planned,
+  });
 
   const departureType = session?.context?.departureType
     || session?.context?.departure_type
