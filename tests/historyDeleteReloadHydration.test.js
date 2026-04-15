@@ -151,6 +151,29 @@ describe("history delete + reload hydration runtime", () => {
     expect(visibleAfterReload.map((row) => row.id)).toEqual(["sess-1", "sess-3"]);
   });
 
+  it("delete of syncing session stays deleted across stale reload + sync replay", () => {
+    const syncingSeed = [{
+      ...baseSessions[0],
+      id: "sess-syncing",
+      pendingSync: true,
+      syncState: "syncing",
+      revision: 7,
+      updatedAt: iso("2026-04-13T09:00:00Z"),
+    }];
+    const harness = buildDeleteHarness({ dogId: "DOG-SYNCING-DEL", sessionsSeed: syncingSeed });
+
+    harness.actions.confirmHistoryDelete({ mode: "delete", kind: "session", id: "sess-syncing", label: "Training session" }, vi.fn());
+
+    // Simulate stale sync/reload writing pre-delete session payload back to local storage.
+    save(sessKey(harness.dogId), syncingSeed);
+
+    const visibleAfterReload = harness.reloadVisibleSessions();
+    expect(visibleAfterReload).toEqual([]);
+    expect(harness.getTombstones()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "sess-syncing", kind: "session", pendingSync: true }),
+    ]));
+  });
+
   it("delete multiple + reload preserves remaining sessions and keeps log populated", () => {
     const harness = buildDeleteHarness();
 
