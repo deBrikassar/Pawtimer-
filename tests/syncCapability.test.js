@@ -47,6 +47,59 @@ describe("sync capability outbound enforcement", () => {
     expect(message).toContain("2 local changes cannot sync");
   });
 
+  it("treats pattern tombstones as unsupported when patterns table is missing", () => {
+    const pending = [{ kind: "pattern", entry: { id: "pat-deleted", kind: "pattern", pendingSync: true } }];
+    const partitioned = partitionPendingOutboundByCapability(pending, partialCapability);
+    expect(partitioned.supported).toHaveLength(0);
+    expect(partitioned.unsupported).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "pattern", entry: expect.objectContaining({ id: "pat-deleted" }) }),
+    ]));
+  });
+
+  it("treats feeding tombstones as unsupported when feedings table is missing", () => {
+    const pending = [{ kind: "feeding", entry: { id: "feed-deleted", kind: "feeding", pendingSync: true } }];
+    const partitioned = partitionPendingOutboundByCapability(pending, partialCapability);
+    expect(partitioned.supported).toHaveLength(0);
+    expect(partitioned.unsupported).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "feeding", entry: expect.objectContaining({ id: "feed-deleted" }) }),
+    ]));
+  });
+
+  it("keeps supported tombstones eligible for normal push", () => {
+    const pending = [{ kind: "session", entry: { id: "sess-deleted", kind: "session", pendingSync: true } }];
+    const partitioned = partitionPendingOutboundByCapability(pending, partialCapability);
+    expect(partitioned.supported).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "session", entry: expect.objectContaining({ id: "sess-deleted" }) }),
+    ]));
+    expect(partitioned.unsupported).toHaveLength(0);
+  });
+
+  it("does not requeue unsupported tombstones for retry across sync cycles", () => {
+    const pending = [{ kind: "pattern", entry: { id: "pat-deleted", kind: "pattern", pendingSync: true } }];
+    const firstCycle = partitionPendingOutboundByCapability(pending, partialCapability);
+    const secondCycle = partitionPendingOutboundByCapability(firstCycle.unsupported, partialCapability);
+    expect(firstCycle.supported).toHaveLength(0);
+    expect(secondCycle.supported).toHaveLength(0);
+    expect(secondCycle.unsupported).toHaveLength(1);
+  });
+
+  it("keeps sync summary explicitly partial for unsupported tombstones", () => {
+    const summary = computeSyncSummary({
+      syncEnabled: true,
+      sessions: [],
+      walks: [],
+      patterns: [],
+      feedings: [],
+      tombstones: [{ id: "pat-deleted", kind: "pattern", pendingSync: true, syncState: SYNC_STATE.UNSUPPORTED }],
+      syncStatus: "partial",
+      syncError: "Partial sync active: patterns unavailable. 1 local change cannot sync until those tables are available.",
+    });
+
+    expect(summary.badgeState).toBe("idle");
+    expect(summary.label).toBe("Partial sync");
+    expect(summary.detail).toContain("cannot sync");
+  });
+
   it("reports partial status cleanly when unsupported local entries are present", () => {
     const summary = computeSyncSummary({
       syncEnabled: true,

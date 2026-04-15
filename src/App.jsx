@@ -617,12 +617,28 @@ export default function PawTimer() {
           );
         });
 
+        const pendingTombstoneEntries = mergedTombstones
+          .filter((entry) => entry.pendingSync)
+          .map((entry) => ({ kind: entry.kind, entry }));
+        const {
+          supported: supportedPendingTombstones,
+          unsupported: unsupportedPendingTombstones,
+        } = partitionPendingOutboundByCapability(pendingTombstoneEntries, remote?.syncCapability);
+        unsupportedPendingTombstones.forEach(({ entry }) => {
+          setTombstoneSyncState(
+            entry.id,
+            entry.kind,
+            SYNC_STATE.UNSUPPORTED,
+            "Delete marker blocked by current backend capability profile; retained locally until table support is available.",
+          );
+        });
+
         let allPendingFlushed = true;
         for (const { kind, entry } of supportedPendingEntries) {
           const pushed = await pushPendingEntry(kind, entry, dogSettings);
           allPendingFlushed = allPendingFlushed && pushed;
         }
-        for (const tombstone of mergedTombstones.filter((entry) => entry.pendingSync)) {
+        for (const { entry: tombstone } of supportedPendingTombstones) {
           const pushed = await pushPendingTombstone(tombstone, dogSettings);
           allPendingFlushed = allPendingFlushed && pushed;
         }
@@ -643,7 +659,10 @@ export default function PawTimer() {
           },
         }));
         const isPartialSync = remote?.syncCapability?.mode === "partial";
-        const partialSyncMessage = buildPartialCapabilitySyncMessage(remote?.syncCapability, unsupportedPendingEntries.length);
+        const partialSyncMessage = buildPartialCapabilitySyncMessage(
+          remote?.syncCapability,
+          unsupportedPendingEntries.length + unsupportedPendingTombstones.length,
+        );
         setSyncError(error || partialSyncMessage);
         setSyncStatus(error ? "err" : isPartialSync ? "partial" : "ok");
       } finally {
