@@ -198,7 +198,7 @@ const stableStringify = (value) => {
 const rankSyncCausality = (item = {}) => {
   const pendingSyncScore = Boolean(item?.pendingSync) ? 2 : 0;
   const syncStateScore = LOCAL_SYNC_STATES.has(item?.syncState) ? 1 : 0;
-  const replicationScore = item?.replicationConfirmed === false ? 1 : 0;
+  const replicationScore = item?.replicationConfirmed === false && Boolean(item?.pendingSync) ? 1 : 0;
   return pendingSyncScore + syncStateScore + replicationScore;
 };
 
@@ -277,7 +277,12 @@ export const resolveSyncConflict = (left = {}, right = {}) => {
 
   if (leftDeletedAt || rightDeletedAt) {
     if (leftDeletedAt !== rightDeletedAt) return leftDeletedAt > rightDeletedAt ? left : right;
-    if (leftDeletedAt && rightDeletedAt) return leftDeletedAt >= rightDeletedAt ? left : right;
+    if (leftDeletedAt && rightDeletedAt) {
+      const leftConfirmed = left?.replicationConfirmed === true;
+      const rightConfirmed = right?.replicationConfirmed === true;
+      if (leftConfirmed !== rightConfirmed) return leftConfirmed ? left : right;
+      return leftDeletedAt >= rightDeletedAt ? left : right;
+    }
     return leftDeletedAt ? left : right;
   }
 
