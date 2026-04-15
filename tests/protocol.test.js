@@ -3,6 +3,7 @@ import {
   PROTOCOL,
   calculateTrainingStats,
   buildRecommendation,
+  computeNextTarget,
   explainNextTarget,
   mapLegacySession,
   suggestNext,
@@ -215,6 +216,22 @@ describe("recommendation engine", () => {
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recommendedDuration).toBe(630);
+  });
+
+  it("applies deterministic high/medium/low risk step multipliers in computeNextTarget", () => {
+    const sessions = [
+      { date: hoursAgo(1), plannedDuration: 300, actualDuration: 300, distressLevel: "none", belowThreshold: true },
+    ];
+
+    const highRisk = computeNextTarget(sessions, { goalSeconds: 3600, relapseRisk: 0.8 });
+    const mediumRisk = computeNextTarget(sessions, { goalSeconds: 3600, relapseRisk: 0.6 });
+    const lowRisk = computeNextTarget(sessions, { goalSeconds: 3600, relapseRisk: 0.2 });
+
+    expect(highRisk.recommendedDuration).toBe(291);
+    expect(mediumRisk.recommendedDuration).toBe(325);
+    expect(lowRisk.recommendedDuration).toBe(342);
+    expect(highRisk.recommendedDuration).toBeLessThan(mediumRisk.recommendedDuration);
+    expect(mediumRisk.recommendedDuration).toBeLessThan(lowRisk.recommendedDuration);
   });
 
   it("does not chain more than one consecutive increase after subtle stress", () => {
