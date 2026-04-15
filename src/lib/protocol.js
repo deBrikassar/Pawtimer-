@@ -1,4 +1,4 @@
-import { sortByDateAsc as sortByDateAscShared } from "./dateSort";
+import { sortValidDateAsc } from "./dateSort";
 
 export const PROTOCOL = {
   sessionsPerDayDefault: 1,
@@ -163,7 +163,7 @@ function isCalmBelowThreshold(session = {}) {
   );
 }
 
-const sortByDateAsc = (sessions = []) => sortByDateAscShared(sessions, { invalidPolicy: "drop" });
+const sortByDateAsc = (sessions = []) => sortValidDateAsc(sessions);
 
 function isProgressionEligibleSession(session = {}) {
   const distress = normalizeDistressLevel(session?.distressLevel);

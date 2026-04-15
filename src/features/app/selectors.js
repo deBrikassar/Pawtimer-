@@ -1,11 +1,9 @@
 import { PROTOCOL, getCalmStreak, getDistressCounts, getRecentHighDistressSummary } from "../../lib/protocol";
+import { hasValidDate, sortValidDateAsc, toTimestampOrNull } from "../../lib/dateSort";
 import { dailyInfo, distressLabel, fmt, getInformationalTone, getLeaveProfile, getRiskTone, isToday, patternInfo, toDayKey } from "./helpers";
 
 const hasValue = (value) => value !== null && value !== undefined;
-const toSortableTimestamp = (value) => {
-  const parsed = new Date(value ?? "").getTime();
-  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
-};
+const toSortableTimestamp = (value) => toTimestampOrNull(value) ?? Number.NEGATIVE_INFINITY;
 const resolveActivityDate = (entry = {}) => (
   entry?.date
   ?? entry?.updatedAt
@@ -28,13 +26,14 @@ const statusTone = (value, { good, warn, invert = false }) => {
 };
 
 export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, feedings, target, protoOverride, recommendation }) {
+  const canonicalSessions = sortValidDateAsc(sessions);
   const dog = dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase());
   const name = dog?.dogName ?? "your dog";
   const goalSec = dog?.goalSeconds ?? 2400;
   const goalPct = Math.min((target / goalSec) * 100, 100);
   const activeProto = { ...PROTOCOL, ...protoOverride };
 
-  const daily = dailyInfo(sessions);
+  const daily = dailyInfo(canonicalSessions);
   const capPct = Math.min((daily.usedSec / daily.capSec) * 100, 100);
   const leaveProfile = getLeaveProfile(dog?.leavesPerDay);
   const pattern = patternInfo(patterns, walks, dog?.leavesPerDay, activeProto);
@@ -57,23 +56,23 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     return `${pattern.todayPat} of ${pattern.recMin}–${pattern.recMax} pattern breaks done for a ${leaveProfile.desc}. Do a few more at random times — not before walks, just scattered through the day.`;
   })();
 
-  const totalCount = sessions.length;
-  const bestCalm = sessions.filter((s) => s.distressLevel === "none").reduce((m, s) => Math.max(m, s.actualDuration), 0);
+  const totalCount = canonicalSessions.length;
+  const bestCalm = canonicalSessions.filter((s) => s.distressLevel === "none").reduce((m, s) => Math.max(m, s.actualDuration), 0);
   const avgWalkDuration = walks.length ? walks.reduce((sum, w) => sum + (Number.isFinite(w.duration) ? w.duration : 0), 0) / walks.length : null;
-  const uniqueSessionDays = new Set(sessions.map((s) => toDayKey(s.date)).filter(Boolean));
+  const uniqueSessionDays = new Set(canonicalSessions.map((s) => toDayKey(s.date)).filter(Boolean));
   const uniqueWalkDays = new Set(walks.map((w) => toDayKey(w.date)).filter(Boolean));
   const avgSessionsPerDay = uniqueSessionDays.size ? totalCount / uniqueSessionDays.size : null;
   const avgWalksPerDay = uniqueWalkDays.size ? walks.length / uniqueWalkDays.size : null;
   const recentWeekCutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
-  const aloneLastWeek = sessions.reduce((sum, s) => {
+  const aloneLastWeek = canonicalSessions.reduce((sum, s) => {
     const ts = new Date(s.date).getTime();
     if (!Number.isFinite(ts) || ts < recentWeekCutoff) return sum;
     return sum + (Number.isFinite(s.actualDuration) ? s.actualDuration : 0);
   }, 0);
-  const streak = getCalmStreak(sessions);
-  const lastSess = sessions[sessions.length - 1];
+  const streak = getCalmStreak(canonicalSessions);
+  const lastSess = canonicalSessions[canonicalSessions.length - 1];
 
-  const recommendationCoverageCount = sessions.filter((s) =>
+  const recommendationCoverageCount = canonicalSessions.filter((s) =>
     (hasValue(s.context?.timeOfDay) || hasValue(s.context?.departureType) || (Array.isArray(s.context?.cuesUsed) && s.context.cuesUsed.length > 0))
     && ["barking", "pacing", "destructive", "salivation"].some((k) => hasValue(s.symptoms?.[k]))
     && hasValue(s.recoverySeconds)
@@ -86,7 +85,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
     cutoff.setDate(cutoff.getDate() - (days - 1));
-    const windowSessions = sessions.filter((s) => {
+    const windowSessions = canonicalSessions.filter((s) => {
       const d = new Date(s.date);
       return !isNaN(d) && d >= cutoff;
     });
@@ -100,13 +99,13 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   const doseMultiplier = leaveProfile.confidenceScale;
   const adjustedTarget = Math.max(activeProto.startDurationSeconds, Math.round(target * doseMultiplier));
   const recommendationConfidence = (() => {
-    if (!sessions.length) return "building";
-    const recent = sessions.slice(-8);
+    if (!canonicalSessions.length) return "building";
+    const recent = canonicalSessions.slice(-8);
     const calmRecent = recent.filter((s) => s.distressLevel === "none").length;
     const subtleRecent = recent.filter((s) => s.distressLevel === "subtle").length;
     const activeRecent = recent.filter((s) => s.distressLevel === "active").length;
     const severeRecent = recent.filter((s) => s.distressLevel === "severe").length;
-    const sessionVolumeScore = Math.min(1, sessions.length / 12);
+    const sessionVolumeScore = Math.min(1, canonicalSessions.length / 12);
     const qualityScore = Math.max(0, Math.min(1, (calmRecent + (subtleRecent * 0.45) - (activeRecent * 0.7) - (severeRecent * 0.9)) / Math.max(1, recent.length)));
     const streakScore = Math.min(1, streak / 5);
     const weighted = (sessionVolumeScore * 0.3) + (qualityScore * 0.5) + (streakScore * 0.2);
@@ -115,7 +114,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     return "building";
   })();
 
-  const calmDurations = sessions.filter((s) => s.distressLevel === "none" && Number.isFinite(s.actualDuration)).map((s) => s.actualDuration).slice(-11);
+  const calmDurations = canonicalSessions.filter((s) => s.distressLevel === "none" && Number.isFinite(s.actualDuration)).map((s) => s.actualDuration).slice(-11);
   const calmMedian = (() => {
     if (!calmDurations.length) return null;
     const sorted = [...calmDurations].sort((a, b) => a - b);
@@ -123,14 +122,14 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     return sorted.length % 2 === 0 ? Math.round((sorted[mid - 1] + sorted[mid]) / 2) : sorted[mid];
   })();
   const durationVariability = (() => {
-    const durations = sessions.map((s) => s.actualDuration).filter((n) => Number.isFinite(n));
+    const durations = canonicalSessions.map((s) => s.actualDuration).filter((n) => Number.isFinite(n));
     if (durations.length < 2) return null;
     const mean = durations.reduce((sum, n) => sum + n, 0) / durations.length;
     const variance = durations.reduce((sum, n) => sum + ((n - mean) ** 2), 0) / durations.length;
     return Math.round(Math.sqrt(variance));
   })();
 
-  const recentHighDistress = getRecentHighDistressSummary(sessions);
+  const recentHighDistress = getRecentHighDistressSummary(canonicalSessions);
   const decisionState = unifiedRecommendation.decisionState || null;
 
   const trainingReadiness = (() => {
@@ -172,7 +171,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     return getRiskTone(decisionState?.riskLevel || "medium");
   })();
 
-  const chartData = sessions.slice(-25).map((s, i) => ({
+  const chartData = canonicalSessions.slice(-25).map((s, i) => ({
     session: i + 1,
     durationSeconds: s.actualDuration,
     durationMinutes: Math.round(s.actualDuration / 60 * 10) / 10,
@@ -202,7 +201,9 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   })();
 
   const timeline = [
-    ...sessions.map((s, idx) => ({ kind: "session", date: resolveActivityDate(s), data: s, sourceOrder: idx })),
+    ...canonicalSessions
+      .filter((s) => hasValidDate(resolveActivityDate(s)))
+      .map((s, idx) => ({ kind: "session", date: resolveActivityDate(s), data: s, sourceOrder: idx })),
     ...walks.map((w, idx) => ({ kind: "walk", date: resolveActivityDate(w), data: w, sourceOrder: idx })),
     ...patterns.map((p, idx) => ({ kind: "pat", date: resolveActivityDate(p), data: p, sourceOrder: idx })),
     ...feedings.map((f, idx) => ({ kind: "feeding", date: resolveActivityDate(f), data: f, sourceOrder: idx })),
@@ -214,7 +215,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
       return a.sourceOrder - b.sourceOrder;
     });
 
-  const distressCounts = getDistressCounts(sessions);
+  const distressCounts = getDistressCounts(canonicalSessions);
 
   return {
     dog,

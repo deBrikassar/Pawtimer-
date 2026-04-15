@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { PROTOCOL, explainNextTarget, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { sortByDateAsc } from "./lib/activityDateTime";
+import { sortValidDateAsc } from "./lib/dateSort";
 import { selectAppData } from "./features/app/selectors";
 import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeById, mergeSessionWithDerivedFields, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, save, sessKey, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
 import { fmt, fmtClock, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
@@ -198,10 +199,12 @@ export default function PawTimer() {
     () => dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId)) ?? null,
     [activeDogId, dogs],
   );
+  const canonicalSessions = useMemo(() => sortValidDateAsc(sessions), [sessions]);
   const deriveRecommendation = useCallback((nextSessions, nextWalks = walks, nextPatterns = patterns, nextDog = activeDog || {}) => {
-    const details = explainNextTarget(nextSessions, nextWalks, nextPatterns, nextDog || {});
+    const logicalSessions = sortValidDateAsc(nextSessions);
+    const details = explainNextTarget(logicalSessions, nextWalks, nextPatterns, nextDog || {});
     const recommendedDuration = details?.recommendedDuration
-      ?? (suggestNextWithContext(nextSessions, nextWalks, nextPatterns, nextDog) ?? suggestNext(nextSessions, nextDog));
+      ?? (suggestNextWithContext(logicalSessions, nextWalks, nextPatterns, nextDog) ?? suggestNext(logicalSessions, nextDog));
     return {
       duration: recommendedDuration,
       decisionState: details?.decisionState ?? null,
@@ -210,14 +213,13 @@ export default function PawTimer() {
     };
   }, [activeDog, patterns, walks]);
 
-  const sortedSessions = useMemo(() => sortByDateAsc(sessions), [sessions]);
   const recommendation = useMemo(() => {
-    return deriveRecommendation(sortedSessions, walks, patterns, activeDog || {});
-  }, [activeDog, deriveRecommendation, patterns, sortedSessions, walks]);
+    return deriveRecommendation(canonicalSessions, walks, patterns, activeDog || {});
+  }, [activeDog, canonicalSessions, deriveRecommendation, patterns, walks]);
   const appData = selectAppData({
     dogs,
     activeDogId,
-    sessions: sortedSessions,
+    sessions: canonicalSessions,
     walks,
     patterns,
     feedings,
@@ -890,8 +892,8 @@ export default function PawTimer() {
           </div>
         </div>
 
-        {tab === "home" && <HomeScreen name={appData.name} sessions={sessions} recommendation={appData.recommendation} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} />}
-        {tab === "history" && <HistoryScreen timeline={appData.timeline} sessions={sessions} name={appData.name} setTab={setTab} patLabels={patLabels} historyModal={historyModal} setHistoryModal={setHistoryModal} actions={historyActions} />}
+        {tab === "home" && <HomeScreen name={appData.name} sessions={canonicalSessions} recommendation={appData.recommendation} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} />}
+        {tab === "history" && <HistoryScreen timeline={appData.timeline} sessions={canonicalSessions} name={appData.name} setTab={setTab} patLabels={patLabels} historyModal={historyModal} setHistoryModal={setHistoryModal} actions={historyActions} />}
         {tab === "progress" && <StatsScreen name={appData.name} totalCount={appData.totalCount} setTab={setTab} bestCalm={appData.bestCalm} recommendation={appData.recommendation} relapseTone={appData.relapseTone} chartData={appData.chartData} goalSec={appData.goalSec} CustomDot={CustomDot} distressLabel={appData.distressLabel} chartTrendLabel={appData.chartTrendLabel} aloneLastWeek={appData.aloneLastWeek} avgWalkDuration={appData.avgWalkDuration} avgSessionsPerDay={appData.avgSessionsPerDay} avgWalksPerDay={appData.avgWalksPerDay} headlineStatus={appData.headlineStatus} headlineStatusTone={appData.headlineStatusTone} />}
         {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} recommendation={appData.recommendation} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} syncDegradation={syncDegradation} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} setOnboardingState={setOnboardingState} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} clearDogActivityState={clearDogActivityState} />}
       </div>

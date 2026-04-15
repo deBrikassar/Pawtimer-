@@ -65,6 +65,34 @@ describe("activity log materialization regression guard", () => {
     expect(app.timeline).toHaveLength(4);
   });
 
+  it("keeps timeline ordering deterministic while excluding invalid-dated session rows from logic", () => {
+    const sessions = [
+      { id: "sess-invalid", date: "invalid-date", plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { id: "sess-valid", date: daysAgo(3), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+    ];
+    const walks = [{ id: "walk-1", date: daysAgo(2), duration: 300, type: "exercise" }];
+    const patterns = [{ id: "pat-1", date: daysAgo(1), type: "keys" }];
+    const feedings = [{ id: "feed-1", date: daysAgo(0), foodType: "meal", amount: "small" }];
+    const recommendation = { duration: 900, decisionState: null, details: {}, explanation: "" };
+
+    const app = selectAppData({
+      ...baseArgs,
+      sessions,
+      walks,
+      patterns,
+      feedings,
+      recommendation,
+    });
+
+    expect(app.totalCount).toBe(1);
+    expect(app.timeline.map((entry) => `${entry.kind}:${entry.data.id}`)).toEqual([
+      "feeding:feed-1",
+      "pat:pat-1",
+      "walk:walk-1",
+      "session:sess-valid",
+    ]);
+  });
+
   it("retains PT-LOGIC-003 plateau hold behavior for repeated near-threshold sessions", () => {
     const sessions = [
       { id: "s-1", date: daysAgo(2), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
