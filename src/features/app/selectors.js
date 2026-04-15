@@ -2,6 +2,18 @@ import { PROTOCOL, getCalmStreak, getDistressCounts, getRecentHighDistressSummar
 import { dailyInfo, distressLabel, fmt, getInformationalTone, getLeaveProfile, getRiskTone, isToday, patternInfo, toDayKey } from "./helpers";
 
 const hasValue = (value) => value !== null && value !== undefined;
+const toSortableTimestamp = (value) => {
+  const parsed = new Date(value ?? "").getTime();
+  return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+};
+const resolveActivityDate = (entry = {}) => (
+  entry?.date
+  ?? entry?.updatedAt
+  ?? entry?.updated_at
+  ?? entry?.createdAt
+  ?? entry?.created_at
+  ?? null
+);
 
 const statusTone = (value, { good, warn, invert = false }) => {
   if (value == null) return getInformationalTone("neutral");
@@ -190,11 +202,17 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   })();
 
   const timeline = [
-    ...sessions.map((s) => ({ kind: "session", date: s.date, data: s })),
-    ...walks.map((w) => ({ kind: "walk", date: w.date, data: w })),
-    ...patterns.map((p) => ({ kind: "pat", date: p.date, data: p })),
-    ...feedings.map((f) => ({ kind: "feeding", date: f.date, data: f })),
-  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+    ...sessions.map((s, idx) => ({ kind: "session", date: resolveActivityDate(s), data: s, sourceOrder: idx })),
+    ...walks.map((w, idx) => ({ kind: "walk", date: resolveActivityDate(w), data: w, sourceOrder: idx })),
+    ...patterns.map((p, idx) => ({ kind: "pat", date: resolveActivityDate(p), data: p, sourceOrder: idx })),
+    ...feedings.map((f, idx) => ({ kind: "feeding", date: resolveActivityDate(f), data: f, sourceOrder: idx })),
+  ]
+    .filter((entry) => entry?.data?.id)
+    .sort((a, b) => {
+      const byDateDesc = toSortableTimestamp(b.date) - toSortableTimestamp(a.date);
+      if (byDateDesc !== 0) return byDateDesc;
+      return a.sourceOrder - b.sourceOrder;
+    });
 
   const distressCounts = getDistressCounts(sessions);
 
