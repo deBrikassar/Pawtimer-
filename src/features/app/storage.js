@@ -258,6 +258,35 @@ const resolveDurationSeconds = (row = {}, config = {}) => {
   return null;
 };
 
+const EXPLICIT_DISTRESS_RESULT_ALIASES = new Set([
+  "distress",
+  "subtle",
+  "mild",
+  "passive",
+  "active",
+  "strong",
+  "severe",
+  "panic",
+]);
+
+const normalizeRawToken = (value) => {
+  if (value == null) return null;
+  const normalized = String(value).trim().toLowerCase();
+  return normalized || null;
+};
+
+const inferDistressLevelFromRow = (row = {}) => {
+  const explicitDistressLevel = normalizeRawToken(row.distressLevel ?? row.distress_level);
+  if (explicitDistressLevel) return explicitDistressLevel;
+
+  const normalizedResult = normalizeRawToken(row.result);
+  if (normalizedResult === "success") return "none";
+  if (normalizedResult && EXPLICIT_DISTRESS_RESULT_ALIASES.has(normalizedResult)) {
+    return normalizedResult === "distress" ? "strong" : normalizedResult;
+  }
+  return null;
+};
+
 export const normalizeSession = (row = {}) => {
   const context = row.context ?? {};
   const symptoms = row.symptoms ?? {};
@@ -266,7 +295,7 @@ export const normalizeSession = (row = {}) => {
   const normalizedDistressType = row.distressType ?? row.distress_type ?? null;
   const normalizedDistressSeverity = row.distressSeverity ?? row.distress_severity ?? null;
   const restoredLegacyDistress = decodeLegacyDistressFields({
-    distressLevel: row.distressLevel ?? row.distress_level ?? (row.result === "success" ? "none" : "strong"),
+    distressLevel: inferDistressLevelFromRow(row),
     distressType: normalizedDistressType,
     distressSeverity: normalizedDistressSeverity,
   });
