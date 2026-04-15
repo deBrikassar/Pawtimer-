@@ -466,6 +466,45 @@ describe("recommendation engine", () => {
     expect(twoCalm.recommendationType).toBe("recovery_mode_resume");
     expect(twoCalm.recoveryState?.active).toBe(false);
   });
+
+  it("clears stale persisted active recovery when trigger session no longer exists", () => {
+    const staleRecoveryState = {
+      active: true,
+      triggerSessionId: "deleted-trigger",
+      triggerSessionDate: daysAgo(2),
+      anchorDuration: 900,
+      fixedDuration: 60,
+      consecutiveCalm: 1,
+    };
+    const sessions = [
+      { id: "c1", date: daysAgo(1), plannedDuration: 700, actualDuration: 700, distressLevel: "none", belowThreshold: true },
+      { id: "c2", date: daysAgo(0), plannedDuration: 760, actualDuration: 760, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600, recoveryState: staleRecoveryState });
+    expect(rec.recommendationType).toBe("keep_same_duration");
+    expect(rec.recoveryMode.active).toBe(false);
+    expect(rec.recoveryState?.active).toBe(false);
+    expect(rec.recoveryState?.triggerSessionId).toBe(null);
+  });
+
+  it("reconciles persisted active recovery to latest valid stress session when trigger was edited", () => {
+    const persistedForOldTrigger = {
+      active: true,
+      triggerSessionId: "s-old",
+      triggerSessionDate: daysAgo(3),
+      anchorDuration: 600,
+      fixedDuration: 60,
+      consecutiveCalm: 0,
+    };
+    const sessions = [
+      { id: "s-old", date: daysAgo(3), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
+      { id: "s-new", date: daysAgo(1), plannedDuration: 900, actualDuration: 400, distressLevel: "active", belowThreshold: false },
+    ];
+    const rec = computeNextTarget(sessions, { goalSeconds: 3600, recoveryState: persistedForOldTrigger });
+    expect(rec.recommendationType).toBe("recovery_mode_active");
+    expect(rec.recoveryState?.active).toBe(true);
+    expect(rec.recoveryState?.triggerSessionId).toBe("s-new");
+  });
 });
 
 describe("public compatibility APIs", () => {
