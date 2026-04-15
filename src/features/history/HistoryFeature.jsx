@@ -55,14 +55,11 @@ export function useHistoryEditing({
   patLabels,
   showToast,
   pushWithSyncStatus,
-  syncDelete,
-  syncDeleteSessionsForDog,
   addTombstone,
   commitSessions,
   setWalks,
   setPatterns,
   setFeedings,
-  activeDogId,
   stampLocalEntry,
 }) {
   const openHistoryDurationEditor = (kind, entry, setHistoryModal) => {
@@ -210,6 +207,8 @@ export function useHistoryEditing({
     clearSessions: () => {
       if (window.confirm("Clear all training sessions?")) {
         commitSessions((prev) => {
+          // Canonical bulk-clear sync contract:
+          // clear locally and emit per-session tombstones for durable retry.
           prev.forEach((entry) => addTombstone("session", entry));
           return [];
         });

@@ -1139,11 +1139,6 @@ export const syncPushTombstone = async (dogId, tombstone, dogSettings = null) =>
   return res.ok ? { ok: true, error: null } : { ok: false, error: `${kind} tombstone push failed: ${res.error}` };
 };
 
-export const syncDeleteSessionsForDog = async (dogId) => {
-  const res = await sbReq(`sessions?dog_id=eq.${encodeURIComponent(canonicalDogId(dogId))}`, { method: "DELETE" });
-  return res.ok;
-};
-
 export const makeEntryId = (kind, dogId) => `${kind}-${canonicalDogId(dogId)}-${Date.now()}`;
 
 export const hydrateDogFromLocal = (dogId) => {
