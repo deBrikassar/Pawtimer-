@@ -102,4 +102,36 @@ describe("storage normalization", () => {
 
     expect(session.distressLevel).toBe("severe");
   });
+
+  it("does not allow malformed explicit below-threshold values to override inference", () => {
+    const session = normalizeSession({
+      id: "s-invalid-below-threshold",
+      plannedDuration: 120,
+      actualDuration: 90,
+      distressLevel: "none",
+      below_threshold: "maybe",
+    });
+
+    expect(session.belowThreshold).toBe(false);
+  });
+
+  it("accepts canonical explicit below-threshold string values", () => {
+    const trueSession = normalizeSession({
+      id: "s-string-true",
+      plannedDuration: 120,
+      actualDuration: 90,
+      distressLevel: "none",
+      below_threshold: "true",
+    });
+    const falseSession = normalizeSession({
+      id: "s-string-false",
+      plannedDuration: 120,
+      actualDuration: 120,
+      distressLevel: "none",
+      below_threshold: "false",
+    });
+
+    expect(trueSession.belowThreshold).toBe(true);
+    expect(falseSession.belowThreshold).toBe(false);
+  });
 });
