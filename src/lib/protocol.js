@@ -1072,24 +1072,18 @@ function buildCueSessions(patterns = []) {
 
 function describeRecommendationType(type) {
   switch (type) {
+    case "baseline_start":
+      return "With no history yet, PawTimer starts with a short confidence-building target.";
     case "repeat_current_duration":
       return "Recent subtle stress keeps the next target at the current level.";
-    case "reduce_duration":
-      return "Recent active distress triggers a shorter next target.";
-    case "stabilization_block":
-      return "Recent severe distress triggers a deeper step back to stabilize.";
-    case "insert_easy_sessions":
-      return "The plan inserts an easier confidence-building session before pushing higher.";
     case "departure_cues_first":
       return "Pattern-break logs suggest cue practice should come first before stretching duration.";
-    case "subtle_recovery_mode":
-      return "Recent subtle stress triggered two short confidence-recovery sessions before normal progression resumes.";
-    case "subtle_recovery_resume":
-      return "Recovery sessions completed. The next target resumes from the subtle-stress anchor with a 5% step-down.";
     case "recovery_mode_active":
       return "Recovery mode is active: progression is paused and short confidence sessions are required.";
     case "recovery_mode_resume":
-      return "Two calm recovery sessions were completed, so progression resumes at 95% of the anchor.";
+      return "Calm recovery sessions were completed, so progression resumes at a cautious step below the prior anchor.";
+    case "keep_same_duration":
+      return "The next target keeps a steady progression from your recent calm baseline.";
     default:
       return "The next target is adjusted from the current safe-alone estimate.";
   }
@@ -1114,20 +1108,13 @@ function buildRecommendationExplanation({
 
   switch (recommendationType) {
     case "recovery_mode_active":
-    case "subtle_recovery_mode":
       return "Short recovery sessions after stress to rebuild confidence.";
-    case "stabilization_block":
-      return "Reduced after signs of distress to rebuild confidence.";
-    case "reduce_duration":
-      return "Holding shorter sessions due to stress signs.";
-    case "subtle_recovery_resume":
     case "recovery_mode_resume":
       return "Recovery sessions went well, so we are carefully stepping back up.";
     case "departure_cues_first":
       return "Holding duration while cue practice catches up.";
     case "keep_same_duration":
     case "repeat_current_duration":
-    case "insert_easy_sessions":
       if (prev > 0 && next > prev && changePct > 0) {
         return `Increased by ${changePct}% after ${calmLabel}.`;
       }
