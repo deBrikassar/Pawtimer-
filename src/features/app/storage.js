@@ -647,11 +647,7 @@ export const normalizeTombstones = (rows = []) => ensureArray(rows)
 
 const isEntrySuppressedByTombstone = (entry, tombstone) => {
   if (!entry?.id || !tombstone?.id || entry.id !== tombstone.id) return false;
-  const tombstoneSyncState = String(tombstone?.syncState || "").toLowerCase();
-  const hasLocalDeleteIntent = Boolean(tombstone?.pendingSync)
-    || tombstoneSyncState === "local"
-    || tombstoneSyncState === "syncing"
-    || tombstoneSyncState === "error";
+  const hasLocalDeleteIntent = tombstone?.pendingSync === true;
   if (hasLocalDeleteIntent) return true;
   const winner = resolveSyncConflict(
     { ...entry, deletedAt: null },
