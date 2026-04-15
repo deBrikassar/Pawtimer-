@@ -209,6 +209,59 @@ describe("mergeMutationSafeSyncCollection concurrent edits", () => {
     expect(merged).toEqual([]);
   });
 
+
+
+  it("prefers local pending-sync mutation when remote echo has same revision but newer clock", () => {
+    const currentLocal = [{
+      id: "session-skew",
+      date: iso(8),
+      revision: 4,
+      updatedAt: iso(7),
+      result: "distress",
+      pendingSync: true,
+      syncState: "syncing",
+    }];
+    const remoteSessions = [{
+      id: "session-skew",
+      date: iso(8),
+      revision: 4,
+      updatedAt: iso(12),
+      result: "success",
+      pendingSync: false,
+      syncState: "synced",
+    }];
+
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: currentLocal,
+      remoteItems: remoteSessions,
+      kind: "session",
+    });
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].result).toBe("distress");
+    expect(merged[0].pendingSync).toBe(true);
+  });
+
+  it("keeps a local bulk-clear durable against stale remote rows via tombstones", () => {
+    const currentLocal = [];
+    const remoteSessions = [
+      { id: "bulk-1", date: iso(8), revision: 2, updatedAt: iso(8), result: "success" },
+      { id: "bulk-2", date: iso(9), revision: 2, updatedAt: iso(9), result: "distress" },
+    ];
+    const tombstones = [
+      { id: "bulk-1", kind: "session", deletedAt: iso(10), revision: 3, updatedAt: iso(10), pendingSync: true, syncState: "syncing" },
+      { id: "bulk-2", kind: "session", deletedAt: iso(10), revision: 3, updatedAt: iso(10), pendingSync: true, syncState: "syncing" },
+    ];
+
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: currentLocal,
+      remoteItems: remoteSessions,
+      tombstones,
+      kind: "session",
+    });
+
+    expect(merged).toEqual([]);
+  });
   it("keeps in-flight tombstone creation even when remote has no tombstone yet", () => {
     const localTombstones = [{ id: "feeding-1", kind: "feeding", deletedAt: iso(11), revision: 4, updatedAt: iso(11), pendingSync: true }];
     const remoteTombstones = [];
@@ -325,6 +378,13 @@ describe("resolveDogSettingsConflict", () => {
     const remoteDog = { id: "DOG-B", dogName: "Milo Remote", revision: 3, updatedAt: iso(10) };
 
     expect(resolveDogSettingsConflict(localDog, remoteDog)).toEqual(remoteDog);
+  });
+
+  it("prefers local pending sync dog settings when revisions tie under clock skew", () => {
+    const localDog = { id: "DOG-C", dogName: "Nova Local", goalSeconds: 1800, revision: 7, updatedAt: iso(7), pendingSync: true, syncState: "syncing" };
+    const remoteDog = { id: "DOG-C", dogName: "Nova Remote", goalSeconds: 2400, revision: 7, updatedAt: iso(13), pendingSync: false, syncState: "synced" };
+
+    expect(resolveDogSettingsConflict(localDog, remoteDog)).toEqual(localDog);
   });
 
   it("resolves concurrent same-metadata edits deterministically", () => {
