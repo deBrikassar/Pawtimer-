@@ -665,6 +665,19 @@ export const applyTombstonesToCollection = (items = [], tombstones = [], kind = 
   });
 };
 
+export const applyAuthoritativeTombstonesAtCommit = ({
+  sessions = [],
+  walks = [],
+  patterns = [],
+  feedings = [],
+  tombstones = [],
+} = {}) => ({
+  sessions: applyTombstonesToCollection(sessions, tombstones, "session"),
+  walks: applyTombstonesToCollection(walks, tombstones, "walk"),
+  patterns: applyTombstonesToCollection(patterns, tombstones, "pattern"),
+  feedings: applyTombstonesToCollection(feedings, tombstones, "feeding"),
+});
+
 export const TOMBSTONE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 const hasConflictingActiveEntity = (entry, activityByKind = {}) => {

@@ -4,7 +4,7 @@ import { PROTOCOL, explainNextTarget, normalizeDistressLevel, suggestNext, sugge
 import { sortByDateAsc } from "./lib/activityDateTime";
 import { sortValidDateAsc } from "./lib/dateSort";
 import { selectAppData } from "./features/app/selectors";
-import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, pruneTombstonesForRetention, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
+import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyAuthoritativeTombstonesAtCommit, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, pruneTombstonesForRetention, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
 import { markCollectionStorageError, persistJoinedDogState, persistValue } from "./features/app/persistence";
 import { buildPartialCapabilitySyncMessage, partitionPendingOutboundByCapability } from "./features/app/syncCapability";
 import { computeSyncSummary } from "./features/app/syncSummary";
@@ -96,6 +96,7 @@ export default function PawTimer() {
   const startRef = useRef(null);
   const syncInFlightRef = useRef(false);
   const syncSnapshotRef = useRef({ dogs: [], sessions: [], walks: [], patterns: [], feedings: [], tombstones: [] });
+  const tombstonesRef = useRef([]);
   const syncHelpersRef = useRef({
     commitSessions: null,
     commitWalks: null,
@@ -181,6 +182,10 @@ export default function PawTimer() {
   useEffect(() => {
     syncSnapshotRef.current = { dogs, sessions, walks, patterns, feedings, tombstones };
   }, [dogs, sessions, walks, patterns, feedings, tombstones]);
+
+  useEffect(() => {
+    tombstonesRef.current = tombstones;
+  }, [tombstones]);
 
   useEffect(() => { save(DOGS_KEY, dogs); }, [dogs]);
   useEffect(() => { save(ACTIVE_DOG_KEY, canonicalDogId(activeDogId)); }, [activeDogId]);
@@ -334,9 +339,11 @@ export default function PawTimer() {
         if (!writeResult.ok) {
           reportLocalWriteFailure(writeResult.error);
           committed = markCollectionStorageError(normalized, writeResult.error);
+          tombstonesRef.current = committed;
           return committed;
         }
       }
+      tombstonesRef.current = normalized;
       committed = normalized;
       return normalized;
     });
@@ -541,14 +548,25 @@ export default function PawTimer() {
           mapLocalItem: withHydratedSyncState,
           mapRemoteItem: markRemoteEntryConfirmed,
         }));
+        const latestSuppressedCollections = applyAuthoritativeTombstonesAtCommit({
+          sessions: mergedSessions,
+          walks: mergedWalks,
+          patterns: mergedPatterns,
+          feedings: mergedFeedings,
+          tombstones: tombstonesRef.current,
+        });
+        const committedSessions = syncHelpersRef.current.commitSessions(latestSuppressedCollections.sessions);
+        const committedWalks = syncHelpersRef.current.commitWalks(latestSuppressedCollections.walks);
+        const committedPatterns = syncHelpersRef.current.commitPatterns(latestSuppressedCollections.patterns);
+        const committedFeedings = syncHelpersRef.current.commitFeedings(latestSuppressedCollections.feedings);
 
         const currentDog = snapshot.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
         const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : remoteDog;
         const pendingEntries = [
-          ...mergedSessions.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "session", entry })),
-          ...mergedWalks.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "walk", entry })),
-          ...mergedPatterns.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "pattern", entry })),
-          ...mergedFeedings.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "feeding", entry })),
+          ...committedSessions.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "session", entry })),
+          ...committedWalks.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "walk", entry })),
+          ...committedPatterns.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "pattern", entry })),
+          ...committedFeedings.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "feeding", entry })),
         ];
 
         const { supported: supportedPendingEntries, unsupported: unsupportedPendingEntries } = partitionPendingOutboundByCapability(pendingEntries, remote?.syncCapability);
@@ -572,7 +590,7 @@ export default function PawTimer() {
         }
 
         const syncDog = remoteDog ?? currentDog;
-        syncHelpersRef.current.recomputeTarget(mergedSessions, mergedWalks, mergedPatterns, syncDog);
+        syncHelpersRef.current.recomputeTarget(committedSessions, committedWalks, committedPatterns, syncDog);
         if (!allPendingFlushed) {
           setSyncError("Some local changes are still waiting for confirmation.");
           setSyncStatus("err");
@@ -580,10 +598,10 @@ export default function PawTimer() {
         }
         commitTombstones((prev) => pruneTombstonesForRetention(prev, {
           activityByKind: {
-            session: mergedSessions,
-            walk: mergedWalks,
-            pattern: mergedPatterns,
-            feeding: mergedFeedings,
+            session: committedSessions,
+            walk: committedWalks,
+            pattern: committedPatterns,
+            feeding: committedFeedings,
           },
         }));
         const isPartialSync = remote?.syncCapability?.mode === "partial";
