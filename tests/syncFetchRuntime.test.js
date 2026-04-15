@@ -292,7 +292,12 @@ describe("syncFetch runtime fallbacks", () => {
         postedBodies.push(JSON.parse(options.body || "{}"));
         return jsonResponse(201, {});
       }
-      if (path === "sessions") return jsonResponse(200, []);
+      if (path === "sessions") return jsonResponse(200, [{
+        id: "session-dead",
+        deleted_at: "2026-04-02T10:00:00.000Z",
+        revision: 9,
+        updated_at: "2026-04-02T10:00:00.000Z",
+      }]);
       if (path === "walks") return jsonResponse(200, []);
       if (path === "patterns") return jsonResponse(200, []);
       if (path === "feedings") return jsonResponse(200, []);
@@ -332,7 +337,12 @@ describe("syncFetch runtime fallbacks", () => {
         return jsonResponse(201, {});
       }
       if (path === "sessions") return jsonResponse(200, []);
-      if (path === "walks") return jsonResponse(200, []);
+      if (path === "walks") return jsonResponse(200, [{
+        id: "walk-dead",
+        deleted_at: "2026-04-03T09:00:00.000Z",
+        revision: 11,
+        updated_at: "2026-04-03T09:00:00.000Z",
+      }]);
       if (path === "patterns") return jsonResponse(200, []);
       if (path === "feedings") return jsonResponse(200, []);
       throw new Error(`Unexpected path: ${path}`);
@@ -384,7 +394,12 @@ describe("syncFetch runtime fallbacks", () => {
       if (path === "sessions") return jsonResponse(200, []);
       if (path === "walks") return jsonResponse(200, []);
       if (path === "patterns") return jsonResponse(200, []);
-      if (path === "feedings") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, [{
+        id: "feeding-dead",
+        deleted_at: "2026-04-04T08:30:00.000Z",
+        revision: 3,
+        updated_at: "2026-04-04T08:30:00.000Z",
+      }]);
       throw new Error(`Unexpected path: ${path}`);
     });
 
@@ -456,7 +471,12 @@ describe("syncFetch runtime fallbacks", () => {
       }
       if (path === "sessions") return jsonResponse(200, []);
       if (path === "walks") return jsonResponse(200, []);
-      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "patterns") return jsonResponse(200, [{
+        id: "pattern-dead",
+        deleted_at: "2026-04-06T09:30:00.000Z",
+        revision: 14,
+        updated_at: "2026-04-06T09:30:00.000Z",
+      }]);
       if (path === "feedings") return jsonResponse(200, []);
       throw new Error(`Unexpected path: ${path}`);
     });
@@ -480,5 +500,37 @@ describe("syncFetch runtime fallbacks", () => {
       revision: 14,
       updated_at: "2026-04-06T09:30:00.000Z",
     });
+  });
+
+  it("keeps tombstone pending when Supabase upsert returns ok but row is still active", async () => {
+    global.fetch = vi.fn(async (url, options = {}) => {
+      const { path } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(201, {});
+      if (path === "sessions" && (options.method || "GET") === "POST") return jsonResponse(201, {});
+      if (path === "sessions") {
+        return jsonResponse(200, [{
+          id: "session-still-active",
+          deleted_at: null,
+          revision: 12,
+          updated_at: "2026-04-07T11:00:00.000Z",
+        }]);
+      }
+      if (path === "walks") return jsonResponse(200, []);
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, []);
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncPushTombstone } = await setupStorageModule();
+    const result = await syncPushTombstone("DOG11", {
+      id: "session-still-active",
+      kind: "session",
+      deletedAt: "2026-04-07T11:30:00.000Z",
+      updatedAt: "2026-04-07T11:30:00.000Z",
+      revision: 13,
+    }, { id: "DOG11", dogName: "Nova" });
+
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("still active");
   });
 });
