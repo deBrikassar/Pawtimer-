@@ -25,6 +25,7 @@ const buildDeleteActions = ({
   commitPatterns,
   commitFeedings,
   syncDelete = vi.fn(() => Promise.resolve(true)),
+  addTombstone = vi.fn(),
   showToast = vi.fn(),
 } = {}) => {
   const actions = useHistoryEditing({
@@ -37,6 +38,7 @@ const buildDeleteActions = ({
     pushWithSyncStatus: vi.fn(() => Promise.resolve({ ok: true })),
     syncDelete,
     syncDeleteSessionsForDog: vi.fn(() => Promise.resolve(true)),
+    addTombstone,
     commitSessions: commitSessions ?? vi.fn(),
     setWalks: commitWalks ?? vi.fn(),
     setPatterns: commitPatterns ?? vi.fn(),
@@ -49,6 +51,7 @@ const buildDeleteActions = ({
     actions,
     showToast,
     syncDelete,
+    addTombstone,
     commitSessions: commitSessions ?? vi.fn(),
     commitWalks: commitWalks ?? vi.fn(),
     commitPatterns: commitPatterns ?? vi.fn(),
@@ -57,9 +60,33 @@ const buildDeleteActions = ({
 };
 
 describe("history delete mutations", () => {
+  it("creates tombstones for every session during bulk clear", () => {
+    const commitSessions = vi.fn();
+    const addTombstone = vi.fn();
+    const originalWindow = globalThis.window;
+    globalThis.window = { confirm: vi.fn(() => true) };
+    const { actions } = buildDeleteActions({
+      sessions: [
+        { ...baseSession, id: "sess-1" },
+        { ...baseSession, id: "sess-2", date: makeIso("2026-04-11T10:00:00Z") },
+      ],
+      commitSessions,
+      addTombstone,
+    });
+
+    actions.clearSessions();
+
+    const clearUpdater = commitSessions.mock.calls[0][0];
+    expect(clearUpdater([{ ...baseSession, id: "sess-1" }, { ...baseSession, id: "sess-2" }])).toEqual([]);
+    expect(addTombstone).toHaveBeenCalledTimes(2);
+    expect(addTombstone.mock.calls.map((call) => call[0])).toEqual(["session", "session"]);
+    globalThis.window = originalWindow;
+  });
+
   it("applies session deletes against latest state after another local mutation", () => {
     const commitSessions = vi.fn();
-    const { actions } = buildDeleteActions({ commitSessions });
+    const addTombstone = vi.fn();
+    const { actions } = buildDeleteActions({ commitSessions, addTombstone });
 
     actions.confirmHistoryDelete({ mode: "delete", kind: "session", id: "sess-1", label: "Training session" }, vi.fn());
 
@@ -83,13 +110,15 @@ describe("history delete mutations", () => {
     const afterDelete = deleteUpdater(stateWithInterveningLocalMutation);
     expect(afterDelete.map((session) => session.id)).toEqual(["sess-2"]);
     expect(afterDelete[0].actualDuration).toBe(145);
+    expect(addTombstone).toHaveBeenCalledWith("session", expect.objectContaining({ id: "sess-1" }));
   });
 
   it("preserves sync-sensitive state changes when deleting walks, patterns, and feedings", () => {
     const commitWalks = vi.fn();
     const commitPatterns = vi.fn();
     const commitFeedings = vi.fn();
-    const { actions } = buildDeleteActions({ commitWalks, commitPatterns, commitFeedings });
+    const addTombstone = vi.fn();
+    const { actions } = buildDeleteActions({ commitWalks, commitPatterns, commitFeedings, addTombstone });
 
     actions.confirmHistoryDelete({ mode: "delete", kind: "walk", id: "walk-1", label: "Exercise walk" }, vi.fn());
     actions.confirmHistoryDelete({ mode: "delete", kind: "pattern", id: "pat-1", label: "Phone trigger" }, vi.fn());
@@ -122,6 +151,8 @@ describe("history delete mutations", () => {
     expect(afterFeedingDelete).toEqual([
       { id: "feed-2", date: makeIso("2026-04-10T13:30:00Z"), foodType: "snack", amount: "tiny", revision: 5, syncState: "syncing", pendingSync: true },
     ]);
+    expect(addTombstone).toHaveBeenCalledTimes(3);
+    expect(addTombstone.mock.calls.map((call) => call[0])).toEqual(["walk", "pattern", "feeding"]);
   });
 
   it("retains non-deleted intervening changes and keeps recommendation recompute inputs correct", () => {

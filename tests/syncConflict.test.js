@@ -17,6 +17,20 @@ describe("resolveSyncConflict", () => {
 
     expect(resolveSyncConflict(local, remote)).toBe(remote);
   });
+
+  it("prefers deletion tombstones over stale updates", () => {
+    const localDelete = { id: "session-1", revision: 6, updatedAt: iso(12), deletedAt: iso(12) };
+    const remoteActive = { id: "session-1", revision: 5, updatedAt: iso(13), result: "success" };
+
+    expect(resolveSyncConflict(localDelete, remoteActive)).toBe(localDelete);
+  });
+
+  it("allows newer updates to win against older tombstones", () => {
+    const localDelete = { id: "session-1", revision: 4, updatedAt: iso(10), deletedAt: iso(10) };
+    const remoteActive = { id: "session-1", revision: 5, updatedAt: iso(11), result: "success" };
+
+    expect(resolveSyncConflict(localDelete, remoteActive)).toBe(remoteActive);
+  });
 });
 
 describe("mergeById concurrent edits", () => {

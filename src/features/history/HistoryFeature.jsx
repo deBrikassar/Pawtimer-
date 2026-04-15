@@ -57,6 +57,7 @@ export function useHistoryEditing({
   pushWithSyncStatus,
   syncDelete,
   syncDeleteSessionsForDog,
+  addTombstone,
   commitSessions,
   setWalks,
   setPatterns,
@@ -179,24 +180,28 @@ export function useHistoryEditing({
     confirmHistoryDelete: (historyModal, setHistoryModal) => {
       if (!historyModal || historyModal.mode !== "delete") return;
       if (historyModal.kind === "session") {
-        commitSessions((prev) => prev.filter((item) => item.id !== historyModal.id));
-        syncDelete("session", historyModal.id).then((ok) => {
-          if (!ok) showToast("Session removed locally — remote delete failed");
+        commitSessions((prev) => {
+          const existing = prev.find((item) => item.id === historyModal.id);
+          if (existing) addTombstone("session", existing);
+          return prev.filter((item) => item.id !== historyModal.id);
         });
       } else if (historyModal.kind === "walk") {
-        setWalks((prev) => prev.filter((item) => item.id !== historyModal.id));
-        syncDelete("walk", historyModal.id).then((ok) => {
-          if (!ok) showToast("Walk removed locally — remote delete failed");
+        setWalks((prev) => {
+          const existing = prev.find((item) => item.id === historyModal.id);
+          if (existing) addTombstone("walk", existing);
+          return prev.filter((item) => item.id !== historyModal.id);
         });
       } else if (historyModal.kind === "pattern") {
-        setPatterns((prev) => prev.filter((item) => item.id !== historyModal.id));
-        syncDelete("pattern", historyModal.id).then((ok) => {
-          if (!ok) showToast("Pattern break removed locally — remote delete failed");
+        setPatterns((prev) => {
+          const existing = prev.find((item) => item.id === historyModal.id);
+          if (existing) addTombstone("pattern", existing);
+          return prev.filter((item) => item.id !== historyModal.id);
         });
       } else if (historyModal.kind === "feeding") {
-        setFeedings((prev) => prev.filter((item) => item.id !== historyModal.id));
-        syncDelete("feeding", historyModal.id).then((ok) => {
-          if (!ok) showToast("Feeding removed locally — remote delete failed");
+        setFeedings((prev) => {
+          const existing = prev.find((item) => item.id === historyModal.id);
+          if (existing) addTombstone("feeding", existing);
+          return prev.filter((item) => item.id !== historyModal.id);
         });
       }
       showToast(`${historyModal.label} deleted`);
@@ -204,11 +209,12 @@ export function useHistoryEditing({
     },
     clearSessions: () => {
       if (window.confirm("Clear all training sessions?")) {
-        commitSessions([]);
-        syncDeleteSessionsForDog(activeDogId).then((ok) => {
-          if (!ok) showToast("Sessions cleared locally — remote delete failed");
-          else showToast("Sessions cleared");
+        commitSessions((prev) => {
+          prev.forEach((entry) => addTombstone("session", entry));
+          return [];
         });
+        syncDeleteSessionsForDog(activeDogId).then(() => {});
+        showToast("Sessions cleared");
       }
     },
   };
