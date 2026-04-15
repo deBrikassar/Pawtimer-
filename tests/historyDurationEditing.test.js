@@ -13,7 +13,12 @@ const baseSession = {
   result: "success",
 };
 
-const buildHistoryActions = (sessions, { commitSessions = vi.fn(), showToast = vi.fn() } = {}) => {
+const buildHistoryActions = (sessions, { commitSessions, showToast = vi.fn() } = {}) => {
+  let state = [...sessions];
+  const commitSessionsSpy = commitSessions ?? vi.fn((updater) => {
+    state = typeof updater === "function" ? updater(state) : updater;
+    return state;
+  });
   const pushWithSyncStatus = vi.fn(() => Promise.resolve({ ok: true }));
   const stampLocalEntry = (entry) => ({ ...entry });
   const actions = useHistoryEditing({
@@ -26,7 +31,7 @@ const buildHistoryActions = (sessions, { commitSessions = vi.fn(), showToast = v
     pushWithSyncStatus,
     syncDelete: vi.fn(),
     syncDeleteSessionsForDog: vi.fn(),
-    commitSessions,
+    commitSessions: commitSessionsSpy,
     setWalks: vi.fn(),
     setPatterns: vi.fn(),
     setFeedings: vi.fn(),
@@ -34,7 +39,7 @@ const buildHistoryActions = (sessions, { commitSessions = vi.fn(), showToast = v
     activeDogId: "dog-1",
     stampLocalEntry,
   });
-  return { actions, commitSessions, showToast };
+  return { actions, commitSessions: commitSessionsSpy, showToast };
 };
 
 describe("duration parser for history editing", () => {
@@ -56,15 +61,15 @@ describe("session duration edits in history", () => {
     const { actions, commitSessions, showToast } = buildHistoryActions([baseSession]);
 
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "1:37" }, vi.fn());
-    const editedFromClock = commitSessions.mock.calls[0][0].find((session) => session.id === "sess-1");
+    const editedFromClock = commitSessions.mock.calls[0][0]([baseSession]).find((session) => session.id === "sess-1");
     expect(editedFromClock.actualDuration).toBe(97);
 
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "22:57" }, vi.fn());
-    const editedFromMinutes = commitSessions.mock.calls[1][0].find((session) => session.id === "sess-1");
+    const editedFromMinutes = commitSessions.mock.calls[1][0]([baseSession]).find((session) => session.id === "sess-1");
     expect(editedFromMinutes.actualDuration).toBe(1377);
 
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "90" }, vi.fn());
-    const editedFromSeconds = commitSessions.mock.calls[2][0].find((session) => session.id === "sess-1");
+    const editedFromSeconds = commitSessions.mock.calls[2][0]([baseSession]).find((session) => session.id === "sess-1");
     expect(editedFromSeconds.actualDuration).toBe(90);
 
     expect(showToast).toHaveBeenCalledWith("Session updated to 1m 37s");
@@ -78,5 +83,62 @@ describe("session duration edits in history", () => {
     expect(commitSessions).not.toHaveBeenCalled();
     expect(showToast).toHaveBeenNthCalledWith(1, "Invalid duration. Use a positive value (seconds, m:ss, or h:mm:ss)");
     expect(showToast).toHaveBeenNthCalledWith(2, "Invalid duration. Use a positive value (seconds, m:ss, or h:mm:ss)");
+  });
+
+  it("applies rapid sequential edits against latest session state without dropping intervening changes", () => {
+    const { actions, commitSessions } = buildHistoryActions([baseSession]);
+    const dismissModal = vi.fn();
+
+    actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "1:37" }, dismissModal);
+    actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "2:30" }, dismissModal);
+
+    const firstUpdater = commitSessions.mock.calls[0][0];
+    const secondUpdater = commitSessions.mock.calls[1][0];
+
+    const afterFirstEdit = firstUpdater([baseSession]);
+    expect(afterFirstEdit[0].actualDuration).toBe(97);
+
+    const stateWithInterveningUpdate = [{
+      ...afterFirstEdit[0],
+      plannedDuration: 240,
+      syncState: "syncing",
+      pendingSync: true,
+      syncError: "transient",
+    }];
+    const afterSecondEdit = secondUpdater(stateWithInterveningUpdate);
+
+    expect(afterSecondEdit[0].actualDuration).toBe(150);
+    expect(afterSecondEdit[0].plannedDuration).toBe(240);
+    expect(afterSecondEdit[0].syncState).toBe("syncing");
+    expect(afterSecondEdit[0].pendingSync).toBe(true);
+    expect(afterSecondEdit[0].syncError).toBe("transient");
+  });
+
+  it("keeps sync-sensitive fields when editing time after an intervening state update", () => {
+    const { actions, commitSessions } = buildHistoryActions([baseSession]);
+
+    actions.saveEditedActivityTime({
+      mode: "datetime",
+      kind: "session",
+      id: "sess-1",
+      date: "2026-04-11",
+      time: "11:30",
+    }, vi.fn());
+
+    const timeUpdater = commitSessions.mock.calls[0][0];
+    const stateWithSyncMetadata = [{
+      ...baseSession,
+      revision: 4,
+      syncState: "error",
+      pendingSync: true,
+      syncError: "network",
+    }];
+    const afterTimeEdit = timeUpdater(stateWithSyncMetadata);
+
+    expect(afterTimeEdit[0].date).toBe("2026-04-11T11:30:00.000Z");
+    expect(afterTimeEdit[0].revision).toBe(4);
+    expect(afterTimeEdit[0].syncState).toBe("error");
+    expect(afterTimeEdit[0].pendingSync).toBe(true);
+    expect(afterTimeEdit[0].syncError).toBe("network");
   });
 });
