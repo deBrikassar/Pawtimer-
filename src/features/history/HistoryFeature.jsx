@@ -61,7 +61,6 @@ export function useHistoryEditing({
   setWalks,
   setPatterns,
   setFeedings,
-  recomputeTarget,
   activeDogId,
   stampLocalEntry,
 }) {
@@ -172,14 +171,12 @@ export function useHistoryEditing({
         syncDelete("walk", historyModal.id).then((ok) => {
           if (!ok) showToast("Walk removed locally — remote delete failed");
         });
-        recomputeTarget(sessions, nextWalks, patterns);
       } else if (historyModal.kind === "pattern") {
         const nextPatterns = patterns.filter((item) => item.id !== historyModal.id);
         setPatterns(nextPatterns);
         syncDelete("pattern", historyModal.id).then((ok) => {
           if (!ok) showToast("Pattern break removed locally — remote delete failed");
         });
-        recomputeTarget(sessions, walks, nextPatterns);
       } else if (historyModal.kind === "feeding") {
         setFeedings((prev) => prev.filter((item) => item.id !== historyModal.id));
         syncDelete("feeding", historyModal.id).then((ok) => {
