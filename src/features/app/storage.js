@@ -229,6 +229,22 @@ export const mergeById = (a = [], b = [], pickWinner = resolveSyncConflict) => {
   return sortByDateAsc(Array.from(merged.values()));
 };
 
+export const mergeMutationSafeSyncCollection = ({
+  currentItems = [],
+  remoteItems = [],
+  tombstones = [],
+  kind = "",
+  mapLocalItem = (item) => item,
+  mapRemoteItem = (item) => item,
+} = {}) => applyTombstonesToCollection(
+  mergeById(
+    ensureArray(currentItems).map(mapLocalItem),
+    ensureArray(remoteItems).map(mapRemoteItem),
+  ),
+  tombstones,
+  kind,
+);
+
 const asBool = (value) => value === true || value === 1;
 const hasValue = (value) => value !== null && value !== undefined;
 

@@ -4,7 +4,7 @@ import { PROTOCOL, explainNextTarget, normalizeDistressLevel, suggestNext, sugge
 import { sortByDateAsc } from "./lib/activityDateTime";
 import { sortValidDateAsc } from "./lib/dateSort";
 import { selectAppData } from "./features/app/selectors";
-import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeById, mergeSessionWithDerivedFields, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, save, sessKey, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
+import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeById, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, save, sessKey, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
 import { fmt, fmtClock, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
 import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
 import { DogSelect, Onboarding } from "./features/setup/SetupScreens";
@@ -97,7 +97,6 @@ export default function PawTimer() {
     commitWalks: null,
     commitPatterns: null,
     commitFeedings: null,
-    mergeSyncedCollection: null,
     recomputeTarget: null,
     setEntrySyncState: null,
   });
@@ -174,11 +173,6 @@ export default function PawTimer() {
     };
   }, []);
 
-  const mergeSyncedCollection = useCallback((localItems, remoteItems) => mergeById(
-    ensureArray(localItems).map(withHydratedSyncState),
-    ensureArray(remoteItems).map(markRemoteEntryConfirmed),
-  ), [markRemoteEntryConfirmed, withHydratedSyncState]);
-
   useEffect(() => {
     syncSnapshotRef.current = { dogs, sessions, walks, patterns, feedings, tombstones };
   }, [dogs, sessions, walks, patterns, feedings, tombstones]);
@@ -252,41 +246,53 @@ export default function PawTimer() {
   }, [activeDogId, recomputeTarget, withHydratedSyncState]);
 
   const commitWalks = useCallback((updater) => {
+    let committed = [];
     setWalks((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = sortByDateAsc(ensureArray(resolved).map((item) => ({ ...withHydratedSyncState(item), type: normalizeWalkType(item?.type) })));
       if (activeDogId) save(walkKey(activeDogId), normalized);
       recomputeTarget(sessions, normalized, patterns, activeDog || {});
+      committed = normalized;
       return normalized;
     });
+    return committed;
   }, [activeDog, activeDogId, patterns, recomputeTarget, sessions, withHydratedSyncState]);
 
   const commitPatterns = useCallback((updater) => {
+    let committed = [];
     setPatterns((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = sortByDateAsc(ensureArray(resolved).map(withHydratedSyncState));
       if (activeDogId) save(patKey(activeDogId), normalized);
       recomputeTarget(sessions, walks, normalized, activeDog || {});
+      committed = normalized;
       return normalized;
     });
+    return committed;
   }, [activeDog, activeDogId, recomputeTarget, sessions, walks, withHydratedSyncState]);
 
   const commitFeedings = useCallback((updater) => {
+    let committed = [];
     setFeedings((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = normalizeFeedings(ensureArray(resolved)).map(withHydratedSyncState);
       if (activeDogId) save(feedingKey(activeDogId), normalized);
+      committed = normalized;
       return normalized;
     });
+    return committed;
   }, [activeDogId, withHydratedSyncState]);
 
   const commitTombstones = useCallback((updater) => {
+    let committed = [];
     setTombstones((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = normalizeTombstones(ensureArray(resolved)).map(withHydratedSyncState);
       if (activeDogId) save(tombKey(activeDogId), normalized);
+      committed = normalized;
       return normalized;
     });
+    return committed;
   }, [activeDogId, withHydratedSyncState]);
 
   const addTombstone = useCallback((kind, entry) => {
@@ -344,11 +350,10 @@ export default function PawTimer() {
       commitWalks,
       commitPatterns,
       commitFeedings,
-      mergeSyncedCollection,
       recomputeTarget,
       setEntrySyncState,
     };
-  }, [commitFeedings, commitPatterns, commitSessions, commitWalks, mergeSyncedCollection, recomputeTarget, setEntrySyncState]);
+  }, [commitFeedings, commitPatterns, commitSessions, commitWalks, recomputeTarget, setEntrySyncState]);
 
   useEffect(() => {
     if (!activeDogId) { setScreen("select"); return; }
@@ -442,36 +447,42 @@ export default function PawTimer() {
         const remotePatterns = ensureArray(remote.patterns);
         const remoteFeedings = normalizeFeedings(remote.feedings);
 
-        const mergedTombstones = mergeById(
-          normalizeTombstones(snapshot.tombstones).map(withHydratedSyncState),
+        const mergedTombstones = commitTombstones((prev) => mergeById(
+          normalizeTombstones(prev).map(withHydratedSyncState),
           normalizeTombstones(remote.tombstones).map(markRemoteEntryConfirmed),
-        );
-        const mergedSessions = applyTombstonesToCollection(
-          syncHelpersRef.current.mergeSyncedCollection(snapshot.sessions, remoteSessions),
-          mergedTombstones,
-          "session",
-        );
-        const mergedWalks = applyTombstonesToCollection(
-          syncHelpersRef.current.mergeSyncedCollection(snapshot.walks, remoteWalks),
-          mergedTombstones,
-          "walk",
-        );
-        const mergedPatterns = applyTombstonesToCollection(
-          syncHelpersRef.current.mergeSyncedCollection(snapshot.patterns, remotePatterns),
-          mergedTombstones,
-          "pattern",
-        );
-        const mergedFeedings = applyTombstonesToCollection(
-          syncHelpersRef.current.mergeSyncedCollection(snapshot.feedings, remoteFeedings),
-          mergedTombstones,
-          "feeding",
-        );
-
-        commitTombstones(mergedTombstones);
-        syncHelpersRef.current.commitSessions(mergedSessions);
-        syncHelpersRef.current.commitWalks(mergedWalks);
-        syncHelpersRef.current.commitPatterns(mergedPatterns);
-        syncHelpersRef.current.commitFeedings(mergedFeedings);
+        ));
+        const mergedSessions = syncHelpersRef.current.commitSessions((prev) => mergeMutationSafeSyncCollection({
+          currentItems: prev,
+          remoteItems: remoteSessions,
+          tombstones: mergedTombstones,
+          kind: "session",
+          mapLocalItem: withHydratedSyncState,
+          mapRemoteItem: markRemoteEntryConfirmed,
+        }));
+        const mergedWalks = syncHelpersRef.current.commitWalks((prev) => mergeMutationSafeSyncCollection({
+          currentItems: prev,
+          remoteItems: remoteWalks,
+          tombstones: mergedTombstones,
+          kind: "walk",
+          mapLocalItem: withHydratedSyncState,
+          mapRemoteItem: markRemoteEntryConfirmed,
+        }));
+        const mergedPatterns = syncHelpersRef.current.commitPatterns((prev) => mergeMutationSafeSyncCollection({
+          currentItems: prev,
+          remoteItems: remotePatterns,
+          tombstones: mergedTombstones,
+          kind: "pattern",
+          mapLocalItem: withHydratedSyncState,
+          mapRemoteItem: markRemoteEntryConfirmed,
+        }));
+        const mergedFeedings = syncHelpersRef.current.commitFeedings((prev) => mergeMutationSafeSyncCollection({
+          currentItems: prev,
+          remoteItems: remoteFeedings,
+          tombstones: mergedTombstones,
+          kind: "feeding",
+          mapLocalItem: withHydratedSyncState,
+          mapRemoteItem: markRemoteEntryConfirmed,
+        }));
 
         const currentDog = snapshot.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
         const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : remoteDog;
