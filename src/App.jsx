@@ -90,7 +90,15 @@ export default function PawTimer() {
   const startRef = useRef(null);
   const syncInFlightRef = useRef(false);
   const syncSnapshotRef = useRef({ dogs: [], sessions: [], walks: [], patterns: [], feedings: [] });
-  const latestAppStateRef = useRef({ sessions: [], walks: [], patterns: [], activeDog: null });
+  const syncHelpersRef = useRef({
+    commitSessions: null,
+    commitWalks: null,
+    commitPatterns: null,
+    commitFeedings: null,
+    mergeSyncedCollection: null,
+    recomputeTarget: null,
+    setEntrySyncState: null,
+  });
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
@@ -153,9 +161,6 @@ export default function PawTimer() {
   useEffect(() => {
     syncSnapshotRef.current = { dogs, sessions, walks, patterns, feedings };
   }, [dogs, sessions, walks, patterns, feedings]);
-  useEffect(() => {
-    latestAppStateRef.current = { sessions, walks, patterns, activeDog };
-  }, [activeDog, patterns, sessions, walks]);
 
   useEffect(() => { save(DOGS_KEY, dogs); }, [dogs]);
   useEffect(() => { save(ACTIVE_DOG_KEY, canonicalDogId(activeDogId)); }, [activeDogId]);
@@ -172,7 +177,7 @@ export default function PawTimer() {
     () => dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId)) ?? null,
     [activeDogId, dogs],
   );
-  const deriveRecommendation = useCallback((nextSessions, nextWalks = [], nextPatterns = [], nextDog = {}) => {
+  const deriveRecommendation = useCallback((nextSessions, nextWalks = walks, nextPatterns = patterns, nextDog = activeDog || {}) => {
     const details = explainNextTarget(nextSessions, nextWalks, nextPatterns, nextDog || {});
     const recommendedDuration = details?.recommendedDuration
       ?? (suggestNextWithContext(nextSessions, nextWalks, nextPatterns, nextDog) ?? suggestNext(nextSessions, nextDog));
@@ -182,7 +187,7 @@ export default function PawTimer() {
       explanation: details?.summary ?? "",
       details: details ?? {},
     };
-  }, []);
+  }, [activeDog, patterns, walks]);
 
   const sortedSessions = useMemo(() => sortByDateAsc(sessions), [sessions]);
   const recommendation = useMemo(() => {
@@ -200,11 +205,11 @@ export default function PawTimer() {
     recommendation,
   });
 
-  const recomputeTarget = useCallback((nextSessions, nextWalks = [], nextPatterns = [], nextDog = {}) => {
+  const recomputeTarget = useCallback((nextSessions, nextWalks = walks, nextPatterns = patterns, nextDog = activeDog || {}) => {
     const nextTarget = deriveRecommendation(nextSessions, nextWalks, nextPatterns, nextDog).duration;
     setTarget(nextTarget);
     return nextTarget;
-  }, [deriveRecommendation]);
+  }, [activeDog, deriveRecommendation, patterns, walks]);
 
   useEffect(() => {
     setTarget((prev) => (prev === recommendation.duration ? prev : recommendation.duration));
@@ -216,8 +221,7 @@ export default function PawTimer() {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = sortByDateAsc(normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState));
       if (activeDogId) save(sessKey(activeDogId), normalized);
-      const latestState = latestAppStateRef.current;
-      recomputeTarget(normalized, latestState.walks, latestState.patterns, latestState.activeDog || {});
+      recomputeTarget(normalized);
       committed = normalized;
       return normalized;
     });
@@ -229,22 +233,20 @@ export default function PawTimer() {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = sortByDateAsc(ensureArray(resolved).map((item) => ({ ...withHydratedSyncState(item), type: normalizeWalkType(item?.type) })));
       if (activeDogId) save(walkKey(activeDogId), normalized);
-      const latestState = latestAppStateRef.current;
-      recomputeTarget(latestState.sessions, normalized, latestState.patterns, latestState.activeDog || {});
+      recomputeTarget(sessions, normalized, patterns, activeDog || {});
       return normalized;
     });
-  }, [activeDogId, recomputeTarget, withHydratedSyncState]);
+  }, [activeDog, activeDogId, patterns, recomputeTarget, sessions, withHydratedSyncState]);
 
   const commitPatterns = useCallback((updater) => {
     setPatterns((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = sortByDateAsc(ensureArray(resolved).map(withHydratedSyncState));
       if (activeDogId) save(patKey(activeDogId), normalized);
-      const latestState = latestAppStateRef.current;
-      recomputeTarget(latestState.sessions, latestState.walks, normalized, latestState.activeDog || {});
+      recomputeTarget(sessions, walks, normalized, activeDog || {});
       return normalized;
     });
-  }, [activeDogId, recomputeTarget, withHydratedSyncState]);
+  }, [activeDog, activeDogId, recomputeTarget, sessions, walks, withHydratedSyncState]);
 
   const commitFeedings = useCallback((updater) => {
     setFeedings((prev) => {
@@ -282,6 +284,18 @@ export default function PawTimer() {
   }, [updateCollectionEntry]);
 
   useEffect(() => {
+    syncHelpersRef.current = {
+      commitSessions,
+      commitWalks,
+      commitPatterns,
+      commitFeedings,
+      mergeSyncedCollection,
+      recomputeTarget,
+      setEntrySyncState,
+    };
+  }, [commitFeedings, commitPatterns, commitSessions, commitWalks, mergeSyncedCollection, recomputeTarget, setEntrySyncState]);
+
+  useEffect(() => {
     if (!activeDogId) { setScreen("select"); return; }
     const normalizedId = canonicalDogId(activeDogId);
     const dog = dogs.find((d) => canonicalDogId(d.id) === normalizedId) ?? ensureArray(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === normalizedId);
@@ -314,15 +328,15 @@ export default function PawTimer() {
 
     const pushPendingEntry = async (kind, entry, dogSettings) => {
       if (!entry?.pendingSync || !entry?.id) return true;
-      setEntrySyncState(kind, entry.id, SYNC_STATE.SYNCING);
+      syncHelpersRef.current.setEntrySyncState(kind, entry.id, SYNC_STATE.SYNCING);
       const { ok, error } = await syncPush(canonicalDogId(activeDogId), kind, entry, dogSettings);
       setSyncDegradation(getSyncDegradationState());
       if (!live) return ok;
       if (ok) {
-        setEntrySyncState(kind, entry.id, SYNC_STATE.SYNCED);
+        syncHelpersRef.current.setEntrySyncState(kind, entry.id, SYNC_STATE.SYNCED);
         return true;
       }
-      setEntrySyncState(kind, entry.id, SYNC_STATE.ERROR, error || "Push failed");
+      syncHelpersRef.current.setEntrySyncState(kind, entry.id, SYNC_STATE.ERROR, error || "Push failed");
       return false;
     };
 
@@ -352,15 +366,15 @@ export default function PawTimer() {
         const remotePatterns = ensureArray(remote.patterns);
         const remoteFeedings = normalizeFeedings(remote.feedings);
 
-        const mergedSessions = mergeSyncedCollection(snapshot.sessions, remoteSessions);
-        const mergedWalks = mergeSyncedCollection(snapshot.walks, remoteWalks);
-        const mergedPatterns = mergeSyncedCollection(snapshot.patterns, remotePatterns);
-        const mergedFeedings = mergeSyncedCollection(snapshot.feedings, remoteFeedings);
+        const mergedSessions = syncHelpersRef.current.mergeSyncedCollection(snapshot.sessions, remoteSessions);
+        const mergedWalks = syncHelpersRef.current.mergeSyncedCollection(snapshot.walks, remoteWalks);
+        const mergedPatterns = syncHelpersRef.current.mergeSyncedCollection(snapshot.patterns, remotePatterns);
+        const mergedFeedings = syncHelpersRef.current.mergeSyncedCollection(snapshot.feedings, remoteFeedings);
 
-        commitSessions(mergedSessions);
-        commitWalks(mergedWalks);
-        commitPatterns(mergedPatterns);
-        commitFeedings(mergedFeedings);
+        syncHelpersRef.current.commitSessions(mergedSessions);
+        syncHelpersRef.current.commitWalks(mergedWalks);
+        syncHelpersRef.current.commitPatterns(mergedPatterns);
+        syncHelpersRef.current.commitFeedings(mergedFeedings);
 
         const currentDog = snapshot.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
         const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : remoteDog;
@@ -378,7 +392,7 @@ export default function PawTimer() {
         }
 
         const syncDog = remoteDog ?? currentDog;
-        recomputeTarget(mergedSessions, mergedWalks, mergedPatterns, syncDog);
+        syncHelpersRef.current.recomputeTarget(mergedSessions, mergedWalks, mergedPatterns, syncDog);
         if (!allPendingFlushed) {
           setSyncError("Some local changes are still waiting for confirmation.");
           setSyncStatus("err");
@@ -394,7 +408,7 @@ export default function PawTimer() {
     sync();
     const timer = setInterval(sync, 15_000);
     return () => { live = false; syncInFlightRef.current = false; clearInterval(timer); };
-  }, [activeDogId, commitFeedings, commitPatterns, commitSessions, commitWalks, mergeSyncedCollection, recomputeTarget, setEntrySyncState]);
+  }, [activeDogId]);
 
   useEffect(() => {
     if (!SYNC_ENABLED || !activeDogId) return;
