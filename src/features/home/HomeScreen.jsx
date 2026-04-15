@@ -54,6 +54,18 @@ export default function HomeScreen(props) {
   } = props;
   const target = recommendation?.duration ?? 0;
   const recoveryMode = recommendation?.details?.recoveryMode;
+  const recommendationType = recommendation?.details?.recommendationType;
+  const recoveryModalTitle = (() => {
+    if (!recoveryMode?.active) return "Recovery plan";
+    if (recommendationType === "stabilization_block") return "Recovery rebuild sessions";
+    if (recommendationType === "reduce_duration") return "Recovery support sessions";
+    if (recommendationType === "repeat_current_duration" || recommendationType === "subtle_recovery_mode") return "Recovery reset sessions";
+    return "Recovery sessions active";
+  })();
+  const recoveryModalCopy = recoveryMode?.planCopy
+    || recommendation?.details?.summary
+    || recommendation?.explanation
+    || "We temporarily adjusted session targets to rebuild calm confidence before progression resumes.";
   const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
 
   return (
@@ -124,7 +136,7 @@ export default function HomeScreen(props) {
           <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => setShowRecoveryInfo(false)}>
             <div className="quick-modal-card modal-card modal-card--dialog-md recovery-explain-modal" onClick={(e) => e.stopPropagation()}>
               <div className="quick-modal-head">
-                <div className="quick-modal-title">Recovery sessions active</div>
+                <div className="quick-modal-title">{recoveryModalTitle}</div>
                 <ModalCloseButton onClick={() => setShowRecoveryInfo(false)} />
               </div>
               <div className="recovery-explain-steps">
@@ -133,7 +145,7 @@ export default function HomeScreen(props) {
                 ))}
               </div>
               <p className="recovery-explain-copy">
-                {recoveryMode.planCopy}
+                {recoveryModalCopy}
               </p>
               <div className="recovery-explain-meta">
                 <span>{recoveryMode.currentStepLabel || `Step ${Math.max(1, recoveryMode.step)} of ${recoveryMode.totalSessions || 2}`}</span>
