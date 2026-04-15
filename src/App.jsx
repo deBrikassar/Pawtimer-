@@ -307,7 +307,8 @@ export default function PawTimer() {
     return created;
   }, [commitTombstones, makeLocalTombstone]);
 
-  const setTombstoneSyncState = useCallback((entryId, kind, nextSyncState, errorMessage = "") => {
+  const setTombstoneSyncState = useCallback((entryId, kind, nextSyncState, errorMessage = "", options = {}) => {
+    const { replicationConfirmed } = options;
     commitTombstones((prev) => prev.map((row) => {
       if (row.id !== entryId || row.kind !== kind) return row;
       return {
@@ -315,6 +316,7 @@ export default function PawTimer() {
         pendingSync: nextSyncState !== SYNC_STATE.SYNCED,
         syncState: nextSyncState,
         syncError: nextSyncState === SYNC_STATE.ERROR ? errorMessage : "",
+        ...(typeof replicationConfirmed === "boolean" ? { replicationConfirmed } : {}),
       };
     }));
   }, [commitTombstones]);
@@ -415,7 +417,7 @@ export default function PawTimer() {
       setSyncDegradation(getSyncDegradationState());
       if (!live) return ok;
       if (ok) {
-        setTombstoneSyncState(entry.id, entry.kind, SYNC_STATE.SYNCED);
+        setTombstoneSyncState(entry.id, entry.kind, SYNC_STATE.SYNCED, "", { replicationConfirmed: true });
         return true;
       }
       setTombstoneSyncState(entry.id, entry.kind, SYNC_STATE.ERROR, error || "Delete marker push failed");

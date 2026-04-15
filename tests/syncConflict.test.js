@@ -83,6 +83,31 @@ describe("resolveSyncConflict", () => {
 
     expect(resolveSyncConflict(localDelete, remoteActive)).toBe(remoteActive);
   });
+
+  it("prefers a confirmed remote tombstone over an otherwise-equal local unconfirmed tombstone", () => {
+    const localDelete = {
+      id: "session-1",
+      kind: "session",
+      revision: 6,
+      updatedAt: iso(12),
+      deletedAt: iso(12),
+      pendingSync: false,
+      syncState: "synced",
+      replicationConfirmed: false,
+    };
+    const remoteDelete = {
+      id: "session-1",
+      kind: "session",
+      revision: 6,
+      updatedAt: iso(12),
+      deletedAt: iso(12),
+      pendingSync: false,
+      syncState: "synced",
+      replicationConfirmed: true,
+    };
+
+    expect(resolveSyncConflict(localDelete, remoteDelete)).toBe(remoteDelete);
+  });
 });
 
 describe("mergeMutationSafeSyncCollection concurrent edits", () => {
@@ -288,6 +313,34 @@ describe("mergeMutationSafeSyncCollection concurrent edits", () => {
       expect.objectContaining({ id: "shared-1", kind: "session" }),
       expect.objectContaining({ id: "shared-1", kind: "walk" }),
     ]));
+  });
+
+  it("marks local tombstone as confirmed after successful push plus remote fetch merge", () => {
+    const localAfterPush = [{
+      id: "session-1",
+      kind: "session",
+      deletedAt: iso(12),
+      updatedAt: iso(12),
+      revision: 6,
+      pendingSync: false,
+      syncState: "synced",
+      replicationConfirmed: false,
+    }];
+    const remoteAfterFetch = [{
+      id: "session-1",
+      kind: "session",
+      deletedAt: iso(12),
+      updatedAt: iso(12),
+      revision: 6,
+      pendingSync: false,
+      syncState: "synced",
+      replicationConfirmed: true,
+    }];
+
+    const mergedTombstones = mergeTombstonesByEntityKey(localAfterPush, remoteAfterFetch);
+
+    expect(mergedTombstones).toHaveLength(1);
+    expect(mergedTombstones[0].replicationConfirmed).toBe(true);
   });
 
   it("suppresses only matching kind when id is shared across kinds", () => {
