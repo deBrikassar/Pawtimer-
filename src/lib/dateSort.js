@@ -38,4 +38,14 @@ export const sortByDateAsc = (items = [], options = {}) => {
     .map(({ item }) => item);
 };
 
+export const hasValidDate = (value) => toTimestampOrNull(value) != null;
+
+export const filterValidDateItems = (items = [], getDate = (item) => item?.date) => (
+  ensureArray(items).filter((item) => hasValidDate(getDate(item)))
+);
+
+export const sortValidDateAsc = (items = []) => (
+  sortByDateAsc(filterValidDateItems(items), { invalidPolicy: INVALID_DATE_POLICIES.DROP })
+);
+
 export { INVALID_DATE_POLICIES, toTimestampOrNull };

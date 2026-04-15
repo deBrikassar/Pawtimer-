@@ -3,6 +3,7 @@ import { selectAppData } from "../src/features/app/selectors";
 import { getInformationalTone, getOutcomeTone, getRiskTone } from "../src/features/app/helpers";
 import { explainNextTarget } from "../src/lib/protocol";
 import { sortByDateAsc } from "../src/lib/activityDateTime";
+import { sortValidDateAsc } from "../src/lib/dateSort";
 
 const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
 const buildRecommendation = ({ sessions, walks, patterns, dog, target }) => {
@@ -141,5 +142,40 @@ describe("semantic status mapping", () => {
     expect(appData.chartTrendLabel).toBe("Trend: Improving");
     expect(appData.streak).toBe(6);
     expect(appData.relapseTone.label).toBe(recommendation.decisionState.riskLevel === "low" ? "Low" : recommendation.decisionState.riskLevel === "high" ? "High" : "Medium");
+  });
+
+  it("drops invalid-dated sessions consistently across recommendation and derived metrics", () => {
+    const sessions = sortByDateAsc([
+      { id: "invalid-text", date: "not-a-date", plannedDuration: 999, actualDuration: 999, distressLevel: "none", belowThreshold: true },
+      { id: "valid-1", date: "2026-04-10T09:00:00.000Z", plannedDuration: 120, actualDuration: 120, distressLevel: "none", belowThreshold: true },
+      { id: "invalid-missing", plannedDuration: 200, actualDuration: 200, distressLevel: "none", belowThreshold: true },
+      { id: "valid-2", date: "2026-04-11T09:00:00.000Z", plannedDuration: 150, actualDuration: 150, distressLevel: "active", belowThreshold: false },
+    ]);
+    const dog = { id: "DOG-1", dogName: "Milo", goalSeconds: 1800, leavesPerDay: 3 };
+    const canonicalSessions = sortValidDateAsc(sessions);
+    const recommendation = buildRecommendation({
+      sessions: canonicalSessions,
+      walks: [],
+      patterns: [],
+      dog,
+      target: 60,
+    });
+    const appData = selectAppData({
+      dogs: [dog],
+      activeDogId: "DOG-1",
+      sessions,
+      walks: [],
+      patterns: [],
+      feedings: [],
+      target: 60,
+      protoOverride: {},
+      recommendation,
+    });
+
+    expect(canonicalSessions.map((session) => session.id)).toEqual(["valid-1", "valid-2"]);
+    expect(appData.totalCount).toBe(canonicalSessions.length);
+    expect(appData.chartData.map((entry) => entry.durationSeconds)).toEqual([120, 150]);
+    expect(appData.timeline.filter((entry) => entry.kind === "session").map((entry) => entry.data.id)).toEqual(["valid-2", "valid-1"]);
+    expect(appData.recentHighDistress.recentSessions).toHaveLength(canonicalSessions.length);
   });
 });
