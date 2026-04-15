@@ -57,6 +57,7 @@ export default function SettingsScreen(props) {
     SB_BASE_URL,
     syncDiagResult,
     syncSummary,
+    syncDegradation,
     recommendation,
     trainingSettingsOpen,
     setProtoWarnAck,
@@ -244,7 +245,13 @@ export default function SettingsScreen(props) {
                 <div className="diag-grid diag-grid--kv">
                   <div className="diag-kv-row"><span>Account sync</span><strong>{SYNC_ENABLED ? "Available" : "Unavailable"}</strong></div>
                   <div className="diag-kv-row"><span>Connection test</span><strong>{syncDiagResult?.checks?.summary?.ok ? "Passing" : "Not run yet"}</strong></div>
+                  <div className="diag-kv-row"><span>Schema compatibility</span><strong>{syncDegradation?.isDegraded ? "Partial sync mode" : "Healthy"}</strong></div>
                 </div>
+                {syncDegradation?.isDegraded && (
+                  <div className="settings-secondary-text" role="status" aria-live="polite">
+                    Sync is working in compatibility mode. Some fields are being skipped until your server schema is updated.
+                  </div>
+                )}
               </div>
               <div className="settings-advanced-group">
                 <button type="button" className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setDiagDetailsOpen((prev) => !prev)}>{diagDetailsOpen ? "Hide technical details" : "Show technical details"}</button>
@@ -256,7 +263,15 @@ export default function SettingsScreen(props) {
                   <div className="diag-kv-row"><span>VITE_SUPABASE_URL</span><strong>{SB_URL ? "Set" : "Missing"}</strong></div>
                   <div className="diag-kv-row"><span>VITE_SUPABASE_ANON_KEY</span><strong>{SB_KEY ? "Set" : "Missing"}</strong></div>
                   <div className="diag-kv-row diag-kv-row--code"><span>Supabase base URL</span><code>{SB_BASE_URL || "(missing)"}</code></div>
+                  <div className="diag-kv-row"><span>Degradation flags</span><code>{(syncDegradation?.flags || []).join(", ") || "(none)"}</code></div>
                 </div>
+                {syncDegradation?.messages?.length > 0 && (
+                  <ul className="settings-secondary-text">
+                    {syncDegradation.messages.map((message) => (
+                      <li key={message}>{message}</li>
+                    ))}
+                  </ul>
+                )}
               </div>}
               {diagDetailsOpen && syncDiagResult && <div className="settings-advanced-group settings-advanced-group--technical"><div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>{syncDiagResult.checks?.summary?.ok ? "All checks passed" : "Some checks failed"}</div><pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre></div>}
             </div>

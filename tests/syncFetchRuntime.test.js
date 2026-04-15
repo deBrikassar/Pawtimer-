@@ -56,13 +56,17 @@ describe("syncFetch runtime fallbacks", () => {
     });
 
     const { syncFetch } = await setupStorageModule();
-    const { result, error } = await syncFetch("dog1");
+    const { result, error, degradation } = await syncFetch("dog1");
 
     expect(error).toBeNull();
     expect(result.sessions).toHaveLength(1);
     expect(sessionSelectAttempts.length).toBe(2);
     expect(sessionSelectAttempts[0]).toContain("latency_to_first_distress");
     expect(sessionSelectAttempts[1]).not.toContain("latency_to_first_distress");
+    expect(degradation?.isDegraded).toBe(true);
+    expect(degradation?.flags).toContain("missing_fetch_column");
+    expect(degradation?.messages.join(" ")).toMatch(/compatibility mode/i);
+    expect(degradation?.events.some((event) => event.table === "sessions" && event.field === "latency_to_first_distress")).toBe(true);
   });
 
   it("degrades gracefully when optional tables are missing", async () => {
