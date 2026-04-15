@@ -96,6 +96,10 @@ export default function PawTimer() {
   const startRef = useRef(null);
   const syncInFlightRef = useRef(false);
   const syncSnapshotRef = useRef({ dogs: [], sessions: [], walks: [], patterns: [], feedings: [], tombstones: [] });
+  const sessionsRef = useRef([]);
+  const walksRef = useRef([]);
+  const patternsRef = useRef([]);
+  const feedingsRef = useRef([]);
   const tombstonesRef = useRef([]);
   const syncHelpersRef = useRef({
     commitSessions: null,
@@ -183,6 +187,10 @@ export default function PawTimer() {
     syncSnapshotRef.current = { dogs, sessions, walks, patterns, feedings, tombstones };
   }, [dogs, sessions, walks, patterns, feedings, tombstones]);
 
+  useEffect(() => { sessionsRef.current = sessions; }, [sessions]);
+  useEffect(() => { walksRef.current = walks; }, [walks]);
+  useEffect(() => { patternsRef.current = patterns; }, [patterns]);
+  useEffect(() => { feedingsRef.current = feedings; }, [feedings]);
   useEffect(() => {
     tombstonesRef.current = tombstones;
   }, [tombstones]);
@@ -248,105 +256,95 @@ export default function PawTimer() {
   }, []);
 
   const commitSessions = useCallback((updater) => {
-    let committed = [];
-    setSessions((prev) => {
-      const resolved = typeof updater === "function" ? updater(prev) : updater;
-      const normalized = sortByDateAsc(normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState));
-      if (activeDogId) {
-        const writeResult = persistValue(sessKey(activeDogId), normalized, save);
-        if (!writeResult.ok) {
-          reportLocalWriteFailure(writeResult.error);
-          committed = markCollectionStorageError(normalized, writeResult.error);
-          recomputeTarget(committed);
-          return committed;
-        }
+    const previous = ensureArray(sessionsRef.current);
+    const resolved = typeof updater === "function" ? updater(previous) : updater;
+    const normalized = sortByDateAsc(normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState));
+    let committed = normalized;
+    if (activeDogId) {
+      const writeResult = persistValue(sessKey(activeDogId), normalized, save);
+      if (!writeResult.ok) {
+        reportLocalWriteFailure(writeResult.error);
+        committed = markCollectionStorageError(normalized, writeResult.error);
       }
-      recomputeTarget(normalized);
-      committed = normalized;
-      return normalized;
-    });
+    }
+    sessionsRef.current = committed;
+    syncSnapshotRef.current = { ...syncSnapshotRef.current, sessions: committed };
+    setSessions(committed);
+    recomputeTarget(committed, walksRef.current, patternsRef.current, activeDog || {});
     return committed;
-  }, [activeDogId, recomputeTarget, reportLocalWriteFailure, withHydratedSyncState]);
+  }, [activeDog, activeDogId, recomputeTarget, reportLocalWriteFailure, withHydratedSyncState]);
 
   const commitWalks = useCallback((updater) => {
-    let committed = [];
-    setWalks((prev) => {
-      const resolved = typeof updater === "function" ? updater(prev) : updater;
-      const normalized = sortByDateAsc(ensureArray(resolved).map((item) => ({ ...withHydratedSyncState(item), type: normalizeWalkType(item?.type) })));
-      if (activeDogId) {
-        const writeResult = persistValue(walkKey(activeDogId), normalized, save);
-        if (!writeResult.ok) {
-          reportLocalWriteFailure(writeResult.error);
-          committed = markCollectionStorageError(normalized, writeResult.error);
-          recomputeTarget(sessions, committed, patterns, activeDog || {});
-          return committed;
-        }
+    const previous = ensureArray(walksRef.current);
+    const resolved = typeof updater === "function" ? updater(previous) : updater;
+    const normalized = sortByDateAsc(ensureArray(resolved).map((item) => ({ ...withHydratedSyncState(item), type: normalizeWalkType(item?.type) })));
+    let committed = normalized;
+    if (activeDogId) {
+      const writeResult = persistValue(walkKey(activeDogId), normalized, save);
+      if (!writeResult.ok) {
+        reportLocalWriteFailure(writeResult.error);
+        committed = markCollectionStorageError(normalized, writeResult.error);
       }
-      recomputeTarget(sessions, normalized, patterns, activeDog || {});
-      committed = normalized;
-      return normalized;
-    });
+    }
+    walksRef.current = committed;
+    syncSnapshotRef.current = { ...syncSnapshotRef.current, walks: committed };
+    setWalks(committed);
+    recomputeTarget(sessionsRef.current, committed, patternsRef.current, activeDog || {});
     return committed;
-  }, [activeDog, activeDogId, patterns, recomputeTarget, reportLocalWriteFailure, sessions, withHydratedSyncState]);
+  }, [activeDog, activeDogId, recomputeTarget, reportLocalWriteFailure, withHydratedSyncState]);
 
   const commitPatterns = useCallback((updater) => {
-    let committed = [];
-    setPatterns((prev) => {
-      const resolved = typeof updater === "function" ? updater(prev) : updater;
-      const normalized = sortByDateAsc(ensureArray(resolved).map(withHydratedSyncState));
-      if (activeDogId) {
-        const writeResult = persistValue(patKey(activeDogId), normalized, save);
-        if (!writeResult.ok) {
-          reportLocalWriteFailure(writeResult.error);
-          committed = markCollectionStorageError(normalized, writeResult.error);
-          recomputeTarget(sessions, walks, committed, activeDog || {});
-          return committed;
-        }
+    const previous = ensureArray(patternsRef.current);
+    const resolved = typeof updater === "function" ? updater(previous) : updater;
+    const normalized = sortByDateAsc(ensureArray(resolved).map(withHydratedSyncState));
+    let committed = normalized;
+    if (activeDogId) {
+      const writeResult = persistValue(patKey(activeDogId), normalized, save);
+      if (!writeResult.ok) {
+        reportLocalWriteFailure(writeResult.error);
+        committed = markCollectionStorageError(normalized, writeResult.error);
       }
-      recomputeTarget(sessions, walks, normalized, activeDog || {});
-      committed = normalized;
-      return normalized;
-    });
+    }
+    patternsRef.current = committed;
+    syncSnapshotRef.current = { ...syncSnapshotRef.current, patterns: committed };
+    setPatterns(committed);
+    recomputeTarget(sessionsRef.current, walksRef.current, committed, activeDog || {});
     return committed;
-  }, [activeDog, activeDogId, recomputeTarget, reportLocalWriteFailure, sessions, walks, withHydratedSyncState]);
+  }, [activeDog, activeDogId, recomputeTarget, reportLocalWriteFailure, withHydratedSyncState]);
 
   const commitFeedings = useCallback((updater) => {
-    let committed = [];
-    setFeedings((prev) => {
-      const resolved = typeof updater === "function" ? updater(prev) : updater;
-      const normalized = normalizeFeedings(ensureArray(resolved)).map(withHydratedSyncState);
-      if (activeDogId) {
-        const writeResult = persistValue(feedingKey(activeDogId), normalized, save);
-        if (!writeResult.ok) {
-          reportLocalWriteFailure(writeResult.error);
-          committed = markCollectionStorageError(normalized, writeResult.error);
-          return committed;
-        }
+    const previous = ensureArray(feedingsRef.current);
+    const resolved = typeof updater === "function" ? updater(previous) : updater;
+    const normalized = normalizeFeedings(ensureArray(resolved)).map(withHydratedSyncState);
+    let committed = normalized;
+    if (activeDogId) {
+      const writeResult = persistValue(feedingKey(activeDogId), normalized, save);
+      if (!writeResult.ok) {
+        reportLocalWriteFailure(writeResult.error);
+        committed = markCollectionStorageError(normalized, writeResult.error);
       }
-      committed = normalized;
-      return normalized;
-    });
+    }
+    feedingsRef.current = committed;
+    syncSnapshotRef.current = { ...syncSnapshotRef.current, feedings: committed };
+    setFeedings(committed);
     return committed;
   }, [activeDogId, reportLocalWriteFailure, withHydratedSyncState]);
 
   const commitTombstones = useCallback((updater) => {
-    let committed = [];
-    setTombstones((prev) => {
-      const resolved = typeof updater === "function" ? updater(prev) : updater;
-      const normalized = normalizeTombstones(ensureArray(resolved)).map(withHydratedSyncState);
-      if (activeDogId) {
-        const writeResult = persistValue(tombKey(activeDogId), normalized, save);
-        if (!writeResult.ok) {
-          reportLocalWriteFailure(writeResult.error);
-          committed = markCollectionStorageError(normalized, writeResult.error);
-          tombstonesRef.current = committed;
-          return committed;
-        }
+    const previous = ensureArray(tombstonesRef.current);
+    const resolved = typeof updater === "function" ? updater(previous) : updater;
+    const normalized = normalizeTombstones(ensureArray(resolved)).map(withHydratedSyncState);
+    let committed = normalized;
+    if (activeDogId) {
+      const writeResult = persistValue(tombKey(activeDogId), normalized, save);
+      if (!writeResult.ok) {
+        reportLocalWriteFailure(writeResult.error);
+        committed = markCollectionStorageError(normalized, writeResult.error);
       }
-      tombstonesRef.current = normalized;
-      committed = normalized;
-      return normalized;
-    });
+    }
+    tombstonesRef.current = committed;
+    syncSnapshotRef.current = { ...syncSnapshotRef.current, tombstones: committed };
+    setTombstones(committed);
     return committed;
   }, [activeDogId, reportLocalWriteFailure, withHydratedSyncState]);
 
@@ -423,11 +421,24 @@ export default function PawTimer() {
     const hydratedWalks = sortByDateAsc(ensureArray(local.walks).map((item) => ({ ...withHydratedSyncState(item), type: normalizeWalkType(item?.type) })));
     const hydratedPatterns = sortByDateAsc(ensureArray(local.patterns).map(withHydratedSyncState));
     const hydratedFeedings = normalizeFeedings(local.feedings).map(withHydratedSyncState);
+    tombstonesRef.current = hydratedTombstones;
+    sessionsRef.current = applyTombstonesToCollection(hydratedSessions, hydratedTombstones, "session");
+    walksRef.current = applyTombstonesToCollection(hydratedWalks, hydratedTombstones, "walk");
+    patternsRef.current = applyTombstonesToCollection(hydratedPatterns, hydratedTombstones, "pattern");
+    feedingsRef.current = applyTombstonesToCollection(hydratedFeedings, hydratedTombstones, "feeding");
+    syncSnapshotRef.current = {
+      ...syncSnapshotRef.current,
+      tombstones: tombstonesRef.current,
+      sessions: sessionsRef.current,
+      walks: walksRef.current,
+      patterns: patternsRef.current,
+      feedings: feedingsRef.current,
+    };
     setTombstones(hydratedTombstones);
-    setSessions(applyTombstonesToCollection(hydratedSessions, hydratedTombstones, "session"));
-    setWalks(applyTombstonesToCollection(hydratedWalks, hydratedTombstones, "walk"));
-    setPatterns(applyTombstonesToCollection(hydratedPatterns, hydratedTombstones, "pattern"));
-    setFeedings(applyTombstonesToCollection(hydratedFeedings, hydratedTombstones, "feeding"));
+    setSessions(sessionsRef.current);
+    setWalks(walksRef.current);
+    setPatterns(patternsRef.current);
+    setFeedings(feedingsRef.current);
     setPatLabels(local.patLabels);
     setDogPhoto(local.photo);
     recomputeTarget(
@@ -735,6 +746,19 @@ export default function PawTimer() {
     setPatterns([]);
     setFeedings([]);
     setTombstones([]);
+    sessionsRef.current = [];
+    walksRef.current = [];
+    patternsRef.current = [];
+    feedingsRef.current = [];
+    tombstonesRef.current = [];
+    syncSnapshotRef.current = {
+      ...syncSnapshotRef.current,
+      sessions: [],
+      walks: [],
+      patterns: [],
+      feedings: [],
+      tombstones: [],
+    };
     setPatLabels({});
     setDogPhoto(null);
     return true;
@@ -766,6 +790,19 @@ export default function PawTimer() {
       const visibleJoinedWalks = applyTombstonesToCollection(joinedWalks, joinedTombstones, "walk");
       const visibleJoinedPatterns = applyTombstonesToCollection(joinedPatterns, joinedTombstones, "pattern");
       const visibleJoinedFeedings = applyTombstonesToCollection(joinedFeedings, joinedTombstones, "feeding");
+      tombstonesRef.current = joinedTombstones;
+      sessionsRef.current = visibleJoinedSessions;
+      walksRef.current = visibleJoinedWalks;
+      patternsRef.current = visibleJoinedPatterns;
+      feedingsRef.current = visibleJoinedFeedings;
+      syncSnapshotRef.current = {
+        ...syncSnapshotRef.current,
+        tombstones: joinedTombstones,
+        sessions: visibleJoinedSessions,
+        walks: visibleJoinedWalks,
+        patterns: visibleJoinedPatterns,
+        feedings: visibleJoinedFeedings,
+      };
       setTombstones(joinedTombstones);
       setSessions(visibleJoinedSessions);
       setWalks(visibleJoinedWalks);
