@@ -75,6 +75,8 @@ export default function SettingsScreen(props) {
   } = props;
 
   const reminderSummary = notifEnabled ? `On · ${notifTime}` : "Off";
+  const recommendationType = recommendation?.details?.recommendationType || "baseline_start";
+  const recommendationSummary = recommendation?.details?.summary || recommendation?.explanation;
 
   return (
     <>
@@ -218,8 +220,9 @@ export default function SettingsScreen(props) {
             <div className="settings-modal-stack">
               <div className="proto-section u-mt-none"><div className="proto-title">Sync devices</div><div className="proto-row">Share your Dog ID, then join with the same ID on the other device.</div></div>
               <div className="proto-section"><div className="proto-title">Session flow</div><div className="proto-row">Start a session, return before distress escalates, then rate how {name} did.</div></div>
-              <div className="proto-section"><div className="proto-title">Next target</div><div className="proto-row">{recommendation?.explanation} It currently weighs {(recommendation?.details?.factors || []).join(" ")}</div></div>
-              <div className="proto-section"><div className="proto-title">Subtle recovery</div><div className="proto-row">After a subtle-distress trigger, any calm follow-up session counts toward recovery completion, even if the duration is longer than the suggested step.</div></div>
+              <div className="proto-section"><div className="proto-title">Current recommendation state</div><div className="proto-row">Now: <strong>{recommendationType}</strong>. {recommendationSummary} It currently weighs {(recommendation?.details?.factors || []).join(" ")}</div></div>
+              <div className="proto-section"><div className="proto-title">Recommendation states emitted</div><div className="proto-row">baseline_start, keep_same_duration, repeat_current_duration, departure_cues_first, recovery_mode_active, recovery_mode_resume.</div></div>
+              <div className="proto-section"><div className="proto-title">Recovery behavior</div><div className="proto-row">Any subtle/active/severe distress can activate recovery. While recovery_mode_active, targets use short fixed steps (typically 60s then 120s; severe can add a third 120s step). Subtle recovery accepts any calm follow-up duration; active/severe count calm sessions at short recovery lengths. After enough calm sessions, recovery_mode_resume emits once, then normal progression continues.</div></div>
               <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions, {activeProto.maxDailyAloneMinutes} min/day, and {pattern.recMin}–{pattern.recMax} pattern breaks.</div></div>
             </div>
           </div>
