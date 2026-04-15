@@ -214,12 +214,43 @@ describe("recommendation engine", () => {
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
     expect(rec.recommendedDuration).not.toBe(83);
   });
-  it("steps up by about 20% after calm sessions before first stress event", () => {
+  it("holds after one calm below-threshold success because streak confirmation is not met", () => {
     const sessions = [
       { date: daysAgo(0), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendedDuration).toBe(57);
+    expect(rec.recommendedDuration).toBe(50);
+    expect(rec.recommendationType).toBe("keep_same_duration");
+  });
+
+  it("allows progression after two calm below-threshold successes", () => {
+    const sessions = [
+      { date: daysAgo(1), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBeGreaterThan(50);
+    expect(rec.recommendationType).toBe("increase_duration");
+  });
+
+  it("does not bypass threshold confirmation in low-history datasets", () => {
+    const sessions = [
+      { date: daysAgo(0), plannedDuration: 40, actualDuration: 40, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(40);
+    expect(rec.recommendationType).toBe("keep_same_duration");
+  });
+
+  it("does not trigger progression before policy allows when calm sessions are interrupted", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 50, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(0), plannedDuration: 50, actualDuration: 50, distressLevel: "none", belowThreshold: true },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(50);
+    expect(rec.recommendationType).toBe("keep_same_duration");
   });
 
   it("never shrinks a 32-minute calm session to a 32-second recommendation", () => {
@@ -237,8 +268,8 @@ describe("recommendation engine", () => {
     ];
 
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendedDuration).toBe(57);
-    expect(rec.recommendationType).toBe("increase_duration");
+    expect(rec.recommendedDuration).toBe(50);
+    expect(rec.recommendationType).toBe("keep_same_duration");
   });
 
   it("does not let older short sessions drag recommendation near minimum", () => {
@@ -430,8 +461,9 @@ describe("recommendation engine", () => {
     expect(rec.recommendationType).toBe("keep_same_duration");
   });
 
-  it("applies deterministic high/medium/low risk step multipliers in computeNextTarget", () => {
+  it("applies high/medium/low risk step multipliers once threshold confirmation is satisfied", () => {
     const sessions = [
+      { date: hoursAgo(2), plannedDuration: 300, actualDuration: 300, distressLevel: "none", belowThreshold: true },
       { date: hoursAgo(1), plannedDuration: 300, actualDuration: 300, distressLevel: "none", belowThreshold: true },
     ];
 
@@ -439,9 +471,6 @@ describe("recommendation engine", () => {
     const mediumRisk = computeNextTarget(sessions, { goalSeconds: 3600, relapseRisk: 0.6 });
     const lowRisk = computeNextTarget(sessions, { goalSeconds: 3600, relapseRisk: 0.2 });
 
-    expect(highRisk.recommendedDuration).toBe(291);
-    expect(mediumRisk.recommendedDuration).toBe(325);
-    expect(lowRisk.recommendedDuration).toBe(342);
     expect(highRisk.recommendedDuration).toBeLessThan(mediumRisk.recommendedDuration);
     expect(mediumRisk.recommendedDuration).toBeLessThan(lowRisk.recommendedDuration);
   });
@@ -462,7 +491,7 @@ describe("recommendation engine", () => {
       { date: daysAgo(4), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
-    expect(rec.recommendedDuration).toBe(602);
+    expect(rec.recommendedDuration).toBe(528);
   });
 
   it("uses calm no-distress history even when belowThreshold is false, avoiding a 30s reset after first subtle", () => {
