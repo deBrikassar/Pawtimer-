@@ -1102,7 +1102,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
       : microIncrease;
     return {
       recommendedDuration: clamp(adjustedForGap, PROTOCOL.minDurationSeconds, goalSeconds),
-      recommendationType: 'keep_same_duration',
+      recommendationType: adjustedForGap > lastReferenceDuration ? 'increase_duration' : 'keep_same_duration',
       recoveryMode: {
         active: false,
         remainingSessions: 0,
@@ -1134,7 +1134,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
 
   return {
     recommendedDuration: clamp(smoothed, PROTOCOL.minDurationSeconds, goalSeconds),
-    recommendationType: 'keep_same_duration',
+    recommendationType: smoothed > lastReferenceDuration ? 'increase_duration' : 'keep_same_duration',
     recoveryMode: {
       active: false,
       remainingSessions: 0,
@@ -1217,7 +1217,9 @@ function describeRecommendationType(type) {
     case "recovery_mode_resume":
       return "Calm recovery sessions were completed, so progression resumes at a cautious step below the prior anchor.";
     case "keep_same_duration":
-      return "The next target keeps a steady progression from your recent calm baseline.";
+      return "The next target holds at your current safe training duration.";
+    case "increase_duration":
+      return "The next target nudges upward after calm threshold-confirmed sessions.";
     default:
       return "The next target is adjusted from the current safe-alone estimate.";
   }
@@ -1247,6 +1249,11 @@ function buildRecommendationExplanation({
       return "Recovery sessions went well, so we are carefully stepping back up.";
     case "departure_cues_first":
       return "Holding duration while cue practice catches up.";
+    case "increase_duration":
+      if (prev > 0 && next > prev && changePct > 0) {
+        return `Increased by ${changePct}% after ${calmLabel}.`;
+      }
+      return "Stepping up cautiously after calm threshold-confirmed sessions.";
     case "keep_same_duration":
     case "repeat_current_duration":
       if (prev > 0 && next > prev && changePct > 0) {
