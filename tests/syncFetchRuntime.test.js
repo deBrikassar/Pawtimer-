@@ -215,4 +215,64 @@ describe("syncFetch runtime fallbacks", () => {
     expect(result.sessions[0].distressLevel).toBe("severe");
     expect(result.sessions[0].distressType).toBe("vocalization");
   });
+
+  it("excludes deleted rows from active payload and returns tombstones", async () => {
+    global.fetch = vi.fn(async (url) => {
+      const { path } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(200, [{ id: "DOG5", settings: { dogName: "Poppy" } }]);
+      if (path === "sessions") {
+        return jsonResponse(200, [
+          { id: "s-active", dog_id: "DOG5", date: "2026-04-01T00:00:00.000Z", planned_duration: 120, actual_duration: 120, distress_level: "none", result: "success", revision: 2, updated_at: "2026-04-01T01:00:00.000Z" },
+          { id: "s-deleted", dog_id: "DOG5", date: "2026-04-01T00:00:00.000Z", planned_duration: 120, actual_duration: 50, distress_level: "subtle", result: "distress", revision: 3, updated_at: "2026-04-01T03:00:00.000Z", deleted_at: "2026-04-01T03:00:00.000Z" },
+        ]);
+      }
+      if (path === "walks") return jsonResponse(200, []);
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, []);
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncFetch } = await setupStorageModule();
+    const { result, error } = await syncFetch("DOG5");
+    expect(error).toBeNull();
+    expect(result.sessions.map((row) => row.id)).toEqual(["s-active"]);
+    expect(result.tombstones).toEqual([
+      expect.objectContaining({ id: "s-deleted", kind: "session", deletedAt: "2026-04-01T03:00:00.000Z" }),
+    ]);
+  });
+
+  it("syncPushTombstone sends deletion markers to remote rows", async () => {
+    const postedBodies = [];
+    global.fetch = vi.fn(async (url, options = {}) => {
+      const { path } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(201, {});
+      if (path === "sessions" && (options.method || "GET") === "POST") {
+        postedBodies.push(JSON.parse(options.body || "{}"));
+        return jsonResponse(201, {});
+      }
+      if (path === "sessions") return jsonResponse(200, []);
+      if (path === "walks") return jsonResponse(200, []);
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, []);
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncPushTombstone } = await setupStorageModule();
+    const result = await syncPushTombstone("DOG6", {
+      id: "session-dead",
+      kind: "session",
+      deletedAt: "2026-04-02T10:00:00.000Z",
+      updatedAt: "2026-04-02T10:00:00.000Z",
+      revision: 9,
+    }, { id: "DOG6", dogName: "June" });
+
+    expect(result.ok).toBe(true);
+    expect(postedBodies).toHaveLength(1);
+    expect(postedBodies[0]).toMatchObject({
+      id: "session-dead",
+      dog_id: "DOG6",
+      deleted_at: "2026-04-02T10:00:00.000Z",
+      revision: 9,
+    });
+  });
 });

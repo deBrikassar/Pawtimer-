@@ -13,6 +13,7 @@ const legacyWalkKey = (id) => `pawtimer_walk_v3_${id}`;
 export const walkKey    = (id) => `pawtimer_walk_v4_${id}`;
 export const feedingKey = (id) => `pawtimer_feed_v1_${id}`;
 export const patKey     = (id) => `pawtimer_pat_v3_${id}`;
+export const tombKey    = (id) => `pawtimer_tomb_v1_${id}`;
 export const patLblKey  = (id) => `pawtimer_patlbl_v3_${id}`;  // custom pattern labels
 export const photoKey   = (id) => `pawtimer_photo_v3_${id}`;   // dog photo (base64)
 
@@ -181,13 +182,22 @@ const getRecordRevision = (item = {}) => {
 };
 
 const getRecordUpdatedAt = (item = {}) => item.updatedAt ?? item.updated_at ?? item.localUpdatedAt ?? item.local_updated_at ?? null;
+const getRecordDeletedAt = (item = {}) => item.deletedAt ?? item.deleted_at ?? null;
 
 export const resolveSyncConflict = (left = {}, right = {}) => {
+  const leftDeletedAt = toTimestamp(getRecordDeletedAt(left));
+  const rightDeletedAt = toTimestamp(getRecordDeletedAt(right));
   const leftRevision = getRecordRevision(left);
   const rightRevision = getRecordRevision(right);
   if (leftRevision !== null && rightRevision !== null && leftRevision !== rightRevision) {
     return leftRevision > rightRevision ? left : right;
   }
+  if (leftDeletedAt || rightDeletedAt) {
+    if (leftDeletedAt !== rightDeletedAt) return leftDeletedAt > rightDeletedAt ? left : right;
+    if (leftDeletedAt && rightDeletedAt) return leftDeletedAt >= rightDeletedAt ? left : right;
+    return leftDeletedAt ? left : right;
+  }
+
 
   const leftUpdatedAt = toTimestamp(getRecordUpdatedAt(left));
   const rightUpdatedAt = toTimestamp(getRecordUpdatedAt(right));
@@ -475,6 +485,45 @@ export const normalizeFeedings = (rows = []) => ensureArray(rows)
   .filter((row) => row.id)
   .sort((a, b) => new Date(a.date) - new Date(b.date));
 
+const normalizeTombstoneKind = (kind) => {
+  if (kind === "session" || kind === "walk" || kind === "pattern" || kind === "feeding") return kind;
+  return null;
+};
+
+export const normalizeTombstones = (rows = []) => ensureArray(rows)
+  .map((row) => ({
+    id: String(row?.id || ""),
+    kind: normalizeTombstoneKind(row?.kind ?? row?.type),
+    deletedAt: row?.deletedAt ?? row?.deleted_at ?? row?.updatedAt ?? row?.updated_at ?? null,
+    revision: normalizeRevision(row?.revision),
+    updatedAt: normalizeUpdatedAt(row),
+    pendingSync: Boolean(row?.pendingSync),
+    syncState: row?.syncState,
+    syncError: row?.syncError ?? "",
+  }))
+  .filter((row) => row.id && row.kind && row.deletedAt)
+  .sort((a, b) => toTimestamp(a.deletedAt) - toTimestamp(b.deletedAt));
+
+const isEntrySuppressedByTombstone = (entry, tombstone) => {
+  if (!entry?.id || !tombstone?.id || entry.id !== tombstone.id) return false;
+  const winner = resolveSyncConflict(
+    { ...entry, deletedAt: null },
+    { ...tombstone, deletedAt: tombstone.deletedAt, date: entry?.date ?? tombstone.deletedAt },
+  );
+  return winner?.deletedAt != null;
+};
+
+export const applyTombstonesToCollection = (items = [], tombstones = [], kind = "") => {
+  const activeTombstones = normalizeTombstones(tombstones).filter((row) => row.kind === kind);
+  if (!activeTombstones.length) return ensureArray(items);
+  const tombstoneById = new Map(activeTombstones.map((row) => [row.id, row]));
+  return ensureArray(items).filter((entry) => {
+    const tombstone = tombstoneById.get(entry?.id);
+    if (!tombstone) return true;
+    return !isEntrySuppressedByTombstone(entry, tombstone);
+  });
+};
+
 export const SESSION_SYNC_FETCH_FIELD_MAP = {
   plannedDuration: "planned_duration",
   actualDuration: "actual_duration",
@@ -497,6 +546,7 @@ export const SESSION_SYNC_FETCH_SELECT = [
   "dog_id",
   "date",
   ...Object.values(SESSION_SYNC_FETCH_FIELD_MAP),
+  "deleted_at",
 ].join(",");
 
 export const WALKS_SYNC_FETCH_SELECT = [
@@ -507,10 +557,11 @@ export const WALKS_SYNC_FETCH_SELECT = [
   "walk_type",
   "revision",
   "updated_at",
+  "deleted_at",
 ].join(",");
 
-export const PATTERNS_SYNC_FETCH_SELECT = "id,dog_id,date,type,revision,updated_at";
-export const FEEDINGS_SYNC_FETCH_SELECT = "id,dog_id,date,food_type,amount,revision,updated_at";
+export const PATTERNS_SYNC_FETCH_SELECT = "id,dog_id,date,type,revision,updated_at,deleted_at";
+export const FEEDINGS_SYNC_FETCH_SELECT = "id,dog_id,date,food_type,amount,revision,updated_at,deleted_at";
 
 const mapSyncFetchSessionRow = (r) => ({
   id: r.id,
@@ -529,6 +580,7 @@ const mapSyncFetchSessionRow = (r) => ({
   environment: r[SESSION_SYNC_FETCH_FIELD_MAP.environment],
   revision: r[SESSION_SYNC_FETCH_FIELD_MAP.revision],
   updatedAt: r[SESSION_SYNC_FETCH_FIELD_MAP.updatedAt],
+  deletedAt: r.deleted_at ?? null,
 });
 
 export const syncFetch = async (dogId) => {
@@ -677,6 +729,12 @@ export const syncFetch = async (dogId) => {
   const walkRows = Array.isArray(walkRes.data) ? walkRes.data : [];
   const patRows = Array.isArray(patRes.data) ? patRes.data : [];
   const feedingRows = Array.isArray(feedingRes.data) ? feedingRes.data : [];
+  const tombstones = normalizeTombstones([
+    ...sessRows.filter((row) => row?.deleted_at).map((row) => ({ id: row.id, kind: "session", deleted_at: row.deleted_at, revision: row.revision, updated_at: row.updated_at })),
+    ...walkRows.filter((row) => row?.deleted_at).map((row) => ({ id: row.id, kind: "walk", deleted_at: row.deleted_at, revision: row.revision, updated_at: row.updated_at })),
+    ...patRows.filter((row) => row?.deleted_at).map((row) => ({ id: row.id, kind: "pattern", deleted_at: row.deleted_at, revision: row.revision, updated_at: row.updated_at })),
+    ...feedingRows.filter((row) => row?.deleted_at).map((row) => ({ id: row.id, kind: "feeding", deleted_at: row.deleted_at, revision: row.revision, updated_at: row.updated_at })),
+  ]);
 
   return {
     error: relatedErrors.length ? `Related data fetch failed (${relatedErrors.join(" | ")})` : null,
@@ -688,8 +746,9 @@ export const syncFetch = async (dogId) => {
             id: canonicalDogId(matchedDog.id),
           }
         : null,
-      sessions: normalizeSessions(sessRows.map(mapSyncFetchSessionRow)),
-      walks: walkRows.map((r) => ({
+      tombstones,
+      sessions: normalizeSessions(sessRows.filter((row) => !row?.deleted_at).map(mapSyncFetchSessionRow)),
+      walks: walkRows.filter((row) => !row?.deleted_at).map((r) => ({
         id: r.id,
         date: r.date,
         duration: r.duration,
@@ -697,14 +756,14 @@ export const syncFetch = async (dogId) => {
         revision: r.revision,
         updatedAt: r.updated_at,
       })),
-      patterns: normalizePatterns(patRows.map((r) => ({
+      patterns: normalizePatterns(patRows.filter((row) => !row?.deleted_at).map((r) => ({
         id: r.id,
         date: r.date,
         type: r.type,
         revision: r.revision,
         updatedAt: r.updated_at,
       }))),
-      feedings: normalizeFeedings(feedingRows.map((r) => ({
+      feedings: normalizeFeedings(feedingRows.filter((row) => !row?.deleted_at).map((r) => ({
         id: r.id,
         date: r.date,
         food_type: r.food_type,
@@ -873,6 +932,28 @@ export const syncDelete = async (kind, id) => {
   return res.ok;
 };
 
+export const syncPushTombstone = async (dogId, tombstone, dogSettings = null) => {
+  const id = canonicalDogId(dogId);
+  const dogReady = await syncUpsertDog(dogSettings && typeof dogSettings === "object" ? { ...dogSettings, id } : { id });
+  if (!dogReady.ok) return { ok: false, error: dogReady.error };
+  const kind = normalizeTombstoneKind(tombstone?.kind);
+  if (!kind || !tombstone?.id || !tombstone?.deletedAt) return { ok: false, error: "Invalid tombstone payload" };
+  const table = kind === "session" ? "sessions" : kind === "walk" ? "walks" : kind === "pattern" ? "patterns" : "feedings";
+  const payload = {
+    id: String(tombstone.id),
+    dog_id: id,
+    deleted_at: tombstone.deletedAt,
+    revision: tombstone.revision ?? null,
+    updated_at: tombstone.updatedAt ?? tombstone.deletedAt,
+  };
+  const res = await sbReq(table, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    prefer: "resolution=merge-duplicates,return=minimal",
+  });
+  return res.ok ? { ok: true, error: null } : { ok: false, error: `${kind} tombstone push failed: ${res.error}` };
+};
+
 export const syncDeleteSessionsForDog = async (dogId) => {
   const res = await sbReq(`sessions?dog_id=eq.${encodeURIComponent(canonicalDogId(dogId))}`, { method: "DELETE" });
   return res.ok;
@@ -896,6 +977,7 @@ export const hydrateDogFromLocal = (dogId) => {
     walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: normalizeWalkType(w?.type) })),
     patterns: normalizePatterns(load(patKey(id), [])),
     feedings: normalizeFeedings(load(feedingKey(id), [])),
+    tombstones: normalizeTombstones(load(tombKey(id), [])),
     patLabels: ensureObject(load(patLblKey(id), {})),
     photo: load(photoKey(id), null),
   };
