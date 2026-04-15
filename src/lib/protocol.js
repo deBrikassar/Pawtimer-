@@ -22,6 +22,11 @@ export const PROTOCOL = {
   minPauseBetweenBlocksMinutes: 30,
   adherenceTargetGapDays: 1,
   largeStepStabilityGate: 0.82,
+  nearThresholdRatioMin: 0.85,
+  nearThresholdRatioMaxExclusive: 0.98,
+  nearThresholdPlateauStreak: 2,
+  thresholdConfirmationWindow: 3,
+  thresholdConfirmationStreak: 2,
   maxDailyAloneMinutes: 30,
   desensitizationBlocksPerDayRecommendedMin: 3,
   desensitizationBlocksPerDayRecommendedMax: 5,
@@ -659,10 +664,37 @@ function isCalmShortSession(session = null) {
   return getCompletionRatio(session) < 0.85;
 }
 
+function isCalmNearThresholdSession(session = null) {
+  if (!session) return false;
+  if (normalizeDistressLevel(session.distressLevel) !== DISTRESS_LEVELS.NONE) return false;
+  if (session.belowThreshold) return false;
+  const completion = getCompletionRatio(session);
+  return completion >= PROTOCOL.nearThresholdRatioMin && completion < PROTOCOL.nearThresholdRatioMaxExclusive;
+}
+
 function isCalmVeryShortSession(session = null) {
   if (!session) return false;
   if (normalizeDistressLevel(session.distressLevel) !== DISTRESS_LEVELS.NONE) return false;
   return getCompletionRatio(session) < 0.5;
+}
+
+function hasThresholdConfirmation(window = []) {
+  const recent = getLatestSessions(window, PROTOCOL.thresholdConfirmationWindow);
+  if (!recent.length) return false;
+
+  const latest = recent[recent.length - 1];
+  const latestIsConfirmedSuccess = (
+    normalizeDistressLevel(latest.distressLevel) === DISTRESS_LEVELS.NONE
+    && latest.belowThreshold === true
+  );
+  if (!latestIsConfirmedSuccess) return false;
+
+  if (recent.length === 1) return true;
+  const confirmedSuccessStreak = countStreak(recent, (session) => (
+    normalizeDistressLevel(session.distressLevel) === DISTRESS_LEVELS.NONE
+    && session.belowThreshold === true
+  ));
+  return confirmedSuccessStreak >= PROTOCOL.thresholdConfirmationStreak;
 }
 
 function getProgressionReferenceDuration(session = null) {
@@ -986,6 +1018,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
   const gapHours = getHoursSinceLastSession(lastSession);
   const gapReduction = gapHours > 48 ? 0.12 : 0;
   const trailingCalmShortStreak = countStreak(recentWindow, isCalmShortSession);
+  const trailingNearThresholdStreak = countStreak(recentWindow, isCalmNearThresholdSession);
 
   if (hasThreeSessionInstability(recentWindow)) {
     const lastReferenceDuration = getProgressionReferenceDuration(lastSession) ?? PROTOCOL.startDurationSeconds;
@@ -1010,6 +1043,31 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
 
   if (trailingCalmShortStreak >= 1) {
     const holdBase = getProgressionReferenceDuration(lastSession)
+      ?? getSessionDurationAnchor(lastSession)
+      ?? PROTOCOL.startDurationSeconds;
+    const adjustedForGap = gapReduction > 0
+      ? Math.round(holdBase * (1 - gapReduction))
+      : holdBase;
+    return {
+      recommendedDuration: clamp(adjustedForGap, PROTOCOL.minDurationSeconds, goalSeconds),
+      recommendationType: 'keep_same_duration',
+      recoveryMode: {
+        active: false,
+        remainingSessions: 0,
+        ...buildRecoveryModeDetails({ step: 0 }),
+        anchorSessionDate: lastSession?.date || null,
+        anchorDuration: getProgressionReferenceDuration(lastSession) ?? null,
+        recoveryDuration: null,
+        postRecoveryDuration: null,
+      },
+      recoveryState: existingRecoveryState,
+    };
+  }
+
+  if (trailingNearThresholdStreak >= PROTOCOL.nearThresholdPlateauStreak) {
+    const holdBase = Number(lastSession?.plannedDuration) > 0
+      ? Math.round(Number(lastSession.plannedDuration))
+      : getProgressionReferenceDuration(lastSession)
       ?? getSessionDurationAnchor(lastSession)
       ?? PROTOCOL.startDurationSeconds;
     const adjustedForGap = gapReduction > 0
@@ -1063,6 +1121,10 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
   let smoothed = clampRateChange(riskAdjustedStep, lastReferenceDuration);
 
   if (hasConsecutivePostSubtleIncrease(recentWindow) && smoothed > lastReferenceDuration) {
+    smoothed = lastReferenceDuration;
+  }
+
+  if (smoothed > lastReferenceDuration && !hasThresholdConfirmation(recentWindow)) {
     smoothed = lastReferenceDuration;
   }
 
