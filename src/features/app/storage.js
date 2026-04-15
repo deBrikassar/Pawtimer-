@@ -183,6 +183,63 @@ const getRecordRevision = (item = {}) => {
 
 const getRecordUpdatedAt = (item = {}) => item.updatedAt ?? item.updated_at ?? item.localUpdatedAt ?? item.local_updated_at ?? null;
 const getRecordDeletedAt = (item = {}) => item.deletedAt ?? item.deleted_at ?? null;
+const isFiniteNumber = (value) => Number.isFinite(Number(value));
+
+const stableStringify = (value) => {
+  if (Array.isArray(value)) return `[${value.map((entry) => stableStringify(entry)).join(",")}]`;
+  if (value && typeof value === "object") {
+    const sortedKeys = Object.keys(value).sort();
+    return `{${sortedKeys.map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+};
+
+export const normalizeDogSyncMetadata = (dog = {}) => {
+  const id = canonicalDogId(dog?.id);
+  const revision = isFiniteNumber(dog?.revision) ? Number(dog.revision) : null;
+  const updatedAt = getRecordUpdatedAt(dog);
+  return {
+    ...(dog && typeof dog === "object" ? dog : {}),
+    id,
+    revision,
+    updatedAt: updatedAt || null,
+  };
+};
+
+export const stampLocalDogSettings = (nextDog = {}, previousDog = null) => {
+  const normalizedNext = normalizeDogSyncMetadata(nextDog);
+  const normalizedPrev = normalizeDogSyncMetadata(previousDog || {});
+  const previousRevision = Number.isFinite(normalizedPrev.revision)
+    ? normalizedPrev.revision
+    : Number.isFinite(normalizedNext.revision)
+      ? normalizedNext.revision
+      : 0;
+  return {
+    ...normalizedNext,
+    revision: previousRevision + 1,
+    updatedAt: new Date().toISOString(),
+  };
+};
+
+export const resolveDogSettingsConflict = (leftDog = {}, rightDog = {}) => {
+  const left = normalizeDogSyncMetadata(leftDog);
+  const right = normalizeDogSyncMetadata(rightDog);
+  if (!left.id && right.id) return right;
+  if (!right.id && left.id) return left;
+
+  const winner = resolveSyncConflict(left, right);
+  const loser = winner === left ? right : left;
+  const winnerRevision = getRecordRevision(winner);
+  const loserRevision = getRecordRevision(loser);
+  const winnerUpdatedAt = toTimestamp(getRecordUpdatedAt(winner));
+  const loserUpdatedAt = toTimestamp(getRecordUpdatedAt(loser));
+  if (winnerRevision !== loserRevision || winnerUpdatedAt !== loserUpdatedAt) return winner;
+
+  const leftFingerprint = stableStringify(left);
+  const rightFingerprint = stableStringify(right);
+  if (leftFingerprint === rightFingerprint) return right;
+  return leftFingerprint > rightFingerprint ? left : right;
+};
 
 export const resolveSyncConflict = (left = {}, right = {}) => {
   const leftDeletedAt = toTimestamp(getRecordDeletedAt(left));
@@ -822,11 +879,19 @@ export const syncFetch = async (dogId) => {
 
 
 export const syncUpsertDog = async (dog) => {
-  const id = canonicalDogId(dog?.id);
+  const localDog = normalizeDogSyncMetadata(dog);
+  const id = canonicalDogId(localDog?.id);
   if (!id) return { ok: false, error: "Dog ID missing" };
+  const remoteLookup = await sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`, { trigger: "syncUpsertDog:lookup" });
+  if (!remoteLookup.ok) return { ok: false, error: `Dog lookup failed before upsert: ${remoteLookup.error}` };
+  const remoteRow = Array.isArray(remoteLookup.data) ? remoteLookup.data[0] : null;
+  const remoteDog = remoteRow?.settings && typeof remoteRow.settings === "object"
+    ? normalizeDogSyncMetadata({ ...remoteRow.settings, id: canonicalDogId(remoteRow.id) })
+    : { id };
+  const mergedDog = resolveDogSettingsConflict(localDog, remoteDog);
   const res = await sbReq("dogs", {
     method: "POST",
-    body: JSON.stringify({ id, settings: { ...(dog || {}), id } }),
+    body: JSON.stringify({ id, settings: { ...mergedDog, id } }),
     prefer: "resolution=merge-duplicates,return=minimal",
   });
   return res.ok ? { ok: true, error: null } : { ok: false, error: `Dog upsert failed: ${res.error}` };
