@@ -229,6 +229,24 @@ export const mergeById = (a = [], b = [], pickWinner = resolveSyncConflict) => {
   return sortByDateAsc(Array.from(merged.values()));
 };
 
+export const tombstoneEntityKey = (entry = {}) => {
+  const kind = normalizeTombstoneKind(entry?.kind ?? entry?.type);
+  const id = String(entry?.id || "");
+  if (!kind || !id) return "";
+  return `${kind}:${id}`;
+};
+
+export const mergeTombstonesByEntityKey = (a = [], b = [], pickWinner = resolveSyncConflict) => {
+  const merged = new Map();
+  [...ensureArray(a), ...ensureArray(b)].forEach((item) => {
+    const key = tombstoneEntityKey(item);
+    if (!key) return;
+    const previous = merged.get(key);
+    merged.set(key, previous ? pickWinner(previous, item) : item);
+  });
+  return sortByDateAsc(Array.from(merged.values()));
+};
+
 export const mergeMutationSafeSyncCollection = ({
   currentItems = [],
   remoteItems = [],
@@ -542,9 +560,9 @@ const isEntrySuppressedByTombstone = (entry, tombstone) => {
 export const applyTombstonesToCollection = (items = [], tombstones = [], kind = "") => {
   const activeTombstones = normalizeTombstones(tombstones).filter((row) => row.kind === kind);
   if (!activeTombstones.length) return ensureArray(items);
-  const tombstoneById = new Map(activeTombstones.map((row) => [row.id, row]));
+  const tombstoneByEntity = new Map(activeTombstones.map((row) => [tombstoneEntityKey(row), row]));
   return ensureArray(items).filter((entry) => {
-    const tombstone = tombstoneById.get(entry?.id);
+    const tombstone = tombstoneByEntity.get(tombstoneEntityKey({ id: entry?.id, kind }));
     if (!tombstone) return true;
     return !isEntrySuppressedByTombstone(entry, tombstone);
   });

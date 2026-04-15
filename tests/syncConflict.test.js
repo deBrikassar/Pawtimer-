@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeMutationSafeSyncCollection, resolveSyncConflict } from "../src/features/app/storage";
+import { applyTombstonesToCollection, mergeMutationSafeSyncCollection, mergeTombstonesByEntityKey, resolveSyncConflict } from "../src/features/app/storage";
 
 const iso = (hour) => `2026-04-01T${String(hour).padStart(2, "0")}:00:00.000Z`;
 
@@ -170,5 +170,38 @@ describe("mergeMutationSafeSyncCollection concurrent edits", () => {
     });
 
     expect(mergedTombstones).toEqual(localTombstones);
+  });
+
+  it("keeps tombstones for different kinds when ids match", () => {
+    const localTombstones = [{ id: "shared-1", kind: "session", deletedAt: iso(9), revision: 2, updatedAt: iso(9), pendingSync: true }];
+    const remoteTombstones = [{ id: "shared-1", kind: "walk", deletedAt: iso(10), revision: 3, updatedAt: iso(10), pendingSync: false }];
+
+    const mergedTombstones = mergeTombstonesByEntityKey(localTombstones, remoteTombstones);
+
+    expect(mergedTombstones).toHaveLength(2);
+    expect(mergedTombstones).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "shared-1", kind: "session" }),
+      expect.objectContaining({ id: "shared-1", kind: "walk" }),
+    ]));
+  });
+
+  it("suppresses only matching kind when id is shared across kinds", () => {
+    const tombstones = [
+      { id: "shared-2", kind: "session", deletedAt: iso(12), revision: 4, updatedAt: iso(12) },
+      { id: "shared-2", kind: "walk", deletedAt: iso(13), revision: 5, updatedAt: iso(13) },
+    ];
+    const sessions = [
+      { id: "shared-2", date: iso(8), revision: 1, updatedAt: iso(8), result: "success" },
+      { id: "session-live", date: iso(9), revision: 1, updatedAt: iso(9), result: "success" },
+    ];
+    const feedings = [
+      { id: "shared-2", date: iso(8), revision: 1, updatedAt: iso(8), foodType: "meal", amount: "small" },
+    ];
+
+    const filteredSessions = applyTombstonesToCollection(sessions, tombstones, "session");
+    const filteredFeedings = applyTombstonesToCollection(feedings, tombstones, "feeding");
+
+    expect(filteredSessions.map((row) => row.id)).toEqual(["session-live"]);
+    expect(filteredFeedings.map((row) => row.id)).toEqual(["shared-2"]);
   });
 });
