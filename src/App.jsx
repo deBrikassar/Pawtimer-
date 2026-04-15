@@ -5,6 +5,7 @@ import { sortByDateAsc } from "./lib/activityDateTime";
 import { sortValidDateAsc } from "./lib/dateSort";
 import { selectAppData } from "./features/app/selectors";
 import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getLocalPersistenceState, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
+import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, pruneTombstonesForRetention, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
 import { fmt, fmtClock, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
 import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
 import { DogSelect, Onboarding } from "./features/setup/SetupScreens";
@@ -186,6 +187,7 @@ export default function PawTimer() {
       deletedAt,
       updatedAt: deletedAt,
       revision: previousRevision + 1,
+      replicationConfirmed: false,
       pendingSync: syncState !== SYNC_STATE.SYNCED,
       syncState,
       syncError: syncState === SYNC_STATE.ERROR ? syncErrorMessage : "",
@@ -472,7 +474,10 @@ export default function PawTimer() {
 
         const mergedTombstones = commitTombstones((prev) => mergeTombstonesByEntityKey(
           normalizeTombstones(prev).map(withHydratedSyncState),
-          normalizeTombstones(remote.tombstones).map(markRemoteEntryConfirmed),
+          normalizeTombstones(remote.tombstones).map((entry) => ({
+            ...markRemoteEntryConfirmed(entry),
+            replicationConfirmed: true,
+          })),
         ));
         const mergedSessions = syncHelpersRef.current.commitSessions((prev) => mergeMutationSafeSyncCollection({
           currentItems: prev,
@@ -533,6 +538,14 @@ export default function PawTimer() {
           setSyncStatus("err");
           return;
         }
+        commitTombstones((prev) => pruneTombstonesForRetention(prev, {
+          activityByKind: {
+            session: mergedSessions,
+            walk: mergedWalks,
+            pattern: mergedPatterns,
+            feeding: mergedFeedings,
+          },
+        }));
         setSyncError(error || "");
         setSyncStatus(error ? "err" : "ok");
       } finally {

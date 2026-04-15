@@ -673,6 +673,7 @@ export const normalizeTombstones = (rows = []) => ensureArray(rows)
     deletedAt: row?.deletedAt ?? row?.deleted_at ?? row?.updatedAt ?? row?.updated_at ?? null,
     revision: normalizeRevision(row?.revision),
     updatedAt: normalizeUpdatedAt(row),
+    replicationConfirmed: Boolean(row?.replicationConfirmed),
     pendingSync: Boolean(row?.pendingSync),
     syncState: row?.syncState,
     syncError: row?.syncError ?? "",
@@ -699,6 +700,27 @@ export const applyTombstonesToCollection = (items = [], tombstones = [], kind = 
     return !isEntrySuppressedByTombstone(entry, tombstone);
   });
 };
+
+export const TOMBSTONE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
+const hasConflictingActiveEntity = (entry, activityByKind = {}) => {
+  const activeRows = ensureArray(activityByKind?.[entry?.kind]);
+  return activeRows.some((row) => String(row?.id || "") === entry.id);
+};
+
+export const pruneTombstonesForRetention = (rows = [], {
+  now = Date.now(),
+  retentionMs = TOMBSTONE_RETENTION_MS,
+  activityByKind = {},
+} = {}) => normalizeTombstones(rows).filter((entry) => {
+  if (!entry.replicationConfirmed) return true;
+  if (entry.pendingSync) return true;
+  if (entry.syncState && entry.syncState !== "synced") return true;
+  if (hasConflictingActiveEntity(entry, activityByKind)) return true;
+  const deletedAtTs = toTimestamp(entry.deletedAt);
+  if (!deletedAtTs) return true;
+  return (now - deletedAtTs) < retentionMs;
+});
 
 export const SESSION_SYNC_FETCH_FIELD_MAP = {
   plannedDuration: "planned_duration",
