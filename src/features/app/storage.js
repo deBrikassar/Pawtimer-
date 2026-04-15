@@ -297,11 +297,7 @@ const inferDistressLevelFromRow = (row = {}) => {
   return null;
 };
 
-export const normalizeSession = (row = {}) => {
-  const context = row.context ?? {};
-  const symptoms = row.symptoms ?? {};
-  const preSession = row.preSession ?? row.pre_session ?? {};
-  const environment = row.environment ?? {};
+const resolveCanonicalDistress = (row = {}) => {
   const normalizedDistressType = row.distressType ?? row.distress_type ?? null;
   const normalizedDistressSeverity = row.distressSeverity ?? row.distress_severity ?? null;
   const restoredLegacyDistress = decodeLegacyDistressFields({
@@ -309,6 +305,20 @@ export const normalizeSession = (row = {}) => {
     distressType: normalizedDistressType,
     distressSeverity: normalizedDistressSeverity,
   });
+  const canonicalDistressLevel = normalizeDistressLevel(restoredLegacyDistress.distressLevel);
+  return {
+    distressLevel: canonicalDistressLevel,
+    distressSeverity: canonicalDistressLevel,
+    distressType: restoredLegacyDistress.distressType,
+  };
+};
+
+export const normalizeSession = (row = {}) => {
+  const context = row.context ?? {};
+  const symptoms = row.symptoms ?? {};
+  const preSession = row.preSession ?? row.pre_session ?? {};
+  const environment = row.environment ?? {};
+  const canonicalDistress = resolveCanonicalDistress(row);
   const actualDuration = resolveDurationSeconds(row, {
     secondsKeys: ["actualDurationSeconds", "actual_duration_seconds", "durationSeconds", "duration_seconds", "completedDurationSeconds", "completed_duration_seconds"],
     canonicalKeys: ["actualDuration", "actual_duration"],
@@ -325,7 +335,7 @@ export const normalizeSession = (row = {}) => {
     ...row,
     actualDuration,
     plannedDuration,
-    distressLevel: restoredLegacyDistress.distressLevel,
+    distressLevel: canonicalDistress.distressLevel,
     context: {
       timeOfDay: context.timeOfDay ?? context.time_of_day ?? null,
       departureType: context.departureType ?? context.departure_type ?? "training",
@@ -346,12 +356,12 @@ export const normalizeSession = (row = {}) => {
     latencyToFirstDistress: Number.isFinite(row.latencyToFirstDistress) ? row.latencyToFirstDistress : (Number.isFinite(row.latency_to_first_distress) ? row.latency_to_first_distress : null),
     belowThreshold: inferBelowThreshold({
       ...row,
-      distressLevel: restoredLegacyDistress.distressLevel,
+      distressLevel: canonicalDistress.distressLevel,
       actualDuration,
       plannedDuration,
     }),
-    distressType: restoredLegacyDistress.distressType,
-    distressSeverity: normalizedDistressSeverity,
+    distressType: canonicalDistress.distressType,
+    distressSeverity: canonicalDistress.distressSeverity,
     videoReview: {
       recorded: hasValue((row.videoReview || {}).recorded) ? !!row.videoReview.recorded : asBool((row.video_review || {}).recorded),
       firstSubtleDistressTs: (row.videoReview || {}).firstSubtleDistressTs ?? (row.video_review || {}).first_subtle_distress_ts ?? null,
