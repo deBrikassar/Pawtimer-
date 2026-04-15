@@ -5,6 +5,7 @@ import { sortByDateAsc } from "./lib/activityDateTime";
 import { sortValidDateAsc } from "./lib/dateSort";
 import { selectAppData } from "./features/app/selectors";
 import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, pruneTombstonesForRetention, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
+import { markCollectionStorageError, persistJoinedDogState, persistValue } from "./features/app/persistence";
 import { fmt, fmtClock, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
 import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
 import { DogSelect, Onboarding } from "./features/setup/SetupScreens";
@@ -233,68 +234,111 @@ export default function PawTimer() {
     setTarget((prev) => (prev === recommendation.duration ? prev : recommendation.duration));
   }, [recommendation.duration]);
 
+  const reportLocalWriteFailure = useCallback((errorMessage) => {
+    setSyncStatus("err");
+    setSyncError(errorMessage);
+  }, []);
+
   const commitSessions = useCallback((updater) => {
     let committed = [];
     setSessions((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = sortByDateAsc(normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState));
-      if (activeDogId) save(sessKey(activeDogId), normalized);
+      if (activeDogId) {
+        const writeResult = persistValue(sessKey(activeDogId), normalized, save);
+        if (!writeResult.ok) {
+          reportLocalWriteFailure(writeResult.error);
+          committed = markCollectionStorageError(normalized, writeResult.error);
+          recomputeTarget(committed);
+          return committed;
+        }
+      }
       recomputeTarget(normalized);
       committed = normalized;
       return normalized;
     });
     return committed;
-  }, [activeDogId, recomputeTarget, withHydratedSyncState]);
+  }, [activeDogId, recomputeTarget, reportLocalWriteFailure, withHydratedSyncState]);
 
   const commitWalks = useCallback((updater) => {
     let committed = [];
     setWalks((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = sortByDateAsc(ensureArray(resolved).map((item) => ({ ...withHydratedSyncState(item), type: normalizeWalkType(item?.type) })));
-      if (activeDogId) save(walkKey(activeDogId), normalized);
+      if (activeDogId) {
+        const writeResult = persistValue(walkKey(activeDogId), normalized, save);
+        if (!writeResult.ok) {
+          reportLocalWriteFailure(writeResult.error);
+          committed = markCollectionStorageError(normalized, writeResult.error);
+          recomputeTarget(sessions, committed, patterns, activeDog || {});
+          return committed;
+        }
+      }
       recomputeTarget(sessions, normalized, patterns, activeDog || {});
       committed = normalized;
       return normalized;
     });
     return committed;
-  }, [activeDog, activeDogId, patterns, recomputeTarget, sessions, withHydratedSyncState]);
+  }, [activeDog, activeDogId, patterns, recomputeTarget, reportLocalWriteFailure, sessions, withHydratedSyncState]);
 
   const commitPatterns = useCallback((updater) => {
     let committed = [];
     setPatterns((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = sortByDateAsc(ensureArray(resolved).map(withHydratedSyncState));
-      if (activeDogId) save(patKey(activeDogId), normalized);
+      if (activeDogId) {
+        const writeResult = persistValue(patKey(activeDogId), normalized, save);
+        if (!writeResult.ok) {
+          reportLocalWriteFailure(writeResult.error);
+          committed = markCollectionStorageError(normalized, writeResult.error);
+          recomputeTarget(sessions, walks, committed, activeDog || {});
+          return committed;
+        }
+      }
       recomputeTarget(sessions, walks, normalized, activeDog || {});
       committed = normalized;
       return normalized;
     });
     return committed;
-  }, [activeDog, activeDogId, recomputeTarget, sessions, walks, withHydratedSyncState]);
+  }, [activeDog, activeDogId, recomputeTarget, reportLocalWriteFailure, sessions, walks, withHydratedSyncState]);
 
   const commitFeedings = useCallback((updater) => {
     let committed = [];
     setFeedings((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = normalizeFeedings(ensureArray(resolved)).map(withHydratedSyncState);
-      if (activeDogId) save(feedingKey(activeDogId), normalized);
+      if (activeDogId) {
+        const writeResult = persistValue(feedingKey(activeDogId), normalized, save);
+        if (!writeResult.ok) {
+          reportLocalWriteFailure(writeResult.error);
+          committed = markCollectionStorageError(normalized, writeResult.error);
+          return committed;
+        }
+      }
       committed = normalized;
       return normalized;
     });
     return committed;
-  }, [activeDogId, withHydratedSyncState]);
+  }, [activeDogId, reportLocalWriteFailure, withHydratedSyncState]);
 
   const commitTombstones = useCallback((updater) => {
     let committed = [];
     setTombstones((prev) => {
       const resolved = typeof updater === "function" ? updater(prev) : updater;
       const normalized = normalizeTombstones(ensureArray(resolved)).map(withHydratedSyncState);
-      if (activeDogId) save(tombKey(activeDogId), normalized);
+      if (activeDogId) {
+        const writeResult = persistValue(tombKey(activeDogId), normalized, save);
+        if (!writeResult.ok) {
+          reportLocalWriteFailure(writeResult.error);
+          committed = markCollectionStorageError(normalized, writeResult.error);
+          return committed;
+        }
+      }
       committed = normalized;
       return normalized;
     });
     return committed;
-  }, [activeDogId, withHydratedSyncState]);
+  }, [activeDogId, reportLocalWriteFailure, withHydratedSyncState]);
 
   const addTombstone = useCallback((kind, entry) => {
     if (!entry?.id) return null;
@@ -444,7 +488,8 @@ export default function PawTimer() {
               ? resolveDogSettingsConflict(normalizeDogSyncMetadata(existingDog), remoteDog)
               : remoteDog;
             const next = [...prev.filter((d) => canonicalDogId(d.id) !== remoteDog.id), resolvedDog];
-            save(DOGS_KEY, next);
+            const writeResult = persistValue(DOGS_KEY, next, save);
+            if (!writeResult.ok) reportLocalWriteFailure(writeResult.error);
             return next;
           });
         }
@@ -542,7 +587,7 @@ export default function PawTimer() {
     sync();
     const timer = setInterval(sync, 15_000);
     return () => { live = false; syncInFlightRef.current = false; clearInterval(timer); };
-  }, [activeDogId, commitTombstones, markRemoteEntryConfirmed, setTombstoneSyncState, withHydratedSyncState]);
+  }, [activeDogId, commitTombstones, markRemoteEntryConfirmed, reportLocalWriteFailure, setTombstoneSyncState, withHydratedSyncState]);
 
   useEffect(() => {
     if (!SYNC_ENABLED || !activeDogId) return;
@@ -639,14 +684,23 @@ export default function PawTimer() {
 
   const clearDogActivityState = useCallback((dogId) => {
     const normalizedId = canonicalDogId(dogId);
-    if (!normalizedId) return;
-    save(sessKey(normalizedId), []);
-    save(walkKey(normalizedId), []);
-    save(patKey(normalizedId), []);
-    save(feedingKey(normalizedId), []);
-    save(tombKey(normalizedId), []);
-    save(patLblKey(normalizedId), {});
-    save(photoKey(normalizedId), null);
+    if (!normalizedId) return false;
+    const writes = [
+      { key: sessKey(normalizedId), value: [] },
+      { key: walkKey(normalizedId), value: [] },
+      { key: patKey(normalizedId), value: [] },
+      { key: feedingKey(normalizedId), value: [] },
+      { key: tombKey(normalizedId), value: [] },
+      { key: patLblKey(normalizedId), value: {} },
+      { key: photoKey(normalizedId), value: null },
+    ];
+    for (const write of writes) {
+      const writeResult = persistValue(write.key, write.value, save);
+      if (!writeResult.ok) {
+        reportLocalWriteFailure(writeResult.error);
+        return false;
+      }
+    }
     setSessions([]);
     setWalks([]);
     setPatterns([]);
@@ -654,7 +708,8 @@ export default function PawTimer() {
     setTombstones([]);
     setPatLabels({});
     setDogPhoto(null);
-  }, []);
+    return true;
+  }, [reportLocalWriteFailure]);
 
   const openDog = (dog) => { logSyncDebug("openDog", { dogId: canonicalDogId(dog?.id) }); setOnboardingState(null); setActiveDogId(canonicalDogId(dog.id)); setScreen("app"); };
 
@@ -687,11 +742,25 @@ export default function PawTimer() {
       setWalks(visibleJoinedWalks);
       setPatterns(visibleJoinedPatterns);
       setFeedings(visibleJoinedFeedings);
-      save(sessKey(normalizedId), visibleJoinedSessions);
-      save(walkKey(normalizedId), visibleJoinedWalks);
-      save(patKey(normalizedId), visibleJoinedPatterns);
-      save(feedingKey(normalizedId), visibleJoinedFeedings);
-      save(tombKey(normalizedId), joinedTombstones);
+      const joinPersistResult = persistJoinedDogState({
+        dogId: normalizedId,
+        sessions: visibleJoinedSessions,
+        walks: visibleJoinedWalks,
+        patterns: visibleJoinedPatterns,
+        feedings: visibleJoinedFeedings,
+        tombstones: joinedTombstones,
+        saveFn: save,
+      });
+      if (!joinPersistResult.ok) {
+        const localWriteError = joinPersistResult.error || `Unable to persist joined profile ${normalizedId}`;
+        reportLocalWriteFailure(localWriteError);
+        setSessions(markCollectionStorageError(visibleJoinedSessions, localWriteError));
+        setWalks(markCollectionStorageError(visibleJoinedWalks, localWriteError));
+        setPatterns(markCollectionStorageError(visibleJoinedPatterns, localWriteError));
+        setFeedings(markCollectionStorageError(visibleJoinedFeedings, localWriteError));
+        setTombstones(markCollectionStorageError(joinedTombstones, localWriteError));
+        showToast(`Joined ${normalizedId}, but local save failed.`);
+      }
       if (error) {
         setSyncStatus("err");
         setSyncError(error);
@@ -725,7 +794,7 @@ export default function PawTimer() {
       dogName: data.dogName,
       createdAt: new Date().toISOString(),
     }, previousDog);
-    if (isFreshProfile) clearDogActivityState(id);
+    if (isFreshProfile && !clearDogActivityState(id)) return;
     setDogs((prev) => [...prev.filter((d) => canonicalDogId(d.id) !== id), newDog]);
     setOnboardingState(null);
     setActiveDogId(id);

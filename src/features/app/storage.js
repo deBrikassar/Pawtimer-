@@ -22,7 +22,12 @@ export const load = (key, fallback) => {
   catch { return fallback; }
 };
 export const save = (key, val) => {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+    return { ok: true, error: "" };
+  } catch (error) {
+    return { ok: false, error };
+  }
 };
 
 export const ensureArray = (value) => (Array.isArray(value) ? value : []);
