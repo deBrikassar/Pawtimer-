@@ -671,6 +671,19 @@ function normalizeRecoveryState(state = null) {
   };
 }
 
+function clearRecoveryState(state = null) {
+  const normalized = normalizeRecoveryState(state);
+  if (!normalized) return null;
+  return {
+    ...normalized,
+    active: false,
+    triggerSessionId: null,
+    triggerSessionDate: null,
+    anchorDuration: null,
+    consecutiveCalm: 0,
+  };
+}
+
 function buildRecoveryStateFromTrigger(trainingSessions = [], triggerIndex = -1, existingState = null) {
   if (triggerIndex < 0) return normalizeRecoveryState(existingState);
   const triggerSession = trainingSessions[triggerIndex] || null;
@@ -692,7 +705,18 @@ function buildRecoveryStateFromTrigger(trainingSessions = [], triggerIndex = -1,
 
 function resolveRecoveryState(trainingSessions = [], recoveryState = null) {
   const normalized = normalizeRecoveryState(recoveryState);
-  if (normalized?.active) return normalized;
+  if (normalized?.active) {
+    const persistedTriggerIndex = trainingSessions.findIndex((session) => (
+      (normalized.triggerSessionId && session.id && session.id === normalized.triggerSessionId)
+      || (normalized.triggerSessionDate && session.date === normalized.triggerSessionDate)
+    ));
+    if (persistedTriggerIndex >= 0) {
+      const persistedTrigger = trainingSessions[persistedTriggerIndex];
+      if ([DISTRESS_LEVELS.SUBTLE, DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(persistedTrigger?.distressLevel)) {
+        return buildRecoveryStateFromTrigger(trainingSessions, persistedTriggerIndex, normalized);
+      }
+    }
+  }
 
   for (let i = trainingSessions.length - 1; i >= 0; i -= 1) {
     if ([DISTRESS_LEVELS.SUBTLE, DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(trainingSessions[i]?.distressLevel)) {
@@ -704,7 +728,7 @@ function resolveRecoveryState(trainingSessions = [], recoveryState = null) {
     }
   }
 
-  return normalized;
+  return clearRecoveryState(normalized);
 }
 
 function evaluatePersistentRecoveryMode(
@@ -909,6 +933,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
         recoveryDuration: null,
         postRecoveryDuration: null,
       },
+      recoveryState: existingRecoveryState,
     };
   }
 
@@ -936,6 +961,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
       recoveryDuration: null,
       postRecoveryDuration: null,
     },
+    recoveryState: existingRecoveryState,
   };
 }
 
@@ -980,7 +1006,7 @@ export function buildRecommendation(sessions = [], options = {}) {
     recommendationType: focusArea,
     stabilizationMode: stats.relapseRisk >= 0.72,
     recoveryMode: nextTarget.recoveryMode,
-    recoveryState: nextTarget.recoveryState ?? normalizeRecoveryState(options.recoveryState),
+    recoveryState: nextTarget.recoveryState ?? null,
     stats,
     warnings,
     safeAbsenceAlert: Number(options.plannedRealAbsenceSeconds || 0) > safeAlone,

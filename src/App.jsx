@@ -22,6 +22,11 @@ const SYNC_STATE = {
   SYNCED: "synced",
   ERROR: "error",
 };
+
+function recoveryStateEqual(a, b) {
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+}
+
 export default function PawTimer() {
   const [dogs, setDogs] = useState(() => ensureArray(load(DOGS_KEY, [])));
   const [activeDogId, setActiveDogId] = useState(() => canonicalDogId(load(ACTIVE_DOG_KEY, null)));
@@ -587,15 +592,6 @@ export default function PawTimer() {
     } finally { setSyncDiagRunning(false); }
   };
 
-  const persistRecoveryState = useCallback((nextRecoveryState) => {
-    if (!activeDogId) return;
-    setDogs((prev) => prev.map((dog) => (
-      canonicalDogId(dog?.id) === canonicalDogId(activeDogId)
-        ? { ...dog, recoveryState: nextRecoveryState ?? null }
-        : dog
-    )));
-  }, [activeDogId]);
-
   const recordResult = (distressLevelInput, options = {}) => {
     const distressLevel = normalizeDistressLevel(distressLevelInput);
     const dog = appData.dog;
@@ -610,7 +606,6 @@ export default function PawTimer() {
     const updated = commitSessions((prev) => [...prev, session]);
     pushWithSyncStatus("session", session).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
     const nextRecommendation = deriveRecommendation(updated, walks, patterns, dog);
-    persistRecoveryState(nextRecommendation?.details?.recoveryState ?? null);
     const next = nextRecommendation.duration;
     cancelSession();
     const n = dog?.dogName ?? "your dog";
@@ -649,6 +644,21 @@ export default function PawTimer() {
   const handlePhotoUpload = (e) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => setDogPhoto(ev.target.result); reader.readAsDataURL(file); };
 
   const historyActions = useHistoryEditing({ sessions, walks, patterns, feedings, patLabels, showToast, pushWithSyncStatus, syncDelete, syncDeleteSessionsForDog, commitSessions, setWalks: commitWalks, setPatterns: commitPatterns, setFeedings: commitFeedings, activeDogId, stampLocalEntry });
+
+  useEffect(() => {
+    if (!activeDogId) return;
+    const nextRecoveryState = recommendation?.details?.recoveryState ?? null;
+    setDogs((prev) => {
+      let changed = false;
+      const updated = prev.map((dog) => {
+        if (canonicalDogId(dog?.id) !== canonicalDogId(activeDogId)) return dog;
+        if (recoveryStateEqual(dog?.recoveryState, nextRecoveryState)) return dog;
+        changed = true;
+        return { ...dog, recoveryState: nextRecoveryState };
+      });
+      return changed ? updated : prev;
+    });
+  }, [activeDogId, recommendation?.details?.recoveryState]);
 
   const syncSummary = useMemo(() => {
     const allEntries = [...sessions, ...walks, ...patterns, ...feedings];
