@@ -101,11 +101,37 @@ export const getSyncDegradationState = () => ({
 
 const normalizeSbUrl = (value) => String(value || "").replace(/\/+$/, "").replace(/\/rest\/v1$/i, "");
 export const SB_BASE_URL = normalizeSbUrl(SB_URL);
+const inFlightGetRequests = new Map();
+const fetchRateTracker = new Map();
+
+const trackFetchRate = (method, path, trigger = "unknown") => {
+  const secondBucket = Math.floor(Date.now() / 1000);
+  const key = `${method.toUpperCase()} ${path}`;
+  const entry = fetchRateTracker.get(key);
+  if (!entry || entry.secondBucket !== secondBucket) {
+    const next = { secondBucket, count: 1 };
+    fetchRateTracker.set(key, next);
+    logSyncDebug("sbReq:rate", { key, trigger, requestsPerSecond: next.count });
+    return;
+  }
+  entry.count += 1;
+  fetchRateTracker.set(key, entry);
+  logSyncDebug("sbReq:rate", { key, trigger, requestsPerSecond: entry.count });
+};
 
 const sbReq = async (path, opts = {}) => {
   if (!SB_BASE_URL || !SB_KEY) {
     return { ok: false, data: null, error: "Supabase env vars are missing", status: 0 };
   }
+  const method = (opts.method ?? "GET").toUpperCase();
+  const trigger = opts.trigger || "unknown";
+  const requestKey = `${method}:${path}`;
+  trackFetchRate(method, path, trigger);
+  if (method === "GET" && inFlightGetRequests.has(requestKey)) {
+    logSyncDebug("sbReq:dedupe-hit", { method, path, trigger });
+    return inFlightGetRequests.get(requestKey);
+  }
+  const requestPromise = (async () => {
   try {
     const headers = {
       apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
@@ -134,6 +160,13 @@ const sbReq = async (path, opts = {}) => {
     const message = e instanceof Error ? e.message : String(e);
     console.warn("Supabase fetch error:", message);
     return { ok: false, data: null, error: message, status: 0 };
+  }
+  })();
+  if (method === "GET") inFlightGetRequests.set(requestKey, requestPromise);
+  try {
+    return await requestPromise;
+  } finally {
+    if (method === "GET") inFlightGetRequests.delete(requestKey);
   }
 };
 
@@ -494,7 +527,7 @@ export const syncFetch = async (dogId) => {
     let attempt = 0;
     while (attempt < 12) {
       const select = selectedColumns.join(",");
-      const res = await sbReq(`${table}?${dogFilter}&select=${select}&order=date.asc`);
+      const res = await sbReq(`${table}?${dogFilter}&select=${select}&order=date.asc`, { trigger: `syncFetch:${table}` });
       if (res.ok) return { table, ok: true, res, select, droppedColumns: [], degraded: false };
 
       if (optional && isMissingTableError(res.error)) {
@@ -545,7 +578,7 @@ export const syncFetch = async (dogId) => {
   logSyncDebug("syncFetch:start", { enteredDogId: dogId, canonicalDogId: id, dogQueryField: "dogs.id", dogQueryValue: id });
   logSyncDebug("syncFetch:queryShapes", tableQueryShapes);
   const [dogRes, sessionsFetch, walksFetch, patternsFetch, feedingsFetch] = await Promise.all([
-    sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`),
+    sbReq(`dogs?id=eq.${encodeURIComponent(id)}&select=id,settings&limit=1`, { trigger: "syncFetch:dogs" }),
     fetchTableWithFallback({
       table: "sessions",
       baseColumns: sessionsSelect.split(","),
