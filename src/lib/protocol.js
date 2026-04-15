@@ -913,7 +913,8 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
   }
 
   const stepped = computeProgressiveIncrease(anchorDuration, calmStreak);
-  let smoothed = clampRateChange(stepped, lastReferenceDuration);
+  const riskAdjustedStep = Math.round(stepped * getStepMultiplier(relapseRisk));
+  let smoothed = clampRateChange(riskAdjustedStep, lastReferenceDuration);
 
   if (hasConsecutivePostSubtleIncrease(recentWindow) && smoothed > lastReferenceDuration) {
     smoothed = lastReferenceDuration;
@@ -938,17 +939,10 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
   };
 }
 
-function getStepMultiplier(stats, latestSessions = [], allSessions = []) {
-  const calmStreak = countStreak(latestSessions, (s) => s.belowThreshold);
-
-  if (stats.relapseRisk >= 0.72) return -0.25;
-  if (!hasPriorStressEvent(allSessions) && calmStreak >= 1) return 0.2;
-  if (calmStreak >= 4 && stats.stabilityScore >= PROTOCOL.largeStepStabilityGate && stats.subtleDistressRate <= 0.15) {
-    return 0.2;
-  }
-  if (calmStreak >= 2 && stats.stabilityScore >= 0.62) return 0.08;
-  if (stats.subtleDistressRate > 0.25) return 0;
-  return 0.03;
+function getStepMultiplier(relapseRisk = 0) {
+  if (relapseRisk >= 0.72) return 0.85;
+  if (relapseRisk >= 0.58) return 0.95;
+  return 1;
 }
 
 export function buildRecommendation(sessions = [], options = {}) {
