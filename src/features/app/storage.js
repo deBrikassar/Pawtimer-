@@ -184,6 +184,7 @@ const getRecordRevision = (item = {}) => {
 const getRecordUpdatedAt = (item = {}) => item.updatedAt ?? item.updated_at ?? item.localUpdatedAt ?? item.local_updated_at ?? null;
 const getRecordDeletedAt = (item = {}) => item.deletedAt ?? item.deleted_at ?? null;
 const isFiniteNumber = (value) => Number.isFinite(Number(value));
+const LOCAL_SYNC_STATES = new Set(["local", "syncing", "error"]);
 
 const stableStringify = (value) => {
   if (Array.isArray(value)) return `[${value.map((entry) => stableStringify(entry)).join(",")}]`;
@@ -192,6 +193,26 @@ const stableStringify = (value) => {
     return `{${sortedKeys.map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(",")}}`;
   }
   return JSON.stringify(value);
+};
+
+const rankSyncCausality = (item = {}) => {
+  const pendingSyncScore = Boolean(item?.pendingSync) ? 2 : 0;
+  const syncStateScore = LOCAL_SYNC_STATES.has(item?.syncState) ? 1 : 0;
+  const replicationScore = item?.replicationConfirmed === false ? 1 : 0;
+  return pendingSyncScore + syncStateScore + replicationScore;
+};
+
+const buildDeterministicConflictFingerprint = (item = {}) => {
+  if (!item || typeof item !== "object") return stableStringify(item);
+  const clone = { ...item };
+  delete clone.updatedAt;
+  delete clone.updated_at;
+  delete clone.localUpdatedAt;
+  delete clone.local_updated_at;
+  delete clone.deletedAt;
+  delete clone.deleted_at;
+  delete clone.date;
+  return stableStringify(clone);
 };
 
 export const normalizeDogSyncMetadata = (dog = {}) => {
@@ -249,6 +270,11 @@ export const resolveSyncConflict = (left = {}, right = {}) => {
   if (leftRevision !== null && rightRevision !== null && leftRevision !== rightRevision) {
     return leftRevision > rightRevision ? left : right;
   }
+
+  const leftCausalRank = rankSyncCausality(left);
+  const rightCausalRank = rankSyncCausality(right);
+  if (leftCausalRank !== rightCausalRank) return leftCausalRank > rightCausalRank ? left : right;
+
   if (leftDeletedAt || rightDeletedAt) {
     if (leftDeletedAt !== rightDeletedAt) return leftDeletedAt > rightDeletedAt ? left : right;
     if (leftDeletedAt && rightDeletedAt) return leftDeletedAt >= rightDeletedAt ? left : right;
@@ -272,7 +298,10 @@ export const resolveSyncConflict = (left = {}, right = {}) => {
     return (left?.syncState === "local" || left?.syncState === "syncing") ? left : right;
   }
 
-  return right;
+  const leftFingerprint = buildDeterministicConflictFingerprint(left);
+  const rightFingerprint = buildDeterministicConflictFingerprint(right);
+  if (leftFingerprint === rightFingerprint) return right;
+  return leftFingerprint > rightFingerprint ? left : right;
 };
 
 // Merge two arrays by id using sync-aware conflict resolution and preserves chronological order
