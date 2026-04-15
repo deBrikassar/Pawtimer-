@@ -954,6 +954,85 @@ describe("public compatibility APIs", () => {
     }
   });
 
+  describe("recommendation semantic consistency", () => {
+    it("keeps increase semantics aligned when final duration is above reference", () => {
+      const next = explainNextTarget([
+        { date: daysAgo(2), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+        { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+        { date: daysAgo(0), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      ], [], [], { goalSeconds: 3600 });
+      expect(next.recommendedDuration).toBeGreaterThan(900);
+      expect(next.recommendationType).toBe("increase_duration");
+    });
+
+    it("keeps hold semantics aligned when final duration equals reference", () => {
+      const next = explainNextTarget([
+        { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+        { date: daysAgo(0), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
+      ], [], [], { goalSeconds: 3600 });
+      expect(next.recommendedDuration).toBe(900);
+      expect(["keep_same_duration", "repeat_current_duration"]).toContain(next.recommendationType);
+    });
+
+    it("maps reduced final durations to decrease semantics", () => {
+      const next = explainNextTarget([
+        { date: daysAgo(2), plannedDuration: 100, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+        { date: daysAgo(1), plannedDuration: 100, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+        { date: daysAgo(0), plannedDuration: 100, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+      ], [
+        { date: daysAgo(0), duration: 1200, type: "intense_exercise" },
+        { date: daysAgo(0), duration: 1000, type: "intense_exercise" },
+        { date: daysAgo(0), duration: 900, type: "intense_exercise" },
+      ], [], { goalSeconds: 3600 });
+      expect(next.walkAdjustmentApplied).toBe(true);
+      expect(next.recommendedDuration).toBeLessThan(100);
+      expect(next.recommendationType).toBe("decrease_duration");
+    });
+
+    it("enforces departure_cues_first as non-increasing against reference duration", () => {
+      const next = explainNextTarget([
+        { date: daysAgo(1), plannedDuration: 120, actualDuration: 120, distressLevel: "none", belowThreshold: true },
+        { date: daysAgo(0), plannedDuration: 130, actualDuration: 130, distressLevel: "none", belowThreshold: true },
+      ], [], [
+        { date: daysAgo(0), type: "keys", reactionLevel: "active" },
+        { date: daysAgo(0), type: "keys", reactionLevel: "active" },
+        { date: daysAgo(0), type: "keys", reactionLevel: "active" },
+      ], { goalSeconds: 3600 });
+      expect(next.recommendationType).toBe("departure_cues_first");
+      expect(next.recommendedDuration).toBeLessThanOrEqual(130);
+    });
+
+    it("recomputes type after walk-based post processing", () => {
+      const withoutWalk = explainNextTarget([
+        { date: daysAgo(2), plannedDuration: 100, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+        { date: daysAgo(1), plannedDuration: 100, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+        { date: daysAgo(0), plannedDuration: 100, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+      ], [], [], { goalSeconds: 3600 });
+      const withWalk = explainNextTarget([
+        { date: daysAgo(2), plannedDuration: 100, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+        { date: daysAgo(1), plannedDuration: 100, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+        { date: daysAgo(0), plannedDuration: 100, actualDuration: 40, distressLevel: "none", belowThreshold: false },
+      ], [
+        { date: daysAgo(0), duration: 1200, type: "intense_exercise" },
+        { date: daysAgo(0), duration: 1000, type: "intense_exercise" },
+        { date: daysAgo(0), duration: 900, type: "intense_exercise" },
+      ], [], { goalSeconds: 3600 });
+      expect(withoutWalk.recommendationType).toBe("repeat_current_duration");
+      expect(withWalk.recommendedDuration).toBeLessThan(withoutWalk.recommendedDuration);
+      expect(withWalk.recommendationType).toBe("decrease_duration");
+    });
+
+    it("recomputes type after bounded/clamped post processing", () => {
+      const rec = buildRecommendation([
+        { date: daysAgo(2), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+        { date: daysAgo(1), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+        { date: daysAgo(0), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      ], { goalSeconds: 900 });
+      expect(rec.recommendedDuration).toBe(900);
+      expect(rec.recommendationType).toBe("keep_same_duration");
+    });
+  });
+
   it("explainNextTarget provides sensible baseline decision state with empty history", () => {
     const next = explainNextTarget([], [], [], { goalSeconds: 3600 });
     expect(next.decisionState.riskLevel).toBe("medium");

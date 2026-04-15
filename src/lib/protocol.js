@@ -552,7 +552,7 @@ function buildDecisionState({ recommendedDuration, recommendationType, stats, re
   }
 
   const riskLevel = labelRelapseRisk(stats.relapseRisk);
-  const cautionType = ["recovery_mode_active"].includes(recommendationType);
+  const cautionType = ["recovery_mode_active", "decrease_duration"].includes(recommendationType);
   const guardedType = ["repeat_current_duration", "departure_cues_first"].includes(recommendationType);
   const readiness = cautionType
     ? "low"
@@ -1163,6 +1163,48 @@ function getStepMultiplier(relapseRisk = 0) {
   return 1;
 }
 
+function getRecommendationReferenceDuration(trainingSessions = []) {
+  const lastTraining = trainingSessions[trainingSessions.length - 1] || null;
+  const planned = Number(lastTraining?.plannedDuration);
+  if (Number.isFinite(planned) && planned > 0) return planned;
+  return getProgressionReferenceDuration(lastTraining)
+    ?? getSessionDurationAnchor(lastTraining)
+    ?? null;
+}
+
+function alignRecommendationSemantics({
+  recommendedDuration,
+  recommendationType,
+  referenceDuration,
+  enforceCueHold = false,
+}) {
+  let duration = Number(recommendedDuration) || 0;
+  const reference = Number(referenceDuration) || 0;
+  let type = recommendationType;
+
+  if (enforceCueHold && type === "departure_cues_first" && reference > 0 && duration > reference) {
+    duration = reference;
+  }
+
+  if (["baseline_start", "recovery_mode_active", "recovery_mode_resume", "departure_cues_first"].includes(type)) {
+    return { recommendedDuration: duration, recommendationType: type };
+  }
+
+  if (!(reference > 0)) {
+    return { recommendedDuration: duration, recommendationType: type };
+  }
+
+  if (duration > reference) {
+    type = "increase_duration";
+  } else if (duration < reference) {
+    type = "decrease_duration";
+  } else if (type !== "repeat_current_duration") {
+    type = "keep_same_duration";
+  }
+
+  return { recommendedDuration: duration, recommendationType: type };
+}
+
 export function buildRecommendation(sessions = [], options = {}) {
   const rich = sortByDateAsc(sessions).map(toRichSession);
   const training = rich.filter((s) => s.departureType !== "real_life");
@@ -1172,6 +1214,7 @@ export function buildRecommendation(sessions = [], options = {}) {
 
   let recommendedDuration = nextTarget.recommendedDuration;
   let recommendationType = nextTarget.recommendationType;
+  const referenceDuration = getRecommendationReferenceDuration(training);
 
   const panicPattern = getLatestSessions(training, 8).filter((s) => s.distressLevel === DISTRESS_LEVELS.SEVERE).length >= 2;
   const uncontrolledRealAbsence = rich.filter((s) => s.departureType === "real_life" && !s.belowThreshold).slice(-3).length >= 1;
@@ -1187,15 +1230,28 @@ export function buildRecommendation(sessions = [], options = {}) {
     ? "departure_cues_first"
     : recommendationType;
 
-  const boundedDuration = clamp(
+  const aligned = alignRecommendationSemantics({
     recommendedDuration,
+    recommendationType: focusArea,
+    referenceDuration,
+    enforceCueHold: true,
+  });
+
+  const boundedDuration = clamp(
+    aligned.recommendedDuration,
     PROTOCOL.minDurationSeconds,
     Number(options.goalSeconds || PROTOCOL.goalDurationDefaultSeconds),
   );
+  const boundedAligned = alignRecommendationSemantics({
+    recommendedDuration: boundedDuration,
+    recommendationType: aligned.recommendationType,
+    referenceDuration,
+    enforceCueHold: true,
+  });
 
   return {
-    recommendedDuration: boundedDuration,
-    recommendationType: focusArea,
+    recommendedDuration: boundedAligned.recommendedDuration,
+    recommendationType: boundedAligned.recommendationType,
     stabilizationMode: stats.relapseRisk >= 0.72,
     recoveryMode: nextTarget.recoveryMode,
     recoveryState: nextTarget.recoveryState ?? null,
@@ -1229,6 +1285,8 @@ function describeRecommendationType(type) {
       return "The next target holds at your current safe training duration.";
     case "increase_duration":
       return "The next target nudges upward after calm threshold-confirmed sessions.";
+    case "decrease_duration":
+      return "The next target steps down to protect confidence and reduce stress risk.";
     default:
       return "The next target is adjusted from the current safe-alone estimate.";
   }
@@ -1263,6 +1321,11 @@ function buildRecommendationExplanation({
         return `Increased by ${changePct}% after ${calmLabel}.`;
       }
       return "Stepping up cautiously after calm threshold-confirmed sessions.";
+    case "decrease_duration":
+      if (prev > 0 && next < prev && changePct > 0) {
+        return `Reduced by ${changePct}% after stress signs.`;
+      }
+      return "Reducing duration to protect confidence before progressing.";
     case "keep_same_duration":
     case "repeat_current_duration":
       if (prev > 0 && next > prev && changePct > 0) {
@@ -1341,6 +1404,7 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
   });
 
   let recommendedDuration = recommendation.recommendedDuration;
+  const referenceDuration = getRecommendationReferenceDuration(trainingSessions);
   let walkAdjustmentApplied = false;
 
   if (walks.length) {
@@ -1370,17 +1434,24 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
     factors.push("Recent intense walks plus low stability trimmed the target by 5% for caution.");
   }
 
-  return {
+  const finalRecommendation = alignRecommendationSemantics({
     recommendedDuration,
     recommendationType: recommendation.recommendationType,
+    referenceDuration,
+    enforceCueHold: true,
+  });
+
+  return {
+    recommendedDuration: finalRecommendation.recommendedDuration,
+    recommendationType: finalRecommendation.recommendationType,
     explanation: buildRecommendationExplanation({
-      recommendationType: recommendation.recommendationType,
-      recommendedDuration,
+      recommendationType: finalRecommendation.recommendationType,
+      recommendedDuration: finalRecommendation.recommendedDuration,
       previousDuration: lastTraining?.plannedDuration || 0,
       lastTraining,
       hasHistory: true,
     }),
-    summary: describeRecommendationType(recommendation.recommendationType),
+    summary: describeRecommendationType(finalRecommendation.recommendationType),
     factors,
     stats: recommendation.stats,
     warnings: recommendation.warnings,
@@ -1388,8 +1459,8 @@ export function explainNextTarget(sessions = [], walks = [], patterns = [], dog 
     recoveryMode: recommendation.recoveryMode,
     recoveryState: recommendation.recoveryState ?? null,
     decisionState: buildDecisionState({
-      recommendedDuration,
-      recommendationType: recommendation.recommendationType,
+      recommendedDuration: finalRecommendation.recommendedDuration,
+      recommendationType: finalRecommendation.recommendationType,
       stats: recommendation.stats,
       recoveryMode: recommendation.recoveryMode,
       factors,
