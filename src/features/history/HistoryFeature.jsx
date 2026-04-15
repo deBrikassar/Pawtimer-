@@ -106,10 +106,14 @@ export function useHistoryEditing({
         return;
       }
       if (historyModal.kind === "walk") {
-        const currentWalk = walks.find((w) => w.id === historyModal.id);
-        if (!currentWalk) return;
-        const updatedWalk = stampLocalEntry({ ...currentWalk, date: updatedIso }, currentWalk);
-        setWalks((prev) => sortByDateAsc(prev.map((w) => (w.id === historyModal.id ? updatedWalk : w))));
+        let updatedWalk = null;
+        setWalks((prev) => {
+          const currentWalk = prev.find((w) => w.id === historyModal.id);
+          if (!currentWalk) return prev;
+          updatedWalk = stampLocalEntry({ ...currentWalk, date: updatedIso }, currentWalk);
+          return sortByDateAsc(prev.map((w) => (w.id === historyModal.id ? updatedWalk : w)));
+        });
+        if (!updatedWalk) return;
         pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
           if (!ok) showToast(`Sync failed: ${error}`);
         });
@@ -117,10 +121,14 @@ export function useHistoryEditing({
         setHistoryModal(null);
         return;
       }
-      const currentSession = sessions.find((s) => s.id === historyModal.id);
-      if (!currentSession) return;
-      const updatedSession = stampLocalEntry(normalizeSession({ ...currentSession, date: updatedIso }), currentSession);
-      commitSessions(sortByDateAsc(sessions.map((s) => (s.id === historyModal.id ? updatedSession : s))));
+      let updatedSession = null;
+      commitSessions((prev) => {
+        const currentSession = prev.find((s) => s.id === historyModal.id);
+        if (!currentSession) return prev;
+        updatedSession = stampLocalEntry(normalizeSession({ ...currentSession, date: updatedIso }), currentSession);
+        return sortByDateAsc(prev.map((s) => (s.id === historyModal.id ? updatedSession : s)));
+      });
+      if (!updatedSession) return;
       pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
         if (!ok) showToast(`Sync failed: ${error}`);
       });
@@ -136,10 +144,14 @@ export function useHistoryEditing({
         return;
       }
       if (historyModal.kind === "walk") {
-        const currentWalk = walks.find((w) => w.id === historyModal.id);
-        if (!currentWalk) return;
-        const updatedWalk = stampLocalEntry({ ...currentWalk, duration: parsedDuration }, currentWalk);
-        setWalks((prev) => prev.map((w) => (w.id === historyModal.id ? updatedWalk : w)));
+        let updatedWalk = null;
+        setWalks((prev) => {
+          const currentWalk = prev.find((w) => w.id === historyModal.id);
+          if (!currentWalk) return prev;
+          updatedWalk = stampLocalEntry({ ...currentWalk, duration: parsedDuration }, currentWalk);
+          return prev.map((w) => (w.id === historyModal.id ? updatedWalk : w));
+        });
+        if (!updatedWalk) return;
         pushWithSyncStatus("walk", updatedWalk).then(({ ok, error }) => {
           if (!ok) showToast(`Sync failed: ${error}`);
         });
@@ -147,10 +159,17 @@ export function useHistoryEditing({
         setHistoryModal(null);
         return;
       }
-      const currentSession = sessions.find((s) => s.id === historyModal.id);
-      if (!currentSession) return;
-      const updatedSession = stampLocalEntry(mergeSessionWithDerivedFields(currentSession, { actualDuration: parsedDuration }), currentSession);
-      commitSessions(sessions.map((s) => (s.id === historyModal.id ? updatedSession : s)));
+      let updatedSession = null;
+      commitSessions((prev) => {
+        const currentSession = prev.find((s) => s.id === historyModal.id);
+        if (!currentSession) return prev;
+        updatedSession = stampLocalEntry(
+          mergeSessionWithDerivedFields(currentSession, { actualDuration: parsedDuration }),
+          currentSession,
+        );
+        return prev.map((s) => (s.id === historyModal.id ? updatedSession : s));
+      });
+      if (!updatedSession) return;
       pushWithSyncStatus("session", updatedSession).then(({ ok, error }) => {
         if (!ok) showToast(`Sync failed: ${error}`);
       });
