@@ -319,87 +319,6 @@ function computeSafeAloneTime(sessions = []) {
   return Math.max(PROTOCOL.minDurationSeconds, Math.round(weighted / Math.max(weight, 0.01)));
 }
 
-function getSubtleRecoveryContext(trainingSessions = []) {
-  const base = {
-    active: false,
-    remainingSessions: 0,
-    subtleIndex: -1,
-    completedRecoveryEndIndex: -1,
-    recoveryStep: 0,
-    nextRecoveryDuration: PROTOCOL.subtleRecoveryDurationSeconds,
-    anchorDuration: null,
-    postRecoveryDuration: null,
-    justCompleted: false,
-  };
-  if (!trainingSessions.length) return base;
-
-  let subtleIndex = -1;
-  for (let i = trainingSessions.length - 1; i >= 0; i -= 1) {
-    if (trainingSessions[i].distressLevel === DISTRESS_LEVELS.SUBTLE) {
-      subtleIndex = i;
-      break;
-    }
-  }
-  if (subtleIndex < 0) return base;
-
-  const subtle = trainingSessions[subtleIndex];
-  const nowTime = Date.now();
-  const subtleTime = toTimestamp(subtle?.date);
-  const anchorIsRecent = Number.isFinite(subtleTime)
-    && (nowTime - subtleTime) <= (PROTOCOL.subtleRecoveryAnchorMaxAgeDays * DAY_MS);
-
-  let trailingCalmAfterSubtle = 0;
-  for (let i = trainingSessions.length - 1; i > subtleIndex; i -= 1) {
-    if (trainingSessions[i].distressLevel !== DISTRESS_LEVELS.NONE) break;
-    trailingCalmAfterSubtle += 1;
-  }
-  const anchorHasCalmClosure = trailingCalmAfterSubtle >= PROTOCOL.subtleRecoveryAnchorClosureCalmSessions;
-  const anchorStillValid = anchorIsRecent && !anchorHasCalmClosure;
-  if (!anchorStillValid) return base;
-
-  const anchorDuration = Math.max(
-    PROTOCOL.minDurationSeconds,
-    Number(subtle?.actualDuration) > 0 ? Number(subtle.actualDuration) : Number(subtle?.plannedDuration || PROTOCOL.minDurationSeconds),
-  );
-  const after = trainingSessions.slice(subtleIndex + 1);
-  let step = 0; // 0 => next is 60s, 1 => next is 120s, 2 => complete
-  let completedRecoveryEndIndex = -1;
-
-  for (let offset = 0; offset < after.length; offset += 1) {
-    const session = after[offset];
-    const calm = session.distressLevel === DISTRESS_LEVELS.NONE;
-    if (!calm) {
-      step = 0; // restart sequence after any non-calm recovery attempt
-      continue;
-    }
-    if (step === 0) {
-      step = 1;
-      continue;
-    }
-    step = 2;
-    completedRecoveryEndIndex = subtleIndex + 1 + offset;
-    break;
-  }
-
-  const completed = step >= 2;
-  const justCompleted = completed && completedRecoveryEndIndex === (trainingSessions.length - 1);
-  const remainingSessions = completed ? 0 : Math.max(0, PROTOCOL.subtleRecoverySessionCount - step);
-
-  return {
-    active: !completed,
-    remainingSessions,
-    subtleIndex,
-    completedRecoveryEndIndex,
-    recoveryStep: Math.min(step + 1, PROTOCOL.subtleRecoverySessionCount),
-    nextRecoveryDuration: step === 0
-      ? PROTOCOL.subtleRecoveryDurationSeconds
-      : (PROTOCOL.subtleRecoveryDurationSeconds * 2),
-    anchorDuration,
-    postRecoveryDuration: Math.max(PROTOCOL.minDurationSeconds, Math.round(anchorDuration * 0.95)),
-    justCompleted,
-  };
-}
-
 function hasPriorStressEvent(sessions = []) {
   return sessions.some((session) => {
     const level = normalizeDistressLevel(session?.distressLevel);
@@ -797,6 +716,18 @@ function evaluatePersistentRecoveryMode(
     recentWindow = [],
   } = {},
 ) {
+  /**
+   * Recovery state machine (single source of truth):
+   *
+   * 1) Entry: resolveRecoveryState() activates recovery on latest subtle/active/severe trigger
+   *    unless there is already a persisted active state.
+   * 2) While active: this function recommends fixed short sessions (60s -> 120s, with a
+   *    severe extension) and tracks consecutive calm sessions after the trigger.
+   * 3) Exit: when required calm sessions are completed, we emit recovery_mode_resume and
+   *    persist active:false so normal progression can resume.
+   *
+   * Important: subtle recovery uses this same machine (no parallel/legacy subtle-only flow).
+   */
   // Policy decision: for subtle-trigger recovery, count any calm session toward completion.
   // We still keep duration-bound checks for active/severe triggers.
   const subtleRecoveryAcceptsAnyCalmSession = true;
