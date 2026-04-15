@@ -928,6 +928,29 @@ export default function PawTimer() {
     return { ok: false, error: message, skipped: null };
   };
 
+  const pushTombstoneWithSyncStatus = useCallback(async (tombstone) => {
+    if (!tombstone?.id || !tombstone?.kind) return { ok: false, error: "Invalid tombstone", skipped: null };
+    if (!SYNC_ENABLED) return { ok: true, error: null, skipped: "sync_disabled" };
+    if (!activeDogId) return { ok: true, error: null, skipped: "missing_active_dog" };
+    const currentDog = syncSnapshotRef.current.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
+    const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
+    setTombstoneSyncState(tombstone.id, tombstone.kind, SYNC_STATE.SYNCING);
+    setSyncStatus("syncing");
+    const { ok, error } = await syncPushTombstone(canonicalDogId(activeDogId), tombstone, dogSettings);
+    setSyncDegradation(getSyncDegradationState());
+    if (ok) {
+      setTombstoneSyncState(tombstone.id, tombstone.kind, SYNC_STATE.SYNCED, "", { replicationConfirmed: true });
+      setSyncError("");
+      setSyncStatus("ok");
+      return { ok: true, error: null, skipped: null };
+    }
+    const message = error || "Delete marker push failed";
+    setTombstoneSyncState(tombstone.id, tombstone.kind, SYNC_STATE.ERROR, message);
+    setSyncError(message);
+    setSyncStatus("err");
+    return { ok: false, error: message, skipped: null };
+  }, [activeDogId, setTombstoneSyncState]);
+
   const runSyncDiagnostics = async () => {
     setSyncDiagRunning(true);
     try {
@@ -996,6 +1019,7 @@ export default function PawTimer() {
     patLabels,
     showToast,
     pushWithSyncStatus,
+    pushTombstoneWithSyncStatus,
     addTombstone,
     commitSessions,
     setWalks: commitWalks,
