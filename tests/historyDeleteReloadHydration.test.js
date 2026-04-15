@@ -7,6 +7,8 @@ import {
   mergeTombstonesByEntityKey,
   normalizeSessions,
   normalizeTombstones,
+  makeEntryId,
+  repairDuplicateSessionIds,
   save,
   sessKey,
   tombKey,
@@ -193,5 +195,52 @@ describe("history delete + reload hydration runtime", () => {
     const visibleAfterReload = applyTombstonesToCollection(hydrated.sessions, hydrated.tombstones, "session");
 
     expect(visibleAfterReload.map((row) => row.id)).toEqual(["sess-1", "sess-3"]);
+  });
+
+  it("repairs duplicate session ids on hydration so deleting one does not wipe all duplicates", () => {
+    const dogId = "DOG-DUPE";
+    const duplicateSessions = [
+      { ...baseSessions[0], id: "sess-dup" },
+      { ...baseSessions[1], id: "sess-dup" },
+      { ...baseSessions[2], id: "sess-keep" },
+    ];
+    save(sessKey(dogId), duplicateSessions);
+    save(tombKey(dogId), []);
+
+    const hydrated = hydrateDogFromLocal(dogId);
+    const hydratedIds = hydrated.sessions.map((row) => row.id);
+    expect(new Set(hydratedIds).size).toBe(3);
+    expect(hydratedIds.some((id) => id.includes("repair"))).toBe(true);
+
+    const repaired = repairDuplicateSessionIds(normalizeSessions(duplicateSessions), dogId).rows;
+    const commitSessions = vi.fn();
+    const actions = useHistoryEditing({
+      sessions: repaired,
+      walks: [],
+      patterns: [],
+      feedings: [],
+      patLabels: {},
+      showToast: vi.fn(),
+      pushWithSyncStatus: vi.fn(async () => ({ ok: true })),
+      addTombstone: vi.fn(),
+      commitSessions,
+      setWalks: vi.fn(),
+      setPatterns: vi.fn(),
+      setFeedings: vi.fn(),
+      stampLocalEntry: (entry) => entry,
+    });
+
+    const repairedTarget = repaired.find((row) => row.id.includes("repair"));
+    expect(repairedTarget).toBeTruthy();
+    actions.confirmHistoryDelete({ mode: "delete", kind: "session", id: repairedTarget.id, label: "Training session" }, vi.fn());
+    const deleteUpdater = commitSessions.mock.calls[0][0];
+    const afterDelete = deleteUpdater(repaired);
+    expect(afterDelete).toHaveLength(2);
+    expect(afterDelete.some((row) => row.id === "sess-keep")).toBe(true);
+  });
+
+  it("makeEntryId generates unique ids for same-millisecond calls", () => {
+    const ids = new Set(Array.from({ length: 20 }, () => makeEntryId("sess", "DOG-ID")));
+    expect(ids.size).toBe(20);
   });
 });

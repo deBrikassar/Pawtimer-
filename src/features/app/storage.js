@@ -595,6 +595,39 @@ const decodeLegacyDistressFields = ({ distressLevel, distressType, distressSever
 };
 
 export const normalizeSessions = (rows = []) => ensureArray(rows).map(normalizeSession);
+const buildRepairedEntryId = (kind, dogId, originalId, index) => {
+  const scopedDogId = canonicalDogId(dogId) || "DOG";
+  const scopedKind = String(kind || "entry");
+  const baseOriginalId = String(originalId || "").trim() || "missing-id";
+  return `${scopedKind}-${scopedDogId}-${baseOriginalId}-repair-${index + 1}`;
+};
+
+export const repairDuplicateSessionIds = (rows = [], dogId = "") => {
+  const seen = new Set();
+  let didRepair = false;
+  const repaired = ensureArray(rows).map((row, index) => {
+    const rawId = String(row?.id || "").trim();
+    const needsRepair = !rawId || seen.has(rawId);
+    if (!needsRepair) {
+      seen.add(rawId);
+      return row;
+    }
+    didRepair = true;
+    const nextId = buildRepairedEntryId("sess", dogId, rawId || "session", index);
+    seen.add(nextId);
+    const nextRevision = Number.isFinite(row?.revision) ? Number(row.revision) + 1 : 1;
+    return {
+      ...row,
+      id: nextId,
+      revision: nextRevision,
+      updatedAt: row?.updatedAt ?? new Date().toISOString(),
+      pendingSync: true,
+      syncState: "local",
+      syncError: "",
+    };
+  });
+  return { rows: repaired, didRepair };
+};
 const normalizeRevision = (value) => {
   const revision = Number(value);
   return Number.isFinite(revision) ? revision : null;
@@ -1218,8 +1251,6 @@ export const syncPushTombstone = async (dogId, tombstone, dogSettings = null) =>
   return res.ok ? { ok: true, error: null } : { ok: false, error: `${kind} tombstone push failed: ${res.error}` };
 };
 
-export const makeEntryId = (kind, dogId) => `${kind}-${canonicalDogId(dogId)}-${Date.now()}`;
-
 export const hydrateDogFromLocal = (dogId) => {
   const id = canonicalDogId(dogId);
   const v4 = load(sessKey(id), null);
@@ -1230,9 +1261,18 @@ export const hydrateDogFromLocal = (dogId) => {
       ? v4Sessions
       : ensureArray(load(legacySessKey(id), []));
   const localSessions = normalizeSessions(rawSessions);
-  if (!Array.isArray(v4)) save(sessKey(id), localSessions);
+  const repairedSessions = repairDuplicateSessionIds(localSessions, id);
+  if (repairedSessions.didRepair) {
+    logSyncDebug("hydrate:sessionIdRepair", {
+      dogId: id,
+      originalCount: localSessions.length,
+      repairedCount: repairedSessions.rows.length,
+      repairedIds: repairedSessions.rows.map((row) => row.id),
+    });
+  }
+  if (!Array.isArray(v4) || repairedSessions.didRepair) save(sessKey(id), repairedSessions.rows);
   return {
-    sessions: localSessions,
+    sessions: repairedSessions.rows,
     walks: ensureArray(load(walkKey(id), load(legacyWalkKey(id), []))).map((w) => ({ ...w, type: normalizeWalkType(w?.type) })),
     patterns: normalizePatterns(load(patKey(id), [])),
     feedings: normalizeFeedings(load(feedingKey(id), [])),
@@ -1240,6 +1280,19 @@ export const hydrateDogFromLocal = (dogId) => {
     patLabels: ensureObject(load(patLblKey(id), {})),
     photo: load(photoKey(id), null),
   };
+};
+
+let entryIdSequence = 0;
+let lastEntryIdTimestamp = 0;
+export const makeEntryId = (kind, dogId) => {
+  const now = Date.now();
+  if (now === lastEntryIdTimestamp) entryIdSequence += 1;
+  else {
+    lastEntryIdTimestamp = now;
+    entryIdSequence = 0;
+  }
+  const entropy = Math.random().toString(36).slice(2, 6);
+  return `${kind}-${canonicalDogId(dogId)}-${now}-${entryIdSequence}-${entropy}`;
 };
 
 export const toDateTimeLocalValue = (value = new Date()) => {
