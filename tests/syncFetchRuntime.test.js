@@ -387,4 +387,76 @@ describe("syncFetch runtime fallbacks", () => {
       updated_at: "2026-04-04T08:30:00.000Z",
     });
   });
+
+  it("preserves same-id tombstones across kinds when fetched from different tables", async () => {
+    global.fetch = vi.fn(async (url) => {
+      const { path } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(200, [{ id: "DOG9", settings: { dogName: "Pixel" } }]);
+      if (path === "sessions") {
+        return jsonResponse(200, [
+          { id: "shared-dead", dog_id: "DOG9", date: "2026-04-05T00:00:00.000Z", planned_duration: 60, actual_duration: 20, distress_level: "subtle", result: "distress", revision: 6, updated_at: "2026-04-05T04:00:00.000Z", deleted_at: "2026-04-05T04:00:00.000Z" },
+        ]);
+      }
+      if (path === "walks") {
+        return jsonResponse(200, [
+          { id: "shared-dead", dog_id: "DOG9", date: "2026-04-05T01:00:00.000Z", duration: 900, walk_type: "regular_walk", revision: 7, updated_at: "2026-04-05T05:00:00.000Z", deleted_at: "2026-04-05T05:00:00.000Z" },
+        ]);
+      }
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, []);
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncFetch } = await setupStorageModule();
+    const { result, error } = await syncFetch("DOG9");
+
+    expect(error).toBeNull();
+    expect(result.sessions).toEqual([]);
+    expect(result.walks).toEqual([]);
+    expect(result.tombstones).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "shared-dead", kind: "session", revision: 6 }),
+      expect.objectContaining({ id: "shared-dead", kind: "walk", revision: 7 }),
+    ]));
+  });
+
+  it("retries pattern tombstone push with strict-schema payload when metadata-only insert violates not-null", async () => {
+    const postedBodies = [];
+    global.fetch = vi.fn(async (url, options = {}) => {
+      const { path } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(201, {});
+      if (path === "patterns" && (options.method || "GET") === "POST") {
+        const payload = JSON.parse(options.body || "{}");
+        postedBodies.push(payload);
+        if (postedBodies.length === 1) {
+          return jsonResponse(400, { message: "null value in column \"date\" of relation \"patterns\" violates not-null constraint" });
+        }
+        return jsonResponse(201, {});
+      }
+      if (path === "sessions") return jsonResponse(200, []);
+      if (path === "walks") return jsonResponse(200, []);
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, []);
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncPushTombstone } = await setupStorageModule();
+    const result = await syncPushTombstone("DOG10", {
+      id: "pattern-dead",
+      kind: "pattern",
+      deletedAt: "2026-04-06T09:30:00.000Z",
+      revision: 14,
+    }, { id: "DOG10", dogName: "Arlo" });
+
+    expect(result.ok).toBe(true);
+    expect(postedBodies).toHaveLength(2);
+    expect(postedBodies[1]).toMatchObject({
+      id: "pattern-dead",
+      dog_id: "DOG10",
+      deleted_at: "2026-04-06T09:30:00.000Z",
+      date: "2026-04-06T09:30:00.000Z",
+      type: "keys",
+      revision: 14,
+      updated_at: "2026-04-06T09:30:00.000Z",
+    });
+  });
 });
