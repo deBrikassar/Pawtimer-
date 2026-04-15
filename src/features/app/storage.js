@@ -42,6 +42,63 @@ export const logSyncDebug = (...args) => {
   console.info("[pawtimer-sync]", ...args);
 };
 
+const createSyncDegradationState = () => ({
+  isDegraded: false,
+  flags: [],
+  messages: [],
+  events: [],
+});
+
+let syncDegradationState = createSyncDegradationState();
+
+const recordSyncDegradation = ({
+  code,
+  operation,
+  table,
+  field = null,
+  message,
+  severity = "warning",
+}) => {
+  const normalizedCode = String(code || "").trim();
+  const normalizedOperation = String(operation || "").trim();
+  const normalizedTable = String(table || "").trim();
+  const normalizedField = field ? String(field).trim() : null;
+  const normalizedMessage = String(message || "").trim();
+  if (!normalizedCode || !normalizedOperation || !normalizedTable || !normalizedMessage) return;
+
+  const eventKey = [normalizedCode, normalizedOperation, normalizedTable, normalizedField || ""].join("|");
+  const exists = syncDegradationState.events.some((event) => event.key === eventKey);
+  if (exists) return;
+
+  const nextEvent = {
+    key: eventKey,
+    code: normalizedCode,
+    severity,
+    operation: normalizedOperation,
+    table: normalizedTable,
+    field: normalizedField,
+    message: normalizedMessage,
+    recordedAt: new Date().toISOString(),
+  };
+  syncDegradationState = {
+    isDegraded: true,
+    flags: syncDegradationState.flags.includes(normalizedCode)
+      ? syncDegradationState.flags
+      : [...syncDegradationState.flags, normalizedCode],
+    messages: syncDegradationState.messages.includes(normalizedMessage)
+      ? syncDegradationState.messages
+      : [...syncDegradationState.messages, normalizedMessage],
+    events: [...syncDegradationState.events, nextEvent],
+  };
+};
+
+export const getSyncDegradationState = () => ({
+  isDegraded: Boolean(syncDegradationState.isDegraded),
+  flags: [...syncDegradationState.flags],
+  messages: [...syncDegradationState.messages],
+  events: syncDegradationState.events.map((event) => ({ ...event })),
+});
+
 const normalizeSbUrl = (value) => String(value || "").replace(/\/+$/, "").replace(/\/rest\/v1$/i, "");
 export const SB_BASE_URL = normalizeSbUrl(SB_URL);
 
@@ -441,6 +498,12 @@ export const syncFetch = async (dogId) => {
       if (res.ok) return { table, ok: true, res, select, droppedColumns: [], degraded: false };
 
       if (optional && isMissingTableError(res.error)) {
+        recordSyncDegradation({
+          code: "missing_optional_table",
+          operation: "fetch",
+          table,
+          message: `Optional ${table} history could not be fetched because the ${table} table is missing. Sync remains available for other activity.`,
+        });
         logSyncDebug("syncFetch:optionalTableMissing", { table, error: res.error });
         return { table, ok: true, res: { ok: true, data: [], error: null, status: res.status }, select, droppedColumns: [], degraded: true };
       }
@@ -452,6 +515,13 @@ export const syncFetch = async (dogId) => {
       if (nextColumns.length === selectedColumns.length) {
         return { table, ok: false, res, select, droppedColumns: [], degraded: false };
       }
+      recordSyncDegradation({
+        code: "missing_fetch_column",
+        operation: "fetch",
+        table,
+        field: missingColumn,
+        message: `Sync for ${table} is running in compatibility mode because ${table}.${missingColumn} is unavailable. Some fields may be omitted until the schema is updated.`,
+      });
       logSyncDebug("syncFetch:retryWithoutMissingColumn", { table, missingColumn, previousSelect: select });
       selectedColumns = nextColumns;
       attempt += 1;
@@ -547,6 +617,7 @@ export const syncFetch = async (dogId) => {
 
   return {
     error: relatedErrors.length ? `Related data fetch failed (${relatedErrors.join(" | ")})` : null,
+    degradation: getSyncDegradationState(),
     result: {
       dog: matchedDog
         ? {
@@ -665,12 +736,26 @@ export const syncPush = async (dogId, kind, data, dogSettings = null) => {
       const errorText = String(res.error || "");
       const missingColumn = errorText.match(/Could not find the '([^']+)' column/i)?.[1];
       if (missingColumn && missingColumn in sessionPayload) {
+        recordSyncDegradation({
+          code: "missing_push_column",
+          operation: "push",
+          table: "sessions",
+          field: missingColumn,
+          message: `Session sync used compatibility mode and skipped ${missingColumn} because that column is missing on the server.`,
+        });
         delete sessionPayload[missingColumn];
         res = await postRow(sessionPayload);
         continue;
       }
 
       if (/(latency_to_first_distress|distress_type)/i.test(errorText)) {
+        recordSyncDegradation({
+          code: "missing_push_column",
+          operation: "push",
+          table: "sessions",
+          field: "latency_to_first_distress,distress_type",
+          message: "Session sync used compatibility mode and skipped latency/distress-type fields because the server schema is behind.",
+        });
         delete sessionPayload.latency_to_first_distress;
         delete sessionPayload.distress_type;
         res = await postRow(sessionPayload);
@@ -678,6 +763,13 @@ export const syncPush = async (dogId, kind, data, dogSettings = null) => {
       }
 
       if (/distress_severity/i.test(errorText)) {
+        recordSyncDegradation({
+          code: "missing_push_column",
+          operation: "push",
+          table: "sessions",
+          field: "distress_severity",
+          message: "Session sync used compatibility mode and skipped distress severity because the server schema is behind.",
+        });
         delete sessionPayload.distress_severity;
         res = await postRow(sessionPayload);
         continue;
