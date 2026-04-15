@@ -429,6 +429,64 @@ describe("recommendation engine", () => {
 });
 
 describe("public compatibility APIs", () => {
+  it("covers explanations/summaries for every emitted recommendation type", () => {
+    const noHistory = explainNextTarget([], [], [], {});
+    expect(noHistory.recommendationType).toBe("baseline_start");
+
+    const keepSameDuration = explainNextTarget([
+      { date: daysAgo(1), plannedDuration: 70, actualDuration: 70, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 72, actualDuration: 72, distressLevel: "none", belowThreshold: true },
+    ], [], [], { goalSeconds: 3600 });
+    expect(keepSameDuration.recommendationType).toBe("keep_same_duration");
+
+    const repeatCurrent = explainNextTarget([
+      { date: daysAgo(2), plannedDuration: 300, actualDuration: 260, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 300, actualDuration: 250, distressLevel: "none", belowThreshold: false },
+      { date: hoursAgo(2), plannedDuration: 300, actualDuration: 240, distressLevel: "none", belowThreshold: false },
+    ], [], [], { goalSeconds: 3600 });
+    expect(repeatCurrent.recommendationType).toBe("repeat_current_duration");
+
+    const recoveryResume = explainNextTarget([
+      { date: daysAgo(2), plannedDuration: 1200, actualDuration: 1200, distressLevel: "subtle", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 60, actualDuration: 60, distressLevel: "none", belowThreshold: true },
+      { date: new Date().toISOString(), plannedDuration: 120, actualDuration: 120, distressLevel: "none", belowThreshold: true },
+    ], [], [], { goalSeconds: 3600 });
+    expect(recoveryResume.recommendationType).toBe("recovery_mode_resume");
+
+    const recoveryActive = explainNextTarget([
+      { date: daysAgo(0), plannedDuration: 600, actualDuration: 220, distressLevel: "active", belowThreshold: false },
+    ], [], [], { goalSeconds: 3600 });
+    expect(recoveryActive.recommendationType).toBe("recovery_mode_active");
+
+    const cueFirst = explainNextTarget([
+      { date: daysAgo(1), plannedDuration: 120, actualDuration: 120, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), plannedDuration: 130, actualDuration: 130, distressLevel: "none", belowThreshold: true },
+    ], [], [
+      { date: daysAgo(0), type: "keys", reactionLevel: "active" },
+      { date: daysAgo(0), type: "keys", reactionLevel: "active" },
+      { date: daysAgo(0), type: "keys", reactionLevel: "active" },
+    ], { goalSeconds: 3600 });
+    expect(cueFirst.recommendationType).toBe("departure_cues_first");
+
+    const results = [noHistory, keepSameDuration, repeatCurrent, recoveryActive, recoveryResume, cueFirst];
+    const emittedTypes = new Set(results.map((result) => result.recommendationType));
+    expect(emittedTypes).toEqual(new Set([
+      "baseline_start",
+      "keep_same_duration",
+      "repeat_current_duration",
+      "recovery_mode_active",
+      "recovery_mode_resume",
+      "departure_cues_first",
+    ]));
+
+    results.forEach((result) => {
+      expect(result.explanation).toBeTruthy();
+      expect(result.summary).toBeTruthy();
+      expect(result.explanation).not.toMatch(/Adjusted from recent results/i);
+      expect(result.summary).not.toMatch(/adjusted from the current safe-alone estimate/i);
+    });
+  });
+
   it("suggestNext starts from 80% baseline for new dogs", () => {
     expect(suggestNext([], { currentMaxCalm: 120 })).toBe(96);
   });
