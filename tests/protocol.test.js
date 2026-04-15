@@ -774,6 +774,38 @@ describe("public compatibility APIs", () => {
     expect(next.recommendedDuration).toBeGreaterThan(1000);
   });
 
+  it("does not let missing plannedDuration with large actualDuration inflate recommendations", () => {
+    const sessions = [
+      { date: daysAgo(1), actualDuration: 300, distressLevel: "none" },
+      { date: daysAgo(0), actualDuration: 360, distressLevel: "none" },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 7200 });
+    expect(next.recommendedDuration).toBe(PROTOCOL.startDurationSeconds);
+  });
+
+  it("uses valid sessions for progression while malformed sessions stay low-confidence", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 120, actualDuration: 120, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 150, actualDuration: 150, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(0), actualDuration: 480, distressLevel: "none" },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 7200 });
+    expect(next.recommendedDuration).toBeLessThan(220);
+    expect(next.recommendedDuration).toBeGreaterThanOrEqual(150);
+  });
+
+  it("keeps malformed-only history from acting as strong calm evidence", () => {
+    const sessions = [
+      { date: daysAgo(3), actualDuration: 420, distressLevel: "none" },
+      { date: daysAgo(2), actualDuration: 500, distressLevel: "none" },
+      { date: daysAgo(1), actualDuration: 620, distressLevel: "none" },
+      { date: daysAgo(0), actualDuration: 700, distressLevel: "none" },
+    ];
+    const next = explainNextTarget(sessions, [], [], { goalSeconds: 7200 });
+    expect(next.recommendationType).toBe("baseline_start");
+    expect(next.recommendedDuration).toBe(PROTOCOL.startDurationSeconds);
+  });
+
   it("starts active-distress recovery at first step and keeps fallback for post-recovery resume", () => {
     const sessions = [
       { date: daysAgo(2), plannedDuration: 1500, actualDuration: 1200, distressLevel: "none", belowThreshold: false },
