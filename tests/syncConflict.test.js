@@ -18,6 +18,58 @@ describe("resolveSyncConflict", () => {
     expect(resolveSyncConflict(local, remote)).toBe(remote);
   });
 
+  it("prefers causal local change markers over skewed clocks when revisions match", () => {
+    const local = {
+      id: "session-1",
+      revision: 4,
+      updatedAt: iso(8),
+      note: "local edit",
+      pendingSync: true,
+      syncState: "syncing",
+    };
+    const remote = {
+      id: "session-1",
+      revision: 4,
+      updatedAt: iso(12),
+      note: "remote echo",
+      pendingSync: false,
+      syncState: "synced",
+    };
+
+    expect(resolveSyncConflict(local, remote)).toBe(local);
+  });
+
+  it("keeps local newer content with bad clock using pending causal metadata", () => {
+    const local = {
+      id: "pattern-1",
+      revision: 10,
+      updatedAt: iso(6),
+      type: "keys",
+      pendingSync: true,
+      syncState: "local",
+    };
+    const remote = {
+      id: "pattern-1",
+      revision: 10,
+      updatedAt: iso(13),
+      type: "jacket",
+      pendingSync: false,
+      syncState: "synced",
+    };
+
+    expect(resolveSyncConflict(local, remote)).toBe(local);
+  });
+
+  it("returns a deterministic winner when same revision has no causal metadata", () => {
+    const left = { id: "session-2", revision: 5, updatedAt: iso(9), date: iso(8), note: "alpha", result: "distress" };
+    const right = { id: "session-2", revision: 5, updatedAt: iso(10), date: iso(9), note: "beta", result: "success" };
+
+    const forwardWinner = resolveSyncConflict(left, right);
+    const reverseWinner = resolveSyncConflict(right, left);
+
+    expect(forwardWinner).toEqual(reverseWinner);
+  });
+
   it("prefers deletion tombstones over stale updates", () => {
     const localDelete = { id: "session-1", revision: 6, updatedAt: iso(12), deletedAt: iso(12) };
     const remoteActive = { id: "session-1", revision: 5, updatedAt: iso(13), result: "success" };
