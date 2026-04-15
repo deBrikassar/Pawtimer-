@@ -179,20 +179,17 @@ export function useHistoryEditing({
     confirmHistoryDelete: (historyModal, setHistoryModal) => {
       if (!historyModal || historyModal.mode !== "delete") return;
       if (historyModal.kind === "session") {
-        const nextSessions = sessions.filter((item) => item.id !== historyModal.id);
-        commitSessions(nextSessions);
+        commitSessions((prev) => prev.filter((item) => item.id !== historyModal.id));
         syncDelete("session", historyModal.id).then((ok) => {
           if (!ok) showToast("Session removed locally — remote delete failed");
         });
       } else if (historyModal.kind === "walk") {
-        const nextWalks = walks.filter((item) => item.id !== historyModal.id);
-        setWalks(nextWalks);
+        setWalks((prev) => prev.filter((item) => item.id !== historyModal.id));
         syncDelete("walk", historyModal.id).then((ok) => {
           if (!ok) showToast("Walk removed locally — remote delete failed");
         });
       } else if (historyModal.kind === "pattern") {
-        const nextPatterns = patterns.filter((item) => item.id !== historyModal.id);
-        setPatterns(nextPatterns);
+        setPatterns((prev) => prev.filter((item) => item.id !== historyModal.id));
         syncDelete("pattern", historyModal.id).then((ok) => {
           if (!ok) showToast("Pattern break removed locally — remote delete failed");
         });
