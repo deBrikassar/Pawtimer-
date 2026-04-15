@@ -55,6 +55,7 @@ export function useHistoryEditing({
   patLabels,
   showToast,
   pushWithSyncStatus,
+  pushTombstoneWithSyncStatus,
   addTombstone,
   commitSessions,
   setWalks,
@@ -192,6 +193,7 @@ export function useHistoryEditing({
     confirmHistoryDelete: (historyModal, setHistoryModal) => {
       if (!historyModal || historyModal.mode !== "delete") return;
       if (historyModal.kind === "session") {
+        let tombstoneToPush = null;
         commitSessions((prev) => {
           const matchingById = prev.filter((item) => item.id === historyModal.id);
           const hasDetailedIdentity = Boolean(
@@ -231,7 +233,16 @@ export function useHistoryEditing({
               updatedAt: item.updatedAt ?? null,
             })),
           });
-          if (existing && matchingById.length <= 1) addTombstone("session", existing);
+          const shouldTreatAsRemotePersisted = Boolean(
+            existing
+            && !existing.pendingSync
+            && existing.syncState !== "local"
+            && existing.syncState !== "syncing"
+            && existing.syncState !== "error",
+          );
+          if (existing && matchingById.length <= 1 && shouldTreatAsRemotePersisted) {
+            tombstoneToPush = addTombstone("session", existing);
+          }
           const next = hasDetailedIdentity
             ? prev.filter((item) => !(
               item.id === historyModal.id
@@ -262,9 +273,15 @@ export function useHistoryEditing({
               updatedAt: item.updatedAt ?? null,
             })),
             tombstoneSkippedDueToDuplicateId: Boolean(existing && matchingById.length > 1),
+            tombstoneSkippedAsLocalOnly: Boolean(existing && !shouldTreatAsRemotePersisted),
           });
           return next;
         });
+        if (tombstoneToPush && typeof pushTombstoneWithSyncStatus === "function") {
+          pushTombstoneWithSyncStatus(tombstoneToPush).then(({ ok, error }) => {
+            if (!ok && error) showToast(`Delete sync failed: ${error}`);
+          });
+        }
       } else if (historyModal.kind === "walk") {
         setWalks((prev) => {
           const existing = prev.find((item) => item.id === historyModal.id);

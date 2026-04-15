@@ -26,6 +26,7 @@ const buildDeleteActions = ({
   commitPatterns,
   commitFeedings,
   addTombstone = vi.fn(),
+  pushTombstoneWithSyncStatus = vi.fn(() => Promise.resolve({ ok: true })),
   showToast = vi.fn(),
 } = {}) => {
   const actions = useHistoryEditing({
@@ -36,6 +37,7 @@ const buildDeleteActions = ({
     patLabels: {},
     showToast,
     pushWithSyncStatus: vi.fn(() => Promise.resolve({ ok: true })),
+    pushTombstoneWithSyncStatus,
     addTombstone,
     commitSessions: commitSessions ?? vi.fn(),
     setWalks: commitWalks ?? vi.fn(),
@@ -309,5 +311,56 @@ describe("history delete mutations", () => {
       expect.objectContaining({ id: "sess-keep" }),
     ]));
     expect(addTombstone).not.toHaveBeenCalled();
+  });
+
+  it("deletes local-only rows without creating or pushing tombstones", async () => {
+    const commitSessions = vi.fn();
+    const addTombstone = vi.fn();
+    const pushTombstoneWithSyncStatus = vi.fn(() => Promise.resolve({ ok: true }));
+    const localOnlySession = {
+      ...baseSession,
+      id: "sess-local-only",
+      pendingSync: true,
+      syncState: "local",
+      date: makeIso("2026-04-12T10:00:00Z"),
+    };
+    const { actions } = buildDeleteActions({
+      sessions: [localOnlySession],
+      commitSessions,
+      addTombstone,
+      pushTombstoneWithSyncStatus,
+    });
+
+    actions.confirmHistoryDelete({ mode: "delete", kind: "session", id: "sess-local-only", label: "Local only session" }, vi.fn());
+    const deleteUpdater = commitSessions.mock.calls[0][0];
+    expect(deleteUpdater([localOnlySession])).toEqual([]);
+    await Promise.resolve();
+    expect(addTombstone).not.toHaveBeenCalled();
+    expect(pushTombstoneWithSyncStatus).not.toHaveBeenCalled();
+  });
+
+  it("creates and pushes tombstones immediately for remotely persisted rows", async () => {
+    const tombstone = { id: "sess-remote", kind: "session", deletedAt: makeIso("2026-04-13T11:00:00Z") };
+    const addTombstone = vi.fn(() => tombstone);
+    const pushTombstoneWithSyncStatus = vi.fn(() => Promise.resolve({ ok: true }));
+    const remoteSession = {
+      ...baseSession,
+      id: "sess-remote",
+      pendingSync: false,
+      syncState: "synced",
+      date: makeIso("2026-04-13T10:00:00Z"),
+    };
+    const commitSessions = vi.fn((updater) => (typeof updater === "function" ? updater([remoteSession]) : updater));
+    const { actions } = buildDeleteActions({
+      sessions: [remoteSession],
+      commitSessions,
+      addTombstone,
+      pushTombstoneWithSyncStatus,
+    });
+
+    actions.confirmHistoryDelete({ mode: "delete", kind: "session", id: "sess-remote", label: "Remote session" }, vi.fn());
+    await Promise.resolve();
+    expect(addTombstone).toHaveBeenCalledWith("session", expect.objectContaining({ id: "sess-remote" }));
+    expect(pushTombstoneWithSyncStatus).toHaveBeenCalledWith(tombstone);
   });
 });
