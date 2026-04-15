@@ -21,8 +21,83 @@ export const load = (key, fallback) => {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
   catch { return fallback; }
 };
+const createLocalPersistenceState = () => ({
+  syncState: "ok",
+  lastError: "",
+  failedKeys: [],
+  events: [],
+});
+
+let localPersistenceState = createLocalPersistenceState();
+
+const emitLocalPersistenceState = () => {
+  if (typeof window === "undefined" || typeof window.dispatchEvent !== "function" || typeof CustomEvent !== "function") return;
+  window.dispatchEvent(new CustomEvent("pawtimer:persistence-state", {
+    detail: {
+      syncState: localPersistenceState.syncState,
+      lastError: localPersistenceState.lastError,
+      failedKeys: [...localPersistenceState.failedKeys],
+      events: localPersistenceState.events.map((event) => ({ ...event })),
+    },
+  }));
+};
+
+const markLocalPersistenceFailure = (key, error) => {
+  const normalizedKey = String(key || "").trim();
+  const reason = error instanceof Error ? error.message : String(error || "Unknown localStorage failure");
+  const message = `Local persistence error: Failed to save "${normalizedKey}" (${reason}).`;
+  const nextFailedKeys = localPersistenceState.failedKeys.includes(normalizedKey)
+    ? localPersistenceState.failedKeys
+    : [...localPersistenceState.failedKeys, normalizedKey];
+  localPersistenceState = {
+    syncState: "error",
+    lastError: message,
+    failedKeys: nextFailedKeys,
+    events: [
+      ...localPersistenceState.events,
+      {
+        key: normalizedKey,
+        message,
+        recordedAt: new Date().toISOString(),
+      },
+    ],
+  };
+  emitLocalPersistenceState();
+};
+
+const clearLocalPersistenceFailure = (key) => {
+  const normalizedKey = String(key || "").trim();
+  const nextFailedKeys = localPersistenceState.failedKeys.filter((failedKey) => failedKey !== normalizedKey);
+  localPersistenceState = {
+    ...localPersistenceState,
+    syncState: nextFailedKeys.length ? "error" : "ok",
+    lastError: nextFailedKeys.length ? localPersistenceState.lastError : "",
+    failedKeys: nextFailedKeys,
+  };
+  emitLocalPersistenceState();
+};
+
+export const getLocalPersistenceState = () => ({
+  syncState: localPersistenceState.syncState,
+  lastError: localPersistenceState.lastError,
+  failedKeys: [...localPersistenceState.failedKeys],
+  events: localPersistenceState.events.map((event) => ({ ...event })),
+});
+
+export const resetLocalPersistenceState = () => {
+  localPersistenceState = createLocalPersistenceState();
+  emitLocalPersistenceState();
+};
+
 export const save = (key, val) => {
-  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+    clearLocalPersistenceFailure(key);
+    return true;
+  } catch (error) {
+    markLocalPersistenceFailure(key, error);
+    return false;
+  }
 };
 
 export const ensureArray = (value) => (Array.isArray(value) ? value : []);

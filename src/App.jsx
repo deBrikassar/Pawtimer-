@@ -4,7 +4,7 @@ import { PROTOCOL, explainNextTarget, normalizeDistressLevel, suggestNext, sugge
 import { sortByDateAsc } from "./lib/activityDateTime";
 import { sortValidDateAsc } from "./lib/dateSort";
 import { selectAppData } from "./features/app/selectors";
-import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
+import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getLocalPersistenceState, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncDelete, syncDeleteSessionsForDog, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
 import { fmt, fmtClock, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
 import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
 import { DogSelect, Onboarding } from "./features/setup/SetupScreens";
@@ -23,6 +23,7 @@ const SYNC_STATE = {
   SYNCED: "synced",
   ERROR: "error",
 };
+const LOCAL_PERSISTENCE_ERROR_PREFIX = "Local persistence error:";
 
 function recoveryStateEqual(a, b) {
   return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
@@ -116,6 +117,24 @@ export default function PawTimer() {
         })
       ))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const applyPersistenceState = () => {
+      const persistenceState = getLocalPersistenceState();
+      if (persistenceState.syncState === "error") {
+        setSyncStatus("err");
+        setSyncError(persistenceState.lastError || "Local persistence error: Failed to save app data.");
+        return;
+      }
+      setSyncError((prev) => (prev.startsWith(LOCAL_PERSISTENCE_ERROR_PREFIX) ? "" : prev));
+    };
+
+    applyPersistenceState();
+    if (typeof window === "undefined") return undefined;
+    const handlePersistenceState = () => applyPersistenceState();
+    window.addEventListener("pawtimer:persistence-state", handlePersistenceState);
+    return () => window.removeEventListener("pawtimer:persistence-state", handlePersistenceState);
   }, []);
 
   const withHydratedSyncState = useCallback((entry) => {
