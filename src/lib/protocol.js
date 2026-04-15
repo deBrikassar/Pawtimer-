@@ -111,13 +111,18 @@ export function inferBelowThreshold(session = {}) {
   const toExplicitBool = (value) => {
     if (value == null) return null;
     if (typeof value === "boolean") return value;
-    if (typeof value === "number") return value !== 0;
+    if (typeof value === "number") {
+      if (value === 1) return true;
+      if (value === 0) return false;
+      return null;
+    }
     if (typeof value === "string") {
       const normalized = value.trim().toLowerCase();
       if (["true", "1", "yes"].includes(normalized)) return true;
       if (["false", "0", "no"].includes(normalized)) return false;
+      return null;
     }
-    return Boolean(value);
+    return null;
   };
 
   const explicit = toExplicitBool(

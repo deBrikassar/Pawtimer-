@@ -63,6 +63,45 @@ describe("below-threshold inference", () => {
       belowThreshold: true,
     })).toBe(true);
   });
+
+  it("accepts supported canonical explicit string values", () => {
+    expect(inferBelowThreshold({
+      distressLevel: "none",
+      plannedDuration: 600,
+      actualDuration: 590,
+      belowThreshold: "true",
+    })).toBe(true);
+    expect(inferBelowThreshold({
+      distressLevel: "none",
+      plannedDuration: 600,
+      actualDuration: 610,
+      belowThreshold: "false",
+    })).toBe(false);
+  });
+
+  it("falls back to inference when explicit value is malformed", () => {
+    expect(inferBelowThreshold({
+      distressLevel: "none",
+      plannedDuration: 600,
+      actualDuration: 590,
+      belowThreshold: "maybe",
+    })).toBe(false);
+  });
+
+  it("falls back to inference when explicit below-threshold is nullish", () => {
+    expect(inferBelowThreshold({
+      distressLevel: "none",
+      plannedDuration: 600,
+      actualDuration: 610,
+      belowThreshold: null,
+    })).toBe(true);
+    expect(inferBelowThreshold({
+      distressLevel: "none",
+      plannedDuration: 600,
+      actualDuration: 590,
+      belowThreshold: undefined,
+    })).toBe(false);
+  });
 });
 
 describe("training stats", () => {

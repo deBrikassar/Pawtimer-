@@ -47,6 +47,21 @@ describe("mergeSessionWithDerivedFields", () => {
     expect(updated.distressSeverity).toBe("active");
     expect(updated.distressType).toBe("barking");
   });
+
+  it("recomputes below-threshold from canonical inference when stored explicit value is malformed", () => {
+    const updated = mergeSessionWithDerivedFields({
+      id: "sess-3",
+      date: daysAgo(0),
+      plannedDuration: 60,
+      actualDuration: 30,
+      distressLevel: "none",
+      belowThreshold: "maybe",
+      result: "success",
+      distressType: "none",
+    }, {});
+
+    expect(updated.belowThreshold).toBe(false);
+  });
 });
 
 describe("edited sessions and target recomputation", () => {
