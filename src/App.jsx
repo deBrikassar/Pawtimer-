@@ -526,8 +526,12 @@ export default function PawTimer() {
             feeding: mergedFeedings,
           },
         }));
-        setSyncError(error || "");
-        setSyncStatus(error ? "err" : "ok");
+        const isPartialSync = remote?.syncCapability?.mode === "partial";
+        const partialSyncMessage = isPartialSync
+          ? `Partial sync active: ${ensureArray(remote?.syncCapability?.missingOptionalTables).join(", ")} unavailable.`
+          : "";
+        setSyncError(error || partialSyncMessage);
+        setSyncStatus(error ? "err" : isPartialSync ? "partial" : "ok");
       } finally {
         syncInFlightRef.current = false;
       }
@@ -686,8 +690,19 @@ export default function PawTimer() {
       save(patKey(normalizedId), visibleJoinedPatterns);
       save(feedingKey(normalizedId), visibleJoinedFeedings);
       save(tombKey(normalizedId), joinedTombstones);
-      if (error) { setSyncStatus("err"); setSyncError(error); showToast(`Joined ${normalizedId}, but related history failed to load.`); }
-      else { setSyncError(""); setSyncStatus("ok"); showToast(`Joined shared profile ${normalizedId}.`); }
+      if (error) {
+        setSyncStatus("err");
+        setSyncError(error);
+        showToast(`Joined ${normalizedId}, but related history failed to load.`);
+      } else {
+        const isPartialSync = remote?.syncCapability?.mode === "partial";
+        const partialSyncMessage = isPartialSync
+          ? `Partial sync active: ${ensureArray(remote?.syncCapability?.missingOptionalTables).join(", ")} unavailable.`
+          : "";
+        setSyncError(partialSyncMessage);
+        setSyncStatus(isPartialSync ? "partial" : "ok");
+        showToast(`Joined shared profile ${normalizedId}.`);
+      }
       openDog(sharedDog);
       return;
     }
@@ -877,6 +892,14 @@ export default function PawTimer() {
         badgeState: "idle",
         label: `${counts[SYNC_STATE.LOCAL]} local only`,
         detail: "These changes are stored locally and will stay visible until the server confirms them.",
+      };
+    }
+
+    if (syncStatus === "partial") {
+      return {
+        badgeState: "idle",
+        label: "Partial sync",
+        detail: syncError || "Some optional activity tables are unavailable on the server, so sync coverage is incomplete.",
       };
     }
 

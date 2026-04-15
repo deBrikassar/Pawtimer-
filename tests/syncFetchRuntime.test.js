@@ -89,12 +89,25 @@ describe("syncFetch runtime fallbacks", () => {
     });
 
     const { syncFetch } = await setupStorageModule();
-    const { result, error } = await syncFetch("DOG1");
+    const { result, error, degradation } = await syncFetch("DOG1");
 
     expect(error).toBeNull();
     expect(result.sessions).toHaveLength(1);
     expect(result.patterns).toEqual([]);
     expect(result.feedings).toEqual([]);
+    expect(result.syncCapability).toEqual({
+      mode: "partial",
+      missingOptionalTables: ["patterns", "feedings"],
+      tableSupport: {
+        sessions: { supported: true, optional: false },
+        walks: { supported: true, optional: false },
+        patterns: { supported: false, optional: true },
+        feedings: { supported: false, optional: true },
+      },
+    });
+    expect(degradation?.isDegraded).toBe(true);
+    expect(degradation?.flags).toContain("missing_optional_table");
+    expect(degradation?.flags).toContain("partial_sync_capability");
   });
 
   it("returns activity-capable data even when an optional source fails", async () => {
@@ -128,6 +141,9 @@ describe("syncFetch runtime fallbacks", () => {
     expect(error).toBeNull();
     expect(result.sessions.some((session) => session.id === "s-activity")).toBe(true);
     expect(result.walks.some((walk) => walk.id === "w-activity")).toBe(true);
+    expect(result.syncCapability.mode).toBe("partial");
+    expect(result.syncCapability.missingOptionalTables).toEqual(["patterns"]);
+    expect(result.syncCapability.tableSupport.feedings.supported).toBe(true);
   });
 
   it("requests walk sync metadata and preserves non-default walk types", async () => {
@@ -168,6 +184,10 @@ describe("syncFetch runtime fallbacks", () => {
       revision: 7,
       updatedAt: "2026-03-01T03:01:00.000Z",
     }]);
+    expect(result.syncCapability.mode).toBe("full");
+    expect(result.syncCapability.missingOptionalTables).toEqual([]);
+    expect(result.syncCapability.tableSupport.patterns.supported).toBe(true);
+    expect(result.syncCapability.tableSupport.feedings.supported).toBe(true);
   });
 
   it("round-trips severe distress via legacy distress_level constraints without collapsing to active", async () => {

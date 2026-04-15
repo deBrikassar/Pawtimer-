@@ -685,6 +685,7 @@ export const WALKS_SYNC_FETCH_SELECT = [
 
 export const PATTERNS_SYNC_FETCH_SELECT = "id,dog_id,date,type,revision,updated_at,deleted_at";
 export const FEEDINGS_SYNC_FETCH_SELECT = "id,dog_id,date,food_type,amount,revision,updated_at,deleted_at";
+const OPTIONAL_SYNC_TABLES = ["patterns", "feedings"];
 
 const mapSyncFetchSessionRow = (r) => ({
   id: r.id,
@@ -810,6 +811,29 @@ export const syncFetch = async (dogId) => {
   const walkRes = walksFetch.res;
   const patRes = patternsFetch.res;
   const feedingRes = feedingsFetch.res;
+  const missingOptionalTables = [patternsFetch, feedingsFetch]
+    .filter((fetchResult) => OPTIONAL_SYNC_TABLES.includes(fetchResult.table) && fetchResult.degraded)
+    .map((fetchResult) => fetchResult.table);
+
+  const syncCapability = {
+    mode: missingOptionalTables.length ? "partial" : "full",
+    missingOptionalTables,
+    tableSupport: {
+      sessions: { supported: true, optional: false },
+      walks: { supported: true, optional: false },
+      patterns: { supported: !missingOptionalTables.includes("patterns"), optional: true },
+      feedings: { supported: !missingOptionalTables.includes("feedings"), optional: true },
+    },
+  };
+  if (syncCapability.mode === "partial") {
+    const unsupportedTables = missingOptionalTables.join(", ");
+    recordSyncDegradation({
+      code: "partial_sync_capability",
+      operation: "fetch",
+      table: "sync",
+      message: `Sync is running with partial table support. Unsupported optional tables: ${unsupportedTables}.`,
+    });
+  }
 
   const resourceErrors = [
     { table: "sessions", res: sessRes, queryShape: sessionsFetch.select },
@@ -863,6 +887,7 @@ export const syncFetch = async (dogId) => {
     error: relatedErrors.length ? `Related data fetch failed (${relatedErrors.join(" | ")})` : null,
     degradation: getSyncDegradationState(),
     result: {
+      syncCapability,
       dog: matchedDog
         ? {
             ...(matchedDog.settings && typeof matchedDog.settings === "object" ? matchedDog.settings : {}),
