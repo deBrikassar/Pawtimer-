@@ -275,4 +275,96 @@ describe("syncFetch runtime fallbacks", () => {
       revision: 9,
     });
   });
+
+  it("retries tombstone push with strict-schema compatible payload after not-null failure", async () => {
+    const postedBodies = [];
+    global.fetch = vi.fn(async (url, options = {}) => {
+      const { path } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(201, {});
+      if (path === "walks" && (options.method || "GET") === "POST") {
+        const payload = JSON.parse(options.body || "{}");
+        postedBodies.push(payload);
+        if (postedBodies.length === 1) {
+          return jsonResponse(400, { message: "null value in column \"date\" of relation \"walks\" violates not-null constraint" });
+        }
+        return jsonResponse(201, {});
+      }
+      if (path === "sessions") return jsonResponse(200, []);
+      if (path === "walks") return jsonResponse(200, []);
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, []);
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncPushTombstone } = await setupStorageModule();
+    const result = await syncPushTombstone("DOG7", {
+      id: "walk-dead",
+      kind: "walk",
+      deletedAt: "2026-04-03T09:00:00.000Z",
+      updatedAt: "2026-04-03T09:00:00.000Z",
+      revision: 11,
+    }, { id: "DOG7", dogName: "Skye" });
+
+    expect(result.ok).toBe(true);
+    expect(postedBodies).toHaveLength(2);
+    expect(postedBodies[0]).toEqual({
+      id: "walk-dead",
+      dog_id: "DOG7",
+      deleted_at: "2026-04-03T09:00:00.000Z",
+      revision: 11,
+      updated_at: "2026-04-03T09:00:00.000Z",
+    });
+    expect(postedBodies[1]).toMatchObject({
+      id: "walk-dead",
+      dog_id: "DOG7",
+      deleted_at: "2026-04-03T09:00:00.000Z",
+      revision: 11,
+      updated_at: "2026-04-03T09:00:00.000Z",
+      date: "2026-04-03T09:00:00.000Z",
+      duration: 0,
+      walk_type: "regular_walk",
+    });
+  });
+
+  it("keeps delete tombstones durable when strict-schema fallback is used", async () => {
+    const postedBodies = [];
+    global.fetch = vi.fn(async (url, options = {}) => {
+      const { path } = getPathAndParams(url);
+      if (path === "dogs") return jsonResponse(201, {});
+      if (path === "feedings" && (options.method || "GET") === "POST") {
+        const payload = JSON.parse(options.body || "{}");
+        postedBodies.push(payload);
+        if (postedBodies.length === 1) {
+          return jsonResponse(400, { message: "null value in column \"date\" of relation \"feedings\" violates not-null constraint" });
+        }
+        return jsonResponse(201, {});
+      }
+      if (path === "sessions") return jsonResponse(200, []);
+      if (path === "walks") return jsonResponse(200, []);
+      if (path === "patterns") return jsonResponse(200, []);
+      if (path === "feedings") return jsonResponse(200, []);
+      throw new Error(`Unexpected path: ${path}`);
+    });
+
+    const { syncPushTombstone } = await setupStorageModule();
+    const result = await syncPushTombstone("DOG8", {
+      id: "feeding-dead",
+      kind: "feeding",
+      deletedAt: "2026-04-04T08:30:00.000Z",
+      revision: 3,
+    }, { id: "DOG8", dogName: "Mochi" });
+
+    expect(result.ok).toBe(true);
+    expect(postedBodies).toHaveLength(2);
+    expect(postedBodies[1]).toMatchObject({
+      id: "feeding-dead",
+      dog_id: "DOG8",
+      deleted_at: "2026-04-04T08:30:00.000Z",
+      date: "2026-04-04T08:30:00.000Z",
+      food_type: "tombstone",
+      amount: "0",
+      revision: 3,
+      updated_at: "2026-04-04T08:30:00.000Z",
+    });
+  });
 });
