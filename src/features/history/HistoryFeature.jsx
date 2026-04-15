@@ -299,7 +299,10 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
           ) : timeline.map((item) => {
             if (item.kind === "session") {
               const s = item.data;
-              const lv = normalizeDistressLevel(s.distressLevel ?? (s.result === "success" ? "none" : "strong"));
+              const lv = normalizeDistressLevel(
+                s.distressLevel
+                ?? (s.result === "success" ? "none" : (s.result === "distress" ? "strong" : null)),
+              );
               const detailBadges = sessionDetailBadges(s);
               return renderHistoryCard({
                 itemKey: `s-${s.id}`,
