@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { suggestNextWithContext } from "../src/lib/protocol";
 import { useHistoryEditing } from "../src/features/history/HistoryFeature";
+import * as storage from "../src/features/app/storage";
 
 const makeIso = (value) => new Date(value).toISOString();
 
@@ -24,8 +25,6 @@ const buildDeleteActions = ({
   commitWalks,
   commitPatterns,
   commitFeedings,
-  syncDelete = vi.fn(() => Promise.resolve(true)),
-  syncDeleteSessionsForDog = vi.fn(() => Promise.resolve(true)),
   addTombstone = vi.fn(),
   showToast = vi.fn(),
 } = {}) => {
@@ -37,22 +36,17 @@ const buildDeleteActions = ({
     patLabels: {},
     showToast,
     pushWithSyncStatus: vi.fn(() => Promise.resolve({ ok: true })),
-    syncDelete,
-    syncDeleteSessionsForDog,
     addTombstone,
     commitSessions: commitSessions ?? vi.fn(),
     setWalks: commitWalks ?? vi.fn(),
     setPatterns: commitPatterns ?? vi.fn(),
     setFeedings: commitFeedings ?? vi.fn(),
-    activeDogId: "dog-1",
     stampLocalEntry: (entry) => ({ ...entry }),
   });
 
   return {
     actions,
     showToast,
-    syncDelete,
-    syncDeleteSessionsForDog,
     addTombstone,
     commitSessions: commitSessions ?? vi.fn(),
     commitWalks: commitWalks ?? vi.fn(),
@@ -62,10 +56,13 @@ const buildDeleteActions = ({
 };
 
 describe("history delete mutations", () => {
+  it("removes the dead remote bulk-delete session contract from sync API surface", () => {
+    expect(storage.syncDeleteSessionsForDog).toBeUndefined();
+  });
+
   it("creates tombstones for every session during bulk clear", () => {
     const commitSessions = vi.fn();
     const addTombstone = vi.fn();
-    const syncDeleteSessionsForDog = vi.fn(() => Promise.resolve(true));
     const originalWindow = globalThis.window;
     globalThis.window = { confirm: vi.fn(() => true) };
     const { actions } = buildDeleteActions({
@@ -75,7 +72,6 @@ describe("history delete mutations", () => {
       ],
       commitSessions,
       addTombstone,
-      syncDeleteSessionsForDog,
     });
 
     actions.clearSessions();
@@ -84,7 +80,37 @@ describe("history delete mutations", () => {
     expect(clearUpdater([{ ...baseSession, id: "sess-1" }, { ...baseSession, id: "sess-2" }])).toEqual([]);
     expect(addTombstone).toHaveBeenCalledTimes(2);
     expect(addTombstone.mock.calls.map((call) => call[0])).toEqual(["session", "session"]);
-    expect(syncDeleteSessionsForDog).not.toHaveBeenCalled();
+    globalThis.window = originalWindow;
+  });
+
+  it("keeps bulk clear retry-safe by only tombstoning sessions that still exist", () => {
+    const commitSessions = vi.fn();
+    const addTombstone = vi.fn();
+    const originalWindow = globalThis.window;
+    globalThis.window = { confirm: vi.fn(() => true) };
+    const { actions } = buildDeleteActions({
+      sessions: [
+        { ...baseSession, id: "sess-1" },
+        { ...baseSession, id: "sess-2", date: makeIso("2026-04-11T10:00:00Z") },
+      ],
+      commitSessions,
+      addTombstone,
+    });
+
+    actions.clearSessions();
+    actions.clearSessions();
+
+    const firstClearUpdater = commitSessions.mock.calls[0][0];
+    const secondClearUpdater = commitSessions.mock.calls[1][0];
+    const afterFirstClear = firstClearUpdater([
+      { ...baseSession, id: "sess-1" },
+      { ...baseSession, id: "sess-2", date: makeIso("2026-04-11T10:00:00Z") },
+    ]);
+    const afterSecondClear = secondClearUpdater(afterFirstClear);
+
+    expect(afterFirstClear).toEqual([]);
+    expect(afterSecondClear).toEqual([]);
+    expect(addTombstone.mock.calls.map((call) => call[1].id)).toEqual(["sess-1", "sess-2"]);
     globalThis.window = originalWindow;
   });
 
