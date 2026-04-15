@@ -153,6 +153,12 @@ function getLatestSessions(sessions, count) {
 
 const sortByDateAsc = (sessions = []) => sortByDateAscShared(sessions, { invalidPolicy: "drop" });
 
+function isProgressionEligibleSession(session = {}) {
+  const distress = normalizeDistressLevel(session?.distressLevel);
+  if (distress !== DISTRESS_LEVELS.NONE) return true;
+  return session?.hasReliablePlan !== false;
+}
+
 
 function countStreak(items, predicate) {
   let streak = 0;
@@ -207,11 +213,12 @@ function gapPenalty(sessions = [], now = new Date()) {
   return 0.38;
 }
 
-function confidenceFromSession(session = {}) {
+function confidenceFromSession(session = {}, options = {}) {
   const selfReported = Number(session.ratingConfidence ?? session.videoReview?.ratingConfidence);
-  if (Number.isFinite(selfReported)) return clamp01(selfReported);
-  if (session.videoReview?.recorded === true) return 0.85;
-  return 0.65;
+  const reliabilityPenalty = options.hasReliablePlan === false ? 0.2 : 1;
+  if (Number.isFinite(selfReported)) return clamp01(selfReported * reliabilityPenalty);
+  if (session.videoReview?.recorded === true) return clamp01(0.85 * reliabilityPenalty);
+  return clamp01(0.65 * reliabilityPenalty);
 }
 
 function pickFinite(session = {}, keys = []) {
@@ -246,11 +253,18 @@ function resolveDurationSeconds(session = {}, config = {}) {
 }
 
 function toRichSession(session = {}) {
-  const planned = Math.max(PROTOCOL.minDurationSeconds, resolveDurationSeconds(session, {
-    secondsKeys: ["plannedDurationSeconds", "planned_duration_seconds", "targetDurationSeconds", "target_duration_seconds"],
-    canonicalKeys: ["plannedDuration", "planned_duration", "targetDuration", "target_duration"],
-    minutesKeys: ["plannedDurationMinutes", "planned_duration_minutes", "targetDurationMinutes", "target_duration_minutes"],
-  }) ?? PROTOCOL.startDurationSeconds);
+  const persistedReliability = typeof session?.hasReliablePlan === "boolean"
+    ? session.hasReliablePlan
+    : null;
+  const plannedResolved = persistedReliability === false
+    ? null
+    : resolveDurationSeconds(session, {
+      secondsKeys: ["plannedDurationSeconds", "planned_duration_seconds", "targetDurationSeconds", "target_duration_seconds"],
+      canonicalKeys: ["plannedDuration", "planned_duration", "targetDuration", "target_duration"],
+      minutesKeys: ["plannedDurationMinutes", "planned_duration_minutes", "targetDurationMinutes", "target_duration_minutes"],
+    });
+  const hasReliablePlan = persistedReliability ?? (Number.isFinite(plannedResolved) && plannedResolved > 0);
+  const planned = Math.max(PROTOCOL.minDurationSeconds, plannedResolved ?? PROTOCOL.startDurationSeconds);
   const actual = resolveDurationSeconds(session, {
     secondsKeys: ["actualDurationSeconds", "actual_duration_seconds", "durationSeconds", "duration_seconds", "completedDurationSeconds", "completed_duration_seconds"],
     canonicalKeys: ["actualDuration", "actual_duration"],
@@ -269,12 +283,16 @@ function toRichSession(session = {}) {
     : level === DISTRESS_LEVELS.NONE
       ? actual
       : Math.min(actual, planned);
-  const belowThreshold = inferBelowThreshold({
+  const inferredBelowThreshold = inferBelowThreshold({
     ...session,
     distressLevel: level,
     actualDuration: actual,
-    plannedDuration: planned,
+    plannedDuration: hasReliablePlan ? planned : null,
   });
+  const belowThreshold = hasReliablePlan ? inferredBelowThreshold : false;
+  const progressionActualDuration = hasReliablePlan
+    ? actual
+    : Math.min(actual, PROTOCOL.startDurationSeconds);
 
   const departureType = session?.context?.departureType
     || session?.context?.departure_type
@@ -290,7 +308,9 @@ function toRichSession(session = {}) {
     latencyToFirstDistress: latency,
     belowThreshold,
     departureType,
-    confidence: confidenceFromSession(session),
+    hasReliablePlan,
+    progressionActualDuration,
+    confidence: confidenceFromSession(session, { hasReliablePlan }),
   };
 }
 
@@ -348,12 +368,12 @@ function computeSafeAloneTime(sessions = []) {
           // If calm sessions are present but marked not below-threshold (often because the
           // planned duration exceeded what was attempted), still use them as evidence of
           // tolerated time with a conservative haircut.
-          actualDuration: Math.max(PROTOCOL.minDurationSeconds, Math.round(s.actualDuration * 0.9)),
+          progressionActualDuration: Math.max(PROTOCOL.minDurationSeconds, Math.round(s.progressionActualDuration * 0.9)),
         };
       });
   if (!calm.length) return PROTOCOL.startDurationSeconds;
 
-  const weighted = calm.reduce((sum, s) => sum + (s.actualDuration * s.confidence * s.recencyWeight), 0);
+  const weighted = calm.reduce((sum, s) => sum + (s.progressionActualDuration * s.confidence * s.recencyWeight), 0);
   const weight = calm.reduce((sum, s) => sum + (s.confidence * s.recencyWeight), 0);
   return Math.max(PROTOCOL.minDurationSeconds, Math.round(weighted / Math.max(weight, 0.01)));
 }
@@ -423,17 +443,18 @@ function computeAdherence(sessions = [], plan = {}, now = new Date()) {
   const recent = sessions.filter((s) => isWithinDays(s.date, 14, now.getTime()));
   if (!recent.length) return 0;
 
-  const completed = recent.filter((s) => (Number(s.actualDuration) || 0) >= (Number(s.plannedDuration) || 0) * 0.95).length;
+  const reliableRecent = recent.filter((s) => s.hasReliablePlan !== false);
+  const completed = reliableRecent.filter((s) => (Number(s.actualDuration) || 0) >= (Number(s.plannedDuration) || 0) * 0.95).length;
   const cadenceTarget = Math.max(1, Math.floor(14 / cadenceDays));
   const cadenceScore = clamp01(recent.length / cadenceTarget);
-  const completionScore = completed / recent.length;
+  const completionScore = reliableRecent.length ? (completed / reliableRecent.length) : 0;
 
-  const withinBandCount = recent.filter((s) => {
+  const withinBandCount = reliableRecent.filter((s) => {
     if (!Number(plan.recommendedDuration)) return true;
     return Math.abs((Number(s.plannedDuration) || 0) - plan.recommendedDuration) <= Math.max(10, plan.recommendedDuration * 0.25);
   }).length;
 
-  const planMatchScore = withinBandCount / recent.length;
+  const planMatchScore = reliableRecent.length ? (withinBandCount / reliableRecent.length) : 0;
   return clamp01((cadenceScore * 0.4) + (completionScore * 0.35) + (planMatchScore * 0.25));
 }
 
@@ -560,7 +581,8 @@ function getRecentTrainingWindow(trainingSessions = [], window = 7) {
 
 function getSessionDurationAnchor(session = null) {
   if (!session) return null;
-  const actual = Number(session.actualDuration);
+  if (session.hasReliablePlan === false) return null;
+  const actual = Number(session.progressionActualDuration ?? session.actualDuration);
   if (Number.isFinite(actual) && actual > 0) return actual;
   const planned = Number(session.plannedDuration);
   if (Number.isFinite(planned) && planned > 0) return planned;
@@ -624,8 +646,9 @@ function hasConsecutivePostSubtleIncrease(window = []) {
 
 function getCompletionRatio(session = null) {
   if (!session) return 0;
+  if (session.hasReliablePlan === false) return 0;
   const planned = Number(session.plannedDuration);
-  const actual = Number(session.actualDuration);
+  const actual = Number(session.progressionActualDuration ?? session.actualDuration);
   if (!Number.isFinite(planned) || planned <= 0 || !Number.isFinite(actual) || actual < 0) return 0;
   return clamp01(actual / planned);
 }
@@ -926,12 +949,13 @@ function evaluatePersistentRecoveryMode(
 
 export function computeNextTarget(trainingSessions = [], options = {}) {
   const normalizedTraining = sortByDateAsc(trainingSessions).map(toRichSession);
-  const recentWindow = getRecentTrainingWindow(normalizedTraining, 7);
+  const progressionTraining = normalizedTraining.filter(isProgressionEligibleSession);
+  const recentWindow = getRecentTrainingWindow(progressionTraining, 7);
   const lastSession = recentWindow[recentWindow.length - 1] || null;
   const goalSeconds = Number(options.goalSeconds || PROTOCOL.goalDurationDefaultSeconds);
   const relapseRisk = clamp01(Number(options.relapseRisk));
   const reductionPercent = relapseRisk >= 0.72 ? 0.2 : relapseRisk >= 0.58 ? 0.15 : 0.1;
-  const existingRecoveryState = resolveRecoveryState(normalizedTraining, options.recoveryState);
+  const existingRecoveryState = resolveRecoveryState(progressionTraining, options.recoveryState);
 
   if (!lastSession) {
     return {
@@ -952,7 +976,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
 
   // Recovery is the first decision priority once history exists:
   // all stressed-session entry and in-progress step decisions must flow through this single path.
-  const activePersistentRecovery = evaluatePersistentRecoveryMode(normalizedTraining, existingRecoveryState, {
+  const activePersistentRecovery = evaluatePersistentRecoveryMode(progressionTraining, existingRecoveryState, {
     goalSeconds,
     reductionPercent,
     recentWindow,
