@@ -691,19 +691,19 @@ function hasThresholdConfirmation(window = []) {
   const recent = getLatestSessions(window, PROTOCOL.thresholdConfirmationWindow);
   if (!recent.length) return false;
 
+  const requiredStreak = Math.max(1, Math.round(Number(PROTOCOL.thresholdConfirmationStreak) || 0));
   const latest = recent[recent.length - 1];
   const latestIsConfirmedSuccess = (
     normalizeDistressLevel(latest.distressLevel) === DISTRESS_LEVELS.NONE
     && latest.belowThreshold === true
   );
   if (!latestIsConfirmedSuccess) return false;
-
-  if (recent.length === 1) return true;
+  if (recent.length < requiredStreak) return false;
   const confirmedSuccessStreak = countStreak(recent, (session) => (
     normalizeDistressLevel(session.distressLevel) === DISTRESS_LEVELS.NONE
     && session.belowThreshold === true
   ));
-  return confirmedSuccessStreak >= PROTOCOL.thresholdConfirmationStreak;
+  return confirmedSuccessStreak >= requiredStreak;
 }
 
 function getProgressionReferenceDuration(session = null) {
