@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mergeById, resolveSyncConflict } from "../src/features/app/storage";
+import { mergeMutationSafeSyncCollection, resolveSyncConflict } from "../src/features/app/storage";
 
 const iso = (hour) => `2026-04-01T${String(hour).padStart(2, "0")}:00:00.000Z`;
 
@@ -33,12 +33,16 @@ describe("resolveSyncConflict", () => {
   });
 });
 
-describe("mergeById concurrent edits", () => {
+describe("mergeMutationSafeSyncCollection concurrent edits", () => {
   it("keeps the higher revision entry across arrays", () => {
     const localSessions = [{ id: "session-1", date: iso(8), revision: 5, updatedAt: iso(8), result: "success" }];
     const remoteSessions = [{ id: "session-1", date: iso(8), revision: 4, updatedAt: iso(10), result: "distress" }];
 
-    const merged = mergeById(localSessions, remoteSessions);
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: localSessions,
+      remoteItems: remoteSessions,
+      kind: "session",
+    });
 
     expect(merged).toHaveLength(1);
     expect(merged[0].revision).toBe(5);
@@ -49,7 +53,11 @@ describe("mergeById concurrent edits", () => {
     const localPatterns = [{ id: "pattern-1", date: iso(8), revision: 8, updatedAt: iso(9), type: "keys" }];
     const remotePatterns = [{ id: "pattern-1", date: iso(8), revision: 8, updatedAt: iso(12), type: "jacket" }];
 
-    const merged = mergeById(localPatterns, remotePatterns);
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: localPatterns,
+      remoteItems: remotePatterns,
+      kind: "pattern",
+    });
 
     expect(merged).toHaveLength(1);
     expect(merged[0].type).toBe("jacket");
@@ -60,7 +68,11 @@ describe("mergeById concurrent edits", () => {
     const localPatterns = [{ id: "pattern-2", date: iso(8), revision: 10, updatedAt: iso(9), type: "keys" }];
     const remotePatterns = [{ id: "pattern-2", date: iso(8), revision: 9, updatedAt: iso(12), type: "jacket" }];
 
-    const merged = mergeById(localPatterns, remotePatterns);
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: localPatterns,
+      remoteItems: remotePatterns,
+      kind: "pattern",
+    });
 
     expect(merged).toHaveLength(1);
     expect(merged[0].revision).toBe(10);
@@ -71,7 +83,11 @@ describe("mergeById concurrent edits", () => {
     const localFeedings = [{ id: "feeding-1", date: iso(8), revision: 6, updatedAt: iso(9), foodType: "meal", amount: "small" }];
     const remoteFeedings = [{ id: "feeding-1", date: iso(8), revision: 5, updatedAt: iso(12), foodType: "snack", amount: "large" }];
 
-    const merged = mergeById(localFeedings, remoteFeedings);
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: localFeedings,
+      remoteItems: remoteFeedings,
+      kind: "feeding",
+    });
 
     expect(merged).toHaveLength(1);
     expect(merged[0].revision).toBe(6);
@@ -82,10 +98,77 @@ describe("mergeById concurrent edits", () => {
     const localWalks = [{ id: "walk-1", date: iso(8), revision: 3, updatedAt: iso(8), type: "training_walk", duration: 900 }];
     const remoteWalks = [{ id: "walk-1", date: iso(8), revision: 2, updatedAt: iso(10), type: "regular_walk", duration: 900 }];
 
-    const merged = mergeById(localWalks, remoteWalks);
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: localWalks,
+      remoteItems: remoteWalks,
+      kind: "walk",
+    });
 
     expect(merged).toHaveLength(1);
     expect(merged[0].revision).toBe(3);
     expect(merged[0].type).toBe("training_walk");
+  });
+
+  it("preserves local edit made after sync start when remote has older revision", () => {
+    const staleSnapshot = [{ id: "session-1", date: iso(8), revision: 1, updatedAt: iso(8), result: "success" }];
+    const currentLocal = [{ id: "session-1", date: iso(8), revision: 2, updatedAt: iso(10), result: "distress" }];
+    const remoteSessions = staleSnapshot;
+
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: currentLocal,
+      remoteItems: remoteSessions,
+      kind: "session",
+    });
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0].revision).toBe(2);
+    expect(merged[0].result).toBe("distress");
+  });
+
+  it("preserves local create made during in-flight sync when absent remotely", () => {
+    const currentLocal = [
+      { id: "session-1", date: iso(8), revision: 1, updatedAt: iso(8), result: "success" },
+      { id: "session-new", date: iso(9), revision: 1, updatedAt: iso(9), result: "distress", pendingSync: true },
+    ];
+    const remoteSessions = [{ id: "session-1", date: iso(8), revision: 1, updatedAt: iso(8), result: "success" }];
+
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: currentLocal,
+      remoteItems: remoteSessions,
+      kind: "session",
+    });
+
+    expect(merged.map((row) => row.id)).toEqual(["session-1", "session-new"]);
+    expect(merged.find((row) => row.id === "session-new")?.pendingSync).toBe(true);
+  });
+
+  it("preserves local delete made during in-flight sync via tombstone", () => {
+    const currentLocal = [{ id: "walk-1", date: iso(8), revision: 1, updatedAt: iso(8), duration: 600 }];
+    const remoteWalks = [{ id: "walk-1", date: iso(8), revision: 1, updatedAt: iso(8), duration: 600 }];
+    const tombstones = [{ id: "walk-1", kind: "walk", deletedAt: iso(10), revision: 2, updatedAt: iso(10), pendingSync: true }];
+
+    const merged = mergeMutationSafeSyncCollection({
+      currentItems: currentLocal,
+      remoteItems: remoteWalks,
+      tombstones,
+      kind: "walk",
+    });
+
+    expect(merged).toEqual([]);
+  });
+
+  it("keeps in-flight tombstone creation even when remote has no tombstone yet", () => {
+    const localTombstones = [{ id: "feeding-1", kind: "feeding", deletedAt: iso(11), revision: 4, updatedAt: iso(11), pendingSync: true }];
+    const remoteTombstones = [];
+
+    const mergedTombstones = mergeMutationSafeSyncCollection({
+      currentItems: localTombstones,
+      remoteItems: remoteTombstones,
+      kind: "feeding",
+      mapLocalItem: (item) => item,
+      mapRemoteItem: (item) => item,
+    });
+
+    expect(mergedTombstones).toEqual(localTombstones);
   });
 });
