@@ -1,14 +1,13 @@
 import { SessionControl, SessionRatingPanel } from "../train/TrainComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton } from "../app/ui";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function HomeScreen(props) {
   const {
     name,
     sessions,
     recommendation,
-    goalSec,
     phase,
     elapsed,
     finalElapsed,
@@ -49,28 +48,10 @@ export default function HomeScreen(props) {
     setFeedingDraft,
     cancelFeedingForm,
     saveFeeding,
-    showTrainFirstRunHint,
     dismissTrainFirstRunHint,
-    trainTimeChangeInsight,
-    returningTrainNudge,
-    dismissReturningTrainNudge,
-    openHistory,
-    openProgress,
   } = props;
   const target = recommendation?.duration ?? 0;
-  const recoveryMode = recommendation?.details?.recoveryMode;
-  const recommendationType = recommendation?.details?.recommendationType;
-  const recoveryModalTitle = (() => {
-    if (!recoveryMode?.active) return "Recovery plan";
-    if (recommendationType === "recovery_mode_active") return "Recovery reset sessions";
-    return "Recovery sessions active";
-  })();
-  const recoveryModalCopy = recoveryMode?.planCopy
-    || recommendation?.details?.summary
-    || recommendation?.explanation
-    || "We temporarily adjusted session targets to rebuild calm confidence before progression resumes.";
   const [todayOpen, setTodayOpen] = useState(false);
-  const [trainExplainOpen, setTrainExplainOpen] = useState(false);
   const todaySessions = sessions.filter((s) => isToday(s.date));
   const todayFeedingCount = feedings.filter((f) => isToday(f.date)).length;
   const latestSession = [...todaySessions]
@@ -81,30 +62,15 @@ export default function HomeScreen(props) {
     : daily.blockReason === "max_sessions"
       ? `Daily session max reached (${daily.maxCount}). Try again tomorrow.`
       : "";
-  const toggleTrainExplain = () => {
-    setTrainExplainOpen((prev) => !prev);
-    if (showTrainFirstRunHint) dismissTrainFirstRunHint();
-  };
-
-  useEffect(() => {
-    if (phase !== "idle") {
-      setTrainExplainOpen(false);
-      return;
-    }
-    if (showTrainFirstRunHint) setTrainExplainOpen(true);
-  }, [phase, showTrainFirstRunHint]);
-
   return (
     <div className="tab-content train-screen">
       <div className="train-main">
         <header className="train-identity-header surface-card">
           <div className="train-identity-header__badge" aria-hidden="true">
-            <Img src="hero-dog.png" size={44} alt="" />
+            <span role="img" aria-label="Dog">🐕</span>
           </div>
           <div className="train-identity-header__copy">
-            <div className="train-identity-header__eyebrow">{name}'s calm practice</div>
             <h2 className="train-identity-header__name">Train with {name}</h2>
-            <p className="train-identity-header__mood">Short, calm reps that build {name}&apos;s confidence when you leave.</p>
           </div>
         </header>
 
@@ -121,90 +87,8 @@ export default function HomeScreen(props) {
           canStart={daily.canAdd}
           startBlockedMessage={sessionBlockedMessage}
           allowIdlePress={false}
-          onIdlePress={toggleTrainExplain}
+          onIdlePress={dismissTrainFirstRunHint}
         />
-        {phase === "idle" && returningTrainNudge && (
-          <section className="train-returning-summary surface-card" role="status" aria-live="polite">
-            <div className="train-returning-summary__head">
-              <p className="train-returning-summary__eyebrow">Welcome back</p>
-              <button type="button" className="train-returning-summary__dismiss" onClick={dismissReturningTrainNudge} aria-label="Dismiss update">
-                Dismiss
-              </button>
-            </div>
-            <p className="train-returning-summary__title">
-              Target updated from <strong>{fmtClock(returningTrainNudge.previousTarget)}</strong> to <strong>{fmtClock(returningTrainNudge.currentTarget)}</strong>.
-            </p>
-            <p className="train-returning-summary__meta">
-              {returningTrainNudge.changedBy > 0 ? "You can try a slightly longer calm rep today." : "A shorter rep keeps confidence steady today."}
-            </p>
-            <div className="train-returning-summary__actions">
-              <button type="button" className="button-base button-ghost button--md button--pill" onClick={openHistory}>History</button>
-              <button type="button" className="button-base button-ghost button--md button--pill" onClick={openProgress}>Progress</button>
-            </div>
-          </section>
-        )}
-        {phase === "idle" && (
-          <div className="train-contextual-help">
-            <button
-              type="button"
-              className={`train-inline-guidance ${showTrainFirstRunHint ? "is-first-run" : ""}`}
-              onClick={toggleTrainExplain}
-              aria-expanded={trainExplainOpen}
-            >
-              <span className="train-inline-guidance__label">What this means</span>
-              <span className="train-inline-guidance__copy">See what the circle is coaching right now</span>
-            </button>
-            {trainExplainOpen && (
-              <div className="train-inline-explain" role="note" aria-live="polite">
-                <p><strong>Circle:</strong> one calm rep for {name}. The ring fills as relaxed time passes.</p>
-                <p><strong>Target ({fmtClock(target)}):</strong> today&apos;s safe step. End while {name} still looks settled.</p>
-                <p><strong>Flow:</strong> start, quietly observe, end early, then log what you noticed.</p>
-              </div>
-            )}
-          </div>
-        )}
-        <section className="train-context-block surface-card">
-          <p className="train-context-block__title">Today&apos;s focus</p>
-          <p className="train-context-block__value">{fmtClock(target)} calm-alone rep for {name}</p>
-          <p className="train-context-block__meta">
-            Reps logged: <strong>{daily.count}</strong> · Longer-term goal: <strong>{fmt(goalSec)}</strong>
-          </p>
-          {!daily.canAdd && (
-            <p className="status-msg status-msg--warning">
-              {sessionBlockedMessage}
-            </p>
-          )}
-          {phase === "idle" && showTrainFirstRunHint && (
-            <div className="train-inline-tip" role="note">
-              <span className="train-inline-tip__label">Targets adapt to {name}</span>
-              <span className="train-inline-tip__copy">Calm reps nudge up. Stress signs gently step back.</span>
-              <ol className="train-inline-tip__steps">
-                <li>Press <strong>Start rep</strong> when the home feels calm.</li>
-                <li>Watch quietly and end before stress builds.</li>
-                <li>Rate the rep so tomorrow&apos;s step stays right-sized.</li>
-              </ol>
-              <button
-                type="button"
-                className="train-inline-tip__dismiss"
-                onClick={dismissTrainFirstRunHint}
-              >
-                Got it
-              </button>
-            </div>
-          )}
-          {phase === "idle" && recoveryMode?.active && (
-            <div className="train-recovery-inline" role="note" aria-live="polite">
-              <p className="train-recovery-inline__title">{recoveryModalTitle}</p>
-              <p className="train-recovery-inline__copy">{recoveryModalCopy}</p>
-            </div>
-          )}
-          {phase === "idle" && trainTimeChangeInsight && (
-            <div className={`train-time-change-insight is-${trainTimeChangeInsight.tone || "neutral"}`} role="status" aria-live="polite">
-              <p className="train-time-change-insight__title">{trainTimeChangeInsight.title}</p>
-              <p className="train-time-change-insight__copy">{trainTimeChangeInsight.body}</p>
-            </div>
-          )}
-        </section>
 
         <SessionRatingPanel
           phase={phase}
@@ -222,6 +106,12 @@ export default function HomeScreen(props) {
           Img={Img}
           distressTypes={DISTRESS_TYPES}
         />
+
+        {!daily.canAdd && (
+          <p className="status-msg status-msg--warning">
+            {sessionBlockedMessage}
+          </p>
+        )}
 
         {daily.canAdd && daily.count >= Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0)) && (
           <p className="status-msg status-msg--warning">

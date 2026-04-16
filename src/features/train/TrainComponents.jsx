@@ -30,7 +30,7 @@ function SessionActionRow({
         onClick={handlePrimary}
         disabled={!isRunning && !canRunStart && !canExplain}
       >
-        {isRunning ? "End and save" : "Start rep"}
+        {isRunning ? "End and save" : "Start session"}
       </button>
       <button
         className="session-cancel-btn button-base button-ghost button--md button--pill"
@@ -81,19 +81,12 @@ export function SessionControl({
         ? "active"
         : "idle";
   const innerCaption = displayState === "warning"
-    ? "Practice is paused for today"
+    ? "Paused"
     : displayState === "success"
-      ? `${name} hit this calm target`
+      ? "Complete"
       : displayState === "active"
-        ? isPastTarget
-          ? `Past target — end while ${name} is still settled`
-          : `${name}'s calm hold for this rep`
-        : `Next target for ${name}`;
-  const helperCaption = displayState === "active"
-    ? (isPastTarget ? `+${fmt(overTargetSeconds)} calm hold` : `${fmt(elapsed)} complete · keep departures quiet and predictable`)
-    : displayState === "warning"
-      ? "Come back tomorrow for the next rep"
-      : "Small, steady reps build comfort with alone time";
+        ? "In session"
+        : "Ready";
 
   const startWithFeedback = () => {
     if (!onStart || !canStart) return;
@@ -149,10 +142,6 @@ export function SessionControl({
             <div className="sc-time">
               <div className="sc-time-value">{fmt(timerValue)}</div>
               <div className="sc-caption">{innerCaption}</div>
-              <div className="sc-support">{helperCaption}</div>
-              <div className={`sc-state-chip ${isRunning ? "is-running" : ""}`}>
-                {isRunning ? `Rep live · ${fmt(elapsed)} elapsed` : "Ready · calm rep"}
-              </div>
             </div>
           </div>
         </button>
