@@ -51,6 +51,7 @@ export default function HomeScreen(props) {
     saveFeeding,
     showTrainFirstRunHint,
     dismissTrainFirstRunHint,
+    trainTimeChangeInsight,
   } = props;
   const target = recommendation?.duration ?? 0;
   const recoveryMode = recommendation?.details?.recoveryMode;
@@ -162,6 +163,12 @@ export default function HomeScreen(props) {
             <div className="train-recovery-inline" role="note" aria-live="polite">
               <p className="train-recovery-inline__title">{recoveryModalTitle}</p>
               <p className="train-recovery-inline__copy">{recoveryModalCopy}</p>
+            </div>
+          )}
+          {phase === "idle" && trainTimeChangeInsight && (
+            <div className={`train-time-change-insight is-${trainTimeChangeInsight.tone || "neutral"}`} role="status" aria-live="polite">
+              <p className="train-time-change-insight__title">{trainTimeChangeInsight.title}</p>
+              <p className="train-time-change-insight__copy">{trainTimeChangeInsight.body}</p>
             </div>
           )}
         </section>
