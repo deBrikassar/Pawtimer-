@@ -17,6 +17,7 @@ import SettingsScreen from "./features/settings/SettingsScreen";
 import { HistoryScreen, useHistoryEditing } from "./features/history/HistoryFeature";
 import "./styles/theme.css";
 import "./styles/shared.css";
+import "./styles/primitives.css";
 import "./styles/app.css";
 
 const LEGACY_SW_PATHS = ["/service-worker.js", "/serviceworker.js", "/workbox-sw.js"];
