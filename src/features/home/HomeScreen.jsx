@@ -1,7 +1,7 @@
 import { SessionControl, SessionRatingPanel } from "../train/TrainComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton } from "../app/ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function HomeScreen(props) {
   const {
@@ -65,11 +65,24 @@ export default function HomeScreen(props) {
     || recommendation?.explanation
     || "We temporarily adjusted session targets to rebuild calm confidence before progression resumes.";
   const [todayOpen, setTodayOpen] = useState(false);
+  const [trainExplainOpen, setTrainExplainOpen] = useState(false);
   const sessionBlockedMessage = daily.blockReason === "cap"
     ? `Daily alone-time cap reached (${fmtClock(daily.capSec)}). Log more sessions tomorrow.`
     : daily.blockReason === "max_sessions"
       ? `Daily session max reached (${daily.maxCount}). Log more sessions tomorrow.`
       : "";
+  const toggleTrainExplain = () => {
+    setTrainExplainOpen((prev) => !prev);
+    if (showTrainFirstRunHint) dismissTrainFirstRunHint();
+  };
+
+  useEffect(() => {
+    if (phase !== "idle") {
+      setTrainExplainOpen(false);
+      return;
+    }
+    if (showTrainFirstRunHint) setTrainExplainOpen(true);
+  }, [phase, showTrainFirstRunHint]);
 
   return (
     <div className="tab-content train-screen">
@@ -98,7 +111,27 @@ export default function HomeScreen(props) {
           canStart={daily.canAdd}
           startBlockedMessage={sessionBlockedMessage}
           allowIdlePress={false}
+          onIdlePress={toggleTrainExplain}
         />
+        {phase === "idle" && (
+          <div className="train-contextual-help">
+            <button
+              type="button"
+              className={`train-inline-guidance ${showTrainFirstRunHint ? "is-first-run" : ""}`}
+              onClick={toggleTrainExplain}
+              aria-expanded={trainExplainOpen}
+            >
+              <span className="train-inline-guidance__label">Tap to explain</span>
+              <span className="train-inline-guidance__copy">What this circle and target mean</span>
+            </button>
+            {trainExplainOpen && (
+              <div className="train-inline-explain" role="note" aria-live="polite">
+                <p><strong>Big circle:</strong> this rep's timer. During a session, the number counts down and the ring fills as calm time is completed.</p>
+                <p><strong>Target time ({fmtClock(target)}):</strong> your current safe goal for one calm rep. End while {name} is still settled.</p>
+              </div>
+            )}
+          </div>
+        )}
         {phase === "idle" && (
           <button
             type="button"
@@ -111,8 +144,8 @@ export default function HomeScreen(props) {
         )}
 
         <section className="train-context-block surface-card">
-          <p className="train-context-block__title">Current calm threshold</p>
-          <p className="train-context-block__value">{fmtClock(target)} with {name}</p>
+          <p className="train-context-block__title">Today's target time</p>
+          <p className="train-context-block__value">{fmtClock(target)} calm for {name}</p>
           <p className="train-context-block__meta">
             Sessions today: <strong>{daily.count}</strong> · Daily pace target: <strong>{fmt(goalSec)}</strong>
           </p>
@@ -127,8 +160,8 @@ export default function HomeScreen(props) {
               className="train-inline-guidance"
               onClick={dismissTrainFirstRunHint}
             >
-              <span className="train-inline-guidance__label">Target adapts</span>
-              <span className="train-inline-guidance__copy">Calm sessions can rise. Stress signs step time down.</span>
+              <span className="train-inline-guidance__label">Target adapts gently</span>
+              <span className="train-inline-guidance__copy">Calm reps step up over time. Stress signs lower the next goal.</span>
             </button>
           )}
           {phase === "idle" && recoveryMode?.active && (
