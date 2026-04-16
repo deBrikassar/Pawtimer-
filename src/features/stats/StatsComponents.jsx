@@ -1,8 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, ReferenceLine,
-} from "recharts";
+import { useEffect, useId, useMemo, useState } from "react";
 import EmptyState from "../../components/EmptyState";
 import { TrendIcon } from "../app/ui";
 
@@ -12,31 +8,9 @@ export const METRIC_VARIANTS = Object.freeze({
   RING: "ring",
 });
 
-const chartTypography = {
-  helperText: {
-    fontFamily: "var(--font-main)",
-    fontSize: "var(--type-helper-text-size)",
-    lineHeight: "var(--type-helper-text-line)",
-    fontWeight: "var(--type-helper-text-weight)",
-    letterSpacing: "var(--type-helper-text-track)",
-  },
-  axisTick: {
-    fill: "var(--text-muted)",
-  },
-  tooltipContent: {
-    background: "var(--chart-tooltip-bg)",
-    border: "1px solid var(--chart-tooltip-border)",
-    borderRadius: 12,
-    color: "white",
-    boxShadow: "var(--chart-tooltip-shadow)",
-  },
-  tooltipLabel: {
-    color: "var(--green-light)",
-  },
-  referenceLabel: {
-    fill: "var(--green-dark)",
-  },
-};
+const WAVE_CHART_WIDTH = 720;
+const WAVE_CHART_HEIGHT = 220;
+const WAVE_CHART_PADDING = { top: 18, right: 20, bottom: 32, left: 20 };
 
 function useAnimatedValue(value, { duration = 180, round = false } = {}) {
   const [displayValue, setDisplayValue] = useState(value);
@@ -240,7 +214,7 @@ export function StatsProgressRing({
   );
 }
 
-export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name, distressLabel, fmt, insightLabel }) {
+export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insightLabel }) {
   if (chartData.length <= 1) {
     return (
       <EmptyState
@@ -253,20 +227,94 @@ export function StatsChartSection({ chartData, goalSec, CustomDot, setTab, name,
     );
   }
 
+  const gradientId = useId();
+  const areaGradientId = useId();
+  const hasGoal = Number.isFinite(goalSec) && goalSec > 0;
+  const goalMinutes = hasGoal ? goalSec / 60 : null;
+  const values = chartData.map((entry) => Number(entry.durationMinutes) || 0);
+  const minY = Math.min(...values);
+  const maxY = Math.max(...values);
+  const range = Math.max(1, maxY - minY);
+  const chartBottom = WAVE_CHART_HEIGHT - WAVE_CHART_PADDING.bottom;
+  const chartTop = WAVE_CHART_PADDING.top;
+  const chartWidth = WAVE_CHART_WIDTH - WAVE_CHART_PADDING.left - WAVE_CHART_PADDING.right;
+
+  const points = chartData.map((entry, index) => {
+    const ratioX = chartData.length === 1 ? 0 : index / (chartData.length - 1);
+    const x = WAVE_CHART_PADDING.left + (ratioX * chartWidth);
+    const y = chartBottom - (((Number(entry.durationMinutes) || 0) - minY) / range) * (chartBottom - chartTop);
+    return { x, y, entry, index };
+  });
+
+  const wavePath = points.reduce((acc, point, index) => {
+    if (index === 0) return `M ${point.x} ${point.y}`;
+    const previousPoint = points[index - 1];
+    const midX = (previousPoint.x + point.x) / 2;
+    return `${acc} Q ${previousPoint.x} ${previousPoint.y} ${midX} ${((previousPoint.y + point.y) / 2)} T ${point.x} ${point.y}`;
+  }, "");
+
+  const areaPath = `${wavePath} L ${points.at(-1).x} ${chartBottom} L ${points[0].x} ${chartBottom} Z`;
+  const latestPoint = points.at(-1);
+  const goalY = hasGoal
+    ? chartBottom - ((Math.min(Math.max(goalMinutes, minY), maxY) - minY) / range) * (chartBottom - chartTop)
+    : null;
+  const midPoint = points[Math.floor(points.length / 2)];
+  const tickPoints = [points[0], midPoint, points.at(-1)];
+
   return (
     <div className="chart-wrap chart-wrap-full surface-card surface-card--chart">
       {insightLabel ? <div className="chart-insight">{insightLabel}</div> : null}
       <div className="chart-title">Session duration over time (min)</div>
-      <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={chartData} margin={{top:5,right:24,left:-14,bottom:5}}>
-          <CartesianGrid stroke="var(--chart-grid-stroke)" vertical={false}/>
-          <XAxis dataKey="session" tick={{ ...chartTypography.helperText, ...chartTypography.axisTick }} tickLine={false} axisLine={false}/>
-          <YAxis tick={{ ...chartTypography.helperText, ...chartTypography.axisTick }} tickLine={false} axisLine={false}/>
-          <Tooltip contentStyle={{ ...chartTypography.helperText, ...chartTypography.tooltipContent }} labelStyle={{ ...chartTypography.helperText, ...chartTypography.tooltipLabel }} formatter={(_v,_n,p)=>[`${fmt(p.payload.durationSeconds)} — ${distressLabel(p.payload.distressLevel)}`,"Duration"]}/>
-          <ReferenceLine y={goalSec/60} stroke="var(--green-dark)" strokeDasharray="4 4" label={{ value:"Goal", position:"right", ...chartTypography.helperText, ...chartTypography.referenceLabel }}/>
-          <Line type="monotone" dataKey="durationMinutes" stroke="var(--brown)" strokeWidth={2.5} dot={<CustomDot/>} activeDot={{r:6}}/>
-        </LineChart>
-      </ResponsiveContainer>
+      <div className="stats-progress-wave" role="img" aria-label={`${name}'s recent session durations`}>
+        <svg viewBox={`0 0 ${WAVE_CHART_WIDTH} ${WAVE_CHART_HEIGHT}`} className="stats-progress-wave-svg" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="color-mix(in srgb, var(--brown) 82%, var(--green-dark))" />
+              <stop offset="100%" stopColor="var(--green-dark)" />
+            </linearGradient>
+            <linearGradient id={areaGradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="color-mix(in srgb, var(--green-light) 30%, transparent)" />
+              <stop offset="100%" stopColor="transparent" />
+            </linearGradient>
+          </defs>
+
+          <line
+            x1={WAVE_CHART_PADDING.left}
+            x2={WAVE_CHART_WIDTH - WAVE_CHART_PADDING.right}
+            y1={chartBottom}
+            y2={chartBottom}
+            className="stats-progress-wave-baseline"
+          />
+          {goalY != null ? (
+            <line
+              x1={WAVE_CHART_PADDING.left}
+              x2={WAVE_CHART_WIDTH - WAVE_CHART_PADDING.right}
+              y1={goalY}
+              y2={goalY}
+              className="stats-progress-wave-goal"
+            />
+          ) : null}
+
+          <path d={areaPath} fill={`url(#${areaGradientId})`} className="stats-progress-wave-area" />
+          <path d={wavePath} fill="none" stroke={`url(#${gradientId})`} className="stats-progress-wave-line" />
+
+          {latestPoint ? (
+            <g transform={`translate(${latestPoint.x} ${latestPoint.y})`} className="stats-progress-wave-latest">
+              <circle r="8" className="stats-progress-wave-latest-halo" />
+              <circle r="4.25" className="stats-progress-wave-latest-core" />
+            </g>
+          ) : null}
+        </svg>
+
+        <div className="stats-progress-wave-meta">
+          {tickPoints.map((point) => (
+            <div key={`tick-${point.index}`} className="stats-progress-wave-meta-col">
+              <span className="stats-progress-wave-meta-session">Session {point.entry.session}</span>
+              <span className="stats-progress-wave-meta-value">{fmt(point.entry.durationSeconds)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
