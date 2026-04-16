@@ -1,5 +1,5 @@
 import { PATTERN_TYPES } from "../app/helpers";
-import { DeleteIcon, ModalCloseButton } from "../app/ui";
+import { ModalCloseButton } from "../app/ui";
 import { useState } from "react";
 import DogProfileCard from "./DogProfileCard";
 
@@ -29,11 +29,28 @@ function SettingsNavRow({ label, value, onClick, danger = false }) {
   );
 }
 
+function SettingsSheet({ title, titleId, onClose, children, compact = false }) {
+  return (
+    <div className="quick-modal-overlay quick-modal-overlay--sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={onClose}>
+      <div className={`quick-modal-card modal-card modal-card--dialog-md quick-modal-card--sheet ${compact ? "quick-modal-card--sheet-compact" : ""}`} onClick={(e) => e.stopPropagation()}>
+        <div className="quick-modal-head">
+          <div className="quick-modal-title" id={titleId}>{title}</div>
+          <ModalCloseButton onClick={onClose} />
+        </div>
+        <div className="settings-modal-stack">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsScreen(props) {
   const [activePanel, setActivePanel] = useState(null);
   const [reminderEditorOpen, setReminderEditorOpen] = useState(false);
   const [diagDetailsOpen, setDiagDetailsOpen] = useState(false);
   const [dangerOpen, setDangerOpen] = useState(false);
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const {
     name,
     activeDogId,
@@ -113,17 +130,18 @@ export default function SettingsScreen(props) {
                   {reminderEditorOpen ? "Done" : notifTime}
                 </button>
               </div>
-              {notifEnabled && reminderEditorOpen && (
-                <input type="time" value={notifTime} onChange={async (e) => {
-                  const nextTime = e.target.value;
-                  const dogName = dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase())?.dogName ?? "your dog";
-                  const ok = await scheduleNotif(nextTime, dogName);
-                  if (ok) setNotifTime(nextTime);
-                }} className="notif-time-input settings-time-input" />
-              )}
-              {!notifEnabled && reminderEditorOpen && (
-                <div className="settings-secondary-text">Turn reminders on first, then choose a time.</div>
-              )}
+              <div className={`settings-inline-reveal ${reminderEditorOpen ? "is-open" : ""}`} aria-hidden={!reminderEditorOpen}>
+                {notifEnabled ? (
+                  <input type="time" value={notifTime} onChange={async (e) => {
+                    const nextTime = e.target.value;
+                    const dogName = dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase())?.dogName ?? "your dog";
+                    const ok = await scheduleNotif(nextTime, dogName);
+                    if (ok) setNotifTime(nextTime);
+                  }} className="notif-time-input settings-time-input" />
+                ) : (
+                  <div className="settings-secondary-text">Turn reminders on first, then choose a time.</div>
+                )}
+              </div>
             </div>
             <SettingsNavRow label="Training settings" value={`Up to ${activeProto.sessionsPerDayMax}/day`} onClick={() => setTrainingSettingsOpen(true)} />
             <SettingsNavRow label="Custom labels" value={`${Object.keys(patLabels).length} custom`} onClick={() => setActivePanel(SETTINGS_PANEL.LABELS)} />
@@ -153,15 +171,31 @@ export default function SettingsScreen(props) {
             </button>
             {dangerOpen ? (
               <div className="settings-collapsible-inner" id="settings-danger-content">
-                <SettingsNavRow label={`Remove ${name} from this device`} danger onClick={() => {
-                  if (window.confirm(`Remove ${name} from this device? This deletes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.`)) {
-                    clearDogActivityState(activeDogId);
-                    const newDogs = dogsState.filter((d) => d.id !== activeDogId);
-                    setDogs(newDogs);
-                    save(ACTIVE_DOG_KEY, null);
-                    setActiveDogId(null);
-                  }
-                }} />
+                <button className="settings-nav-row settings-nav-row--danger" type="button" onClick={() => setRemoveConfirmOpen((prev) => !prev)}>
+                  <span className="settings-nav-row__label">{`Remove ${name} from this device`}</span>
+                  <span className="settings-nav-row__meta">
+                    <span className="settings-nav-row__chevron" aria-hidden="true">{removeConfirmOpen ? "−" : "›"}</span>
+                  </span>
+                </button>
+                <div className={`settings-inline-reveal ${removeConfirmOpen ? "is-open" : ""}`} aria-hidden={!removeConfirmOpen}>
+                  <div className="settings-danger-confirm">
+                    <div className="settings-secondary-text">
+                      This removes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.
+                    </div>
+                    <div className="settings-danger-actions">
+                      <button type="button" className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={() => setRemoveConfirmOpen(false)}>Cancel</button>
+                      <button type="button" className="settings-inline-btn button-size-secondary-pill button-danger" onClick={() => {
+                        clearDogActivityState(activeDogId);
+                        const newDogs = dogsState.filter((d) => d.id !== activeDogId);
+                        setDogs(newDogs);
+                        save(ACTIVE_DOG_KEY, null);
+                        setActiveDogId(null);
+                      }}>
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             ) : null}
           </section>
@@ -169,85 +203,55 @@ export default function SettingsScreen(props) {
       </div>
 
       {activePanel === SETTINGS_PANEL.PROFILE && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-profile-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
-            <div className="quick-modal-head">
-              <div className="quick-modal-title" id="settings-profile-title">Dog profile</div>
-              <ModalCloseButton onClick={() => setActivePanel(null)} />
+        <SettingsSheet title="Dog profile" titleId="settings-profile-title" onClose={() => setActivePanel(null)} compact>
+          <div className="settings-profile-id-row" aria-label="Dog ID">
+            <div>
+              <div className="settings-simple-title">Dog ID</div>
+              <div className="settings-id-value">{activeDogId}</div>
             </div>
-            <div className="settings-modal-stack">
-              <div className="settings-profile-id-row" aria-label="Dog ID">
-                <div>
-                  <div className="settings-simple-title">Dog ID</div>
-                  <div className="settings-id-value">{activeDogId}</div>
-                </div>
-                <button className="copy-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
-              </div>
-              <div className="settings-sync-summary" aria-live="polite">
-                <div className={`sync-badge sync-state-${syncSummary.badgeState}`} title={syncSummary.detail}>
-                  <span className={`sync-dot sync-${syncSummary.badgeState}`} />
-                  <span>{syncSummary.label}</span>
-                </div>
-                <div className="settings-sync-copy">{syncSummary.detail}</div>
-              </div>
-            </div>
+            <button className="copy-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
           </div>
-        </div>
+          <div className="settings-sync-summary" aria-live="polite">
+            <div className={`sync-badge sync-state-${syncSummary.badgeState}`} title={syncSummary.detail}>
+              <span className={`sync-dot sync-${syncSummary.badgeState}`} />
+              <span>{syncSummary.label}</span>
+            </div>
+            <div className="settings-sync-copy">{syncSummary.detail}</div>
+          </div>
+        </SettingsSheet>
       )}
 
       {activePanel === SETTINGS_PANEL.LABELS && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-labels-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
-            <div className="quick-modal-head">
-              <div className="quick-modal-title" id="settings-labels-title">Custom labels</div>
-              <ModalCloseButton onClick={() => setActivePanel(null)} />
+        <SettingsSheet title="Custom labels" titleId="settings-labels-title" onClose={() => setActivePanel(null)}>
+          {PATTERN_TYPES.map((pt) => (
+            <div key={pt.type} className="pat-edit-row">
+              {editingPat === pt.type ? (
+                <input className="pat-edit-input" autoFocus aria-label={`Rename ${pt.label}`} defaultValue={patLabels[pt.type] || pt.label} onBlur={(e) => { const val = e.target.value.trim(); if (val) setPatLabels((prev) => ({ ...prev, [pt.type]: val })); setEditingPat(null); }} onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") setEditingPat(null); }} />
+              ) : (
+                <span className="pat-edit-label">{patLabels[pt.type] || pt.label}</span>
+              )}
+              <div className="pat-edit-actions">
+                <button className="pat-edit-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}>Edit</button>
+                {editingPat === pt.type && patLabels[pt.type] && <button className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text" onMouseDown={(e) => e.preventDefault()} onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">Reset</button>}
+              </div>
             </div>
-            <div className="settings-modal-stack">
-              {PATTERN_TYPES.map((pt) => (
-                <div key={pt.type} className="pat-edit-row">
-                  {editingPat === pt.type ? (
-                    <input className="pat-edit-input" autoFocus aria-label={`Rename ${pt.label}`} defaultValue={patLabels[pt.type] || pt.label} onBlur={(e) => { const val = e.target.value.trim(); if (val) setPatLabels((prev) => ({ ...prev, [pt.type]: val })); setEditingPat(null); }} onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") setEditingPat(null); }} />
-                  ) : (
-                    <span className="pat-edit-label">{patLabels[pt.type] || pt.label}</span>
-                  )}
-                  <div className="pat-edit-actions">
-                    <button className="pat-edit-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setEditingPat(pt.type)} aria-label={`Edit ${pt.label} name`}>Edit</button>
-                    {editingPat === pt.type && patLabels[pt.type] && <button className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text" onMouseDown={(e) => e.preventDefault()} onClick={() => setPatLabels((prev) => { const n = { ...prev }; delete n[pt.type]; return n; })} aria-label="Reset to default">Reset</button>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          ))}
+        </SettingsSheet>
       )}
 
       {activePanel === SETTINGS_PANEL.HELP && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-help-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
-            <div className="quick-modal-head">
-              <div className="quick-modal-title" id="settings-help-title">Help</div>
-              <ModalCloseButton onClick={() => setActivePanel(null)} />
-            </div>
-            <div className="settings-modal-stack">
+        <SettingsSheet title="Help" titleId="settings-help-title" onClose={() => setActivePanel(null)}>
               <div className="proto-section u-mt-none"><div className="proto-title">Sync devices</div><div className="proto-row">Share your Dog ID, then join with the same ID on the other device.</div></div>
               <div className="proto-section"><div className="proto-title">Session flow</div><div className="proto-row">Start a session, return before distress escalates, then rate how {name} did.</div></div>
               <div className="proto-section"><div className="proto-title">Current recommendation state</div><div className="proto-row">Now: <strong>{recommendationType}</strong>. {recommendationSummary} It currently weighs {(recommendation?.details?.factors || []).join(" ")}</div></div>
               <div className="proto-section"><div className="proto-title">Recommendation states emitted</div><div className="proto-row">baseline_start, keep_same_duration, repeat_current_duration, departure_cues_first, recovery_mode_active, recovery_mode_resume.</div></div>
               <div className="proto-section"><div className="proto-title">Recovery behavior</div><div className="proto-row">Any subtle/active/severe distress can activate recovery. While recovery_mode_active, targets use short fixed steps (typically 60s then 120s; severe can add a third 120s step). Subtle recovery accepts any calm follow-up duration; active/severe count calm sessions at short recovery lengths. After enough calm sessions, recovery_mode_resume emits once, then normal progression continues.</div></div>
               <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions, {activeProto.maxDailyAloneMinutes} min/day, and {pattern.recMin}–{pattern.recMax} pattern breaks.</div></div>
-            </div>
-          </div>
-        </div>
+        </SettingsSheet>
       )}
 
       {activePanel === SETTINGS_PANEL.ADVANCED && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-advanced-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
-            <div className="quick-modal-head">
-              <div className="quick-modal-title" id="settings-advanced-title">Advanced</div>
-              <ModalCloseButton onClick={() => setActivePanel(null)} />
-            </div>
-            <div className="settings-modal-stack">
+        <SettingsSheet title="Advanced" titleId="settings-advanced-title" onClose={() => setActivePanel(null)}>
               <div className="settings-advanced-group">
                 <div className="diag-head">
                   <button className="diag-run-btn button-size-compact-tertiary secondary-control secondary-control--compact-button" type="button" disabled={syncDiagRunning} onClick={runSyncDiagnostics}>{syncDiagRunning ? "Running…" : "Run connection test"}</button>
@@ -288,45 +292,27 @@ export default function SettingsScreen(props) {
                 )}
               </div>}
               {diagDetailsOpen && syncDiagResult && <div className="settings-advanced-group settings-advanced-group--technical"><div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>{syncDiagResult.checks?.summary?.ok ? "All checks passed" : "Some checks failed"}</div><pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre></div>}
-            </div>
-          </div>
-        </div>
+        </SettingsSheet>
       )}
 
       {activePanel === SETTINGS_PANEL.ACCOUNT && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-account-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
-            <div className="quick-modal-head">
-              <div className="quick-modal-title" id="settings-account-title">Account</div>
-              <ModalCloseButton onClick={() => setActivePanel(null)} />
-            </div>
-            <div className="settings-modal-stack">
-              <button
-                className="settings-btn button-size-secondary-pill"
-                onClick={() => {
-                  if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) {
-                    setOnboardingState({ mode: "claim", dogId: activeDogId });
-                    setScreen("onboard");
-                  }
-                }}
-              >
-                Edit {name}&rsquo;s profile
-              </button>
-              <button className="settings-btn button-size-secondary-pill" onClick={() => setScreen("select")}>
-                <span className="settings-btn__label">Switch dog</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <SettingsSheet title="Account" titleId="settings-account-title" onClose={() => setActivePanel(null)} compact>
+          <SettingsNavRow
+            label={`Edit ${name}’s profile`}
+            value="Re-run setup"
+            onClick={() => {
+              if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) {
+                setOnboardingState({ mode: "claim", dogId: activeDogId });
+                setScreen("onboard");
+              }
+            }}
+          />
+          <SettingsNavRow label="Switch dog" onClick={() => setScreen("select")} />
+        </SettingsSheet>
       )}
 
       {trainingSettingsOpen && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="training-settings-title" onClick={() => setTrainingSettingsOpen(false)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
-            <div className="quick-modal-head">
-              <div className="quick-modal-title" id="training-settings-title">Edit training plan</div>
-              <ModalCloseButton onClick={() => setTrainingSettingsOpen(false)} />
-            </div>
+        <SettingsSheet title="Edit training plan" titleId="training-settings-title" onClose={() => setTrainingSettingsOpen(false)}>
             <div className="share-sub">Adjust protocol values only if a trainer has advised you to. Full guidance is kept in Help.</div>
             {!protoWarnAck ? (
               <div className="proto-warn-banner">
@@ -354,8 +340,7 @@ export default function SettingsScreen(props) {
                 <button onClick={() => { setProtoOverride({}); setProtoWarnAck(false); }} className="settings-inline-reset-btn t-helper u-mt-row secondary-control secondary-control--inline-text" type="button">Reset to defaults</button>
               </div>
             )}
-          </div>
-        </div>
+        </SettingsSheet>
       )}
     </>
   );
