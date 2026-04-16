@@ -30,7 +30,7 @@ function SessionActionRow({
         onClick={handlePrimary}
         disabled={!isRunning && !canRunStart && !canExplain}
       >
-        {isRunning ? "End and save rep" : "Start calm-alone rep"}
+        {isRunning ? "End and save" : "Start rep"}
       </button>
       <button
         className="session-cancel-btn button-base button-ghost button--md button--pill"
@@ -38,7 +38,7 @@ function SessionActionRow({
         aria-hidden={!isRunning}
         tabIndex={isRunning ? 0 : -1}
       >
-        Cancel rep (don&apos;t save)
+        Cancel (don&apos;t save)
       </button>
       {!isRunning && !canStart && (
         <p className="session-action-meta" role="status">{startBlockedMessage}</p>
@@ -81,19 +81,19 @@ export function SessionControl({
         ? "active"
         : "idle";
   const innerCaption = displayState === "warning"
-    ? "Calm-alone practice is paused for today"
+    ? "Practice is paused for today"
     : displayState === "success"
       ? `${name} hit this calm target`
       : displayState === "active"
         ? isPastTarget
           ? `Past target — end while ${name} is still settled`
           : `${name}'s calm hold for this rep`
-        : `Next calm-alone target for ${name}`;
+        : `Next target for ${name}`;
   const helperCaption = displayState === "active"
     ? (isPastTarget ? `+${fmt(overTargetSeconds)} calm hold` : `${fmt(elapsed)} completed this rep`)
     : displayState === "warning"
       ? "Come back tomorrow for the next rep"
-      : "Builds calm alone-time tolerance with short reps";
+      : "Short reps build comfort with alone time";
 
   const startWithFeedback = () => {
     if (!onStart || !canStart) return;
@@ -151,7 +151,7 @@ export function SessionControl({
               <div className="sc-caption">{innerCaption}</div>
               <div className="sc-support">{helperCaption}</div>
               <div className={`sc-state-chip ${isRunning ? "is-running" : ""}`}>
-                {isRunning ? `Rep live · ${fmt(elapsed)} elapsed` : "Ready for a calm-alone rep"}
+                {isRunning ? `Rep live · ${fmt(elapsed)} elapsed` : "Ready for the next rep"}
               </div>
             </div>
           </div>
@@ -188,7 +188,7 @@ export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
         <span className="prog-thumb" style={{ left: `${thumbPct}%` }} aria-hidden="true" />
       </div>
       <div className="prog-meta">
-        <span>Threshold <strong className="num-stable">{fmt(target)}</strong></span>
+        <span>Current target <strong className="num-stable">{fmt(target)}</strong></span>
         <span>Goal <strong className="num-stable">{fmt(goalSec)}</strong></span>
       </div>
     </div>
@@ -210,29 +210,29 @@ export function SessionRatingPanel({
     <div className="rating-overlay" role="presentation">
       <div className="rating-screen session-feedback modal-card modal-card--dialog-md rating-sheet" role="dialog" aria-modal="true" aria-labelledby="session-rating-title" aria-describedby="session-rating-sub">
         <div className="rating-sheet-grabber" aria-hidden="true" />
-        <div className="rating-title" id="session-rating-title">How did {name} handle being alone?</div>
+        <div className="rating-title" id="session-rating-title">How did {name} do?</div>
         <div className="rating-sub" id="session-rating-sub">
-          {fmt(finalElapsed)} alone-time rep with {name}. Your choice adjusts the next target gently.
+          {fmt(finalElapsed)} rep with {name}. Your choice gently adjusts the next target.
         </div>
         <div className="result-grid">
           <button className="btn-result btn-none" onClick={() => recordResult("none")}>
             <Img src="result-calm.png" size={36} alt="No stress"/>
-            <div><div>No stress</div><div className="result-desc">Fully calm throughout the session</div></div>
+            <div><div>Calm</div><div className="result-desc">Relaxed the whole rep</div></div>
           </button>
           <button className="btn-result btn-mild" onClick={() => recordResult("subtle")}>
             <Img src="result-mild.png" size={36} alt="Slight stress"/>
-            <div><div>Slight stress</div><div className="result-desc">Small signs, but able to settle</div></div>
+            <div><div>Some stress</div><div className="result-desc">Mild signs, still settled</div></div>
           </button>
           <button className="btn-result btn-strong" onClick={() => recordResult("active")}>
             <Img src="result-strong.png" size={36} alt="Strong stress"/>
-            <div><div>Strong stress</div><div className="result-desc">Clear stress; next step should be easier</div></div>
+            <div><div>High stress</div><div className="result-desc">Clear stress signs; next step should be easier</div></div>
           </button>
         </div>
         <p className="rating-adapt-note" role="status">
-          We use this feedback to adjust pace automatically and keep training in the calm zone.
+          We use this to keep the pace gentle and dog-friendly.
         </p>
         <button className="session-cancel-btn button-base button-ghost button--md button--block" onClick={onCancel}>
-          Discard this session
+          Delete this rep
         </button>
       </div>
     </div>

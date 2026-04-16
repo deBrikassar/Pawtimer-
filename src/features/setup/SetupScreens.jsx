@@ -18,10 +18,10 @@ export function WelcomeScreen({ onStart, onManageDogs }) {
         <div className="ws-paw">
           <PawIcon size={66} />
         </div>
-        <div className="ws-eyebrow">Calm dog training</div>
+        <div className="ws-eyebrow">Separation training for dogs</div>
         <h1 className="ws-title">PawTimer</h1>
         <p className="ws-copy">
-          Guided separation-training reps that teach your dog to settle calmly when left alone.
+          Short, guided reps that help your dog feel safer when home alone.
         </p>
       </div>
 
@@ -31,10 +31,10 @@ export function WelcomeScreen({ onStart, onManageDogs }) {
           type="button"
           onClick={onStart}
         >
-          Start setup
+          Set up my dog
         </button>
         <button className="ws-secondary" type="button" onClick={onManageDogs}>
-          I already have a dog profile
+          I already have a profile
         </button>
       </div>
     </div>
@@ -63,8 +63,8 @@ export function Onboarding({ onComplete, onBack }) {
       <div className="ob-hero">
         <div className="ob-hero-icon"><PawIcon size={48} /></div>
         <div className="ob-eyebrow">Build {displayName}&apos;s plan</div>
-        <div className="ob-title">{displayName === "your dog" ? "Start calm-alone training" : `${displayName}&apos;s calm-alone training`}</div>
-        <div className="ob-subtitle">{activeStep.progressLabel} • We&apos;ll set a safe starting pace.</div>
+        <div className="ob-title">{displayName === "your dog" ? "Start calm-alone training" : `${displayName}'s calm-alone training`}</div>
+        <div className="ob-subtitle">{activeStep.progressLabel} • We&apos;ll start gently.</div>
         <div className="ob-step-indicator">
           {[0, 1, 2, 3].map((i) => <div key={i} className={`ob-step-dot ${i < step ? "done" : i === step ? "active" : ""}`} />)}
         </div>
@@ -72,14 +72,14 @@ export function Onboarding({ onComplete, onBack }) {
       <div className="ob-body">
         <div key={step} className="ob-step-panel">
           {step === 0 && <>
-            <div className="ob-question">Which dog are you training for calm-alone time?</div>
-            <div className="ob-note prose">Your dog&apos;s name personalizes each training cue, log, and progress insight.</div>
-            <div className="ob-hint">You can update this later in settings if needed.</div>
+            <div className="ob-question">Which dog is this plan for?</div>
+            <div className="ob-note prose">We&apos;ll use this name across training, logs, and insights.</div>
+            <div className="ob-hint">You can change it anytime in Settings.</div>
             <input className="ob-input" placeholder="e.g. Luna, Mochi, Rocco…" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && canNext && handleNext()} autoFocus />
           </>}
           {step === 1 && <>
-            <div className="ob-question">How often is {displayName} left home alone?</div>
-            <div className="ob-hint">We use this to pace reps so practice fits real-life departure routines.</div>
+            <div className="ob-question">How often is {displayName} home alone?</div>
+            <div className="ob-hint">This helps us suggest a realistic daily pace.</div>
             <div className="ob-options">
               {LEAVE_OPTIONS.map((o) => (
                 <button key={o.value} className={`ob-option ${leaves === o.value ? "selected" : ""}`} onClick={() => setLeaves(o.value)}>
@@ -89,8 +89,8 @@ export function Onboarding({ onComplete, onBack }) {
             </div>
           </>}
           {step === 2 && <>
-            <div className="ob-question">Right now, how long can {displayName} stay settled alone?</div>
-            <div className="ob-hint">This baseline sets your first safe reps and helps prevent stress spikes.</div>
+            <div className="ob-question">Today, how long can {displayName} stay calm alone?</div>
+            <div className="ob-hint">We&apos;ll use this as your starting point.</div>
             <div className="ob-duration-grid">
               {CALM_DURATIONS.map((d) => (
                 <button key={d.value} className={`ob-dur-btn ${calm === d.value ? "selected" : ""}`} onClick={() => setCalm(d.value)}>
@@ -100,9 +100,9 @@ export function Onboarding({ onComplete, onBack }) {
             </div>
           </>}
           {step === 3 && <>
-            <div className="ob-question">Choose a future calm-alone goal for {displayName}</div>
-            <div className="ob-note prose">Optional: skip for now and set this after a few sessions.</div>
-            <div className="ob-hint">A goal helps you plan for real errands while keeping training humane and gradual.</div>
+            <div className="ob-question">Pick a longer-term goal for {displayName}</div>
+            <div className="ob-note prose">Optional. You can skip this and set it later.</div>
+            <div className="ob-hint">Goals help connect training to real-life departures.</div>
             <div className="ob-duration-grid">
               {GOAL_DURATIONS.map((d) => (
                 <button key={d.value} className={`ob-dur-btn ${goal === d.value ? "selected" : ""}`} onClick={() => setGoal(d.value)}>
@@ -115,7 +115,7 @@ export function Onboarding({ onComplete, onBack }) {
       </div>
       <div className="ob-footer">
         <button className="ob-btn-next button-base button-primary button--lg button-size-primary-cta button--block" onClick={handleNext} disabled={!canNext}>
-          {step < 3 ? "Continue →" : `Start ${displayName}&apos;s calm-alone plan`}
+          {step < 3 ? "Continue →" : `Start ${displayName}'s plan`}
         </button>
         <button className="ob-back-btn" onClick={() => step === 0 ? onBack?.() : setStep((s) => s - 1)}>
           ← {step === 0 ? "Back to dogs" : "Back"}
@@ -155,13 +155,13 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
     if (result?.ok) {
       setJoinState({
         status: "ready",
-        message: "Looks good. Review and confirm to join this profile.",
+        message: "ID found. Review and confirm to join.",
         preview: result,
       });
     } else {
       setJoinState({
         status: "not-found",
-        message: result?.message || "We couldn't find that shared ID yet. Please check and retry.",
+        message: result?.message || "We couldn't find that ID. Please check and try again.",
         preview: null,
       });
     }
@@ -178,7 +178,7 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
       <div className="ds-hero">
         <div className="ds-logo"><PawIcon size={68} /></div>
         <div className="ds-title">PawTimer</div>
-        <div className="ds-sub">Choose how you want to begin your dog&apos;s calm-alone training.</div>
+        <div className="ds-sub">Choose how you want to start your dog&apos;s plan.</div>
       </div>
       <div className="ds-body">
         <div className="ds-path-grid">
@@ -190,24 +190,24 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
               onCreateNew();
             }}
           >
-            <div className="ds-path-title">Create new dog plan</div>
-            <div className="ds-path-copy">Set a calm-alone baseline and training rhythm in under a minute.</div>
+            <div className="ds-path-title">Create a new plan</div>
+            <div className="ds-path-copy">Set a calm baseline in about a minute.</div>
           </button>
           <button
             className={`ds-path-card ${activePath === "join" ? "selected" : ""}`}
             type="button"
             onClick={() => setActivePath("join")}
           >
-            <div className="ds-path-title">Join existing dog by ID</div>
-            <div className="ds-path-copy">Use a shared ID so everyone follows the same calm-alone plan.</div>
+            <div className="ds-path-title">Join with dog ID</div>
+            <div className="ds-path-copy">Use a shared ID so everyone follows one plan.</div>
           </button>
         </div>
 
         <div className={`ds-join-panel ${activePath === "join" ? "is-open" : ""}`}>
-          <div className="ds-section-label">Join with a dog ID</div>
+          <div className="ds-section-label">Join using dog ID</div>
           <div className="ds-note">
-            This shared ID connects one household's dog profile across devices.
-            You'll usually receive it from your partner, trainer, or whoever created the profile in Settings.
+            This ID links one dog profile across devices.
+            You&apos;ll usually get it from your partner, trainer, or whoever set up the profile.
           </div>
           <div className="ds-join-row">
             <input
@@ -233,18 +233,18 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
           {joinState.message && <div className={`ds-join-feedback ds-join-feedback--${joinState.status}`}>{joinState.message}</div>}
           {joinState.status === "ready" && joinState.preview && (
             <div className="ds-join-confirm-card">
-              <div className="ds-join-confirm-eyebrow">Ready to join</div>
+              <div className="ds-join-confirm-eyebrow">Ready</div>
               <div className="ds-join-confirm-title">{joinState.preview.dogName || "Shared dog profile"}</div>
               <div className="ds-join-confirm-copy">
                 ID: {joinState.preview.normalizedId}
                 {joinState.preview.source ? ` • ${joinState.preview.source}` : ""}
               </div>
               <button className="ds-join-btn ds-join-confirm-btn" type="button" onClick={handleJoinConfirm}>
-                Confirm and join
+                Join this profile
               </button>
             </div>
           )}
-          <div className="ds-join-hint">Find this ID in PawTimer → Settings → Sync devices.</div>
+          <div className="ds-join-hint">Find this ID in Settings → Dog profile.</div>
         </div>
 
         {dogs.length > 0 && <>

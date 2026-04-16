@@ -39,7 +39,7 @@ function HistoryDetailGroup({ label, children }) {
 }
 
 function HistoryChipList({ items }) {
-  if (!items?.length) return <div className="h-detail-empty">No extra context recorded for this dog yet.</div>;
+  if (!items?.length) return <div className="h-detail-empty">No extra notes logged yet.</div>;
   return (
     <div className="h-chip-list">
       {items.map((item) => <span className="h-chip" key={item}>{item}</span>)}
@@ -589,7 +589,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
           )}
 
           {timeline.length === 0 ? (
-            <EmptyState media={<TrendIcon />} title="No calm-alone logs yet" body={`Start ${name}&apos;s first calm-alone rep to build a separation-training history.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
+            <EmptyState media={<TrendIcon />} title="No logs yet" body={`Start ${name}&apos;s first rep to build a training history.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
           ) : dayGroups.map(([dayKey, items]) => (
             <div className="history-day-group" key={dayKey}>
               <div className="history-day-label">{new Date(`${dayKey}T00:00:00`).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>
