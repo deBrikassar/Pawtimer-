@@ -10,7 +10,7 @@ import { buildPartialCapabilitySyncMessage, partitionPendingOutboundByCapability
 import { computeSyncSummary } from "./features/app/syncSummary";
 import { fmt, fmtClock, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
 import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
-import { DogSelect, Onboarding } from "./features/setup/SetupScreens";
+import { DogSelect, Onboarding, WelcomeScreen } from "./features/setup/SetupScreens";
 import HomeScreen from "./features/home/HomeScreen";
 import StatsScreen from "./features/stats/StatsScreen";
 import SettingsScreen from "./features/settings/SettingsScreen";
@@ -74,6 +74,7 @@ export default function PawTimer() {
   const [feedingOpen, setFeedingOpen] = useState(false);
   const [feedingDraft, setFeedingDraft] = useState(() => ({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }));
   const [historyModal, setHistoryModal] = useState(null);
+  const getSetupLandingScreen = useCallback((nextDogs = dogs) => (ensureArray(nextDogs).length > 0 ? "select" : "welcome"), [dogs]);
 
   const {
     needRefresh: [needRefresh],
@@ -433,10 +434,10 @@ export default function PawTimer() {
   }, [commitFeedings, commitPatterns, commitSessions, commitWalks, recomputeTarget, setEntrySyncState]);
 
   useEffect(() => {
-    if (!activeDogId) { setScreen("select"); return; }
+    if (!activeDogId) { setScreen(getSetupLandingScreen(dogs)); return; }
     const normalizedId = canonicalDogId(activeDogId);
     const dog = dogs.find((d) => canonicalDogId(d.id) === normalizedId) ?? ensureArray(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === normalizedId);
-    if (!dog) { setScreen("select"); return; }
+    if (!dog) { setScreen(getSetupLandingScreen(dogs)); return; }
     const local = hydrateDogFromLocal(normalizedId);
     const hydratedTombstones = normalizeTombstones(local.tombstones).map(withHydratedSyncState);
     const hydratedSessions = sortByDateAsc(normalizeSessions(local.sessions).map(withHydratedSyncState));
@@ -476,14 +477,14 @@ export default function PawTimer() {
       dog,
     );
     setScreen("app");
-  }, [activeDogId, dogs, recomputeTarget, withHydratedSyncState]);
+  }, [activeDogId, dogs, getSetupLandingScreen, recomputeTarget, withHydratedSyncState]);
 
   useEffect(() => {
     const savedId = load(ACTIVE_DOG_KEY, null);
     const savedDogs = ensureArray(load(DOGS_KEY, []));
     if (savedId && (SYNC_ENABLED || savedDogs.find((d) => canonicalDogId(d.id) === canonicalDogId(savedId)))) setActiveDogId(canonicalDogId(savedId));
-    else setScreen("select");
-  }, []);
+    else setScreen(getSetupLandingScreen(savedDogs));
+  }, [getSetupLandingScreen]);
 
   useEffect(() => {
     if (!activeDogId || !SYNC_ENABLED) { setSyncStatus("idle"); setSyncError(""); return; }
@@ -1079,8 +1080,19 @@ export default function PawTimer() {
     return <circle cx={cx} cy={cy} r={5} fill={c} stroke="white" strokeWidth={2} />;
   };
 
+  if (screen === "welcome") {
+    return (
+      <>
+        {toast && <div className="toast">{toast}</div>}
+        <WelcomeScreen
+          onStart={() => { setOnboardingState({ mode: "new", dogId: null }); setScreen("onboard"); }}
+          onManageDogs={() => setScreen("select")}
+        />
+      </>
+    );
+  }
   if (screen === "select") return <>{toast && <div className="toast">{toast}</div>}<DogSelect dogs={dogs} onSelect={handleDogSelect} onCreateNew={() => { setOnboardingState({ mode: "new", dogId: null }); setScreen("onboard"); }} /></>;
-  if (screen === "onboard") return <Onboarding onComplete={handleOnboardComplete} onBack={() => { setOnboardingState(null); setScreen("select"); }} />;
+  if (screen === "onboard") return <Onboarding onComplete={handleOnboardComplete} onBack={() => { setOnboardingState(null); setScreen(getSetupLandingScreen(dogs)); }} />;
 
   return (
     <>
