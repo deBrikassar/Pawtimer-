@@ -408,6 +408,16 @@ const EXPLICIT_DISTRESS_RESULT_ALIASES = new Set([
   "severe",
   "panic",
 ]);
+const KNOWN_DISTRESS_LEVEL_TOKENS = new Set([
+  "none",
+  "subtle",
+  "mild",
+  "passive",
+  "active",
+  "strong",
+  "severe",
+  "panic",
+]);
 
 const normalizeRawToken = (value) => {
   if (value == null) return null;
@@ -427,19 +437,33 @@ const inferDistressLevelFromRow = (row = {}) => {
   return null;
 };
 
+const isKnownDistressOutcomeToken = (value) => {
+  const token = normalizeRawToken(value);
+  return token != null && KNOWN_DISTRESS_LEVEL_TOKENS.has(token);
+};
+
 const resolveCanonicalDistress = (row = {}) => {
   const normalizedDistressType = row.distressType ?? row.distress_type ?? null;
   const normalizedDistressSeverity = row.distressSeverity ?? row.distress_severity ?? null;
+  const inferredDistressLevel = inferDistressLevelFromRow(row);
   const restoredLegacyDistress = decodeLegacyDistressFields({
-    distressLevel: inferDistressLevelFromRow(row),
+    distressLevel: inferredDistressLevel,
     distressType: normalizedDistressType,
     distressSeverity: normalizedDistressSeverity,
   });
   const canonicalDistressLevel = normalizeDistressLevel(restoredLegacyDistress.distressLevel);
+  const hasKnownDistressOutcome = (
+    isKnownDistressOutcomeToken(inferredDistressLevel)
+    || isKnownDistressOutcomeToken(row.distressLevel)
+    || isKnownDistressOutcomeToken(row.distress_level)
+    || isKnownDistressOutcomeToken(normalizedDistressSeverity)
+    || normalizeRawToken(restoredLegacyDistress.distressType) != null
+  );
   return {
     distressLevel: canonicalDistressLevel,
     distressSeverity: canonicalDistressLevel,
     distressType: restoredLegacyDistress.distressType,
+    hasKnownDistressOutcome,
   };
 };
 
@@ -490,6 +514,7 @@ export const normalizeSession = (row = {}) => {
       actualDuration,
       plannedDuration,
     }),
+    hasKnownDistressOutcome: canonicalDistress.hasKnownDistressOutcome,
     distressType: canonicalDistress.distressType,
     distressSeverity: canonicalDistress.distressSeverity,
     videoReview: {
@@ -509,6 +534,9 @@ export const normalizeSession = (row = {}) => {
       noiseEvent: hasValue(environment.noiseEvent) ? !!environment.noiseEvent : asBool(environment.noise_event),
     },
   };
+  if (canonicalDistress.hasKnownDistressOutcome === false) {
+    normalized.belowThreshold = false;
+  }
   return normalized;
 };
 

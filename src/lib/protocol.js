@@ -159,7 +159,15 @@ function getLatestSessions(sessions, count) {
 function isCalmBelowThreshold(session = {}) {
   return (
     normalizeDistressLevel(session?.distressLevel) === DISTRESS_LEVELS.NONE
+    && session?.hasKnownDistressOutcome !== false
     && session?.belowThreshold === true
+  );
+}
+
+function isConfirmedCalmOutcome(session = {}) {
+  return (
+    normalizeDistressLevel(session?.distressLevel) === DISTRESS_LEVELS.NONE
+    && session?.hasKnownDistressOutcome !== false
   );
 }
 
@@ -290,9 +298,12 @@ function toRichSession(session = {}) {
     || session.distress_severity,
   );
   const distressType = getDistressType(level, session.distressType);
+  const hasKnownDistressOutcome = typeof session?.hasKnownDistressOutcome === "boolean"
+    ? session.hasKnownDistressOutcome
+    : true;
   const latency = Number.isFinite(session.latencyToFirstDistress)
     ? Math.max(0, Number(session.latencyToFirstDistress))
-    : level === DISTRESS_LEVELS.NONE
+    : (level === DISTRESS_LEVELS.NONE && hasKnownDistressOutcome)
       ? actual
       : Math.min(actual, planned);
   const inferredBelowThreshold = inferBelowThreshold({
@@ -301,7 +312,7 @@ function toRichSession(session = {}) {
     actualDuration: actual,
     plannedDuration: hasReliablePlan ? planned : null,
   });
-  const belowThreshold = (hasReliablePlan && level === DISTRESS_LEVELS.NONE)
+  const belowThreshold = (hasReliablePlan && level === DISTRESS_LEVELS.NONE && hasKnownDistressOutcome)
     ? inferredBelowThreshold
     : false;
   const progressionActualDuration = hasReliablePlan
@@ -319,6 +330,7 @@ function toRichSession(session = {}) {
     distressLevel: level,
     distressType,
     distressSeverity: level,
+    hasKnownDistressOutcome,
     latencyToFirstDistress: latency,
     belowThreshold,
     departureType,
@@ -369,6 +381,7 @@ function computeSafeAloneTime(sessions = []) {
     ? calmBelowThreshold
     : recentWindow
       .filter((s) => s.distressLevel === DISTRESS_LEVELS.NONE)
+      .filter((s) => s.hasKnownDistressOutcome !== false)
       .map((s) => {
         const ageDays = Math.max(0, (nowTime - (toTimestamp(s.date) ?? nowTime)) / DAY_MS);
         let recencyWeight = 0.08;
@@ -605,7 +618,7 @@ function getSessionDurationAnchor(session = null) {
 
 function getLastCalmSession(sessions = []) {
   for (let i = sessions.length - 1; i >= 0; i -= 1) {
-    if (sessions[i].distressLevel === DISTRESS_LEVELS.NONE) return sessions[i];
+    if (isConfirmedCalmOutcome(sessions[i])) return sessions[i];
   }
   return null;
 }
@@ -669,13 +682,13 @@ function getCompletionRatio(session = null) {
 
 function isCalmShortSession(session = null) {
   if (!session) return false;
-  if (normalizeDistressLevel(session.distressLevel) !== DISTRESS_LEVELS.NONE) return false;
+  if (!isConfirmedCalmOutcome(session)) return false;
   return getCompletionRatio(session) < 0.85;
 }
 
 function isCalmNearThresholdSession(session = null) {
   if (!session) return false;
-  if (normalizeDistressLevel(session.distressLevel) !== DISTRESS_LEVELS.NONE) return false;
+  if (!isConfirmedCalmOutcome(session)) return false;
   if (session.belowThreshold) return false;
   const completion = getCompletionRatio(session);
   return completion >= PROTOCOL.nearThresholdRatioMin && completion < PROTOCOL.nearThresholdRatioMaxExclusive;
@@ -683,7 +696,7 @@ function isCalmNearThresholdSession(session = null) {
 
 function isCalmVeryShortSession(session = null) {
   if (!session) return false;
-  if (normalizeDistressLevel(session.distressLevel) !== DISTRESS_LEVELS.NONE) return false;
+  if (!isConfirmedCalmOutcome(session)) return false;
   return getCompletionRatio(session) < 0.5;
 }
 
@@ -694,13 +707,13 @@ function hasThresholdConfirmation(window = []) {
   const requiredStreak = Math.max(1, Math.round(Number(PROTOCOL.thresholdConfirmationStreak) || 0));
   const latest = recent[recent.length - 1];
   const latestIsConfirmedSuccess = (
-    normalizeDistressLevel(latest.distressLevel) === DISTRESS_LEVELS.NONE
+    isConfirmedCalmOutcome(latest)
     && latest.belowThreshold === true
   );
   if (!latestIsConfirmedSuccess) return false;
   if (recent.length < requiredStreak) return false;
   const confirmedSuccessStreak = countStreak(recent, (session) => (
-    normalizeDistressLevel(session.distressLevel) === DISTRESS_LEVELS.NONE
+    isConfirmedCalmOutcome(session)
     && session.belowThreshold === true
   ));
   return confirmedSuccessStreak >= requiredStreak;
@@ -725,13 +738,14 @@ function clampRateChange(nextDuration, referenceDuration) {
 
 function computeFallbackFromCalmHistory(recentWindow = [], anchorDuration = null) {
   const calmBelowThresholdDurations = recentWindow
-    .filter((session) => session.distressLevel === DISTRESS_LEVELS.NONE && session.belowThreshold)
+    .filter((session) => isConfirmedCalmOutcome(session) && session.belowThreshold)
     .map((session) => getSessionDurationAnchor(session))
     .filter((value) => Number.isFinite(value) && value > 0);
   const calmDurations = calmBelowThresholdDurations.length
     ? calmBelowThresholdDurations
     : recentWindow
       .filter((session) => session.distressLevel === DISTRESS_LEVELS.NONE)
+      .filter((session) => session.hasKnownDistressOutcome !== false)
       .map((session) => getSessionDurationAnchor(session))
       .filter((value) => Number.isFinite(value) && value > 0);
 
@@ -858,7 +872,7 @@ function resolveRecoveryState(trainingSessions = [], recoveryState = null) {
   for (let i = trainingSessions.length - 1; i >= 0; i -= 1) {
     if ([DISTRESS_LEVELS.SUBTLE, DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(trainingSessions[i]?.distressLevel)) {
       const afterTrigger = trainingSessions.slice(i + 1);
-      if (afterTrigger.length >= 3 && afterTrigger.slice(-3).every((session) => session.distressLevel === DISTRESS_LEVELS.NONE)) {
+      if (afterTrigger.length >= 3 && afterTrigger.slice(-3).every((session) => isConfirmedCalmOutcome(session))) {
         continue;
       }
       return buildRecoveryStateFromTrigger(trainingSessions, i, normalized);
@@ -915,7 +929,7 @@ function evaluatePersistentRecoveryMode(
     const looksLikeRecovery = [DISTRESS_LEVELS.ACTIVE, DISTRESS_LEVELS.SEVERE].includes(stressLevel)
       ? Number.isFinite(sessionDuration) && sessionDuration <= 120
       : subtleRecoveryAcceptsAnyCalmSession;
-    if (session.distressLevel === DISTRESS_LEVELS.NONE && looksLikeRecovery) consecutiveCalm += 1;
+    if (isConfirmedCalmOutcome(session) && looksLikeRecovery) consecutiveCalm += 1;
     else consecutiveCalm = 0;
   }
 
@@ -1098,7 +1112,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
     };
   }
 
-  const calmStreak = countStreak(recentWindow, (session) => session.distressLevel === DISTRESS_LEVELS.NONE);
+  const calmStreak = countStreak(recentWindow, (session) => isConfirmedCalmOutcome(session));
   const lastCalmSession = getLastCalmSession(recentWindow);
   const anchorDuration = getProgressionReferenceDuration(lastCalmSession) ?? PROTOCOL.startDurationSeconds;
   const lastReferenceDuration = getProgressionReferenceDuration(lastSession) ?? anchorDuration;
