@@ -104,7 +104,7 @@ export default function HomeScreen(props) {
           <div className="train-identity-header__copy">
             <div className="train-identity-header__eyebrow">{name}'s calm practice</div>
             <h2 className="train-identity-header__name">Train with {name}</h2>
-            <p className="train-identity-header__mood">Short, gentle reps to help {name} feel safer during real departures.</p>
+            <p className="train-identity-header__mood">Short, calm reps that build {name}&apos;s confidence when you leave.</p>
           </div>
         </header>
 
@@ -152,22 +152,22 @@ export default function HomeScreen(props) {
               aria-expanded={trainExplainOpen}
             >
               <span className="train-inline-guidance__label">What this means</span>
-              <span className="train-inline-guidance__copy">How the circle supports separation training</span>
+              <span className="train-inline-guidance__copy">See what the circle is coaching right now</span>
             </button>
             {trainExplainOpen && (
               <div className="train-inline-explain" role="note" aria-live="polite">
-                <p><strong>Circle:</strong> this is {name}&apos;s target for one rep. The ring fills as calm alone time is completed.</p>
-                <p><strong>Target ({fmtClock(target)}):</strong> your current safe step. End while {name} is still relaxed.</p>
-                <p><strong>Session flow:</strong> start, observe calm body language, then end and rate what you saw.</p>
+                <p><strong>Circle:</strong> one calm rep for {name}. The ring fills as relaxed time passes.</p>
+                <p><strong>Target ({fmtClock(target)}):</strong> today&apos;s safe step. End while {name} still looks settled.</p>
+                <p><strong>Flow:</strong> start, quietly observe, end early, then log what you noticed.</p>
               </div>
             )}
           </div>
         )}
         <section className="train-context-block surface-card">
-          <p className="train-context-block__title">Today&apos;s target</p>
-          <p className="train-context-block__value">{fmtClock(target)} calm for {name}</p>
+          <p className="train-context-block__title">Today&apos;s focus</p>
+          <p className="train-context-block__value">{fmtClock(target)} calm-alone rep for {name}</p>
           <p className="train-context-block__meta">
-            Reps today: <strong>{daily.count}</strong> · Longer-term goal: <strong>{fmt(goalSec)}</strong>
+            Reps logged: <strong>{daily.count}</strong> · Longer-term goal: <strong>{fmt(goalSec)}</strong>
           </p>
           {!daily.canAdd && (
             <p className="status-msg status-msg--warning">
@@ -176,12 +176,12 @@ export default function HomeScreen(props) {
           )}
           {phase === "idle" && showTrainFirstRunHint && (
             <div className="train-inline-tip" role="note">
-              <span className="train-inline-tip__label">Targets adapt to your dog</span>
-              <span className="train-inline-tip__copy">Calm reps nudge targets up. Stress signs nudge them down.</span>
+              <span className="train-inline-tip__label">Targets adapt to {name}</span>
+              <span className="train-inline-tip__copy">Calm reps nudge up. Stress signs gently step back.</span>
               <ol className="train-inline-tip__steps">
-                <li>Press <strong>Start rep</strong> when the space is calm.</li>
-                <li>Watch quietly, then end before stress builds.</li>
-                <li>Rate what you saw so tomorrow&apos;s target fits better.</li>
+                <li>Press <strong>Start rep</strong> when the home feels calm.</li>
+                <li>Watch quietly and end before stress builds.</li>
+                <li>Rate the rep so tomorrow&apos;s step stays right-sized.</li>
               </ol>
               <button
                 type="button"
@@ -237,8 +237,8 @@ export default function HomeScreen(props) {
             onClick={() => setTodayOpen((prev) => !prev)}
           >
             <div>
-              <div className="section-title section-title--flush">Today&apos;s training + care log</div>
-              <div className="t-helper">{todaySessions.length} calm-alone reps · support logs</div>
+              <div className="section-title section-title--flush">Today&apos;s care log</div>
+              <div className="t-helper">{todaySessions.length} calm reps · walks, breaks, feeding</div>
             </div>
             <span className="settings-collapsible-arrow" aria-hidden="true">{todayOpen ? "−" : "+"}</span>
           </button>
