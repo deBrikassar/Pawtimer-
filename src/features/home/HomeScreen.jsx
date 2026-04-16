@@ -89,6 +89,7 @@ export default function HomeScreen(props) {
           phase={phase}
           elapsed={elapsed}
           target={target}
+          name={name}
           onStart={startSession}
           onEnd={endSession}
           onCancel={cancelSession}

@@ -13,6 +13,7 @@ export function SessionControl({
   phase,
   elapsed,
   target,
+  name = "your dog",
   onStart,
   onEnd,
   onCancel,
@@ -32,7 +33,28 @@ export function SessionControl({
   const isRunning = phase === "running";
   const isIdle = phase === "idle";
   const isPastTarget = elapsed > target;
-  const timerValue = isRunning ? elapsed : remainingSeconds;
+  const timerValue = isRunning ? remainingSeconds : target;
+  const displayState = !canStart && isIdle
+    ? "warning"
+    : completed
+      ? "success"
+      : isRunning
+        ? "active"
+        : "idle";
+  const innerCaption = displayState === "warning"
+    ? "Calm practice is paused for today"
+    : displayState === "success"
+      ? `${name} hit this calm target`
+      : displayState === "active"
+        ? isPastTarget
+          ? `Past target — end while ${name} is still settled`
+          : `${name}'s calm hold for this rep`
+        : `Next calm session target for ${name}`;
+  const helperCaption = displayState === "active"
+    ? (isPastTarget ? `+${fmt(overTargetSeconds)} calm hold` : `${fmt(elapsed)} completed this rep`)
+    : displayState === "warning"
+      ? "Come back tomorrow for the next rep"
+      : "Builds comfort with short solo reps";
 
   const startWithFeedback = () => {
     if (!onStart || !canStart) return;
@@ -49,7 +71,7 @@ export function SessionControl({
     <>
       {phase !== "rating" && (<div className="session-control-wrap">
         <button
-          className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""} ${isPastTarget ? "is-over-target" : ""}`}
+          className={`session-control state-${displayState} ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""} ${isPastTarget ? "is-over-target" : ""}`}
           onClick={isIdle && idleCanPress ? startWithFeedback : undefined}
           disabled={isIdle && !idleCanPress}
           aria-label={isRunning
@@ -74,16 +96,10 @@ export function SessionControl({
           </svg>
 
           <div className="sc-content">
-            <div className="sc-idle" aria-hidden={isRunning}>
-              <div className="sc-idle-label">
-                <span>Start</span>
-                <span>{canStart ? "Session" : "Blocked"}</span>
-              </div>
-            </div>
-
             <div className="sc-time">
               <div className="sc-time-value">{fmt(timerValue)}</div>
-              {isPastTarget && <div className="sc-over-target">+{fmt(overTargetSeconds)} over target</div>}
+              <div className="sc-caption">{innerCaption}</div>
+              <div className="sc-support">{helperCaption}</div>
             </div>
           </div>
         </button>
