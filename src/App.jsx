@@ -1189,7 +1189,7 @@ export default function PawTimer() {
               </label>
               <div className="identity-copy">
                 <div className="app-title">{appData.name}</div>
-                <div className="app-subtitle">Separation anxiety training</div>
+                <div className="app-subtitle">Calm-alone plan for real departures</div>
               </div>
             </div>
           </div>

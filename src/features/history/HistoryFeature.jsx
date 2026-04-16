@@ -39,7 +39,7 @@ function HistoryDetailGroup({ label, children }) {
 }
 
 function HistoryChipList({ items }) {
-  if (!items?.length) return <div className="h-detail-empty">No extra details recorded.</div>;
+  if (!items?.length) return <div className="h-detail-empty">No extra context recorded for this dog yet.</div>;
   return (
     <div className="h-chip-list">
       {items.map((item) => <span className="h-chip" key={item}>{item}</span>)}
@@ -540,7 +540,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
           <div className="history-section-head">
             <div>
               <div className="section-title">History</div>
-              <div className="t-helper">A calm view of {name}&rsquo;s training progress.</div>
+              <div className="t-helper">A timeline of {name}&rsquo;s calm-alone reps and support routine.</div>
             </div>
             {sessions.length > 0 && <button className="clear-btn surface-text-button secondary-control secondary-control--inline-text" onClick={actions.clearSessions}>Clear sessions</button>}
           </div>
@@ -549,21 +549,21 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               <div className="history-summary-grid">
                 <div className="history-summary-item">
                   <div className="history-summary-value">{sessionCount}</div>
-                  <div className="history-summary-label">Training sessions</div>
+                  <div className="history-summary-label">Calm-alone reps</div>
                 </div>
                 <div className="history-summary-item">
                   <div className="history-summary-value">{careCount}</div>
-                  <div className="history-summary-label">Care routine logs</div>
+                  <div className="history-summary-label">Support routine logs</div>
                 </div>
                 <div className="history-summary-item">
                   <div className="history-summary-value">{recentCount}</div>
-                  <div className="history-summary-label">Recent moments</div>
+                  <div className="history-summary-label">Recent training moments</div>
                 </div>
               </div>
               <div className="history-mini-trend" aria-label="Last seven days of training sessions">
                 <div className="history-mini-trend-head">
-                  <span>7-day training rhythm</span>
-                  <span>{recentTrend.reduce((sum, day) => sum + day.count, 0)} sessions</span>
+                  <span>7-day calm-alone rhythm</span>
+                  <span>{recentTrend.reduce((sum, day) => sum + day.count, 0)} reps</span>
                 </div>
                 <div className="history-mini-trend-bars" role="img" aria-label="Each bar shows number of sessions completed each day">
                   {recentTrend.map((day) => (
@@ -584,12 +584,12 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   ))}
                 </div>
               ) : null}
-              {lastSession ? <div className="history-summary-note">Latest training session: {fmtDate(lastSession.date)}.</div> : null}
+              {lastSession ? <div className="history-summary-note">Latest calm-alone rep: {fmtDate(lastSession.date)}.</div> : null}
             </div>
           )}
 
           {timeline.length === 0 ? (
-            <EmptyState media={<TrendIcon />} title="No activity yet" body={`Start ${name}'s first session and your training history will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
+            <EmptyState media={<TrendIcon />} title="No calm-alone logs yet" body={`Start ${name}&apos;s first calm-alone rep to build a separation-training history.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
           ) : dayGroups.map(([dayKey, items]) => (
             <div className="history-day-group" key={dayKey}>
               <div className="history-day-label">{new Date(`${dayKey}T00:00:00`).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>
@@ -603,10 +603,10 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               );
               return renderHistoryCard({
                 itemKey: `s-${s.id}`,
-                title: "Training session",
+                title: "Calm-alone training rep",
                 date: fmtDate(s.date),
                 value: fmt(s.actualDuration),
-                kindLabel: "Training",
+                kindLabel: "Calm-alone",
                 onActivate: () => setSessionDetail(s),
                 badge: <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>,
                 syncBadge: renderSyncBadge(s),
@@ -625,7 +625,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 expandedContent: <>
                   <div className="h-expand-grid">
                     <HistoryDetailGroup label="Walk details">
-                      <HistoryChipList items={["Walk logged", `Type: ${walkTypeLabel(w.type)}`]} />
+                      <HistoryChipList items={["Walk logged for decompression support", `Type: ${walkTypeLabel(w.type)}`]} />
                     </HistoryDetailGroup>
                   </div>
                   <div className="h-expand-footer">
@@ -655,7 +655,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 expandedContent: <>
                   <div className="h-expand-grid">
                     <HistoryDetailGroup label="Pattern details">
-                      <HistoryChipList items={["Routine support item", pt.desc]} />
+                      <HistoryChipList items={["Departure-cue support item", pt.desc]} />
                     </HistoryDetailGroup>
                   </div>
                   <div className="h-expand-footer">
@@ -683,7 +683,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 expandedContent: <>
                   <div className="h-expand-grid">
                     <HistoryDetailGroup label="Meal details">
-                      <HistoryChipList items={["Meal recorded", `Amount: ${f.amount}`, `Type: ${f.foodType}`]} />
+                      <HistoryChipList items={["Meal recorded for routine consistency", `Amount: ${f.amount}`, `Type: ${f.foodType}`]} />
                     </HistoryDetailGroup>
                   </div>
                   <div className="h-expand-footer">
@@ -715,7 +715,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
             </div>
 
             {historyModal.mode === "datetime" && <>
-              <div className="t-helper activity-time-hint">Choose a date and time. Duration is edited separately.</div>
+              <div className="t-helper activity-time-hint">Choose when this dog activity happened. Duration is edited separately.</div>
               <label className="activity-time-field">
                 <span className="t-helper">Date</span>
                 <input type="date" value={historyModal.date} onChange={(e) => setHistoryModal((prev) => (prev ? { ...prev, date: e.target.value } : prev))} />
@@ -750,7 +750,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
             {historyModal.mode === "delete" && <>
               <div className="history-delete-copy">
                 <div className="history-delete-label">{historyModal.label}</div>
-                <p>This action removes the item from the timeline for this dog. You can’t undo it after confirmation.</p>
+                <p>This removes the item from this dog&apos;s training timeline. You can’t undo it after confirmation.</p>
               </div>
               <div className="feeding-actions">
                 <button className="walk-cancel-btn button-base button-ghost button--md button--pill" type="button" onClick={() => setHistoryModal(null)}>Keep item</button>
@@ -772,7 +772,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
           <div className="history-session-sheet modal-card modal-card--dialog-md" onClick={(event) => event.stopPropagation()}>
             <div className="history-session-sheet-grabber" aria-hidden="true" />
             <div className="quick-modal-head">
-              <div className="section-title section-title--flush" id="history-session-sheet-title">Session details</div>
+              <div className="section-title section-title--flush" id="history-session-sheet-title">Calm-alone rep details</div>
               <ModalCloseButton onClick={() => setSessionDetail(null)} />
             </div>
             <div className="history-session-sheet-meta">

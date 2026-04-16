@@ -101,8 +101,8 @@ export default function SettingsScreen(props) {
     <>
       <div className="tab-content">
         <div className="section settings-shell">
-          <div className="section-title">Calm control</div>
-          <div className="t-helper">Elegant control for {name}&rsquo;s training rhythm, routine, and account.</div>
+          <div className="section-title">{name}&rsquo;s calm-alone settings</div>
+          <div className="t-helper">Tune routines, reminders, and profile details for separation training.</div>
 
           <DogProfileCard
             dogName={name}
@@ -114,10 +114,10 @@ export default function SettingsScreen(props) {
           />
 
           <div className="settings-group" role="list" aria-label="Training routine settings">
-            <div className="settings-section-label">Training routine</div>
+            <div className="settings-section-label">Calm-alone routine</div>
             <div className="settings-inline-card">
               <div className="settings-row-head">
-                <span className="settings-inline-title">Daily reminder</span>
+                <span className="settings-inline-title">Daily training reminder</span>
                 <button className={`notif-toggle secondary-control secondary-control--toggle ${notifEnabled ? "on" : ""}`} onClick={handleToggleNotif} type="button">{notifEnabled ? "On" : "Off"}</button>
               </div>
               <div className="settings-inline-row">
@@ -143,7 +143,7 @@ export default function SettingsScreen(props) {
                 )}
               </div>
             </div>
-            <SettingsNavRow label="Training settings" value={`Up to ${activeProto.sessionsPerDayMax}/day`} onClick={() => setTrainingSettingsOpen(true)} />
+            <SettingsNavRow label="Training settings" value={`Up to ${activeProto.sessionsPerDayMax} reps/day`} onClick={() => setTrainingSettingsOpen(true)} />
             <SettingsNavRow label="Custom labels" value={`${Object.keys(patLabels).length} custom`} onClick={() => setActivePanel(SETTINGS_PANEL.LABELS)} />
           </div>
 
@@ -241,12 +241,12 @@ export default function SettingsScreen(props) {
 
       {activePanel === SETTINGS_PANEL.HELP && (
         <SettingsSheet title="Help" titleId="settings-help-title" onClose={() => setActivePanel(null)}>
-              <div className="proto-section u-mt-none"><div className="proto-title">Sync devices</div><div className="proto-row">Share your Dog ID, then join with the same ID on the other device.</div></div>
-              <div className="proto-section"><div className="proto-title">Session flow</div><div className="proto-row">Start a session, return before distress escalates, then rate how {name} did.</div></div>
+              <div className="proto-section u-mt-none"><div className="proto-title">Sync devices</div><div className="proto-row">Share your Dog ID so everyone tracks the same calm-alone plan for {name}.</div></div>
+              <div className="proto-section"><div className="proto-title">Session flow</div><div className="proto-row">Start a calm-alone rep, return before stress escalates, then rate how {name} handled being alone.</div></div>
               <div className="proto-section"><div className="proto-title">Current recommendation state</div><div className="proto-row">Now: <strong>{recommendationType}</strong>. {recommendationSummary} It currently weighs {(recommendation?.details?.factors || []).join(" ")}</div></div>
               <div className="proto-section"><div className="proto-title">Recommendation states emitted</div><div className="proto-row">baseline_start, keep_same_duration, repeat_current_duration, departure_cues_first, recovery_mode_active, recovery_mode_resume.</div></div>
               <div className="proto-section"><div className="proto-title">Recovery behavior</div><div className="proto-row">Any subtle/active/severe distress can activate recovery. While recovery_mode_active, targets use short fixed steps (typically 60s then 120s; severe can add a third 120s step). Subtle recovery accepts any calm follow-up duration; active/severe count calm sessions at short recovery lengths. After enough calm sessions, recovery_mode_resume emits once, then normal progression continues.</div></div>
-              <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions, {activeProto.maxDailyAloneMinutes} min/day, and {pattern.recMin}–{pattern.recMax} pattern breaks.</div></div>
+              <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} calm-alone reps, {activeProto.maxDailyAloneMinutes} min/day, and {pattern.recMin}–{pattern.recMax} pattern-break supports.</div></div>
         </SettingsSheet>
       )}
 
@@ -312,7 +312,7 @@ export default function SettingsScreen(props) {
       )}
 
       {trainingSettingsOpen && (
-        <SettingsSheet title="Edit training plan" titleId="training-settings-title" onClose={() => setTrainingSettingsOpen(false)}>
+        <SettingsSheet title="Edit calm-alone plan" titleId="training-settings-title" onClose={() => setTrainingSettingsOpen(false)}>
             <div className="share-sub">Adjust protocol values only if a trainer has advised you to. Full guidance is kept in Help.</div>
             {!protoWarnAck ? (
               <div className="proto-warn-banner">
