@@ -90,10 +90,10 @@ export function SessionControl({
           : `${name}'s calm hold for this rep`
         : `Next target for ${name}`;
   const helperCaption = displayState === "active"
-    ? (isPastTarget ? `+${fmt(overTargetSeconds)} calm hold` : `${fmt(elapsed)} completed this rep · keep departures quiet and predictable`)
+    ? (isPastTarget ? `+${fmt(overTargetSeconds)} calm hold` : `${fmt(elapsed)} complete · keep departures quiet and predictable`)
     : displayState === "warning"
       ? "Come back tomorrow for the next rep"
-      : "Short reps build comfort with alone time";
+      : "Small, steady reps build comfort with alone time";
 
   const startWithFeedback = () => {
     if (!onStart || !canStart) return;
@@ -151,7 +151,7 @@ export function SessionControl({
               <div className="sc-caption">{innerCaption}</div>
               <div className="sc-support">{helperCaption}</div>
               <div className={`sc-state-chip ${isRunning ? "is-running" : ""}`}>
-                {isRunning ? `Rep live · ${fmt(elapsed)} elapsed` : "Ready for the next rep"}
+                {isRunning ? `Rep live · ${fmt(elapsed)} elapsed` : "Ready · calm rep"}
               </div>
             </div>
           </div>
@@ -212,20 +212,20 @@ export function SessionRatingPanel({
         <div className="rating-sheet-grabber" aria-hidden="true" />
         <div className="rating-title" id="session-rating-title">How did {name} do?</div>
         <div className="rating-sub" id="session-rating-sub">
-          {fmt(finalElapsed)} rep with {name}. Your choice gently adjusts the next target.
+          {fmt(finalElapsed)} with {name}. Your rating tunes the next step.
         </div>
         <div className="result-grid">
           <button className="btn-result btn-none" onClick={() => recordResult("none")}>
             <Img src="result-calm.png" size={36} alt="No stress"/>
-            <div><div>Calm</div><div className="result-desc">Relaxed the whole rep</div></div>
+            <div><div>Calm</div><div className="result-desc">Relaxed throughout</div></div>
           </button>
           <button className="btn-result btn-mild" onClick={() => recordResult("subtle")}>
             <Img src="result-mild.png" size={36} alt="Slight stress"/>
-            <div><div>Some stress</div><div className="result-desc">Mild signs, still settled</div></div>
+            <div><div>Some stress</div><div className="result-desc">Mild signs, recovered</div></div>
           </button>
           <button className="btn-result btn-strong" onClick={() => recordResult("active")}>
             <Img src="result-strong.png" size={36} alt="Strong stress"/>
-            <div><div>High stress</div><div className="result-desc">Clear stress signs; next step should be easier</div></div>
+            <div><div>High stress</div><div className="result-desc">Clear stress signs; next rep should be easier</div></div>
           </button>
         </div>
         <p className="rating-adapt-note" role="status">

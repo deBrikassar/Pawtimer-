@@ -2270,7 +2270,7 @@
 
 .train-main {
   width: min(100%, 484px);
-  gap: var(--space-3);
+  gap: clamp(16px, 2.8vh, 24px);
 }
 
 .tool-group-card {
@@ -2359,6 +2359,66 @@
 }
 .tab-btn:active {
   transform: translateY(0) scale(0.986);
+}
+
+.train-identity-header,
+.train-context-block,
+.train-returning-summary,
+.train-inline-guidance,
+.train-inline-explain,
+.train-inline-tip,
+.train-time-change-insight {
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--surface-overlay-soft) 9%, transparent);
+}
+
+.train-identity-header {
+  border-radius: 20px;
+  padding: 16px;
+}
+
+.train-identity-header__mood {
+  margin-top: 6px;
+  max-width: 36ch;
+}
+
+.session-control {
+  width: clamp(238px, 70vw, 300px);
+}
+
+.sc-state-chip {
+  letter-spacing: 0.01em;
+}
+
+.session-actions {
+  margin-top: 6px;
+  gap: 10px;
+}
+
+.session-primary-btn,
+.session-cancel-btn {
+  width: min(100%, 296px);
+}
+
+.train-inline-guidance {
+  align-items: flex-start;
+}
+
+.train-inline-guidance__copy {
+  max-width: 24ch;
+  text-wrap: balance;
+}
+
+.train-inline-explain {
+  border-radius: 14px;
+}
+
+.train-context-block__value {
+  text-wrap: balance;
+}
+
+.train-returning-summary__title,
+.train-time-change-insight__copy {
+  text-wrap: pretty;
 }
 
 :where(
