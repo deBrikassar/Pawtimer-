@@ -54,7 +54,7 @@
 
 .surface-card-elevated {
   background: var(--surface-gradient-raised);
-  border: 1.5px solid var(--border);
+  border: var(--border-width-strong) solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   animation: surfaceEnter var(--motion-enter) var(--ease-out);
@@ -62,7 +62,7 @@
 
 .surface-card-interactive {
   background: var(--surface-gradient-raised);
-  border: 1.5px solid var(--border);
+  border: var(--border-width-strong) solid var(--border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -92,14 +92,14 @@
 .surface-card-panel,
 .surface-card-inset {
   background: linear-gradient(180deg, var(--surface-muted) 0%, color-mix(in srgb, var(--surface-muted) 94%, var(--warm-accent-soft)) 100%);
-  border: 1.5px solid var(--border);
+  border: var(--border-width-strong) solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surf) 60%, transparent);
 }
 
 .surface-card-modal {
   background: var(--surf);
-  border: 1.5px solid var(--border);
+  border: var(--border-width-strong) solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
 }
@@ -115,10 +115,10 @@
   flex-direction: column;
   gap: var(--space-control-gap);
   background: var(--surface-gradient-raised);
-  border: 1.5px solid var(--border);
+  border: var(--border-width-strong) solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  animation: slideUp 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: slideUp var(--motion-dialog-enter) var(--ease-emphasized);
 }
 
 .modal-card--sheet {
@@ -134,7 +134,7 @@
 }
 
 .shared-pill {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: var(--type-overline-size);
   line-height: var(--type-overline-line);
   font-weight: var(--type-overline-weight);
@@ -149,7 +149,7 @@
 .shared-stat-tile {
   background: var(--surf);
   border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border);
+  border: var(--border-width-strong) solid var(--border);
 }
 
 
@@ -221,7 +221,7 @@
   align-items:center;
   gap:var(--space-control-gap);
   padding:var(--space-card-padding);
-  border:1.5px solid var(--border);
+  border:var(--border-width-strong) solid var(--border);
   border-radius:var(--radius-sm);
   background:var(--surface-gradient-raised);
   box-shadow:var(--shadow);
@@ -287,10 +287,10 @@
 }
 
 .surface-text-button {
-  --small-tertiary-size:44px;
+  --small-tertiary-size: var(--control-touch-target-md);
   background:none;
   border:1px solid transparent;
-  border-radius:999px;
+  border-radius:var(--radius-pill);
   color:var(--primaryBlue);
   font-size:var(--type-secondary-size);
   font-weight:var(--type-secondary-weight);
@@ -313,7 +313,7 @@
 
 .shared-button,
 .button-base {
-  --button-size-min-height: 44px;
+  --button-size-min-height: var(--control-touch-target-md);
   --button-size-padding-block: var(--space-1);
   --button-size-padding-inline: var(--space-2);
   --button-size-radius: var(--radius-md);
@@ -381,7 +381,7 @@
 }
 
 .button--sm {
-  --button-size-min-height: 36px;
+  --button-size-min-height: var(--control-touch-target-sm);
   --button-size-padding-block: 6px;
   --button-size-padding-inline: 12px;
   --button-size-radius: 999px;
@@ -393,7 +393,7 @@
 }
 
 .button--md {
-  --button-size-min-height: 44px;
+  --button-size-min-height: var(--control-touch-target-md);
   --button-size-padding-block: var(--space-1);
   --button-size-padding-inline: var(--space-2);
   --button-size-radius: 999px;
@@ -405,7 +405,7 @@
 }
 
 .button--lg {
-  --button-size-min-height: 52px;
+  --button-size-min-height: var(--control-touch-target-lg);
   --button-size-padding-block: 14px;
   --button-size-padding-inline: 24px;
   --button-size-radius: var(--radius-md);
@@ -417,7 +417,7 @@
 }
 
 .button-size-primary-cta {
-  --button-size-min-height: 52px;
+  --button-size-min-height: var(--control-touch-target-lg);
   --button-size-padding-block: 14px;
   --button-size-padding-inline: 24px;
   --button-size-radius: var(--radius-md);
@@ -429,7 +429,7 @@
 }
 
 .button-size-secondary-pill {
-  --button-size-min-height: 44px;
+  --button-size-min-height: var(--control-touch-target-md);
   --button-size-padding-block: var(--space-1);
   --button-size-padding-inline: var(--space-2);
   --button-size-radius: 999px;
@@ -441,7 +441,7 @@
 }
 
 .button-size-compact-tertiary {
-  --button-size-min-height: 36px;
+  --button-size-min-height: var(--control-touch-target-sm);
   --button-size-padding-block: 6px;
   --button-size-padding-inline: 12px;
   --button-size-radius: 999px;
@@ -458,7 +458,7 @@
   color: var(--surf);
   box-shadow: var(--shadow);
   border-color: transparent;
-  min-height: 44px;
+  min-height: var(--control-touch-target-md);
   font-size: var(--type-button-size);
   line-height: var(--type-button-line);
   font-weight: var(--type-button-weight);
@@ -558,8 +558,8 @@
 
 .button-pill,
 .button-icon {
-  min-height: 44px;
-  border-radius: 999px;
+  min-height: var(--control-touch-target-md);
+  border-radius: var(--radius-pill);
 }
 
 .button--block {
@@ -567,11 +567,11 @@
 }
 
 .button--pill {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .button--compact {
-  min-height: 36px;
+  min-height: var(--control-touch-target-sm);
   padding-block: 6px;
   padding-inline: 12px;
   font-size: var(--type-button-compact-size);
@@ -599,7 +599,7 @@
    - secondary-icon-button: icon-only edit/close/dismiss controls.
    - secondary-toggle-control: compact binary toggles/collapsible triggers. */
 .secondary-control {
-  --secondary-min-height: 44px;
+  --secondary-min-height: var(--control-touch-target-md);
   --secondary-padding-block: var(--space-1);
   --secondary-padding-inline: var(--space-2);
   --secondary-radius: 999px;
@@ -618,7 +618,7 @@
 }
 
 .secondary-control--compact-button {
-  --secondary-min-height: 36px;
+  --secondary-min-height: var(--control-touch-target-sm);
   --secondary-padding-block: 6px;
   --secondary-padding-inline: 12px;
   --secondary-font-size: var(--type-button-compact-size);
@@ -628,7 +628,7 @@
 }
 
 .secondary-control--inline-text {
-  --secondary-min-height: 44px;
+  --secondary-min-height: var(--control-touch-target-md);
   --secondary-padding-block: 0;
   --secondary-padding-inline: var(--space-2);
   --secondary-font-size: var(--type-secondary-size);
@@ -648,19 +648,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   line-height: 1;
 }
 
 .secondary-control--toggle {
-  --secondary-min-height: 44px;
+  --secondary-min-height: var(--control-touch-target-md);
   --secondary-padding-block: var(--space-1);
   --secondary-padding-inline: var(--space-2);
 }
 
 :is(.ob-option, .ob-dur-btn) {
   background: var(--surf);
-  border: 1.5px solid var(--border);
+  border: var(--border-width-strong) solid var(--border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -683,8 +683,8 @@
 
 
 :is(.walk-end-btn, .walk-cancel-btn, .settings-inline-btn, .session-cancel-btn, .copy-btn, .ob-back-btn) {
-  min-height: 44px;
-  border-radius: 999px;
+  min-height: var(--control-touch-target-md);
+  border-radius: var(--radius-pill);
 }
 
 :is(.settings-btn, .ds-join-btn) {
@@ -716,7 +716,7 @@
 :is(.settings-inline-btn, .settings-btn, .notif-toggle) {
   background: var(--surf);
   color: var(--primaryBlue);
-  border: 1.5px solid color-mix(in srgb, var(--mutedBlue) 32%, var(--border));
+  border: var(--border-width-strong) solid color-mix(in srgb, var(--mutedBlue) 32%, var(--border));
   cursor: pointer;
   transition:
     border-color var(--motion-base) var(--ease-standard),
@@ -754,7 +754,7 @@
 }
 
 .settings-btn {
-  min-height: 44px;
+  min-height: var(--control-touch-target-md);
   padding-block: 12px;
   justify-content: flex-start;
   text-align: left;

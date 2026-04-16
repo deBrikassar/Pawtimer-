@@ -1,0 +1,39 @@
+:root {
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --radius: var(--radius-lg);
+
+  --border-width-default: 1px;
+  --border-width-strong: 1.5px;
+
+  --control-touch-target-sm: 36px;
+  --control-touch-target-md: 44px;
+  --control-touch-target-lg: 52px;
+
+  /* soft depth */
+  --shadow: 0 10px 24px rgba(47,33,20,0.07);
+  --shadow-lg: 0 20px 44px rgba(47,33,20,0.12);
+  --surface-focus-shadow-soft: 0 10px 24px rgba(47,33,20,0.06);
+  --surface-dock-shadow: 0 -10px 30px rgba(47,33,20,0.06);
+  --surface-toast-shadow: 0 8px 32px rgba(36,27,19,0.24);
+  --surface-metric-radius: var(--radius-md);
+  --surface-metric-shadow: 0 10px 24px rgba(15,23,42,0.05);
+
+  /* calm premium motion */
+  --motion-press: 120ms;
+  --motion-enter: 180ms;
+  --motion-fast: 160ms;
+  --motion-base: 220ms;
+  --motion-slow: 340ms;
+  --motion-dialog-enter: 320ms;
+  --ease-standard: cubic-bezier(0.22, 0.6, 0.28, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0.95, 0.3, 1);
+  --ease-out: cubic-bezier(0,0,0.2,1);
+
+  --icon-size-xs: 14px;
+  --icon-size-sm: 18px;
+  --icon-size-md: 24px;
+  --icon-size-lg: 32px;
+}

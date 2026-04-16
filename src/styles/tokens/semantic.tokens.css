@@ -1,0 +1,78 @@
+:root {
+  /* Semantic theme roles */
+  --bg: var(--color-bg);
+  --surf: var(--color-surface);
+  --surf-soft: var(--color-surface-soft);
+  --border: var(--color-border);
+  --border-strong: var(--color-border-strong);
+
+  --text: var(--color-text);
+  --text-muted: var(--color-text-muted);
+  --text-subtle: var(--color-text-subtle);
+  --text-on-accent: var(--surf);
+  --brand: var(--green-dark);
+  --surface-card-bg: var(--surface-gradient-soft);
+
+  --primaryBlue: var(--color-info-500);
+  --softBlue: var(--color-info-50);
+  --softBlueHover: var(--color-info-100);
+  --softBlueBorder: var(--color-info-200);
+  --mutedBlue: #8C7A67;
+
+  --green: var(--color-primary-200);
+  --green-light: #D7E8D2;
+  --green-dark: var(--color-primary-700);
+  --blue: var(--primaryBlue);
+  --blue-light: var(--softBlueHover);
+  --blue-soft: var(--softBlue);
+  --blue-dark: var(--primaryBlue);
+  --blue-darker: var(--color-info-600);
+  --blue-muted: var(--mutedBlue);
+  --blue-wash: rgba(124,103,81,0.08);
+
+  --brown: var(--text);
+  --brown-mid: var(--text-muted);
+  --brown-muted: var(--text-subtle);
+  --amber: var(--color-warning-600);
+  --amber-light: #D6A06A;
+  --red: var(--color-error-600);
+  --orange: #D97706;
+
+  --danger: var(--red);
+  --success: var(--color-success-600);
+  --warning: var(--amber);
+  --info: var(--primaryBlue);
+
+  --surface-muted: #F6F1E8;
+  --surface-tint: #F8F3EB;
+  --surface-hero-top: var(--color-bg-subtle);
+  --surface-hero-mid: #F7F0E5;
+  --surface-overlay: rgba(36,27,19,0.30);
+  --surface-overlay-strong: rgba(36,27,19,0.38);
+  --surface-frost: rgba(255,249,241,0.94);
+
+  --surface-gradient-soft: linear-gradient(180deg, var(--surf) 0%, var(--surface-tint) 100%);
+  --surface-gradient-raised: linear-gradient(180deg, var(--surf) 0%, var(--color-surface-raised) 100%);
+
+  --warm-accent-soft: color-mix(in srgb, var(--color-warm-accent) 14%, var(--surf));
+  --warm-accent-border: color-mix(in srgb, var(--color-warm-accent-strong) 20%, var(--border));
+  --warm-accent-fg: color-mix(in srgb, var(--color-warm-accent-strong) 56%, var(--brown));
+
+  --focus-ring: color-mix(in srgb, var(--primaryBlue) 28%, transparent);
+  --icon-ink: color-mix(in srgb, var(--brown) 90%, var(--brown-mid));
+
+  --status-success-bg: rgba(166,211,183,0.28);
+  --status-success-bg-strong: rgba(166,211,183,0.34);
+  --status-success-fg: var(--green-dark);
+  --status-warning-bg: rgba(184,123,62,0.12);
+  --status-warning-bg-strong: rgba(184,123,62,0.15);
+  --status-warning-fg: var(--amber);
+  --status-warning-contrast-fg: var(--surf);
+  --status-danger-bg: rgba(192,57,43,0.1);
+  --status-danger-bg-strong: rgba(192,57,43,0.12);
+  --status-danger-fg: var(--danger);
+  --status-attention-bg: rgba(200,120,78,0.12);
+  --status-attention-fg: color-mix(in srgb, var(--orange) 56%, var(--danger));
+  --status-neutral-bg: rgba(90,71,53,0.08);
+  --status-sync-local-fg: #9a6a19;
+}
