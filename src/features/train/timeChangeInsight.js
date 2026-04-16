@@ -19,8 +19,16 @@ export function buildTrainTimeChangeInsight({
   const name = dogName || "your dog";
   const dropped = next < previous;
   const increased = next > previous;
+  const recommendationReason = (() => {
+    if (recommendationType === "decrease_duration") return `${name} showed stress signs in the last rep, so we stepped down.`;
+    if (recommendationType === "increase_duration") return `Recent calm reps looked stable, so we added a small amount of time.`;
+    if (recommendationType === "maintain_duration") return `Recent results were mixed, so we held steady.`;
+    if (recommendationType === "cap_by_daily_limit") return `Today's daily limit is near, so we kept this target conservative.`;
+    if (recommendationType === "floor_at_start_duration") return `We kept the minimum starter duration to protect confidence.`;
+    return "";
+  })();
 
-  if (!dropped && !increased && recommendationType !== "recovery_mode_active" && recommendationType !== "recovery_mode_resume") {
+  if (!dropped && !increased && recommendationType !== "recovery_mode_active" && recommendationType !== "recovery_mode_resume" && !recommendationReason) {
     return null;
   }
 
@@ -28,7 +36,7 @@ export function buildTrainTimeChangeInsight({
     return {
       tone: "caution",
       title: `Recovery mode on · next target is ${formattedNext}`,
-      body: `${name} showed stress signs, so we moved to shorter reset reps.`,
+      body: `${name} showed stress signs, so we moved to shorter reset reps. We'll step back up after calm sessions.`,
     };
   }
 
@@ -45,8 +53,8 @@ export function buildTrainTimeChangeInsight({
       tone: "caution",
       title: `Target eased to ${formattedNext}`,
       body: distressLevel === "none"
-        ? `We lowered the next rep slightly to keep training steady.`
-        : `${name} showed stress signs, so the next rep is shorter.`,
+        ? `We lowered the next rep slightly to keep training steady. ${recommendationReason}`.trim()
+        : `${name} showed stress signs, so the next rep is shorter. ${recommendationReason}`.trim(),
     };
   }
 
@@ -54,13 +62,13 @@ export function buildTrainTimeChangeInsight({
     return {
       tone: "positive",
       title: `Target increased to ${formattedNext}`,
-      body: `Recent calm reps went well, so the next step is a little longer.`,
+      body: recommendationReason || `Recent calm reps went well, so the next step is a little longer.`,
     };
   }
 
   return {
     tone: "neutral",
     title: `Target stays at ${formattedNext}`,
-    body: `We're holding this duration to keep progress steady.`,
+    body: recommendationReason || `We're holding this duration to keep progress steady.`,
   };
 }

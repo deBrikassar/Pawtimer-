@@ -145,6 +145,12 @@
     letter-spacing: var(--type-body-track);
     font-weight: var(--type-body-lg-weight);
   }
+  .ws-copy--support {
+    margin-top: 8px;
+    font-size: var(--type-helper-text-size);
+    line-height: var(--type-helper-text-line);
+    color: color-mix(in srgb, var(--text-muted) 88%, var(--text));
+  }
   .ws-footer { display: flex; flex-direction: column; gap: 12px; animation: ws-fade-up .9s .08s var(--ease-out-soft, ease-out) both; }
   .ws-cta { box-shadow: 0 12px 34px rgba(70, 90, 72, 0.2); }
   .ws-secondary {
@@ -312,6 +318,17 @@
     min-height:var(--small-tertiary-size);
     text-align:center;
     padding:0 var(--space-2);
+  }
+  .ob-skip-goal-btn {
+    margin-top:var(--space-card-row-gap);
+    width:100%;
+    min-height:44px;
+    border:none;
+    border-radius:var(--radius-pill);
+    color:var(--text-muted);
+    background:transparent;
+    font:inherit;
+    cursor:pointer;
   }
 
   /* ── Header ── */
@@ -804,6 +821,15 @@
     font-size:var(--type-helper-text-size);
     line-height:var(--type-helper-text-line);
     color:var(--text-muted);
+  }
+  .train-inline-tip__steps {
+    margin:0;
+    padding-left:18px;
+    color:var(--text-muted);
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+    display:grid;
+    gap:4px;
   }
   .train-inline-tip__dismiss {
     justify-self:end;

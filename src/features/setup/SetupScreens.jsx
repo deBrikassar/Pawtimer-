@@ -21,7 +21,10 @@ export function WelcomeScreen({ onStart, onManageDogs }) {
         <div className="ws-eyebrow">Separation training for dogs</div>
         <h1 className="ws-title">PawTimer</h1>
         <p className="ws-copy">
-          Short, guided reps that help your dog feel safer when home alone.
+          Calm, guided reps that help your dog build confidence when home alone.
+        </p>
+        <p className="ws-copy ws-copy--support">
+          Start in about a minute, then follow one clear rep at a time.
         </p>
       </div>
 
@@ -31,10 +34,10 @@ export function WelcomeScreen({ onStart, onManageDogs }) {
           type="button"
           onClick={onStart}
         >
-          Set up my dog
+          Start first-time setup
         </button>
         <button className="ws-secondary" type="button" onClick={onManageDogs}>
-          I already have a profile
+          I already have a dog ID
         </button>
       </div>
     </div>
@@ -64,7 +67,7 @@ export function Onboarding({ onComplete, onBack }) {
         <div className="ob-hero-icon"><PawIcon size={48} /></div>
         <div className="ob-eyebrow">Build {displayName}&apos;s plan</div>
         <div className="ob-title">{displayName === "your dog" ? "Start calm-alone training" : `${displayName}'s calm-alone training`}</div>
-        <div className="ob-subtitle">{activeStep.progressLabel} • We&apos;ll start gently.</div>
+        <div className="ob-subtitle">{activeStep.progressLabel} • We&apos;ll keep this calm and simple.</div>
         <div className="ob-step-indicator">
           {[0, 1, 2, 3].map((i) => <div key={i} className={`ob-step-dot ${i < step ? "done" : i === step ? "active" : ""}`} />)}
         </div>
@@ -110,12 +113,15 @@ export function Onboarding({ onComplete, onBack }) {
                 </button>
               ))}
             </div>
+            <button className="ob-skip-goal-btn" type="button" onClick={handleNext}>
+              Skip goal for now
+            </button>
           </>}
         </div>
       </div>
       <div className="ob-footer">
         <button className="ob-btn-next button-base button-primary button--lg button-size-primary-cta button--block" onClick={handleNext} disabled={!canNext}>
-          {step < 3 ? "Continue →" : `Start ${displayName}'s plan`}
+          {step < 3 ? "Continue →" : `Open ${displayName}'s Train screen`}
         </button>
         <button className="ob-back-btn" onClick={() => step === 0 ? onBack?.() : setStep((s) => s - 1)}>
           ← {step === 0 ? "Back to dogs" : "Back"}
@@ -178,7 +184,7 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
       <div className="ds-hero">
         <div className="ds-logo"><PawIcon size={68} /></div>
         <div className="ds-title">PawTimer</div>
-        <div className="ds-sub">Choose how you want to start your dog&apos;s plan.</div>
+        <div className="ds-sub">Pick the fastest way to get into your dog&apos;s training plan.</div>
       </div>
       <div className="ds-body">
         <div className="ds-path-grid">
@@ -191,7 +197,7 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
             }}
           >
             <div className="ds-path-title">Create a new plan</div>
-            <div className="ds-path-copy">Set a calm baseline in about a minute.</div>
+            <div className="ds-path-copy">Best for first-time setup. We&apos;ll choose a calm starting target.</div>
           </button>
           <button
             className={`ds-path-card ${activePath === "join" ? "selected" : ""}`}
@@ -199,7 +205,7 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
             onClick={() => setActivePath("join")}
           >
             <div className="ds-path-title">Join with dog ID</div>
-            <div className="ds-path-copy">Use a shared ID so everyone follows one plan.</div>
+            <div className="ds-path-copy">Best when someone already set up this dog profile.</div>
           </button>
         </div>
 

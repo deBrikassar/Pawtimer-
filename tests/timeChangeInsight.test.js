@@ -40,4 +40,17 @@ describe("buildTrainTimeChangeInsight", () => {
 
     expect(insight?.title).toContain("Recovery mode on");
   });
+
+  it("includes recommendation reason context when available", () => {
+    const insight = buildTrainTimeChangeInsight({
+      previousDuration: 90,
+      recommendedDuration: 90,
+      recommendationType: "maintain_duration",
+      distressLevel: "subtle",
+      dogName: "Milo",
+    });
+
+    expect(insight?.tone).toBe("neutral");
+    expect(insight?.body).toContain("held steady");
+  });
 });
