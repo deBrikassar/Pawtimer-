@@ -1,10 +1,48 @@
 import { useState } from "react";
 
-function SessionActionRow({ onEnd, onCancel }) {
+function SessionActionRow({
+  isRunning,
+  canStart,
+  onStart,
+  onEnd,
+  onCancel,
+  onIdlePress,
+  startBlockedMessage,
+}) {
+  const canRunStart = canStart && Boolean(onStart);
+  const canExplain = !canRunStart && Boolean(onIdlePress);
+  const handlePrimary = () => {
+    if (isRunning) {
+      onEnd?.();
+      return;
+    }
+    if (canRunStart) {
+      onStart?.();
+      return;
+    }
+    if (canExplain) onIdlePress?.();
+  };
+
   return (
-    <div className="session-actions">
-      <button className="session-end-btn button-base button-primary button--md button--pill" onClick={onEnd}>End Session</button>
-      <button className="session-cancel-btn button-base button-ghost button--md button--pill" onClick={onCancel}>Cancel (don't save)</button>
+    <div className={`session-actions ${isRunning ? "is-running" : "is-idle"}`}>
+      <button
+        className="session-primary-btn button-base button-primary button--md button--pill"
+        onClick={handlePrimary}
+        disabled={!isRunning && !canRunStart && !canExplain}
+      >
+        {isRunning ? "End and save session" : "Start calm session"}
+      </button>
+      <button
+        className="session-cancel-btn button-base button-ghost button--md button--pill"
+        onClick={onCancel}
+        aria-hidden={!isRunning}
+        tabIndex={isRunning ? 0 : -1}
+      >
+        Cancel session (don&apos;t save)
+      </button>
+      {!isRunning && !canStart && (
+        <p className="session-action-meta" role="status">{startBlockedMessage}</p>
+      )}
     </div>
   );
 }
@@ -112,12 +150,25 @@ export function SessionControl({
               <div className="sc-time-value">{fmt(timerValue)}</div>
               <div className="sc-caption">{innerCaption}</div>
               <div className="sc-support">{helperCaption}</div>
+              <div className={`sc-state-chip ${isRunning ? "is-running" : ""}`}>
+                {isRunning ? `Session live · ${fmt(elapsed)} elapsed` : "Ready when you are"}
+              </div>
             </div>
           </div>
         </button>
       </div>)}
 
-      {isRunning && <SessionActionRow onEnd={onEnd} onCancel={onCancel} />}
+      {phase !== "rating" && (
+        <SessionActionRow
+          isRunning={isRunning}
+          canStart={canStart}
+          onStart={startWithFeedback}
+          onEnd={onEnd}
+          onCancel={onCancel}
+          onIdlePress={onIdlePress}
+          startBlockedMessage={startBlockedMessage}
+        />
+      )}
     </>
   );
 }
