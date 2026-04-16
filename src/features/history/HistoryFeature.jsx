@@ -374,6 +374,85 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
     }
     return buckets;
   })();
+  const historyInsights = (() => {
+    const sessionItems = timeline
+      .filter((item) => item.kind === "session")
+      .map((item) => item.data)
+      .filter((session) => session?.date)
+      .sort((a, b) => (a.date > b.date ? 1 : -1));
+    if (sessionItems.length < 2) return [];
+
+    const scoreDistress = (session) => {
+      const level = normalizeDistressLevel(
+        session?.distressLevel
+        ?? (session?.result === "success" ? "none" : (session?.result === "distress" ? "strong" : null)),
+      );
+      if (level === "none") return 0;
+      if (level === "subtle") return 1;
+      if (level === "active") return 2;
+      return 3;
+    };
+
+    const average = (values) => values.reduce((sum, value) => sum + value, 0) / values.length;
+    const latestSessions = sessionItems.slice(-6);
+    const latestThree = latestSessions.slice(-3);
+    const previousThree = latestSessions.slice(0, 3);
+    const insightPool = [];
+
+    if (latestThree.length === 3 && previousThree.length === 3) {
+      const recentDistress = average(latestThree.map(scoreDistress));
+      const priorDistress = average(previousThree.map(scoreDistress));
+      if (recentDistress + 0.35 < priorDistress) {
+        insightPool.push("Improving over recent sessions.");
+      }
+    }
+
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const todaySessions = sessionItems.filter((session) => session.date.slice(0, 10) === todayKey);
+    if (todaySessions.length >= 2) {
+      const todayDurations = todaySessions
+        .map((session) => (Number.isFinite(session.actualDuration) ? session.actualDuration : 0))
+        .filter((duration) => duration > 0);
+      const todayDistressAvg = average(todaySessions.map(scoreDistress));
+      if (todayDurations.length >= 2 && todayDistressAvg <= 1) {
+        const spread = Math.max(...todayDurations) - Math.min(...todayDurations);
+        if (spread <= 120) insightPool.push("More stable today.");
+      }
+    }
+
+    const distressScores = sessionItems.map(scoreDistress);
+    const mostRecentStressIndex = distressScores.reduce((latestIndex, score, index) => (score >= 2 ? index : latestIndex), -1);
+    if (mostRecentStressIndex >= 0 && mostRecentStressIndex + 2 < sessionItems.length) {
+      const preStressDuration = sessionItems
+        .slice(Math.max(0, mostRecentStressIndex - 2), mostRecentStressIndex)
+        .map((session) => session.actualDuration)
+        .filter((duration) => Number.isFinite(duration) && duration > 0);
+      const postStressDuration = sessionItems
+        .slice(mostRecentStressIndex + 1, mostRecentStressIndex + 3)
+        .map((session) => session.actualDuration)
+        .filter((duration) => Number.isFinite(duration) && duration > 0);
+      if (preStressDuration.length && postStressDuration.length) {
+        if (average(postStressDuration) <= average(preStressDuration) * 0.82) {
+          insightPool.push("Shorter sessions after a stress event.");
+        }
+      }
+    }
+
+    if (sessionItems.length >= 4) {
+      const lastTwoScores = sessionItems.slice(-2).map(scoreDistress);
+      const priorScores = sessionItems.slice(-6, -2).map(scoreDistress);
+      const hadStressBefore = priorScores.some((score) => score >= 2);
+      const nowCalm = lastTwoScores.every((score) => score <= 1);
+      if (hadStressBefore && nowCalm) {
+        insightPool.push("Back on track.");
+      }
+    }
+
+    if (!insightPool.length) {
+      return ["Steady rhythm this week."];
+    }
+    return insightPool.slice(0, 2);
+  })();
   const trendMax = Math.max(1, ...recentTrend.map((day) => day.count));
   const trendLevel = (count) => {
     if (count <= 0) return 0;
@@ -498,6 +577,13 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   ))}
                 </div>
               </div>
+              {historyInsights.length > 0 ? (
+                <div className="history-insights" aria-label="History summary insights">
+                  {historyInsights.map((insight) => (
+                    <span className="history-insight-pill" key={insight}>{insight}</span>
+                  ))}
+                </div>
+              ) : null}
               {lastSession ? <div className="history-summary-note">Latest training session: {fmtDate(lastSession.date)}.</div> : null}
             </div>
           )}
