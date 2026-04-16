@@ -73,6 +73,7 @@ export default function PawTimer() {
   const [trainingSettingsOpen, setTrainingSettingsOpen] = useState(false);
   const [trainFirstRunHintVisible, setTrainFirstRunHintVisible] = useState(false);
   const [trainTimeChangeInsight, setTrainTimeChangeInsight] = useState(null);
+  const [returningTrainNudge, setReturningTrainNudge] = useState(null);
   const [walkPhase, setWalkPhase] = useState("idle");
   const [walkElapsed, setWalkElapsed] = useState(0);
   const [walkPendingDuration, setWalkPendingDuration] = useState(0);
@@ -222,6 +223,10 @@ export default function PawTimer() {
     () => (activeDogId ? `pawtimer_train_intro_seen_v1_${canonicalDogId(activeDogId)}` : null),
     [activeDogId],
   );
+  const trainReturnSnapshotKey = useMemo(
+    () => (activeDogId ? `pawtimer_train_last_seen_v1_${canonicalDogId(activeDogId)}` : null),
+    [activeDogId],
+  );
   const canonicalSessions = useMemo(() => sortValidDateAsc(sessions), [sessions]);
   const deriveRecommendation = useCallback((nextSessions, nextWalks = walks, nextPatterns = patterns, nextDog = activeDog || {}) => {
     const logicalSessions = sortValidDateAsc(nextSessions);
@@ -276,6 +281,49 @@ export default function PawTimer() {
     save(trainFirstRunHintKey, true);
     setTrainFirstRunHintVisible(false);
   }, [trainFirstRunHintKey]);
+
+  const acknowledgeReturningTrainNudge = useCallback(() => {
+    if (!trainReturnSnapshotKey) return;
+    save(trainReturnSnapshotKey, {
+      target: recommendation.duration,
+      seenAt: new Date().toISOString(),
+    });
+    setReturningTrainNudge(null);
+  }, [recommendation.duration, trainReturnSnapshotKey]);
+
+  useEffect(() => {
+    if (!trainReturnSnapshotKey || !activeDogId || canonicalSessions.length === 0) {
+      setReturningTrainNudge(null);
+      return;
+    }
+    const snapshot = ensureObject(load(trainReturnSnapshotKey, {}));
+    const previousTarget = Number(snapshot.target);
+    if (!Number.isFinite(previousTarget)) {
+      setReturningTrainNudge(null);
+      return;
+    }
+    const currentTarget = Number(recommendation.duration);
+    if (!Number.isFinite(currentTarget) || currentTarget === previousTarget) {
+      setReturningTrainNudge(null);
+      return;
+    }
+    setReturningTrainNudge({
+      previousTarget,
+      currentTarget,
+      changedBy: currentTarget - previousTarget,
+      seenAt: snapshot.seenAt || null,
+    });
+  }, [activeDogId, canonicalSessions.length, recommendation.duration, trainReturnSnapshotKey]);
+
+  useEffect(() => {
+    if (!trainReturnSnapshotKey || !activeDogId) return;
+    if (tab !== "home") {
+      save(trainReturnSnapshotKey, {
+        target: recommendation.duration,
+        seenAt: new Date().toISOString(),
+      });
+    }
+  }, [activeDogId, recommendation.duration, tab, trainReturnSnapshotKey]);
 
   const reportLocalWriteFailure = useCallback((errorMessage) => {
     setSyncStatus("err");
@@ -988,6 +1036,7 @@ export default function PawTimer() {
       return;
     }
     completeTrainFirstRunHint();
+    acknowledgeReturningTrainNudge();
     setTrainTimeChangeInsight(null);
     setElapsed(0); setSessionCompleted(false); setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft(""); setPhase("running");
   };
@@ -1205,7 +1254,7 @@ export default function PawTimer() {
         </div>
 
         <div className={`tab-panel tab-panel--${tabMotionDirection}`} key={tab}>
-          {tab === "home" && <HomeScreen name={appData.name} sessions={canonicalSessions} recommendation={appData.recommendation} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} showTrainFirstRunHint={trainFirstRunHintVisible} dismissTrainFirstRunHint={completeTrainFirstRunHint} trainTimeChangeInsight={trainTimeChangeInsight} />}
+          {tab === "home" && <HomeScreen name={appData.name} sessions={canonicalSessions} recommendation={appData.recommendation} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} showTrainFirstRunHint={trainFirstRunHintVisible} dismissTrainFirstRunHint={completeTrainFirstRunHint} trainTimeChangeInsight={trainTimeChangeInsight} returningTrainNudge={returningTrainNudge} dismissReturningTrainNudge={acknowledgeReturningTrainNudge} openHistory={() => handleTabChange("history")} openProgress={() => handleTabChange("progress")} />}
           {tab === "history" && <HistoryScreen timeline={appData.timeline} sessions={canonicalSessions} name={appData.name} setTab={setTab} patLabels={patLabels} historyModal={historyModal} setHistoryModal={setHistoryModal} actions={historyActions} />}
           {tab === "progress" && <StatsScreen name={appData.name} totalCount={appData.totalCount} setTab={setTab} bestCalm={appData.bestCalm} recommendation={appData.recommendation} relapseTone={appData.relapseTone} chartData={appData.chartData} goalSec={appData.goalSec} CustomDot={CustomDot} distressLabel={appData.distressLabel} chartTrendLabel={appData.chartTrendLabel} aloneLastWeek={appData.aloneLastWeek} avgWalkDuration={appData.avgWalkDuration} avgSessionsPerDay={appData.avgSessionsPerDay} avgWalksPerDay={appData.avgWalksPerDay} headlineStatus={appData.headlineStatus} headlineStatusTone={appData.headlineStatusTone} contextualInsights={appData.contextualInsights} />}
           {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} recommendation={appData.recommendation} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} syncDegradation={syncDegradation} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} setOnboardingState={setOnboardingState} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} clearDogActivityState={clearDogActivityState} />}

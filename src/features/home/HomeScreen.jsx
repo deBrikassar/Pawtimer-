@@ -52,6 +52,10 @@ export default function HomeScreen(props) {
     showTrainFirstRunHint,
     dismissTrainFirstRunHint,
     trainTimeChangeInsight,
+    returningTrainNudge,
+    dismissReturningTrainNudge,
+    openHistory,
+    openProgress,
   } = props;
   const target = recommendation?.duration ?? 0;
   const recoveryMode = recommendation?.details?.recoveryMode;
@@ -119,6 +123,26 @@ export default function HomeScreen(props) {
           allowIdlePress={false}
           onIdlePress={toggleTrainExplain}
         />
+        {phase === "idle" && returningTrainNudge && (
+          <section className="train-returning-summary surface-card" role="status" aria-live="polite">
+            <div className="train-returning-summary__head">
+              <p className="train-returning-summary__eyebrow">Welcome back</p>
+              <button type="button" className="train-returning-summary__dismiss" onClick={dismissReturningTrainNudge} aria-label="Dismiss update">
+                Dismiss
+              </button>
+            </div>
+            <p className="train-returning-summary__title">
+              Target updated from <strong>{fmtClock(returningTrainNudge.previousTarget)}</strong> to <strong>{fmtClock(returningTrainNudge.currentTarget)}</strong>.
+            </p>
+            <p className="train-returning-summary__meta">
+              {returningTrainNudge.changedBy > 0 ? "You can try a slightly longer calm rep today." : "A shorter rep keeps confidence steady today."}
+            </p>
+            <div className="train-returning-summary__actions">
+              <button type="button" className="button-base button-ghost button--md button--pill" onClick={openHistory}>History</button>
+              <button type="button" className="button-base button-ghost button--md button--pill" onClick={openProgress}>Progress</button>
+            </div>
+          </section>
+        )}
         {phase === "idle" && (
           <div className="train-contextual-help">
             <button
