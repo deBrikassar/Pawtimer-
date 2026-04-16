@@ -118,14 +118,21 @@ export function StatsSupportRow({ label, value }) {
 export function ProgressHero({
   name,
   headlineStatus,
+  headline,
   headlineSurfaceState = "today",
   currentValue,
   currentLabel = "Current window",
+  currentSeconds = null,
   targetValue,
   targetLabel = "Next target",
+  targetSeconds = null,
   insight,
 }) {
   const dogInitial = (name || "D").trim().charAt(0).toUpperCase();
+  const progressRatio = Number.isFinite(currentSeconds) && Number.isFinite(targetSeconds) && targetSeconds > 0
+    ? Math.max(0, Math.min(currentSeconds / targetSeconds, 1))
+    : null;
+  const progressPct = progressRatio != null ? Math.round(progressRatio * 100) : null;
 
   return (
     <div
@@ -141,7 +148,7 @@ export function ProgressHero({
         <span className="stats-progress-headline-status">{headlineStatus}</span>
       </div>
 
-      <h3 className="stats-progress-headline">{headlineStatus}</h3>
+      <h3 className="stats-progress-headline">{headline || headlineStatus}</h3>
 
       <div className="stats-progress-values" role="group" aria-label="Current value and next milestone">
         <div className="stats-progress-value-block">
@@ -154,6 +161,15 @@ export function ProgressHero({
           <div className="stats-progress-label">{targetLabel}</div>
         </div>
       </div>
+
+      {progressPct != null ? (
+        <div className="stats-progress-rail-wrap" aria-label={`${progressPct}% toward next target`}>
+          <div className="stats-progress-rail">
+            <span className="stats-progress-rail-fill" style={{ width: `${Math.max(progressPct, 6)}%` }} />
+          </div>
+          <span className="stats-progress-rail-text">{progressPct}% to milestone</span>
+        </div>
+      ) : null}
 
       {insight ? <p className="stats-progress-insight">{insight}</p> : null}
     </div>

@@ -1533,7 +1533,8 @@
   .stats-progress-hero-aura { position:absolute; inset:auto -16% -66% auto; width:min(66vw, 280px); aspect-ratio:1; background:radial-gradient(circle, color-mix(in srgb, var(--green-light) 28%, transparent) 0%, transparent 70%); animation:statsHeroAura 6s ease-in-out infinite; pointer-events:none; z-index:0; }
   .stats-progress-hero-topline { position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); }
   .stats-progress-dog-chip { display:inline-flex; align-items:center; gap:8px; min-width:0; }
-  .stats-progress-dog-mark { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; background:color-mix(in srgb, var(--green-light) 40%, white); border:1px solid color-mix(in srgb, var(--green-dark) 16%, transparent); font-size:var(--type-helper-text-size); font-weight:700; color:var(--brown); }
+  .stats-progress-dog-mark { position:relative; display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; background:color-mix(in srgb, var(--green-light) 40%, white); border:1px solid color-mix(in srgb, var(--green-dark) 16%, transparent); font-size:var(--type-helper-text-size); font-weight:700; color:var(--brown); }
+  .stats-progress-dog-mark::after { content:"🐾"; position:absolute; right:-10px; bottom:-8px; font-size:10px; opacity:0.42; transform:translate3d(0, 0, 0); animation:statsDogPawDrift 4.8s ease-in-out infinite; }
   .stats-progress-dog-name { font-size:var(--type-section-eyebrow-size); line-height:var(--type-section-eyebrow-line); letter-spacing:var(--type-section-eyebrow-track); font-weight:var(--type-section-eyebrow-weight); color:var(--text-muted); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:24ch; }
   .stats-progress-headline-status { font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); font-weight:var(--type-field-value-weight); color:var(--metric-surface-accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:48%; }
   .stats-progress-headline { position:relative; z-index:1; margin:0; font-size:clamp(1.1rem, 2.5vw, 1.35rem); line-height:1.2; font-weight:var(--type-card-heading-weight); letter-spacing:var(--type-card-heading-track); color:var(--brown); }
@@ -1543,11 +1544,23 @@
   .stats-progress-value--target { color:color-mix(in srgb, var(--brown) 86%, var(--green-dark)); }
   .stats-progress-label { font-size:var(--type-metric-label-size); line-height:var(--type-metric-label-line); letter-spacing:var(--type-metric-label-track); font-weight:var(--type-metric-label-weight); color:var(--text-muted); }
   .stats-progress-value-divider { width:1px; align-self:stretch; background:color-mix(in srgb, var(--border) 78%, transparent); }
+  .stats-progress-rail-wrap { position:relative; z-index:1; display:grid; gap:5px; }
+  .stats-progress-rail { height:7px; border-radius:999px; background:color-mix(in srgb, var(--green-light) 18%, var(--surf)); overflow:hidden; border:1px solid color-mix(in srgb, var(--green-dark) 16%, transparent); }
+  .stats-progress-rail-fill { display:block; height:100%; min-width:6%; background:linear-gradient(90deg, color-mix(in srgb, var(--green-dark) 90%, var(--brown)), var(--green)); border-radius:inherit; transition:width 620ms var(--ease-out); animation:statsRailBreathe 3.2s ease-in-out infinite; }
+  .stats-progress-rail-text { font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); color:var(--text-muted); }
   .stats-progress-insight { position:relative; z-index:1; margin:0; font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:color-mix(in srgb, var(--text) 90%, var(--text-muted)); max-width:56ch; }
 
   @keyframes statsHeroAura {
     0%, 100% { transform:translate3d(0, 0, 0) scale(1); opacity:0.45; }
     50% { transform:translate3d(-8px, -8px, 0) scale(1.06); opacity:0.66; }
+  }
+  @keyframes statsRailBreathe {
+    0%, 100% { filter:saturate(1); }
+    50% { filter:saturate(1.12); }
+  }
+  @keyframes statsDogPawDrift {
+    0%, 100% { transform:translate3d(0, 0, 0); opacity:0.4; }
+    50% { transform:translate3d(2px, -1px, 0); opacity:0.62; }
   }
 
   @media (max-width: 380px) {
@@ -1558,6 +1571,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     .stats-progress-hero-aura { animation:none; }
+    .stats-progress-dog-mark::after,
+    .stats-progress-rail-fill { animation:none; }
   }
   .stats-section-supporting { margin-bottom:var(--space-card-row-gap); }
   .stats-support-list { background:var(--surf); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow); overflow:hidden; }
