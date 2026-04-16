@@ -3,7 +3,7 @@ import { METRIC_VARIANTS, ProgressHero, StatsChartSection, StatsMetricCard, Stat
 import { fmt } from "../app/helpers";
 import { SproutIcon } from "../app/ui";
 
-export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
+export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
   const target = recommendation?.duration ?? 0;
   const standardMetricVariant = METRIC_VARIANTS.STANDARD;
   const ringMetricVariant = METRIC_VARIANTS.RING;
@@ -71,7 +71,7 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
           </StatsSection>
 
           <StatsSection title="Journey curve" className="stats-section-journey">
-            <StatsChartSection chartData={chartData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmt} insightLabel={chartTrendLabel} />
+            <StatsChartSection chartData={chartData} goalSec={goalSec} setTab={setTab} name={name} fmt={fmt} insightLabel={chartTrendLabel} />
           </StatsSection>
 
           <StatsSection title="Contextual insights" className="stats-section-supporting">

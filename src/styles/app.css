@@ -1427,6 +1427,20 @@
   .chart-wrap-full { padding:var(--space-card-padding); }
   .chart-insight { font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); color:var(--mutedBlue); margin:0 0 var(--space-card-row-gap); padding-left:var(--stats-content-inset, var(--space-card-padding)); }
   .chart-title { font-size:var(--type-card-heading-size); line-height:var(--type-card-heading-line); letter-spacing:var(--type-card-heading-track); font-weight:var(--type-card-heading-weight); color:var(--brown); margin-bottom:var(--space-section-gap); padding-left:var(--stats-content-inset, var(--space-card-padding)); }
+  .stats-progress-wave { position:relative; padding:0 var(--stats-content-inset, var(--space-card-padding)); display:grid; gap:10px; }
+  .stats-progress-wave-svg { width:100%; height:210px; overflow:visible; }
+  .stats-progress-wave-baseline { stroke:color-mix(in srgb, var(--border) 76%, transparent); stroke-width:1.1; }
+  .stats-progress-wave-goal { stroke:color-mix(in srgb, var(--green-dark) 68%, transparent); stroke-width:1.2; stroke-dasharray:4 6; opacity:0.58; }
+  .stats-progress-wave-area { opacity:0.64; animation:statsWaveRevealArea 780ms var(--ease-out); transform-origin:center bottom; }
+  .stats-progress-wave-line { stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; path-length:100; stroke-dasharray:100; stroke-dashoffset:100; animation:statsWaveRevealLine 1050ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards; }
+  .stats-progress-wave-latest-halo { fill:color-mix(in srgb, var(--green-light) 30%, transparent); animation:statsWaveLatestPulse 2.8s ease-in-out infinite; }
+  .stats-progress-wave-latest-core { fill:var(--green-dark); stroke:color-mix(in srgb, var(--surf) 86%, white); stroke-width:2; }
+  .stats-progress-wave-meta { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; }
+  .stats-progress-wave-meta-col { display:grid; gap:2px; }
+  .stats-progress-wave-meta-col:nth-child(2) { text-align:center; }
+  .stats-progress-wave-meta-col:last-child { text-align:right; }
+  .stats-progress-wave-meta-session { font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); color:var(--text-muted); }
+  .stats-progress-wave-meta-value { font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); font-weight:var(--type-secondary-weight); color:color-mix(in srgb, var(--text) 90%, var(--green-dark)); font-variant-numeric:tabular-nums; }
   .streak-card { background:var(--surface-streak-bg); border-radius:var(--radius); padding:var(--space-inline-control-padding); color:var(--text-on-accent); text-align:center; box-shadow:var(--surface-streak-shadow); margin-bottom:var(--space-control-gap); }
   .streak-num  { font-size:var(--type-metric-xl-size); font-weight:var(--type-metric-xl-weight); line-height:var(--type-metric-xl-line); letter-spacing:var(--type-metric-xl-track); }
   .streak-lbl  { opacity:0.9; margin-top:var(--space-card-row-gap); display:flex; align-items:center; justify-content:center; gap:var(--space-card-row-gap); }
@@ -1562,6 +1576,18 @@
     0%, 100% { transform:translate3d(0, 0, 0); opacity:0.4; }
     50% { transform:translate3d(2px, -1px, 0); opacity:0.62; }
   }
+  @keyframes statsWaveRevealLine {
+    from { stroke-dashoffset:100; opacity:0.36; }
+    to { stroke-dashoffset:0; opacity:1; }
+  }
+  @keyframes statsWaveRevealArea {
+    from { opacity:0; transform:translate3d(0, 8px, 0) scaleY(0.95); }
+    to { opacity:0.64; transform:translate3d(0, 0, 0) scaleY(1); }
+  }
+  @keyframes statsWaveLatestPulse {
+    0%, 100% { transform:scale(1); opacity:0.48; }
+    50% { transform:scale(1.2); opacity:0.75; }
+  }
 
   @media (max-width: 380px) {
     .stats-progress-values { grid-template-columns:1fr; align-items:start; }
@@ -1573,6 +1599,10 @@
     .stats-progress-hero-aura { animation:none; }
     .stats-progress-dog-mark::after,
     .stats-progress-rail-fill { animation:none; }
+    .stats-progress-wave-area,
+    .stats-progress-wave-line,
+    .stats-progress-wave-latest-halo { animation:none; }
+    .stats-progress-wave-line { stroke-dashoffset:0; }
   }
   .stats-section-supporting { margin-bottom:var(--space-card-row-gap); }
   .stats-support-list { background:var(--surf); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow); overflow:hidden; }
