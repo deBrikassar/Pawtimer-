@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EmptyState from "../../components/EmptyState";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
@@ -334,6 +334,7 @@ const renderSyncBadge = (entry) => {
 
 export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
   const [expandedItemKey, setExpandedItemKey] = useState(null);
+  const [sessionDetail, setSessionDetail] = useState(null);
   const parsedDuration = historyModal?.mode === "duration" ? parseDurationInput(historyModal.value) : null;
   const requiresPositiveDuration = historyModal?.kind === "session";
   const durationHasInput = historyModal?.mode === "duration" && String(historyModal.value ?? "").trim().length > 0;
@@ -388,23 +389,43 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
     setExpandedItemKey((prev) => (prev === itemKey ? null : itemKey));
   };
 
-  const renderHistoryCard = ({ itemKey, title, date, value, badge, syncBadge, expandedContent, kindLabel }) => {
+  useEffect(() => {
+    if (!sessionDetail) return;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setSessionDetail(null);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [sessionDetail]);
+
+  const renderHistoryCard = ({ itemKey, title, date, value, badge, syncBadge, expandedContent, kindLabel, onActivate }) => {
     const isExpanded = expandedItemKey === itemKey;
     const detailsId = `history-details-${itemKey}`;
+    const isInteractiveCard = typeof onActivate === "function" || Boolean(expandedContent);
+    const cardClassName = `h-item ${isExpanded ? "is-expanded" : ""} ${typeof onActivate === "function" ? "is-tap-card" : ""}`.trim();
+
+    const handleActivate = () => {
+      if (typeof onActivate === "function") {
+        onActivate();
+        return;
+      }
+      if (expandedContent) toggleExpandedItem(itemKey);
+    };
 
     return (
       <div
-        className={`h-item ${isExpanded ? "is-expanded" : ""}`.trim()}
+        className={cardClassName}
         key={itemKey}
-        role="button"
-        tabIndex={0}
-        aria-expanded={isExpanded}
-        aria-controls={detailsId}
-        onClick={() => toggleExpandedItem(itemKey)}
+        role={isInteractiveCard ? "button" : undefined}
+        tabIndex={isInteractiveCard ? 0 : undefined}
+        aria-expanded={expandedContent ? isExpanded : undefined}
+        aria-controls={expandedContent ? detailsId : undefined}
+        onClick={isInteractiveCard ? handleActivate : undefined}
         onKeyDown={(event) => {
+          if (!isInteractiveCard) return;
           if (event.key !== "Enter" && event.key !== " ") return;
           event.preventDefault();
-          toggleExpandedItem(itemKey);
+          handleActivate();
         }}
       >
         <div className="h-body">
@@ -494,33 +515,15 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 s.distressLevel
                 ?? (s.result === "success" ? "none" : (s.result === "distress" ? "strong" : null)),
               );
-              const detailBadges = sessionDetailBadges(s);
               return renderHistoryCard({
                 itemKey: `s-${s.id}`,
                 title: "Training session",
                 date: fmtDate(s.date),
                 value: fmt(s.actualDuration),
                 kindLabel: "Training",
+                onActivate: () => setSessionDetail(s),
                 badge: <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>,
                 syncBadge: renderSyncBadge(s),
-                expandedContent: <>
-                  <div className="h-expand-grid">
-                    <HistoryDetailGroup label="Session details">
-                      <HistoryChipList items={detailBadges} />
-                    </HistoryDetailGroup>
-                  </div>
-                  <div className="h-expand-footer">
-                    <HistoryDetailGroup label="Actions">
-                      <HistoryActionGroup
-                        actions={[
-                          { key: "time", className: "h-edit", label: "Edit session time", icon: <ClockIcon />, onClick: () => actions.editSessionTime(s.id, setHistoryModal) },
-                          { key: "duration", className: "h-edit", label: "Edit session duration", icon: <EditIcon />, onClick: () => actions.editSessionDuration(s.id, setHistoryModal) },
-                          { key: "delete", className: "h-del", label: "Delete session", icon: <DeleteIcon />, onClick: () => actions.requestHistoryDelete("session", s, setHistoryModal) },
-                        ]}
-                      />
-                    </HistoryDetailGroup>
-                  </div>
-                </>,
               });
             }
             if (item.kind === "walk") {
@@ -668,6 +671,67 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 <button className="history-delete-confirm button-base button-danger button--md button--pill" type="button" onClick={() => actions.confirmHistoryDelete(historyModal, setHistoryModal)}>Delete</button>
               </div>
             </>}
+          </div>
+        </div>
+      )}
+
+      {sessionDetail && (
+        <div
+          className="history-session-sheet-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="history-session-sheet-title"
+          onClick={() => setSessionDetail(null)}
+        >
+          <div className="history-session-sheet modal-card modal-card--dialog-md" onClick={(event) => event.stopPropagation()}>
+            <div className="history-session-sheet-grabber" aria-hidden="true" />
+            <div className="quick-modal-head">
+              <div className="section-title section-title--flush" id="history-session-sheet-title">Session details</div>
+              <ModalCloseButton onClick={() => setSessionDetail(null)} />
+            </div>
+            <div className="history-session-sheet-meta">
+              <div className="history-session-sheet-value">{fmt(sessionDetail.actualDuration)}</div>
+              <div className="history-session-sheet-date">{fmtDate(sessionDetail.date)}</div>
+            </div>
+            <HistoryDetailGroup label="Details">
+              <HistoryChipList items={sessionDetailBadges(sessionDetail)} />
+            </HistoryDetailGroup>
+            <HistoryDetailGroup label="Actions">
+              <HistoryActionGroup
+                actions={[
+                  {
+                    key: "time",
+                    className: "h-edit",
+                    label: "Edit session time",
+                    icon: <ClockIcon />,
+                    onClick: () => {
+                      actions.editSessionTime(sessionDetail.id, setHistoryModal);
+                      setSessionDetail(null);
+                    },
+                  },
+                  {
+                    key: "duration",
+                    className: "h-edit",
+                    label: "Edit session duration",
+                    icon: <EditIcon />,
+                    onClick: () => {
+                      actions.editSessionDuration(sessionDetail.id, setHistoryModal);
+                      setSessionDetail(null);
+                    },
+                  },
+                  {
+                    key: "delete",
+                    className: "h-del",
+                    label: "Delete session",
+                    icon: <DeleteIcon />,
+                    onClick: () => {
+                      actions.requestHistoryDelete("session", sessionDetail, setHistoryModal);
+                      setSessionDetail(null);
+                    },
+                  },
+                ]}
+              />
+            </HistoryDetailGroup>
           </div>
         </div>
       )}
