@@ -1529,6 +1529,36 @@
   .stats-headline-value { font-family:var(--font-ui); font-size:var(--type-metric-headline-size); line-height:var(--type-metric-headline-line); letter-spacing:var(--type-metric-headline-track); font-weight:var(--type-metric-headline-weight); font-variant-numeric:tabular-nums; margin:0; padding:0; white-space:nowrap; color:var(--brown); min-width:0; }
   .stats-headline-status { font-family:var(--font-ui); font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); font-weight:var(--type-field-value-weight); font-variant-numeric:tabular-nums; margin:0; padding:0; text-align:right; flex:0 1 clamp(12ch, 36%, 20ch); min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--metric-surface-accent); transition:color var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out); }
   .stats-hero-insight { margin:0; position:relative; z-index:1; font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:color-mix(in srgb, var(--text) 90%, var(--text-muted)); max-width:56ch; }
+  .stats-progress-hero { position:relative; overflow:hidden; padding:clamp(16px, 3.5vw, 22px); gap:clamp(12px, 2.4vw, 18px); isolation:isolate; }
+  .stats-progress-hero-aura { position:absolute; inset:auto -16% -66% auto; width:min(66vw, 280px); aspect-ratio:1; background:radial-gradient(circle, color-mix(in srgb, var(--green-light) 28%, transparent) 0%, transparent 70%); animation:statsHeroAura 6s ease-in-out infinite; pointer-events:none; z-index:0; }
+  .stats-progress-hero-topline { position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); }
+  .stats-progress-dog-chip { display:inline-flex; align-items:center; gap:8px; min-width:0; }
+  .stats-progress-dog-mark { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; background:color-mix(in srgb, var(--green-light) 40%, white); border:1px solid color-mix(in srgb, var(--green-dark) 16%, transparent); font-size:var(--type-helper-text-size); font-weight:700; color:var(--brown); }
+  .stats-progress-dog-name { font-size:var(--type-section-eyebrow-size); line-height:var(--type-section-eyebrow-line); letter-spacing:var(--type-section-eyebrow-track); font-weight:var(--type-section-eyebrow-weight); color:var(--text-muted); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:24ch; }
+  .stats-progress-headline-status { font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); font-weight:var(--type-field-value-weight); color:var(--metric-surface-accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:48%; }
+  .stats-progress-headline { position:relative; z-index:1; margin:0; font-size:clamp(1.1rem, 2.5vw, 1.35rem); line-height:1.2; font-weight:var(--type-card-heading-weight); letter-spacing:var(--type-card-heading-track); color:var(--brown); }
+  .stats-progress-values { position:relative; z-index:1; display:grid; grid-template-columns:1fr auto 1fr; align-items:end; gap:clamp(10px, 2.2vw, 16px); }
+  .stats-progress-value-block { min-width:0; display:grid; gap:3px; }
+  .stats-progress-value { font-family:var(--font-ui); font-size:var(--type-metric-headline-size); line-height:var(--type-metric-headline-line); letter-spacing:var(--type-metric-headline-track); font-weight:var(--type-metric-headline-weight); color:var(--brown); font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .stats-progress-value--target { color:color-mix(in srgb, var(--brown) 86%, var(--green-dark)); }
+  .stats-progress-label { font-size:var(--type-metric-label-size); line-height:var(--type-metric-label-line); letter-spacing:var(--type-metric-label-track); font-weight:var(--type-metric-label-weight); color:var(--text-muted); }
+  .stats-progress-value-divider { width:1px; align-self:stretch; background:color-mix(in srgb, var(--border) 78%, transparent); }
+  .stats-progress-insight { position:relative; z-index:1; margin:0; font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:color-mix(in srgb, var(--text) 90%, var(--text-muted)); max-width:56ch; }
+
+  @keyframes statsHeroAura {
+    0%, 100% { transform:translate3d(0, 0, 0) scale(1); opacity:0.45; }
+    50% { transform:translate3d(-8px, -8px, 0) scale(1.06); opacity:0.66; }
+  }
+
+  @media (max-width: 380px) {
+    .stats-progress-values { grid-template-columns:1fr; align-items:start; }
+    .stats-progress-value-divider { display:none; }
+    .stats-progress-headline-status { max-width:56%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stats-progress-hero-aura { animation:none; }
+  }
   .stats-section-supporting { margin-bottom:var(--space-card-row-gap); }
   .stats-support-list { background:var(--surf); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow); overflow:hidden; }
   .stats-support-list--insights { background:var(--surface-gradient-raised); border-color:color-mix(in srgb, var(--border) 88%, var(--warm-accent-border)); }
