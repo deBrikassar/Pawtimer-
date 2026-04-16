@@ -244,8 +244,9 @@ export default function HomeScreen(props) {
         </section>
 
         {(walkPhase !== "idle" || patOpen) && (
-          <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
-            <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+          <div className="quick-modal-overlay quick-modal-overlay--sheet" role="dialog" aria-modal="true" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
+            <div className="quick-modal-card modal-card modal-card--dialog-md modal-card--sheet quick-modal-card--sheet" onClick={(e) => e.stopPropagation()}>
+              <div className="history-session-sheet-grabber" aria-hidden="true" />
               <div className="quick-modal-head">
                 <div className="quick-modal-title">{walkPhase !== "idle" ? "Log walk" : "Log pattern break"}</div>
                 <ModalCloseButton onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }} />
@@ -301,12 +302,14 @@ export default function HomeScreen(props) {
         )}
 
         {feedingOpen && (
-          <div className="feeding-overlay" role="dialog" aria-modal="true" aria-labelledby="feeding-title" onClick={cancelFeedingForm}>
-            <div className="feeding-card modal-card modal-card--dialog-sm" onClick={(e) => e.stopPropagation()}>
+          <div className="feeding-overlay quick-modal-overlay--sheet" role="dialog" aria-modal="true" aria-labelledby="feeding-title" onClick={cancelFeedingForm}>
+            <div className="feeding-card modal-card modal-card--dialog-sm modal-card--sheet quick-modal-card--sheet quick-modal-card--sheet-compact" onClick={(e) => e.stopPropagation()}>
+              <div className="history-session-sheet-grabber" aria-hidden="true" />
               <div className="quick-modal-head">
                 <div className="section-title section-title--flush" id="feeding-title">Log feeding</div>
                 <ModalCloseButton onClick={cancelFeedingForm} />
               </div>
+              <div className="t-helper activity-time-hint">Quick log for routine consistency. You can fine-tune details in History later.</div>
               <label className="feeding-field">
                 <span className="t-helper">Feeding time</span>
                 <input type="datetime-local" value={feedingDraft.time} onChange={(e) => setFeedingDraft((prev) => ({ ...prev, time: e.target.value }))} />
