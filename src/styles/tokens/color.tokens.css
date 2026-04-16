@@ -1,0 +1,31 @@
+:root {
+  /* 2026 Warm Minimalism — primitive palette */
+  --color-bg: #F6F4EE;
+  --color-bg-subtle: #FBF8F3;
+  --color-surface: #FFFCF8;
+  --color-surface-soft: #EFEAE2;
+  --color-surface-raised: #FFFDF9;
+  --color-border: #DCD3C6;
+  --color-border-strong: #C8BCAA;
+
+  --color-text: #2E2720;
+  --color-text-muted: #6E6255;
+  --color-text-subtle: #938678;
+
+  --color-primary-700: #2F7A57;
+  --color-primary-600: #3D8C67;
+  --color-primary-200: #B8E0C7;
+
+  --color-info-500: #5B78B4;
+  --color-info-600: #4D6AA5;
+  --color-info-50: #F4F1EA;
+  --color-info-100: #E9E1D4;
+  --color-info-200: #DACDBB;
+
+  --color-success-600: #2F7A57;
+  --color-warning-600: #B87B3E;
+  --color-error-600: #C24138;
+
+  --color-warm-accent: #E4D2B8;
+  --color-warm-accent-strong: #D1AA7A;
+}
