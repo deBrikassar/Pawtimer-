@@ -1088,15 +1088,29 @@
     inset:0;
     z-index:210;
     display:flex;
-    align-items:center;
+    align-items:flex-end;
     justify-content:center;
     padding:var(--space-2);
-    background:var(--surface-overlay);
+    background:color-mix(in srgb, var(--surface-overlay) 86%, transparent);
     min-height:100vh;
     min-height:100dvh;
     box-sizing:border-box;
+    animation:fadeIn var(--motion-base) var(--ease-out);
   }
-  .rating-screen { --modal-card-max-width:420px; --modal-card-max-height:calc(100dvh - 32px); margin:0; background:var(--surface-gradient-raised); border-color:color-mix(in srgb, var(--border) 94%, var(--surf)); box-shadow:var(--shadow); }
+  .rating-screen { --modal-card-max-width:520px; --modal-card-max-height:min(80dvh, 560px); margin:0; background:var(--surface-gradient-raised); border-color:color-mix(in srgb, var(--border) 94%, var(--surf)); box-shadow:var(--shadow); }
+  .rating-sheet {
+    width:100%;
+    border-radius:24px 24px 18px 18px;
+    padding-top:var(--space-2);
+    animation:ratingSheetIn var(--motion-slow, 260ms) var(--ease-out);
+  }
+  .rating-sheet-grabber {
+    width:44px;
+    height:5px;
+    border-radius:999px;
+    background:color-mix(in srgb, var(--text-subtle) 30%, transparent);
+    margin:0 auto var(--space-control-gap);
+  }
   .rating-title { font-size:var(--type-section-heading-size); font-weight:var(--type-section-heading-weight); line-height:var(--type-section-heading-line); letter-spacing:var(--type-section-heading-track); color:var(--brown); text-align:center; margin-bottom:4px; }
   .rating-sub   { font-size:var(--type-body-size); color:var(--text-muted); text-align:center; margin-bottom:var(--space-2); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); }
   .result-grid { display:flex; flex-direction:column; gap:var(--space-control-gap); margin-bottom:var(--space-1); }
@@ -1107,11 +1121,24 @@
   .btn-strong { background:var(--status-attention-bg); color:var(--status-attention-fg); border-color:color-mix(in srgb, var(--status-attention-fg) 24%, var(--border)); }
   .btn-severe { background:var(--status-danger-bg); color:var(--status-danger-fg); border-color:color-mix(in srgb, var(--status-danger-fg) 24%, var(--border)); }
   .btn-result:hover { transform:translateY(-2px); }
+  .rating-adapt-note {
+    margin:var(--space-control-gap) 0 var(--space-1);
+    padding:var(--space-1) var(--space-2);
+    border-radius:var(--radius-sm);
+    border:1px solid color-mix(in srgb, var(--primaryBlue) 18%, var(--border));
+    background:color-mix(in srgb, var(--softBlue) 64%, var(--surf));
+    color:var(--brown-mid);
+    font-size:var(--type-secondary-size);
+    line-height:var(--type-secondary-line);
+    letter-spacing:var(--type-secondary-track);
+    font-weight:var(--type-secondary-weight);
+  }
   .outcome-details { margin-top:var(--space-2); padding:var(--space-2); border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-muted); display:flex; flex-direction:column; gap:var(--space-1); }
   .field-label { font-size:var(--type-secondary-size); color:var(--brown); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); }
   /* Form controls: default field */
   .text-input { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:var(--space-field-padding-default); font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:var(--brown); background:var(--surf); }
   .btn-save-outcome { margin-top:var(--space-density-compact-control-gap); border-radius:10px; padding:var(--space-field-padding-default); }
+  @keyframes ratingSheetIn { from { opacity:0; transform:translateY(20px) scale(.995); } to { opacity:1; transform:translateY(0) scale(1); } }
 
   /* ── Contextual tips ── */
   .ctx { margin:0 var(--space-card-padding-lg) var(--space-card-row-gap); padding:var(--space-field-padding-default); background:var(--surf); border-radius:var(--radius-sm); border:1px solid color-mix(in srgb, var(--mutedBlue) 18%, var(--border)); border-left:3px solid var(--mutedBlue); font-size:var(--type-secondary-size); color:var(--text-muted); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); font-weight:var(--type-secondary-weight); box-shadow:var(--shadow); }
