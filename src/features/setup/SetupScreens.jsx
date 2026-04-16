@@ -23,7 +23,7 @@ export function Onboarding({ onComplete, onBack }) {
       <div className="ob-hero">
         <div className="ob-hero-icon"><PawIcon size={48} /></div>
         <div className="ob-title">PawTimer</div>
-        <div className="ob-subtitle">Set up {displayName}'s training plan in 4 steps.</div>
+        <div className="ob-subtitle">Set up {displayName}'s calm plan in 4 quick steps.</div>
         <div className="ob-step-indicator">
           {[0, 1, 2, 3].map((i) => <div key={i} className={`ob-step-dot ${i < step ? "done" : i === step ? "active" : ""}`} />)}
         </div>
@@ -32,12 +32,12 @@ export function Onboarding({ onComplete, onBack }) {
         {step === 0 && <>
           <div className="ob-question">What's your dog's name?</div>
           <div className="ob-note prose">Names are case-insensitive, and we'll keep your dog's natural spelling.</div>
-          <div className="ob-hint">Used to personalise messages throughout the app.</div>
+          <div className="ob-hint">Used across Train, History, Progress, and Settings.</div>
           <input className="ob-input" placeholder="e.g. Luna, Maximilian…" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && canNext && handleNext()} autoFocus />
         </>}
         {step === 1 && <>
           <div className="ob-question">How often do you leave the house per day?</div>
-          <div className="ob-hint">Determines how many pattern-break exercises to recommend each day.</div>
+          <div className="ob-hint">Shapes daily support routine suggestions.</div>
           <div className="ob-options">
             {LEAVE_OPTIONS.map((o) => (
               <button key={o.value} className={`ob-option ${leaves === o.value ? "selected" : ""}`} onClick={() => setLeaves(o.value)}>
@@ -48,7 +48,7 @@ export function Onboarding({ onComplete, onBack }) {
         </>}
         {step === 2 && <>
           <div className="ob-question">How long can {displayName} stay calm alone now?</div>
-          <div className="ob-hint">The first target starts around 80% of this, then adapts using calm streaks, distress, and relapse risk.</div>
+          <div className="ob-hint">Train starts near 80% and adapts to calm streaks and stress signs.</div>
           <div className="ob-duration-grid">
             {CALM_DURATIONS.map((d) => (
               <button key={d.value} className={`ob-dur-btn ${calm === d.value ? "selected" : ""}`} onClick={() => setCalm(d.value)}>

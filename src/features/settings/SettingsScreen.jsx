@@ -82,10 +82,11 @@ export default function SettingsScreen(props) {
     <>
       <div className="tab-content">
         <div className="section">
-          <div className="section-title">Settings</div>
+          <div className="section-title">Calm control</div>
+          <div className="t-helper">Manage profile, routine defaults, and device behavior for {name}.</div>
 
           <div className="settings-nav-list" role="list" aria-label="Settings destinations">
-            <div className="settings-section-label">General</div>
+            <div className="settings-section-label">Dog + routine</div>
             <SettingsNavRow label="Dog profile" value={name} onClick={() => setActivePanel(SETTINGS_PANEL.PROFILE)} />
             <SettingsNavRow label="Reminders" value={reminderSummary} onClick={() => setActivePanel(SETTINGS_PANEL.REMINDERS)} />
             <SettingsNavRow label="Training settings" value={`Up to ${activeProto.sessionsPerDayMax}/day`} onClick={() => setTrainingSettingsOpen(true)} />
@@ -93,13 +94,13 @@ export default function SettingsScreen(props) {
           </div>
 
           <div className="settings-nav-list" role="list" aria-label="Support destinations">
-            <div className="settings-section-label">Support</div>
+            <div className="settings-section-label">Guidance + diagnostics</div>
             <SettingsNavRow label="Help" value="Guidance" onClick={() => setActivePanel(SETTINGS_PANEL.HELP)} />
             <SettingsNavRow label="Advanced" value="Diagnostics" onClick={() => setActivePanel(SETTINGS_PANEL.ADVANCED)} />
           </div>
 
           <div className="settings-nav-list" role="list" aria-label="Account destinations">
-            <div className="settings-section-label">Account</div>
+            <div className="settings-section-label">Account + device</div>
             <SettingsNavRow label="Account" value="Profile & device" onClick={() => setActivePanel(SETTINGS_PANEL.ACCOUNT)} />
           </div>
 

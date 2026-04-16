@@ -17,14 +17,14 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
         {totalCount === 0 ? (
           <EmptyState media={<SproutIcon />} title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
         ) : <>
-          <StatsSection title="Today" className="stats-section-priority">
+          <StatsSection title="Today’s feeling" className="stats-section-priority">
             <div className="stats-metric-anchor">
               <div
                 className={`stats-headline-card metric-surface metric-surface--${headlineMetricVariant} surface-state--${headlineSurfaceState}`.trim()}
                 data-metric-variant={headlineMetricVariant}
                 aria-label="Current recommendation"
               >
-                <span className="stats-headline-label">Current recommendation</span>
+                  <span className="stats-headline-label">Confidence recommendation</span>
                 <div className="stats-headline-main">
                   <span className="stats-headline-value">{fmt(target)}</span>
                   <span className="stats-headline-status">{headlineStatus}</span>
@@ -33,7 +33,7 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
             </div>
           </StatsSection>
 
-          <StatsSection title="Key metrics">
+          <StatsSection title="Confidence signals">
             <div className="stats-row stats-row-core stats-row-core-trimmed">
               <StatsMetricCard
                 value={fmt(bestCalm)}
@@ -56,11 +56,11 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
             </div>
           </StatsSection>
 
-          <StatsSection title="Progress chart">
+          <StatsSection title="Journey curve">
             <StatsChartSection chartData={chartData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmt} insightLabel={chartTrendLabel} />
           </StatsSection>
 
-          <StatsSection title="Daily patterns" className="stats-section-supporting">
+          <StatsSection title="Daily rhythm" className="stats-section-supporting">
             <div className="stats-support-list">
               <StatsSupportRow label="Alone time per week" value={fmt(aloneLastWeek)} />
               <StatsSupportRow label="Average walk duration" value={avgWalkDuration != null ? fmt(avgWalkDuration, { hoursMinutesOnly: true }) : "—"} />

@@ -340,6 +340,9 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
   const durationIsValid = historyModal?.mode === "duration"
     ? Number.isFinite(parsedDuration) && (requiresPositiveDuration ? parsedDuration > 0 : parsedDuration >= 0)
     : true;
+  const recentCount = timeline.slice(0, 7).length;
+  const sessionCount = timeline.filter((item) => item.kind === "session").length;
+  const careCount = timeline.filter((item) => item.kind !== "session").length;
 
   const toggleExpandedItem = (itemKey) => {
     setExpandedItemKey((prev) => (prev === itemKey ? null : itemKey));
@@ -393,9 +396,19 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
       <div className="tab-content">
         <div className="section">
           <div className="history-section-head">
-            <div className="section-title">Activity Log</div>
+            <div>
+              <div className="section-title">Story timeline</div>
+              <div className="t-helper">A narrative of {name}'s training and support routines over time.</div>
+            </div>
             {sessions.length > 0 && <button className="clear-btn surface-text-button secondary-control secondary-control--inline-text" onClick={actions.clearSessions}>Clear sessions</button>}
           </div>
+          {timeline.length > 0 && (
+            <div className="history-story-summary">
+              <span>{recentCount} recent moments</span>
+              <span>{sessionCount} training sessions</span>
+              <span>{careCount} support routine logs</span>
+            </div>
+          )}
 
           {timeline.length === 0 ? (
             <EmptyState media={<TrendIcon />} title="No activity yet" body={`Start ${name}'s first session and your training history will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
