@@ -199,81 +199,38 @@ export function SessionRatingPanel({
   phase,
   finalElapsed,
   name,
-  sessionOutcome,
-  setSessionOutcome,
   recordResult,
-  latencyDraft,
-  setLatencyDraft,
-  distressTypeDraft,
-  setDistressTypeDraft,
   onCancel,
   fmt,
   Img,
-  distressTypes,
 }) {
   if (phase !== "rating") return null;
 
   return (
     <div className="rating-overlay" role="presentation">
-      <div className="rating-screen session-feedback modal-card modal-card--dialog-md" role="dialog" aria-modal="true" aria-labelledby="session-rating-title">
+      <div className="rating-screen session-feedback modal-card modal-card--dialog-md rating-sheet" role="dialog" aria-modal="true" aria-labelledby="session-rating-title" aria-describedby="session-rating-sub">
+        <div className="rating-sheet-grabber" aria-hidden="true" />
         <div className="rating-title" id="session-rating-title">Was there any stress?</div>
-        <div className="rating-sub">
-          {fmt(finalElapsed)} session — how did {name} handle it?
+        <div className="rating-sub" id="session-rating-sub">
+          {fmt(finalElapsed)} session with {name}. Your choice updates the next training target.
         </div>
         <div className="result-grid">
-          <button className="btn-result btn-none" onClick={() => { setSessionOutcome("none"); recordResult("none"); }}>
-            <Img src="result-calm.png" size={36} alt="No distress"/>
-            <div><div>No distress</div><div className="result-desc">{name} was completely calm</div></div>
+          <button className="btn-result btn-none" onClick={() => recordResult("none")}>
+            <Img src="result-calm.png" size={36} alt="No stress"/>
+            <div><div>No stress</div><div className="result-desc">Fully calm throughout the session</div></div>
           </button>
-          <button className="btn-result btn-mild" onClick={() => setSessionOutcome("subtle")}>
-            <Img src="result-mild.png" size={36} alt="Subtle stress"/>
-            <div><div>Subtle stress</div><div className="result-desc">Mild/passive signs (restless, lip licking, etc.)</div></div>
+          <button className="btn-result btn-mild" onClick={() => recordResult("subtle")}>
+            <Img src="result-mild.png" size={36} alt="Slight stress"/>
+            <div><div>Slight stress</div><div className="result-desc">Small signs, but able to settle</div></div>
           </button>
-          <button className="btn-result btn-strong" onClick={() => setSessionOutcome("active")}>
-            <Img src="result-strong.png" size={36} alt="Active distress"/>
-            <div><div>Active distress</div><div className="result-desc">Barking, pacing, unable to settle</div></div>
-          </button>
-          <button className="btn-result btn-severe" onClick={() => setSessionOutcome("severe")}>
-            <Img src="result-strong.png" size={36} alt="Severe distress"/>
-            <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
+          <button className="btn-result btn-strong" onClick={() => recordResult("active")}>
+            <Img src="result-strong.png" size={36} alt="Strong stress"/>
+            <div><div>Strong stress</div><div className="result-desc">Clear stress; next step should be easier</div></div>
           </button>
         </div>
-        {sessionOutcome && sessionOutcome !== "none" && (
-          <div className="outcome-details">
-            <label className="field-label" htmlFor="latency-input">Latency to first stress (seconds)</label>
-            <input
-              id="latency-input"
-              className="text-input"
-              type="number"
-              min="0"
-              step="1"
-              placeholder="Optional"
-              value={latencyDraft}
-              onChange={(e) => setLatencyDraft(e.target.value)}
-            />
-            <label className="field-label" htmlFor="distress-type">Distress type (optional)</label>
-            <select
-              id="distress-type"
-              className="text-input"
-              value={distressTypeDraft}
-              onChange={(e) => setDistressTypeDraft(e.target.value)}
-            >
-              <option value="">Select distress type</option>
-              {distressTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-            <button
-              className="btn-save-outcome button-base button-primary button--md button--block"
-              onClick={() => recordResult(sessionOutcome, {
-                latencyToFirstDistress: latencyDraft,
-                distressType: distressTypeDraft || null,
-              })}
-            >
-              Save session
-            </button>
-          </div>
-        )}
+        <p className="rating-adapt-note" role="status">
+          We use this feedback to adjust pace automatically and keep training in the calm zone.
+        </p>
         <button className="session-cancel-btn button-base button-ghost button--md button--block" onClick={onCancel}>
           Discard this session
         </button>
