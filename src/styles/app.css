@@ -444,13 +444,57 @@
     color:var(--text-muted);
     text-wrap:balance;
   }
+  .sc-state-chip {
+    margin-top:6px;
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:11px;
+    letter-spacing:0.02em;
+    font-weight:600;
+    color:color-mix(in srgb, var(--brown) 82%, var(--text-muted));
+    background:color-mix(in srgb, var(--surface-muted) 86%, white);
+    border:1px solid color-mix(in srgb, var(--border) 82%, white);
+    transition:background-color 240ms ease, color 240ms ease, border-color 240ms ease;
+  }
+  .sc-state-chip.is-running {
+    color:color-mix(in srgb, var(--green-dark) 80%, var(--brown));
+    background:color-mix(in srgb, var(--green-light) 34%, white);
+    border-color:color-mix(in srgb, var(--green) 36%, var(--border));
+  }
   .sc-progress.is-dim { opacity:0.18; }
   @keyframes heroBreath {
     0%, 100% { transform:scale(1); box-shadow:0 18px 46px color-mix(in srgb, var(--green-dark) 20%, transparent), inset 0 1px 0 rgba(255,255,255,0.72); }
     50% { transform:scale(1.014); box-shadow:0 20px 50px color-mix(in srgb, var(--green-dark) 25%, transparent), inset 0 1px 0 rgba(255,255,255,0.75); }
   }
-  .session-actions { margin-top:var(--space-card-row-gap); display:flex; flex-direction:column; gap:10px; align-items:center; }
-  .session-end-btn, .session-cancel-btn { width:min(100%, 260px); padding:var(--space-inline-control-padding); }
+  .session-actions {
+    margin-top:var(--space-card-row-gap);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:center;
+    width:min(100%, 320px);
+    margin-inline:auto;
+  }
+  .session-primary-btn, .session-cancel-btn { width:min(100%, 280px); padding:var(--space-inline-control-padding); }
+  .session-cancel-btn {
+    opacity:0;
+    max-height:0;
+    overflow:hidden;
+    transform:translateY(-4px);
+    transition:opacity 220ms ease, max-height 280ms ease, transform 220ms ease;
+  }
+  .session-actions.is-running .session-cancel-btn {
+    opacity:0.8;
+    max-height:44px;
+    transform:translateY(0);
+  }
+  .session-actions.is-running .session-cancel-btn:hover { opacity:1; }
+  .session-action-meta {
+    margin:0;
+    text-align:center;
+    font-size:var(--type-helper-text-size);
+    color:var(--text-muted);
+  }
 
   .readiness-hint { margin:var(--space-card-row-gap) auto 0; width:min(100%, 320px); padding:var(--space-inline-control-padding); border-radius:12px; border:1px solid var(--border); background:var(--surface-muted); display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); }
   .readiness-label { font-size:var(--type-field-label-size); line-height:var(--type-field-label-line); letter-spacing:var(--type-field-label-track); color:var(--text-muted); font-weight:var(--type-field-label-weight); }

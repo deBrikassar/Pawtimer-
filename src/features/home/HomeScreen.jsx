@@ -137,17 +137,6 @@ export default function HomeScreen(props) {
             )}
           </div>
         )}
-        {phase === "idle" && (
-          <button
-            type="button"
-            className="train-primary-cta button-base button-primary button--lg button--pill"
-            onClick={startSession}
-            disabled={!daily.canAdd}
-          >
-            Start calm session
-          </button>
-        )}
-
         <section className="train-context-block surface-card">
           <p className="train-context-block__title">Today's target time</p>
           <p className="train-context-block__value">{fmtClock(target)} calm for {name}</p>
