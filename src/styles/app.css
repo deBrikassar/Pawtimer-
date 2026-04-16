@@ -497,6 +497,17 @@
     border-style:solid;
     transition:border-color 220ms ease, transform 180ms ease, box-shadow 220ms ease;
   }
+  .train-contextual-help {
+    width:min(100%, 360px);
+    margin:6px auto 0;
+  }
+  .train-contextual-help .train-inline-guidance {
+    margin-top:0;
+  }
+  .train-inline-guidance.is-first-run {
+    border-color:color-mix(in srgb, var(--primaryBlue) 44%, var(--border));
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--primaryBlue) 24%, transparent);
+  }
   .train-inline-guidance:hover {
     border-color:color-mix(in srgb, var(--primaryBlue) 36%, var(--border));
     transform:translateY(-1px);
@@ -515,6 +526,21 @@
     color:var(--text-muted);
     text-align:right;
   }
+  .train-inline-explain {
+    margin-top:8px;
+    border-radius:14px;
+    border:1px solid color-mix(in srgb, var(--border) 82%, white);
+    background:color-mix(in srgb, var(--surf) 96%, white);
+    padding:10px 12px;
+    display:grid;
+    gap:6px;
+    color:var(--text-muted);
+    text-align:left;
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+  }
+  .train-inline-explain p { margin:0; }
+  .train-inline-explain strong { color:var(--brown); }
   .train-focus-strip--recovery {
     border-color:color-mix(in srgb, var(--warning) 30%, var(--border));
     box-shadow:0 0 0 1px color-mix(in srgb, var(--warning) 15%, transparent);
