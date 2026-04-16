@@ -15,6 +15,11 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
   const nextTargetLabel = progressDelta > 0
     ? `Next milestone (+${fmt(progressDelta)})`
     : "Milestone met — hold this rhythm";
+  const heroHeadline = progressDelta <= 0
+    ? `${name} reached this milestone.`
+    : progressDelta <= 60
+      ? `${name} is one calm stretch from the next milestone.`
+      : `${name} is building calm confidence.`;
   const cadenceLabel = avgSessionsPerDay != null
     ? avgSessionsPerDay >= 1
       ? `Strong cadence: ${avgSessionsPerDay.toFixed(1)} sessions/day.`
@@ -34,11 +39,14 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
             <ProgressHero
               name={name}
               headlineStatus={headlineStatus}
+              headline={heroHeadline}
               headlineSurfaceState={headlineSurfaceState}
               currentValue={fmt(bestCalm)}
               currentLabel="Current calm window"
+              currentSeconds={bestCalm}
               targetValue={fmt(target)}
               targetLabel={nextTargetLabel}
+              targetSeconds={target}
               insight={emotionalMomentum}
             />
           </StatsSection>
