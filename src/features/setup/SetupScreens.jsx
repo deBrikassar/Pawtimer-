@@ -2,6 +2,13 @@ import { useState } from "react";
 import { CALM_DURATIONS, GOAL_DURATIONS, LEAVE_OPTIONS } from "../app/helpers";
 import { PawIcon } from "../app/ui";
 
+const CREATE_DOG_STEPS = [
+  { key: "name", progressLabel: "Step 1 of 4" },
+  { key: "leaving", progressLabel: "Step 2 of 4" },
+  { key: "calm", progressLabel: "Step 3 of 4" },
+  { key: "goal", progressLabel: "Step 4 of 4" },
+];
+
 export function WelcomeScreen({ onStart, onManageDogs }) {
   return (
     <div className="welcome-screen">
@@ -42,8 +49,9 @@ export function Onboarding({ onComplete, onBack }) {
   const [goal, setGoal] = useState(null);
 
   const cleanName = name.replace(/\s+/g, " ").trim();
-  const canNext = [cleanName.length >= 1, leaves !== null, calm !== null, goal !== null][step];
+  const canNext = [cleanName.length >= 1, leaves !== null, calm !== null, true][step];
   const displayName = cleanName || "your dog";
+  const activeStep = CREATE_DOG_STEPS[step];
 
   const handleNext = () => {
     if (step < 3) setStep((s) => s + 1);
@@ -54,56 +62,60 @@ export function Onboarding({ onComplete, onBack }) {
     <div className="onboarding">
       <div className="ob-hero">
         <div className="ob-hero-icon"><PawIcon size={48} /></div>
-        <div className="ob-title">PawTimer</div>
-        <div className="ob-subtitle">Set up {displayName}'s calm plan in 4 quick steps.</div>
+        <div className="ob-eyebrow">Create dog</div>
+        <div className="ob-title">{displayName === "your dog" ? "Start a calm journey" : `${displayName}'s calm journey`}</div>
+        <div className="ob-subtitle">{activeStep.progressLabel} • One focused choice at a time.</div>
         <div className="ob-step-indicator">
           {[0, 1, 2, 3].map((i) => <div key={i} className={`ob-step-dot ${i < step ? "done" : i === step ? "active" : ""}`} />)}
         </div>
       </div>
       <div className="ob-body">
-        {step === 0 && <>
-          <div className="ob-question">What's your dog's name?</div>
-          <div className="ob-note prose">Names are case-insensitive, and we'll keep your dog's natural spelling.</div>
-          <div className="ob-hint">Used across Train, History, Progress, and Settings.</div>
-          <input className="ob-input" placeholder="e.g. Luna, Maximilian…" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && canNext && handleNext()} autoFocus />
-        </>}
-        {step === 1 && <>
-          <div className="ob-question">How often do you leave the house per day?</div>
-          <div className="ob-hint">Shapes daily support routine suggestions.</div>
-          <div className="ob-options">
-            {LEAVE_OPTIONS.map((o) => (
-              <button key={o.value} className={`ob-option ${leaves === o.value ? "selected" : ""}`} onClick={() => setLeaves(o.value)}>
-                <div><div className="ob-option-label">{o.label}</div><div className="ob-option-sub">{o.sub}</div></div>
-              </button>
-            ))}
-          </div>
-        </>}
-        {step === 2 && <>
-          <div className="ob-question">How long can {displayName} stay calm alone now?</div>
-          <div className="ob-hint">Train starts near 80% and adapts to calm streaks and stress signs.</div>
-          <div className="ob-duration-grid">
-            {CALM_DURATIONS.map((d) => (
-              <button key={d.value} className={`ob-dur-btn ${calm === d.value ? "selected" : ""}`} onClick={() => setCalm(d.value)}>
-                <div className="ob-dur-val">{d.label}</div><div className="ob-dur-lbl">{d.sub}</div>
-              </button>
-            ))}
-          </div>
-        </>}
-        {step === 3 && <>
-          <div className="ob-question">What's the goal for {displayName}?</div>
-          <div className="ob-hint">Training is gradual. You can change this any time.</div>
-          <div className="ob-duration-grid">
-            {GOAL_DURATIONS.map((d) => (
-              <button key={d.value} className={`ob-dur-btn ${goal === d.value ? "selected" : ""}`} onClick={() => setGoal(d.value)}>
-                <div className="ob-dur-val">{d.label}</div><div className="ob-dur-lbl">{d.sub}</div>
-              </button>
-            ))}
-          </div>
-        </>}
+        <div key={step} className="ob-step-panel">
+          {step === 0 && <>
+            <div className="ob-question">Who are we training with today?</div>
+            <div className="ob-note prose">Your dog's name personalizes every cue and progress view.</div>
+            <div className="ob-hint">You can update this later in settings if needed.</div>
+            <input className="ob-input" placeholder="e.g. Luna, Mochi, Rocco…" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && canNext && handleNext()} autoFocus />
+          </>}
+          {step === 1 && <>
+            <div className="ob-question">How often is {displayName} home alone?</div>
+            <div className="ob-hint">This helps shape your weekly rhythm and guidance intensity.</div>
+            <div className="ob-options">
+              {LEAVE_OPTIONS.map((o) => (
+                <button key={o.value} className={`ob-option ${leaves === o.value ? "selected" : ""}`} onClick={() => setLeaves(o.value)}>
+                  <div><div className="ob-option-label">{o.label}</div><div className="ob-option-sub">{o.sub}</div></div>
+                </button>
+              ))}
+            </div>
+          </>}
+          {step === 2 && <>
+            <div className="ob-question">How long does {displayName} stay calm right now?</div>
+            <div className="ob-hint">We'll start gently from this baseline and build calm confidence over time.</div>
+            <div className="ob-duration-grid">
+              {CALM_DURATIONS.map((d) => (
+                <button key={d.value} className={`ob-dur-btn ${calm === d.value ? "selected" : ""}`} onClick={() => setCalm(d.value)}>
+                  <div className="ob-dur-val">{d.label}</div><div className="ob-dur-lbl">{d.sub}</div>
+                </button>
+              ))}
+            </div>
+          </>}
+          {step === 3 && <>
+            <div className="ob-question">Choose a future calm goal for {displayName}</div>
+            <div className="ob-note prose">Optional: skip for now and set this after a few sessions.</div>
+            <div className="ob-hint">Goals keep motivation high — training still works even without one.</div>
+            <div className="ob-duration-grid">
+              {GOAL_DURATIONS.map((d) => (
+                <button key={d.value} className={`ob-dur-btn ${goal === d.value ? "selected" : ""}`} onClick={() => setGoal(d.value)}>
+                  <div className="ob-dur-val">{d.label}</div><div className="ob-dur-lbl">{d.sub}</div>
+                </button>
+              ))}
+            </div>
+          </>}
+        </div>
       </div>
       <div className="ob-footer">
         <button className="ob-btn-next button-base button-primary button--lg button-size-primary-cta button--block" onClick={handleNext} disabled={!canNext}>
-          {step < 3 ? "Continue →" : `Start training with ${displayName}`}
+          {step < 3 ? "Continue →" : `Begin ${displayName}'s plan`}
         </button>
         <button className="ob-back-btn" onClick={() => step === 0 ? onBack?.() : setStep((s) => s - 1)}>
           ← {step === 0 ? "Back to dogs" : "Back"}
