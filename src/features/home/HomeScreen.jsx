@@ -73,9 +73,9 @@ export default function HomeScreen(props) {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 4);
   const sessionBlockedMessage = daily.blockReason === "cap"
-    ? `Daily alone-time cap reached (${fmtClock(daily.capSec)}). Log more sessions tomorrow.`
+    ? `Daily alone-time cap reached (${fmtClock(daily.capSec)}). Try again tomorrow.`
     : daily.blockReason === "max_sessions"
-      ? `Daily session max reached (${daily.maxCount}). Log more sessions tomorrow.`
+      ? `Daily session max reached (${daily.maxCount}). Try again tomorrow.`
       : "";
   const toggleTrainExplain = () => {
     setTrainExplainOpen((prev) => !prev);
@@ -100,7 +100,7 @@ export default function HomeScreen(props) {
           <div className="train-identity-header__copy">
             <div className="train-identity-header__eyebrow">{name}'s calm practice</div>
             <h2 className="train-identity-header__name">Train with {name}</h2>
-            <p className="train-identity-header__mood">Short, humane separation reps to help {name} stay calm during real departures.</p>
+            <p className="train-identity-header__mood">Short, gentle reps to help {name} feel safer during real departures.</p>
           </div>
         </header>
 
@@ -127,22 +127,22 @@ export default function HomeScreen(props) {
               onClick={toggleTrainExplain}
               aria-expanded={trainExplainOpen}
             >
-              <span className="train-inline-guidance__label">Tap to explain</span>
-              <span className="train-inline-guidance__copy">How this calm circle connects to separation training</span>
+              <span className="train-inline-guidance__label">What this means</span>
+              <span className="train-inline-guidance__copy">How the circle supports separation training</span>
             </button>
             {trainExplainOpen && (
               <div className="train-inline-explain" role="note" aria-live="polite">
-                <p><strong>Big circle:</strong> this is {name}&apos;s calm-alone window for one rep. The ring fills as settled alone time is completed.</p>
-                <p><strong>Target time ({fmtClock(target)}):</strong> your current safe threshold before stress rises. End while {name} is still relaxed.</p>
+                <p><strong>Circle:</strong> this is {name}&apos;s target for one rep. The ring fills as calm alone time is completed.</p>
+                <p><strong>Target ({fmtClock(target)}):</strong> your current safe step. End while {name} is still relaxed.</p>
               </div>
             )}
           </div>
         )}
         <section className="train-context-block surface-card">
-          <p className="train-context-block__title">Today&apos;s calm-alone target</p>
+          <p className="train-context-block__title">Today&apos;s target</p>
           <p className="train-context-block__value">{fmtClock(target)} calm for {name}</p>
           <p className="train-context-block__meta">
-            Sessions today: <strong>{daily.count}</strong> · Daily pace target: <strong>{fmt(goalSec)}</strong>
+            Reps today: <strong>{daily.count}</strong> · Longer-term goal: <strong>{fmt(goalSec)}</strong>
           </p>
           {!daily.canAdd && (
             <p className="status-msg status-msg--warning">
@@ -156,7 +156,7 @@ export default function HomeScreen(props) {
               onClick={dismissTrainFirstRunHint}
             >
               <span className="train-inline-guidance__label">Targets adapt to your dog</span>
-              <span className="train-inline-guidance__copy">Consistent calm nudges targets upward. Stress signs bring the next step down.</span>
+              <span className="train-inline-guidance__copy">Calm reps nudge targets up. Stress signs nudge them down.</span>
             </button>
           )}
           {phase === "idle" && recoveryMode?.active && (
@@ -192,7 +192,7 @@ export default function HomeScreen(props) {
 
         {daily.canAdd && daily.count >= Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0)) && (
           <p className="status-msg status-msg--warning">
-            {daily.count} sessions today — for ~{pattern.normalizedLeaves} departures/day, keep it around {Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0))} to avoid overloading real departures.
+            {daily.count} reps today — with ~{pattern.normalizedLeaves} departures/day, try to stay near {Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0))} so training stays sustainable.
           </p>
         )}
 
@@ -205,7 +205,7 @@ export default function HomeScreen(props) {
           >
             <div>
               <div className="section-title section-title--flush">Today&apos;s training + care log</div>
-              <div className="t-helper">{todaySessions.length} calm-alone reps · support activity</div>
+              <div className="t-helper">{todaySessions.length} calm-alone reps · support logs</div>
             </div>
             <span className="settings-collapsible-arrow" aria-hidden="true">{todayOpen ? "−" : "+"}</span>
           </button>
@@ -214,7 +214,7 @@ export default function HomeScreen(props) {
               <div className="train-today-list" role="list" aria-label="Today's logged activity">
                 <div className="train-today-row" role="listitem">
                   <span className="train-today-row__label">Calm-alone reps</span>
-                  <span className="train-today-row__meta">{todaySessions.length} logged</span>
+                  <span className="train-today-row__meta">{todaySessions.length} today</span>
                 </div>
                 <button className="train-today-row train-today-row--action" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
                   <span className="train-today-row__label">Walk</span>

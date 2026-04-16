@@ -27,16 +27,16 @@ export function buildTrainTimeChangeInsight({
   if (recommendationType === "recovery_mode_active") {
     return {
       tone: "caution",
-      title: `Recovery mode on · target is now ${formattedNext}`,
-      body: `${name} showed stress signs, so we switched to short reset sessions to rebuild calm confidence.`,
+      title: `Recovery mode on · next target is ${formattedNext}`,
+      body: `${name} showed stress signs, so we moved to shorter reset reps.`,
     };
   }
 
   if (recommendationType === "recovery_mode_resume") {
     return {
       tone: "positive",
-      title: `Recovery complete · target is now ${formattedNext}`,
-      body: `Recent calm reset sessions went well, so we are gently stepping back up again.`,
+      title: `Recovery complete · next target is ${formattedNext}`,
+      body: `Recent reset reps went well, so we're gently stepping up again.`,
     };
   }
 
@@ -45,8 +45,8 @@ export function buildTrainTimeChangeInsight({
       tone: "caution",
       title: `Target eased to ${formattedNext}`,
       body: distressLevel === "none"
-        ? `We lowered the next session slightly to keep training comfortable and steady.`
-        : `${name} showed stress signs, so the next session is shorter to protect confidence.`,
+        ? `We lowered the next rep slightly to keep training steady.`
+        : `${name} showed stress signs, so the next rep is shorter.`,
     };
   }
 
@@ -54,13 +54,13 @@ export function buildTrainTimeChangeInsight({
     return {
       tone: "positive",
       title: `Target increased to ${formattedNext}`,
-      body: `Recent calm sessions were successful, so the next step is a little longer.`,
+      body: `Recent calm reps went well, so the next step is a little longer.`,
     };
   }
 
   return {
     tone: "neutral",
     title: `Target stays at ${formattedNext}`,
-    body: `We are holding this duration to keep progress steady and predictable.`,
+    body: `We're holding this duration to keep progress steady.`,
   };
 }

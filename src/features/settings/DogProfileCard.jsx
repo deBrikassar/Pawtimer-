@@ -26,7 +26,7 @@ export default function DogProfileCard({
           {String(dogName || "D").trim().charAt(0).toUpperCase()}
         </div>
         <div className="settings-dog-profile-card__titles">
-          <div className="settings-simple-title">Active calm-alone profile</div>
+          <div className="settings-simple-title">Active dog profile</div>
           <div className="settings-dog-profile-card__name">{dogName}</div>
           <div className="settings-dog-profile-card__state">
             <span className={`settings-dog-profile-card__state-dot settings-dog-profile-card__state-dot--${syncTone}`} aria-hidden="true" />
@@ -39,8 +39,8 @@ export default function DogProfileCard({
       </div>
 
       <div className="settings-dog-profile-card__meta" aria-label="Dog status summary">
-        <div className="settings-profile-chip">{reminderSummary} training reminders</div>
-        <div className="settings-profile-chip">Plan: max {sessionsPerDayMax} calm-alone reps/day</div>
+        <div className="settings-profile-chip">{reminderSummary} reminders</div>
+        <div className="settings-profile-chip">Plan max: {sessionsPerDayMax} reps/day</div>
         <div className="settings-profile-chip">{customLabelCount} custom labels</div>
       </div>
     </button>

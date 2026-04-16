@@ -170,26 +170,26 @@ export const normalizeWalkType = (value) => {
 export const walkTypeLabel = (walkType) => (WALK_TYPE_OPTIONS.find((option) => option.value === normalizeWalkType(walkType))?.label ?? "regular walk");
 
 export const LEAVE_OPTIONS = [
-  { value: 1, label: "1–2 times", sub: "Work from home / rarely leave" },
-  { value: 3, label: "3–4 times", sub: "Short errands, occasional walks" },
-  { value: 5, label: "5–6 times", sub: "Regular commute or active lifestyle" },
-  { value: 8, label: "7+ times", sub: "Frequent short trips during the day" },
+  { value: 1, label: "1–2 times", sub: "Usually someone is home" },
+  { value: 3, label: "3–4 times", sub: "A few short departures" },
+  { value: 5, label: "5–6 times", sub: "Most weekdays are busy" },
+  { value: 8, label: "7+ times", sub: "Many short in-and-out trips" },
 ];
 
 export const CALM_DURATIONS = [
-  { value: 30, label: "30s", sub: "Just starting out" },
-  { value: 120, label: "2 min", sub: "A little bit" },
-  { value: 300, label: "5 min", sub: "Getting there" },
-  { value: 600, label: "10 min", sub: "Doing okay" },
-  { value: 1200, label: "20 min", sub: "Pretty good" },
-  { value: 1800, label: "30 min", sub: "Almost there" },
+  { value: 30, label: "30s", sub: "Very new to this" },
+  { value: 120, label: "2 min", sub: "Early baseline" },
+  { value: 300, label: "5 min", sub: "Can settle briefly" },
+  { value: 600, label: "10 min", sub: "Settles with support" },
+  { value: 1200, label: "20 min", sub: "Steady on good days" },
+  { value: 1800, label: "30 min", sub: "Consistent short departures" },
 ];
 
 export const GOAL_DURATIONS = [
-  { value: 1800, label: "30 min", sub: "Short errands" },
-  { value: 2400, label: "40 min", sub: "Standard goal" },
-  { value: 3600, label: "1 hour", sub: "Longer walks" },
-  { value: 7200, label: "2 hours", sub: "Half workday" },
-  { value: 14400, label: "4 hours", sub: "Morning/afternoon" },
+  { value: 1800, label: "30 min", sub: "Quick errand" },
+  { value: 2400, label: "40 min", sub: "Local trip" },
+  { value: 3600, label: "1 hour", sub: "One longer outing" },
+  { value: 7200, label: "2 hours", sub: "Half-day stretch" },
+  { value: 14400, label: "4 hours", sub: "Extended outing" },
   { value: 28800, label: "8 hours", sub: "Full workday" },
 ];

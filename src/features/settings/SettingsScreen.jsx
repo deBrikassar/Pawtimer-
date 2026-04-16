@@ -101,8 +101,8 @@ export default function SettingsScreen(props) {
     <>
       <div className="tab-content">
         <div className="section settings-shell">
-          <div className="section-title">{name}&rsquo;s calm-alone settings</div>
-          <div className="t-helper">Tune routines, reminders, and profile details for separation training.</div>
+          <div className="section-title">{name}&rsquo;s settings</div>
+          <div className="t-helper">Adjust reminders, routine settings, and profile details.</div>
 
           <DogProfileCard
             dogName={name}
@@ -114,10 +114,10 @@ export default function SettingsScreen(props) {
           />
 
           <div className="settings-group" role="list" aria-label="Training routine settings">
-            <div className="settings-section-label">Calm-alone routine</div>
+            <div className="settings-section-label">Training routine</div>
             <div className="settings-inline-card">
               <div className="settings-row-head">
-                <span className="settings-inline-title">Daily training reminder</span>
+                <span className="settings-inline-title">Daily reminder</span>
                 <button className={`notif-toggle secondary-control secondary-control--toggle ${notifEnabled ? "on" : ""}`} onClick={handleToggleNotif} type="button">{notifEnabled ? "On" : "Off"}</button>
               </div>
               <div className="settings-inline-row">
@@ -149,7 +149,7 @@ export default function SettingsScreen(props) {
 
           <div className="settings-group settings-group--muted" role="list" aria-label="Support destinations">
             <div className="settings-section-label">Help + diagnostics</div>
-            <SettingsNavRow label="Help" value="Guidance" onClick={() => setActivePanel(SETTINGS_PANEL.HELP)} />
+            <SettingsNavRow label="Help" value="How it works" onClick={() => setActivePanel(SETTINGS_PANEL.HELP)} />
             <SettingsNavRow label="Advanced" value="Diagnostics" onClick={() => setActivePanel(SETTINGS_PANEL.ADVANCED)} />
           </div>
 
@@ -180,7 +180,7 @@ export default function SettingsScreen(props) {
                 <div className={`settings-inline-reveal ${removeConfirmOpen ? "is-open" : ""}`} aria-hidden={!removeConfirmOpen}>
                   <div className="settings-danger-confirm">
                     <div className="settings-secondary-text">
-                      This removes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.
+                      This removes this dog&apos;s local sessions, walks, feedings, labels, and photo from this device only. Shared data on other devices stays the same.
                     </div>
                     <div className="settings-danger-actions">
                       <button type="button" className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={() => setRemoveConfirmOpen(false)}>Cancel</button>
@@ -241,12 +241,12 @@ export default function SettingsScreen(props) {
 
       {activePanel === SETTINGS_PANEL.HELP && (
         <SettingsSheet title="Help" titleId="settings-help-title" onClose={() => setActivePanel(null)}>
-              <div className="proto-section u-mt-none"><div className="proto-title">Sync devices</div><div className="proto-row">Share your Dog ID so everyone tracks the same calm-alone plan for {name}.</div></div>
-              <div className="proto-section"><div className="proto-title">Session flow</div><div className="proto-row">Start a calm-alone rep, return before stress escalates, then rate how {name} handled being alone.</div></div>
+              <div className="proto-section u-mt-none"><div className="proto-title">Sync devices</div><div className="proto-row">Share your Dog ID so everyone logs to the same plan for {name}.</div></div>
+              <div className="proto-section"><div className="proto-title">Session flow</div><div className="proto-row">Start a rep, return while {name} is still calm, then rate how it went.</div></div>
               <div className="proto-section"><div className="proto-title">Current recommendation state</div><div className="proto-row">Now: <strong>{recommendationType}</strong>. {recommendationSummary} It currently weighs {(recommendation?.details?.factors || []).join(" ")}</div></div>
               <div className="proto-section"><div className="proto-title">Recommendation states emitted</div><div className="proto-row">baseline_start, keep_same_duration, repeat_current_duration, departure_cues_first, recovery_mode_active, recovery_mode_resume.</div></div>
               <div className="proto-section"><div className="proto-title">Recovery behavior</div><div className="proto-row">Any subtle/active/severe distress can activate recovery. While recovery_mode_active, targets use short fixed steps (typically 60s then 120s; severe can add a third 120s step). Subtle recovery accepts any calm follow-up duration; active/severe count calm sessions at short recovery lengths. After enough calm sessions, recovery_mode_resume emits once, then normal progression continues.</div></div>
-              <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} calm-alone reps, {activeProto.maxDailyAloneMinutes} min/day, and {pattern.recMin}–{pattern.recMax} pattern-break supports.</div></div>
+              <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} reps, {activeProto.maxDailyAloneMinutes} min/day, and {pattern.recMin}–{pattern.recMax} pattern-break supports.</div></div>
         </SettingsSheet>
       )}
 
@@ -312,7 +312,7 @@ export default function SettingsScreen(props) {
       )}
 
       {trainingSettingsOpen && (
-        <SettingsSheet title="Edit calm-alone plan" titleId="training-settings-title" onClose={() => setTrainingSettingsOpen(false)}>
+        <SettingsSheet title="Edit training plan" titleId="training-settings-title" onClose={() => setTrainingSettingsOpen(false)}>
             <div className="share-sub">Adjust protocol values only if a trainer has advised you to. Full guidance is kept in Help.</div>
             {!protoWarnAck ? (
               <div className="proto-warn-banner">

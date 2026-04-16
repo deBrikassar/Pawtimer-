@@ -137,7 +137,7 @@ export function ProgressHero({
 
       <h3 className="stats-progress-headline">{headline || headlineStatus}</h3>
 
-      <div className="stats-progress-values" role="group" aria-label="Current value and next milestone">
+      <div className="stats-progress-values" role="group" aria-label="Current value and next step">
         <div className="stats-progress-value-block">
           <div className="stats-progress-value">{currentValue}</div>
           <div className="stats-progress-label">{currentLabel}</div>
@@ -154,7 +154,7 @@ export function ProgressHero({
           <div className="stats-progress-rail">
             <span className="stats-progress-rail-fill" style={{ width: `${Math.max(progressPct, 6)}%` }} />
           </div>
-          <span className="stats-progress-rail-text">{progressPct}% to milestone</span>
+          <span className="stats-progress-rail-text">{progressPct}% to next step</span>
         </div>
       ) : null}
 
@@ -233,7 +233,7 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
       <EmptyState
         media={<TrendIcon />}
         title="Almost there"
-        body={`Complete 2 more sessions to see ${name}'s progress chart and trends.`}
+        body={`Complete 2 more reps to see ${name}'s progress chart.`}
         ctaLabel="Start training →"
         onCta={() => setTab("home")}
       />
@@ -277,7 +277,7 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
   return (
     <div className="chart-wrap chart-wrap-full surface-card surface-card--chart">
       {insightLabel ? <div className="chart-insight">{insightLabel}</div> : null}
-      <div className="chart-title">Session duration over time (min)</div>
+      <div className="chart-title">Rep duration over time (min)</div>
       <div className="stats-progress-wave" role="img" aria-label={`${name}'s recent session durations`}>
         <svg viewBox={`0 0 ${WAVE_CHART_WIDTH} ${WAVE_CHART_HEIGHT}`} className="stats-progress-wave-svg" preserveAspectRatio="none">
           <defs>
