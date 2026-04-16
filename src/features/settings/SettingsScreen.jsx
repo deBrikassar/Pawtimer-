@@ -51,6 +51,7 @@ export default function SettingsScreen(props) {
   const [diagDetailsOpen, setDiagDetailsOpen] = useState(false);
   const [dangerOpen, setDangerOpen] = useState(false);
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
+  const [rerunSetupConfirmOpen, setRerunSetupConfirmOpen] = useState(false);
   const {
     name,
     activeDogId,
@@ -299,14 +300,29 @@ export default function SettingsScreen(props) {
         <SettingsSheet title="Account" titleId="settings-account-title" onClose={() => setActivePanel(null)} compact>
           <SettingsNavRow
             label={`Edit ${name}’s profile`}
-            value="Re-run setup"
-            onClick={() => {
-              if (window.confirm(`Re-run setup for ${name}? All sessions are kept.`)) {
-                setOnboardingState({ mode: "claim", dogId: activeDogId });
-                setScreen("onboard");
-              }
-            }}
+            value={rerunSetupConfirmOpen ? "Confirm below" : "Re-run setup"}
+            onClick={() => setRerunSetupConfirmOpen((prev) => !prev)}
           />
+          <div className={`settings-inline-reveal ${rerunSetupConfirmOpen ? "is-open" : ""}`} aria-hidden={!rerunSetupConfirmOpen}>
+            <div className="settings-danger-confirm">
+              <div className="settings-secondary-text">
+                Re-run setup for {name}? Existing reps and support logs are kept, and only onboarding preferences are refreshed.
+              </div>
+              <div className="settings-danger-actions">
+                <button type="button" className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={() => setRerunSetupConfirmOpen(false)}>Keep current setup</button>
+                <button
+                  type="button"
+                  className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button"
+                  onClick={() => {
+                    setOnboardingState({ mode: "claim", dogId: activeDogId });
+                    setScreen("onboard");
+                  }}
+                >
+                  Re-run setup
+                </button>
+              </div>
+            </div>
+          </div>
           <SettingsNavRow label="Switch dog" onClick={() => setScreen("select")} />
         </SettingsSheet>
       )}

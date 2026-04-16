@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import EmptyState from "../../components/EmptyState";
+import { InlineBanner } from "../../components/primitives";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
 import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, sessionDetailBadges, walkTypeLabel } from "../app/helpers";
@@ -307,15 +308,13 @@ export function useHistoryEditing({
       setHistoryModal(null);
     },
     clearSessions: () => {
-      if (window.confirm("Clear all training sessions?")) {
-        commitSessions((prev) => {
-          // Canonical bulk-clear sync contract:
-          // clear locally and emit per-session tombstones for durable retry.
-          prev.forEach((entry) => addTombstone("session", entry));
-          return [];
-        });
-        showToast("Sessions cleared");
-      }
+      commitSessions((prev) => {
+        // Canonical bulk-clear sync contract:
+        // clear locally and emit per-session tombstones for durable retry.
+        prev.forEach((entry) => addTombstone("session", entry));
+        return [];
+      });
+      showToast("Sessions cleared");
     },
   };
 }
@@ -335,6 +334,7 @@ const renderSyncBadge = (entry) => {
 export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
   const [expandedItemKey, setExpandedItemKey] = useState(null);
   const [sessionDetail, setSessionDetail] = useState(null);
+  const [clearSessionsConfirmOpen, setClearSessionsConfirmOpen] = useState(false);
   const parsedDuration = historyModal?.mode === "duration" ? parseDurationInput(historyModal.value) : null;
   const requiresPositiveDuration = historyModal?.kind === "session";
   const durationHasInput = historyModal?.mode === "duration" && String(historyModal.value ?? "").trim().length > 0;
@@ -542,8 +542,31 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               <div className="section-title">History</div>
               <div className="t-helper">A timeline of {name}&rsquo;s calm-alone reps and support routine.</div>
             </div>
-            {sessions.length > 0 && <button className="clear-btn surface-text-button secondary-control secondary-control--inline-text" onClick={actions.clearSessions}>Clear sessions</button>}
+            {sessions.length > 0 && <button className="clear-btn surface-text-button secondary-control secondary-control--inline-text" onClick={() => setClearSessionsConfirmOpen((prev) => !prev)}>{clearSessionsConfirmOpen ? "Cancel" : "Clear sessions"}</button>}
           </div>
+          {clearSessionsConfirmOpen && sessions.length > 0 ? (
+            <InlineBanner
+              className="history-clear-banner"
+              tone="warning"
+              title="Clear all calm-alone reps?"
+              body="This clears session entries from this device and sync queue. Walks, feeding logs, and pattern breaks stay untouched."
+              action={(
+                <div className="history-clear-banner-actions">
+                  <button className="button-base button-ghost button--sm button--pill" type="button" onClick={() => setClearSessionsConfirmOpen(false)}>Keep sessions</button>
+                  <button
+                    className="button-base button-danger button--sm button--pill"
+                    type="button"
+                    onClick={() => {
+                      actions.clearSessions();
+                      setClearSessionsConfirmOpen(false);
+                    }}
+                  >
+                    Clear now
+                  </button>
+                </div>
+              )}
+            />
+          ) : null}
           {timeline.length > 0 && (
             <div className="history-summary-surface">
               <div className="history-summary-grid">
@@ -705,8 +728,9 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
       </div>
 
       {historyModal && (
-        <div className="activity-time-overlay" role="dialog" aria-modal="true" aria-labelledby="history-modal-title" onClick={() => setHistoryModal(null)}>
-          <div className="activity-time-card history-modal-card modal-card modal-card--dialog-sm" onClick={(e) => e.stopPropagation()}>
+        <div className="activity-time-overlay quick-modal-overlay--sheet" role="dialog" aria-modal="true" aria-labelledby="history-modal-title" onClick={() => setHistoryModal(null)}>
+          <div className="activity-time-card history-modal-card modal-card modal-card--dialog-sm modal-card--sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="history-session-sheet-grabber" aria-hidden="true" />
             <div className="quick-modal-head">
               <div className="section-title section-title--flush" id="history-modal-title">
                 {historyModal.mode === "delete" ? `Delete ${historyModal.kind === "pattern" ? "pattern break" : historyModal.kind}` : `Edit ${historyModal.kind} ${historyModal.mode === "datetime" ? "date & time" : "duration"}`}
