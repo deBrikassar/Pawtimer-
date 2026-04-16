@@ -814,13 +814,46 @@ export default function PawTimer() {
 
   const openDog = (dog) => { logSyncDebug("openDog", { dogId: canonicalDogId(dog?.id) }); setOnboardingState(null); setActiveDogId(canonicalDogId(dog.id)); setScreen("app"); };
 
-  const handleDogSelect = async (id, isJoin = false) => {
+  const handleDogSelect = async (id, isJoin = false, options = {}) => {
     const normalizedId = canonicalDogId(id);
+    const mode = options?.mode || "join";
+    const isPreview = mode === "preview";
+    if (isPreview && isJoin) {
+      const localDog = dogs.find((dog) => canonicalDogId(dog.id) === normalizedId)
+        ?? ensureArray(load(DOGS_KEY, [])).find((dog) => canonicalDogId(dog.id) === normalizedId);
+      if (localDog) {
+        return {
+          ok: true,
+          normalizedId,
+          dogName: localDog?.dogName || "Shared dog profile",
+          source: "Already on this device",
+        };
+      }
+      if (!SYNC_ENABLED) {
+        return { ok: false, message: "Sync is currently unavailable on this device." };
+      }
+      const { result: remote, error } = await syncFetch(normalizedId);
+      setSyncDegradation(getSyncDegradationState());
+      if (!remote?.dog) {
+        return { ok: false, message: error || `No shared profile found for ${normalizedId} yet.` };
+      }
+      return {
+        ok: true,
+        normalizedId,
+        dogName: remote?.dog?.dogName || "Shared dog profile",
+        source: remote?.syncCapability?.mode === "partial" ? "Shared profile (partial sync)" : "Shared profile",
+      };
+    }
     if (isJoin && SYNC_ENABLED) {
       setSyncStatus("syncing");
       const { result: remote, error } = await syncFetch(normalizedId);
       setSyncDegradation(getSyncDegradationState());
-      if (!remote?.dog) { setSyncStatus("err"); setSyncError(error || `No shared dog account found for ${normalizedId}`); showToast(`No shared profile found for ${normalizedId} yet.`); return; }
+      if (!remote?.dog) {
+        setSyncStatus("err");
+        setSyncError(error || `No shared dog account found for ${normalizedId}`);
+        showToast(`No shared profile found for ${normalizedId} yet.`);
+        return { ok: false, message: `No shared profile found for ${normalizedId} yet.` };
+      }
       const sharedDog = normalizeDogSyncMetadata({ ...remote.dog, id: normalizedId });
       setDogs((prev) => {
         const existing = prev.find((d) => canonicalDogId(d.id) === normalizedId) ?? null;
@@ -889,12 +922,19 @@ export default function PawTimer() {
         showToast(`Joined shared profile ${normalizedId}.`);
       }
       openDog(sharedDog);
-      return;
+      return { ok: true, normalizedId, dogName: sharedDog?.dogName || "Shared dog profile" };
     }
     const existing = dogs.find((d) => canonicalDogId(d.id) === normalizedId) ?? ensureArray(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === normalizedId);
-    if (existing) { openDog(existing); return; }
-    if (isJoin) { setSyncStatus("err"); setSyncError(`No shared dog account found for ${normalizedId}`); showToast(`No shared profile found for ${normalizedId}. Check the ID and try again.`); }
-    else { setOnboardingState({ mode: "claim", dogId: normalizedId }); setActiveDogId(normalizedId); setScreen("onboard"); }
+    if (existing) { openDog(existing); return { ok: true, normalizedId, dogName: existing?.dogName || "Shared dog profile" }; }
+    if (isJoin) {
+      setSyncStatus("err");
+      setSyncError(`No shared dog account found for ${normalizedId}`);
+      showToast(`No shared profile found for ${normalizedId}. Check the ID and try again.`);
+      return { ok: false, message: `No shared profile found for ${normalizedId}.` };
+    } else {
+      setOnboardingState({ mode: "claim", dogId: normalizedId }); setActiveDogId(normalizedId); setScreen("onboard");
+      return { ok: true, normalizedId };
+    }
   };
 
   const handleOnboardComplete = (data) => {
