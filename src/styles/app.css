@@ -660,6 +660,66 @@
     line-height:var(--type-helper-text-line);
   }
   .train-today { padding:12px 14px; border-radius:18px; }
+  .train-today-body {
+    transition:max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin:top center;
+  }
+  .train-today-body.open { transform:translateY(0); }
+  .train-today-body.closed { transform:translateY(-4px); }
+  .train-today-list {
+    display:grid;
+    gap:8px;
+  }
+  .train-today-row {
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:var(--space-control-gap);
+    border:1px solid color-mix(in srgb, var(--border) 88%, var(--surface-muted));
+    background:color-mix(in srgb, var(--surf) 96%, var(--surface-muted));
+    border-radius:12px;
+    padding:10px 12px;
+    color:var(--text);
+    font:inherit;
+    text-align:left;
+  }
+  .train-today-row--action {
+    cursor:pointer;
+    transition:border-color var(--motion-base) var(--ease-out), background var(--motion-base) var(--ease-out), transform var(--motion-press) var(--ease-out);
+  }
+  .train-today-row--action:hover {
+    border-color:color-mix(in srgb, var(--mutedBlue) 30%, var(--border));
+    background:color-mix(in srgb, var(--surface-muted) 86%, var(--warm-accent-soft));
+  }
+  .train-today-row--action:active { transform:scale(0.99); }
+  .train-today-row.warn { border-color:color-mix(in srgb, var(--amber) 40%, var(--border)); }
+  .train-today-row__label {
+    font-size:var(--type-body-size);
+    font-weight:var(--type-body-weight);
+    color:var(--brown);
+  }
+  .train-today-row__meta {
+    font-size:var(--type-helper-text-size);
+    color:var(--text-muted);
+    white-space:nowrap;
+  }
+  .train-today-mini-log {
+    border-top:1px solid color-mix(in srgb, var(--border) 74%, transparent);
+    margin-top:6px;
+    padding-top:8px;
+    display:grid;
+    gap:2px;
+  }
+  .train-today-mini-log__row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    color:var(--text-muted);
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+    padding:5px 2px;
+  }
   .ring-sub-btn {
     margin-top:var(--space-card-row-gap);
     font-size:var(--type-metric-label-size);

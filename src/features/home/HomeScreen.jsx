@@ -66,6 +66,11 @@ export default function HomeScreen(props) {
     || "We temporarily adjusted session targets to rebuild calm confidence before progression resumes.";
   const [todayOpen, setTodayOpen] = useState(false);
   const [trainExplainOpen, setTrainExplainOpen] = useState(false);
+  const todaySessions = sessions.filter((s) => isToday(s.date));
+  const todayFeedingCount = feedings.filter((f) => isToday(f.date)).length;
+  const recentSessionLogs = [...todaySessions]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 4);
   const sessionBlockedMessage = daily.blockReason === "cap"
     ? `Daily alone-time cap reached (${fmtClock(daily.capSec)}). Log more sessions tomorrow.`
     : daily.blockReason === "max_sessions"
@@ -203,27 +208,41 @@ export default function HomeScreen(props) {
             onClick={() => setTodayOpen((prev) => !prev)}
           >
             <div>
-              <div className="section-title section-title--flush">Today</div>
-              <div className="t-helper">{daily.count} session logs · support routines</div>
+              <div className="section-title section-title--flush">Today&apos;s logs</div>
+              <div className="t-helper">{todaySessions.length} calm sessions · support activity</div>
             </div>
             <span className="settings-collapsible-arrow" aria-hidden="true">{todayOpen ? "−" : "+"}</span>
           </button>
-          <div className={`collapsible-body ${todayOpen ? "open" : "closed"}`}>
+          <div className={`collapsible-body train-today-body ${todayOpen ? "open" : "closed"}`}>
             <div className="settings-collapsible-inner">
-              <div className="quick-actions-row">
-                <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
-                  <span className="quick-action-label">Walk</span>
-                  <span className="quick-action-meta">{walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `Today: ${pattern.todayWalks}`}</span>
+              <div className="train-today-list" role="list" aria-label="Today's logged activity">
+                <div className="train-today-row" role="listitem">
+                  <span className="train-today-row__label">Calm sessions</span>
+                  <span className="train-today-row__meta">{todaySessions.length} logged</span>
+                </div>
+                <button className="train-today-row train-today-row--action" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
+                  <span className="train-today-row__label">Walk</span>
+                  <span className="train-today-row__meta">{walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `${pattern.todayWalks} today`}</span>
                 </button>
-                <button className={`quick-action-btn ${pattern.behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
-                  <span className="quick-action-label">Pattern break</span>
-                  <span className="quick-action-meta">Today: {pattern.todayPat}</span>
+                <button className={`train-today-row train-today-row--action ${pattern.behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
+                  <span className="train-today-row__label">Pattern break</span>
+                  <span className="train-today-row__meta">{pattern.todayPat} today</span>
                 </button>
-                <button className="quick-action-btn" type="button" onClick={openFeedingForm}>
-                  <span className="quick-action-label">Feeding</span>
-                  <span className="quick-action-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
+                <button className="train-today-row train-today-row--action" type="button" onClick={openFeedingForm}>
+                  <span className="train-today-row__label">Feeding</span>
+                  <span className="train-today-row__meta">{todayFeedingCount} today</span>
                 </button>
               </div>
+              {recentSessionLogs.length > 0 && (
+                <div className="train-today-mini-log" role="list" aria-label="Recent calm sessions">
+                  {recentSessionLogs.map((session) => (
+                    <div className="train-today-mini-log__row" role="listitem" key={session.id || `${session.date}-${session.actualDuration || 0}`}>
+                      <span>{new Date(session.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
+                      <span>{fmt(session.actualDuration || session.seconds || 0)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </section>
