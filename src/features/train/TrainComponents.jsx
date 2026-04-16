@@ -90,7 +90,7 @@ export function SessionControl({
           : `${name}'s calm hold for this rep`
         : `Next target for ${name}`;
   const helperCaption = displayState === "active"
-    ? (isPastTarget ? `+${fmt(overTargetSeconds)} calm hold` : `${fmt(elapsed)} completed this rep`)
+    ? (isPastTarget ? `+${fmt(overTargetSeconds)} calm hold` : `${fmt(elapsed)} completed this rep · keep departures quiet and predictable`)
     : displayState === "warning"
       ? "Come back tomorrow for the next rep"
       : "Short reps build comfort with alone time";

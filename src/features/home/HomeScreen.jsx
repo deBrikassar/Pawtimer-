@@ -134,6 +134,7 @@ export default function HomeScreen(props) {
               <div className="train-inline-explain" role="note" aria-live="polite">
                 <p><strong>Circle:</strong> this is {name}&apos;s target for one rep. The ring fills as calm alone time is completed.</p>
                 <p><strong>Target ({fmtClock(target)}):</strong> your current safe step. End while {name} is still relaxed.</p>
+                <p><strong>Session flow:</strong> start, observe calm body language, then end and rate what you saw.</p>
               </div>
             )}
           </div>
@@ -153,6 +154,11 @@ export default function HomeScreen(props) {
             <div className="train-inline-tip" role="note">
               <span className="train-inline-tip__label">Targets adapt to your dog</span>
               <span className="train-inline-tip__copy">Calm reps nudge targets up. Stress signs nudge them down.</span>
+              <ol className="train-inline-tip__steps">
+                <li>Press <strong>Start rep</strong> when the space is calm.</li>
+                <li>Watch quietly, then end before stress builds.</li>
+                <li>Rate what you saw so tomorrow&apos;s target fits better.</li>
+              </ol>
               <button
                 type="button"
                 className="train-inline-tip__dismiss"
