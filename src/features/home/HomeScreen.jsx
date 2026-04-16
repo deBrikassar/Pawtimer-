@@ -100,7 +100,7 @@ export default function HomeScreen(props) {
           <div className="train-identity-header__copy">
             <div className="train-identity-header__eyebrow">{name}'s calm practice</div>
             <h2 className="train-identity-header__name">Train with {name}</h2>
-            <p className="train-identity-header__mood">A short, gentle rep to help {name} feel safer when alone.</p>
+            <p className="train-identity-header__mood">Short, humane separation reps to help {name} stay calm during real departures.</p>
           </div>
         </header>
 
@@ -128,18 +128,18 @@ export default function HomeScreen(props) {
               aria-expanded={trainExplainOpen}
             >
               <span className="train-inline-guidance__label">Tap to explain</span>
-              <span className="train-inline-guidance__copy">What this circle and target mean</span>
+              <span className="train-inline-guidance__copy">How this calm circle connects to separation training</span>
             </button>
             {trainExplainOpen && (
               <div className="train-inline-explain" role="note" aria-live="polite">
-                <p><strong>Big circle:</strong> this rep's timer. During a session, the number counts down and the ring fills as calm time is completed.</p>
-                <p><strong>Target time ({fmtClock(target)}):</strong> your current safe goal for one calm rep. End while {name} is still settled.</p>
+                <p><strong>Big circle:</strong> this is {name}&apos;s calm-alone window for one rep. The ring fills as settled alone time is completed.</p>
+                <p><strong>Target time ({fmtClock(target)}):</strong> your current safe threshold before stress rises. End while {name} is still relaxed.</p>
               </div>
             )}
           </div>
         )}
         <section className="train-context-block surface-card">
-          <p className="train-context-block__title">Today's target time</p>
+          <p className="train-context-block__title">Today&apos;s calm-alone target</p>
           <p className="train-context-block__value">{fmtClock(target)} calm for {name}</p>
           <p className="train-context-block__meta">
             Sessions today: <strong>{daily.count}</strong> · Daily pace target: <strong>{fmt(goalSec)}</strong>
@@ -155,8 +155,8 @@ export default function HomeScreen(props) {
               className="train-inline-guidance"
               onClick={dismissTrainFirstRunHint}
             >
-              <span className="train-inline-guidance__label">Target adapts gently</span>
-              <span className="train-inline-guidance__copy">Calm reps step up over time. Stress signs lower the next goal.</span>
+              <span className="train-inline-guidance__label">Targets adapt to your dog</span>
+              <span className="train-inline-guidance__copy">Consistent calm nudges targets upward. Stress signs bring the next step down.</span>
             </button>
           )}
           {phase === "idle" && recoveryMode?.active && (
@@ -204,8 +204,8 @@ export default function HomeScreen(props) {
             onClick={() => setTodayOpen((prev) => !prev)}
           >
             <div>
-              <div className="section-title section-title--flush">Today&apos;s logs</div>
-              <div className="t-helper">{todaySessions.length} calm sessions · support activity</div>
+              <div className="section-title section-title--flush">Today&apos;s training + care log</div>
+              <div className="t-helper">{todaySessions.length} calm-alone reps · support activity</div>
             </div>
             <span className="settings-collapsible-arrow" aria-hidden="true">{todayOpen ? "−" : "+"}</span>
           </button>
@@ -213,7 +213,7 @@ export default function HomeScreen(props) {
             <div className="settings-collapsible-inner">
               <div className="train-today-list" role="list" aria-label="Today's logged activity">
                 <div className="train-today-row" role="listitem">
-                  <span className="train-today-row__label">Calm sessions</span>
+                  <span className="train-today-row__label">Calm-alone reps</span>
                   <span className="train-today-row__meta">{todaySessions.length} logged</span>
                 </div>
                 <button className="train-today-row train-today-row--action" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
@@ -230,7 +230,7 @@ export default function HomeScreen(props) {
                 </button>
               </div>
               {recentSessionLogs.length > 0 && (
-                <div className="train-today-mini-log" role="list" aria-label="Recent calm sessions">
+                <div className="train-today-mini-log" role="list" aria-label="Recent calm-alone reps">
                   {recentSessionLogs.map((session) => (
                     <div className="train-today-mini-log__row" role="listitem" key={session.id || `${session.date}-${session.actualDuration || 0}`}>
                       <span>{new Date(session.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>

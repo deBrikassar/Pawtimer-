@@ -30,7 +30,7 @@ function SessionActionRow({
         onClick={handlePrimary}
         disabled={!isRunning && !canRunStart && !canExplain}
       >
-        {isRunning ? "End and save session" : "Start calm session"}
+        {isRunning ? "End and save rep" : "Start calm-alone rep"}
       </button>
       <button
         className="session-cancel-btn button-base button-ghost button--md button--pill"
@@ -38,7 +38,7 @@ function SessionActionRow({
         aria-hidden={!isRunning}
         tabIndex={isRunning ? 0 : -1}
       >
-        Cancel session (don&apos;t save)
+        Cancel rep (don&apos;t save)
       </button>
       {!isRunning && !canStart && (
         <p className="session-action-meta" role="status">{startBlockedMessage}</p>
@@ -81,19 +81,19 @@ export function SessionControl({
         ? "active"
         : "idle";
   const innerCaption = displayState === "warning"
-    ? "Calm practice is paused for today"
+    ? "Calm-alone practice is paused for today"
     : displayState === "success"
       ? `${name} hit this calm target`
       : displayState === "active"
         ? isPastTarget
           ? `Past target — end while ${name} is still settled`
           : `${name}'s calm hold for this rep`
-        : `Next calm session target for ${name}`;
+        : `Next calm-alone target for ${name}`;
   const helperCaption = displayState === "active"
     ? (isPastTarget ? `+${fmt(overTargetSeconds)} calm hold` : `${fmt(elapsed)} completed this rep`)
     : displayState === "warning"
       ? "Come back tomorrow for the next rep"
-      : "Builds comfort with short solo reps";
+      : "Builds calm alone-time tolerance with short reps";
 
   const startWithFeedback = () => {
     if (!onStart || !canStart) return;
@@ -151,7 +151,7 @@ export function SessionControl({
               <div className="sc-caption">{innerCaption}</div>
               <div className="sc-support">{helperCaption}</div>
               <div className={`sc-state-chip ${isRunning ? "is-running" : ""}`}>
-                {isRunning ? `Session live · ${fmt(elapsed)} elapsed` : "Ready when you are"}
+                {isRunning ? `Rep live · ${fmt(elapsed)} elapsed` : "Ready for a calm-alone rep"}
               </div>
             </div>
           </div>
@@ -210,9 +210,9 @@ export function SessionRatingPanel({
     <div className="rating-overlay" role="presentation">
       <div className="rating-screen session-feedback modal-card modal-card--dialog-md rating-sheet" role="dialog" aria-modal="true" aria-labelledby="session-rating-title" aria-describedby="session-rating-sub">
         <div className="rating-sheet-grabber" aria-hidden="true" />
-        <div className="rating-title" id="session-rating-title">Was there any stress?</div>
+        <div className="rating-title" id="session-rating-title">How did {name} handle being alone?</div>
         <div className="rating-sub" id="session-rating-sub">
-          {fmt(finalElapsed)} session with {name}. Your choice updates the next training target.
+          {fmt(finalElapsed)} alone-time rep with {name}. Your choice adjusts the next target gently.
         </div>
         <div className="result-grid">
           <button className="btn-result btn-none" onClick={() => recordResult("none")}>
