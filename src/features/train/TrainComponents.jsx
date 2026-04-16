@@ -20,6 +20,7 @@ export function SessionControl({
   fmt,
   canStart = true,
   startBlockedMessage = "Session limit reached for today.",
+  allowIdlePress = true,
 }) {
   const [pressing, setPressing] = useState(false);
   const remaining = Math.max(target - elapsed, 0);
@@ -42,20 +43,22 @@ export function SessionControl({
     }, 120);
   };
 
+  const idleCanPress = allowIdlePress && canStart && Boolean(onStart);
+
   return (
     <>
       {phase !== "rating" && (<div className="session-control-wrap">
         <button
           className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""} ${isPastTarget ? "is-over-target" : ""}`}
-          onClick={isIdle && canStart ? startWithFeedback : undefined}
-          disabled={isIdle && !canStart}
+          onClick={isIdle && idleCanPress ? startWithFeedback : undefined}
+          disabled={isIdle && !idleCanPress}
           aria-label={isRunning
             ? (isPastTarget
               ? `${fmt(overTargetSeconds)} over target in current session`
               : `${fmt(remainingSeconds)} remaining in current session`)
-            : canStart
+            : idleCanPress
               ? `Start ${fmt(target)} session`
-              : startBlockedMessage}
+              : canStart ? `Ready for ${fmt(target)} session` : startBlockedMessage}
           aria-live={isRunning ? "polite" : undefined}
         >
           <svg className="sc-ring-svg" viewBox="0 0 226 226" aria-hidden="true">

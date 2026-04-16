@@ -503,6 +503,88 @@
     margin-top:var(--space-card-row-gap);
     width:100%;
   }
+  .train-identity-header {
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:18px;
+    border-radius:20px;
+    background:linear-gradient(180deg, color-mix(in srgb, var(--surf) 96%, white), color-mix(in srgb, var(--surface-muted) 90%, white));
+    border:1px solid color-mix(in srgb, var(--border) 82%, white);
+  }
+  .train-identity-header__badge {
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    background:color-mix(in srgb, var(--green) 18%, var(--surface-muted));
+    box-shadow:0 6px 16px color-mix(in srgb, var(--surface-overlay-soft) 18%, transparent);
+    flex:0 0 auto;
+  }
+  .train-identity-header__copy { min-width:0; }
+  .train-identity-header__eyebrow {
+    font-size:var(--type-helper-text-size);
+    color:var(--text-muted);
+    text-transform:uppercase;
+    letter-spacing:var(--type-helper-text-track);
+    margin-bottom:2px;
+  }
+  .train-identity-header__name {
+    margin:0;
+    color:var(--brown);
+    font-size:var(--type-card-heading-size);
+    line-height:var(--type-card-heading-line);
+  }
+  .train-identity-header__mood {
+    margin:4px 0 0;
+    color:var(--text-muted);
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+  }
+  .train-primary-cta {
+    width:min(100%, 280px);
+    margin:2px auto 0;
+    transition:transform 180ms ease, box-shadow 220ms ease, opacity 180ms ease;
+  }
+  .train-primary-cta:not(:disabled):hover { transform:translateY(-1px); }
+  .train-context-block {
+    text-align:center;
+    padding:18px 16px;
+    border-radius:18px;
+    border:1px solid color-mix(in srgb, var(--border) 80%, white);
+    background:color-mix(in srgb, var(--surf) 94%, white);
+  }
+  .train-context-block__title {
+    margin:0;
+    text-transform:uppercase;
+    letter-spacing:var(--type-helper-text-track);
+    color:var(--text-muted);
+    font-size:var(--type-helper-text-size);
+  }
+  .train-context-block__value {
+    margin:6px 0 2px;
+    color:var(--brown);
+    font-size:var(--type-metric-xl-size);
+    line-height:var(--type-metric-xl-line);
+    font-weight:var(--type-metric-xl-weight);
+    letter-spacing:var(--type-metric-xl-track);
+  }
+  .train-context-block__meta {
+    margin:0;
+    color:var(--text-muted);
+    font-size:var(--type-helper-text-size);
+  }
+  .train-recovery-link {
+    border:none;
+    background:transparent;
+    color:var(--amber);
+    font-size:var(--type-helper-text-size);
+    margin:0 auto;
+    text-decoration:underline;
+    text-underline-offset:2px;
+  }
+  .train-today { padding:12px 14px; border-radius:18px; }
   .ring-sub-btn {
     margin-top:var(--space-card-row-gap);
     font-size:var(--type-metric-label-size);

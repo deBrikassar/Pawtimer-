@@ -1,4 +1,4 @@
-import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
+import { SessionControl, SessionRatingPanel } from "../train/TrainComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton } from "../app/ui";
 import { useState } from "react";
@@ -8,7 +8,6 @@ export default function HomeScreen(props) {
     name,
     sessions,
     recommendation,
-    goalPct,
     goalSec,
     phase,
     elapsed,
@@ -66,6 +65,7 @@ export default function HomeScreen(props) {
     || recommendation?.explanation
     || "We temporarily adjusted session targets to rebuild calm confidence before progression resumes.";
   const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
+  const [todayOpen, setTodayOpen] = useState(false);
   const sessionBlockedMessage = daily.blockReason === "cap"
     ? `Daily alone-time cap reached (${fmtClock(daily.capSec)}). Log more sessions tomorrow.`
     : daily.blockReason === "max_sessions"
@@ -75,7 +75,16 @@ export default function HomeScreen(props) {
   return (
     <div className="tab-content train-screen">
       <div className="train-main">
-        <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} />
+        <header className="train-identity-header surface-card">
+          <div className="train-identity-header__badge" aria-hidden="true">
+            <Img src="hero-dog.png" size={36} alt="" />
+          </div>
+          <div className="train-identity-header__copy">
+            <div className="train-identity-header__eyebrow">Training with</div>
+            <h2 className="train-identity-header__name">{name}</h2>
+            <p className="train-identity-header__mood">Build calm confidence, one short separation at a time.</p>
+          </div>
+        </header>
 
         <SessionControl
           phase={phase}
@@ -88,7 +97,26 @@ export default function HomeScreen(props) {
           fmt={fmt}
           canStart={daily.canAdd}
           startBlockedMessage={sessionBlockedMessage}
+          allowIdlePress={false}
         />
+        {phase === "idle" && (
+          <button
+            type="button"
+            className="train-primary-cta button-base button-primary button--lg button--pill"
+            onClick={startSession}
+            disabled={!daily.canAdd}
+          >
+            Start calm session
+          </button>
+        )}
+
+        <section className="train-context-block surface-card">
+          <p className="train-context-block__title">Today’s calm target</p>
+          <p className="train-context-block__value">{fmtClock(target)}</p>
+          <p className="train-context-block__meta">
+            Logged today: <strong>{daily.count}</strong> · Goal pace: <strong>{fmt(goalSec)}</strong>
+          </p>
+        </section>
 
         <SessionRatingPanel
           phase={phase}
@@ -107,23 +135,20 @@ export default function HomeScreen(props) {
           distressTypes={DISTRESS_TYPES}
         />
 
-        {phase === "idle" && (
-          <button
-            type="button"
-            className={`train-focus-strip ${recoveryMode?.active ? "train-focus-strip--recovery" : ""}`.trim()}
-            onClick={recoveryMode?.active ? () => setShowRecoveryInfo(true) : undefined}
-            disabled={!recoveryMode?.active}
-          >
-            <span className="train-focus-strip__label">Focus now</span>
-            <span className="train-focus-strip__value">{fmtClock(target)} calm session</span>
-            <span className="train-focus-strip__meta">{daily.count} logged today</span>
-          </button>
-        )}
         {phase === "idle" && showTrainFirstRunHint && (
           <div className="train-inline-guidance" role="note" aria-live="polite">
             <span className="train-inline-guidance__label">Target adapts</span>
             <span className="train-inline-guidance__copy">Calm runs nudge up. Stress signs can step time down.</span>
           </div>
+        )}
+        {phase === "idle" && recoveryMode?.active && (
+          <button
+            type="button"
+            className="train-recovery-link"
+            onClick={() => setShowRecoveryInfo(true)}
+          >
+            Recovery plan active · view steps
+          </button>
         )}
         {showRecoveryInfo && recoveryMode?.active && (
           <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => setShowRecoveryInfo(false)}>
@@ -186,24 +211,38 @@ export default function HomeScreen(props) {
           </p>
         )}
 
-        <div className="tool-group-card surface-card surface-card--tool-group">
-          <div className="section-title">Support routines</div>
-          <div className="t-helper">Quick log items that support training, without leaving Train.</div>
-          <div className="quick-actions-row">
-            <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
-              <span className="quick-action-label">Walk</span>
-              <span className="quick-action-meta">{walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `Today: ${pattern.todayWalks}`}</span>
-            </button>
-            <button className={`quick-action-btn ${pattern.behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
-              <span className="quick-action-label">Pattern break</span>
-              <span className="quick-action-meta">Today: {pattern.todayPat}</span>
-            </button>
-            <button className="quick-action-btn" type="button" onClick={openFeedingForm}>
-              <span className="quick-action-label">Feeding</span>
-              <span className="quick-action-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
-            </button>
+        <section className="train-today surface-card settings-collapsible-card settings-collapsible-card--quiet">
+          <button
+            type="button"
+            className="settings-collapsible-toggle secondary-control--toggle"
+            aria-expanded={todayOpen}
+            onClick={() => setTodayOpen((prev) => !prev)}
+          >
+            <div>
+              <div className="section-title section-title--flush">Today</div>
+              <div className="t-helper">{daily.count} session logs · support routines</div>
+            </div>
+            <span className="settings-collapsible-arrow" aria-hidden="true">{todayOpen ? "−" : "+"}</span>
+          </button>
+          <div className={`collapsible-body ${todayOpen ? "open" : "closed"}`}>
+            <div className="settings-collapsible-inner">
+              <div className="quick-actions-row">
+                <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
+                  <span className="quick-action-label">Walk</span>
+                  <span className="quick-action-meta">{walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `Today: ${pattern.todayWalks}`}</span>
+                </button>
+                <button className={`quick-action-btn ${pattern.behind ? "warn" : ""}`} type="button" onClick={() => setPatOpen(true)}>
+                  <span className="quick-action-label">Pattern break</span>
+                  <span className="quick-action-meta">Today: {pattern.todayPat}</span>
+                </button>
+                <button className="quick-action-btn" type="button" onClick={openFeedingForm}>
+                  <span className="quick-action-label">Feeding</span>
+                  <span className="quick-action-meta">Today: {feedings.filter((f) => isToday(f.date)).length}</span>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
 
         {(walkPhase !== "idle" || patOpen) && (
           <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
