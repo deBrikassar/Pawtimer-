@@ -90,10 +90,10 @@ export function StatsSupportRow({ label, value }) {
 }
 
 export function StatsInsightCard({ message, detail, tone = "neutral", index = 0 }) {
+  const staggerIndex = Math.max(0, Math.min(index, 5));
   return (
     <article
-      className={`stats-insight-card stats-insight-card--${tone}`.trim()}
-      style={{ "--insight-index": index }}
+      className={`stats-insight-card stats-insight-card--${tone} stats-insight-card--stagger-${staggerIndex}`.trim()}
       aria-live="polite"
     >
       <p className="stats-insight-message">{message}</p>
@@ -151,9 +151,10 @@ export function ProgressHero({
 
       {progressPct != null ? (
         <div className="stats-progress-rail-wrap" aria-label={`${progressPct}% toward next target`}>
-          <div className="stats-progress-rail">
-            <span className="stats-progress-rail-fill" style={{ width: `${Math.max(progressPct, 6)}%` }} />
-          </div>
+          <svg className="stats-progress-rail" viewBox="0 0 100 7" preserveAspectRatio="none" aria-hidden="true">
+            <rect className="stats-progress-rail-track" x="0" y="0" width="100" height="7" rx="3.5" ry="3.5" />
+            <rect className="stats-progress-rail-fill" x="0" y="0" width={Math.max(progressPct, 6)} height="7" rx="3.5" ry="3.5" />
+          </svg>
           <span className="stats-progress-rail-text">{progressPct}% to next step</span>
         </div>
       ) : null}

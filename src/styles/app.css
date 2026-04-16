@@ -360,14 +360,9 @@
     transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1);
   }
   .prog-thumb {
-    position:absolute;
-    top:50%;
-    width:6px;
-    height:6px;
-    border-radius:50%;
-    transform:translate(-50%, -50%);
-    border:1.35px solid var(--surf);
-    background:var(--progress-thumb-core-bg);
+    fill:var(--progress-thumb-core-bg);
+    stroke:var(--surf);
+    stroke-width:0.85;
     filter:drop-shadow(0 1px 4px color-mix(in srgb, var(--green-dark) 25%, transparent));
   }
   .prog-meta  { display:flex; justify-content:space-between; margin-top:var(--space-1); font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); color:var(--text-muted); font-weight:var(--type-secondary-weight); }
@@ -831,18 +826,10 @@
   .train-today-mini-log {
     border-top:1px solid color-mix(in srgb, var(--border) 74%, transparent);
     margin-top:6px;
-    padding-top:8px;
-    display:grid;
-    gap:2px;
-  }
-  .train-today-mini-log__row {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+    padding:8px 2px 2px;
     color:var(--text-muted);
     font-size:var(--type-helper-text-size);
     line-height:var(--type-helper-text-line);
-    padding:5px 2px;
   }
   .ring-sub-btn {
     margin-top:var(--space-card-row-gap);
@@ -1616,8 +1603,9 @@
   .stats-progress-label { font-size:var(--type-metric-label-size); line-height:var(--type-metric-label-line); letter-spacing:var(--type-metric-label-track); font-weight:var(--type-metric-label-weight); color:var(--text-muted); }
   .stats-progress-value-divider { width:1px; align-self:stretch; background:color-mix(in srgb, var(--border) 78%, transparent); }
   .stats-progress-rail-wrap { position:relative; z-index:1; display:grid; gap:5px; }
-  .stats-progress-rail { height:7px; border-radius:999px; background:color-mix(in srgb, var(--green-light) 18%, var(--surf)); overflow:hidden; border:1px solid color-mix(in srgb, var(--green-dark) 16%, transparent); }
-  .stats-progress-rail-fill { display:block; height:100%; min-width:6%; background:linear-gradient(90deg, color-mix(in srgb, var(--green-dark) 90%, var(--brown)), var(--green)); border-radius:inherit; transition:width 620ms var(--ease-out); animation:statsRailBreathe 3.2s ease-in-out infinite; }
+  .stats-progress-rail { display:block; width:100%; height:7px; }
+  .stats-progress-rail-track { fill:color-mix(in srgb, var(--green-light) 18%, var(--surf)); stroke:color-mix(in srgb, var(--green-dark) 16%, transparent); stroke-width:0.6; }
+  .stats-progress-rail-fill { fill:color-mix(in srgb, var(--green-dark) 86%, var(--brown)); animation:statsRailBreathe 3.2s ease-in-out infinite; }
   .stats-progress-rail-text { font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); color:var(--text-muted); }
   .stats-progress-insight { position:relative; z-index:1; margin:0; font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:color-mix(in srgb, var(--text) 90%, var(--text-muted)); max-width:56ch; }
 
@@ -1675,8 +1663,13 @@
     gap:4px;
     box-shadow:var(--shadow);
     animation:statsInsightEnter 460ms var(--ease-out) both;
-    animation-delay:calc(var(--insight-index, 0) * 80ms);
   }
+  .stats-insight-card--stagger-0 { animation-delay:0ms; }
+  .stats-insight-card--stagger-1 { animation-delay:80ms; }
+  .stats-insight-card--stagger-2 { animation-delay:160ms; }
+  .stats-insight-card--stagger-3 { animation-delay:240ms; }
+  .stats-insight-card--stagger-4 { animation-delay:320ms; }
+  .stats-insight-card--stagger-5 { animation-delay:400ms; }
   .stats-insight-card::after {
     content:"";
     position:absolute;
