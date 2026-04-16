@@ -703,6 +703,39 @@
     color:var(--text-muted);
     line-height:var(--type-helper-text-line);
   }
+  .train-time-change-insight {
+    margin-top:10px;
+    border-radius:12px;
+    border:1px solid color-mix(in srgb, var(--border) 80%, white);
+    background:color-mix(in srgb, var(--surface-muted) 84%, var(--surf));
+    padding:10px 12px;
+    text-align:left;
+    animation:trainInsightFadeIn 220ms ease-out;
+  }
+  .train-time-change-insight.is-positive {
+    border-color:color-mix(in srgb, var(--green) 34%, var(--border));
+    background:color-mix(in srgb, var(--green) 14%, var(--surf));
+  }
+  .train-time-change-insight.is-caution {
+    border-color:color-mix(in srgb, var(--amber) 42%, var(--border));
+    background:color-mix(in srgb, var(--amber) 14%, var(--surf));
+  }
+  .train-time-change-insight__title {
+    margin:0;
+    font-size:var(--type-helper-text-size);
+    font-weight:600;
+    color:var(--brown);
+  }
+  .train-time-change-insight__copy {
+    margin:4px 0 0;
+    font-size:var(--type-helper-text-size);
+    color:var(--text-muted);
+    line-height:var(--type-helper-text-line);
+  }
+  @keyframes trainInsightFadeIn {
+    from { opacity:0; transform:translateY(4px); }
+    to { opacity:1; transform:translateY(0); }
+  }
   .train-today { padding:12px 14px; border-radius:18px; }
   .train-today-body {
     transition:max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
