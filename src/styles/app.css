@@ -451,9 +451,57 @@
   .train-focus-strip__label { font-size:var(--type-helper-text-size); color:var(--text-muted); text-transform:uppercase; letter-spacing:var(--type-helper-text-track); }
   .train-focus-strip__value { font-weight:600; color:var(--brown); }
   .train-focus-strip__meta { font-size:var(--type-helper-text-size); color:var(--text-muted); }
+  .train-inline-guidance {
+    margin-top:10px;
+    padding:10px 12px;
+    border:1px solid color-mix(in srgb, var(--primaryBlue) 24%, var(--border));
+    border-radius:14px;
+    background:linear-gradient(180deg, color-mix(in srgb, var(--surface-muted) 94%, white), color-mix(in srgb, var(--surf) 97%, var(--surface-muted)));
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .train-inline-guidance__label {
+    font-size:var(--type-helper-text-size);
+    font-weight:600;
+    color:var(--primaryBlue);
+    letter-spacing:var(--type-helper-text-track);
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .train-inline-guidance__copy {
+    font-size:var(--type-helper-text-size);
+    color:var(--text-muted);
+    text-align:right;
+  }
   .train-focus-strip--recovery {
     border-color:color-mix(in srgb, var(--warning) 30%, var(--border));
     box-shadow:0 0 0 1px color-mix(in srgb, var(--warning) 15%, transparent);
+  }
+  .train-first-run-overlay { z-index:205; }
+  .train-first-run-card {
+    border:1px solid color-mix(in srgb, var(--primaryBlue) 20%, var(--border));
+    background:linear-gradient(180deg, color-mix(in srgb, var(--surf) 95%, white), color-mix(in srgb, var(--surface-muted) 94%, var(--primaryBlue-weak)));
+    box-shadow:0 18px 38px color-mix(in srgb, var(--surface-overlay-strong) 36%, transparent);
+  }
+  .train-first-run-card__eyebrow {
+    margin-bottom:4px;
+    font-size:var(--type-helper-text-size);
+    color:var(--text-muted);
+    text-transform:uppercase;
+    letter-spacing:var(--type-helper-text-track);
+  }
+  .train-first-run-card__copy {
+    margin:var(--space-card-row-gap) 0 0;
+    color:color-mix(in srgb, var(--brown) 88%, var(--text));
+    font-size:var(--type-list-row-secondary-size);
+    line-height:var(--type-list-row-secondary-line);
+  }
+  .train-first-run-card__copy strong { color:var(--brown); }
+  .train-first-run-card__cta {
+    margin-top:var(--space-card-row-gap);
+    width:100%;
   }
   .ring-sub-btn {
     margin-top:var(--space-card-row-gap);

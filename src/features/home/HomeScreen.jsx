@@ -50,6 +50,8 @@ export default function HomeScreen(props) {
     setFeedingDraft,
     cancelFeedingForm,
     saveFeeding,
+    showTrainFirstRunHint,
+    dismissTrainFirstRunHint,
   } = props;
   const target = recommendation?.duration ?? 0;
   const recoveryMode = recommendation?.details?.recoveryMode;
@@ -117,6 +119,12 @@ export default function HomeScreen(props) {
             <span className="train-focus-strip__meta">{daily.count} logged today</span>
           </button>
         )}
+        {phase === "idle" && showTrainFirstRunHint && (
+          <div className="train-inline-guidance" role="note" aria-live="polite">
+            <span className="train-inline-guidance__label">Target adapts</span>
+            <span className="train-inline-guidance__copy">Calm runs nudge up. Stress signs can step time down.</span>
+          </div>
+        )}
         {showRecoveryInfo && recoveryMode?.active && (
           <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => setShowRecoveryInfo(false)}>
             <div className="quick-modal-card modal-card modal-card--dialog-md recovery-explain-modal" onClick={(e) => e.stopPropagation()}>
@@ -141,6 +149,27 @@ export default function HomeScreen(props) {
                 <span>{recoveryMode.currentStepLabel || `Step ${Math.max(1, recoveryMode.step)} of ${recoveryMode.totalSessions || 2}`}</span>
                 <span>{recoveryMode.remainingSessions} remaining</span>
               </div>
+            </div>
+          </div>
+        )}
+        {phase === "idle" && showTrainFirstRunHint && (
+          <div className="quick-modal-overlay train-first-run-overlay" role="dialog" aria-modal="true" aria-labelledby="train-first-run-title" onClick={dismissTrainFirstRunHint}>
+            <div className="quick-modal-card modal-card modal-card--dialog-md train-first-run-card" onClick={(e) => e.stopPropagation()}>
+              <div className="train-first-run-card__eyebrow">First training session</div>
+              <div className="quick-modal-title" id="train-first-run-title">How today's target works</div>
+              <p className="train-first-run-card__copy">
+                <strong>{fmtClock(target)}</strong> is your current calm threshold. End while {name} is still calm.
+              </p>
+              <p className="train-first-run-card__copy">
+                Progress is gradual: calm sessions can increase time, stress signs can decrease it to protect confidence.
+              </p>
+              <button
+                type="button"
+                className="button-base button-primary button--md button--pill train-first-run-card__cta"
+                onClick={dismissTrainFirstRunHint}
+              >
+                Got it
+              </button>
             </div>
           </div>
         )}
