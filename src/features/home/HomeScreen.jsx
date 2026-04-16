@@ -150,14 +150,17 @@ export default function HomeScreen(props) {
             </p>
           )}
           {phase === "idle" && showTrainFirstRunHint && (
-            <button
-              type="button"
-              className="train-inline-guidance"
-              onClick={dismissTrainFirstRunHint}
-            >
-              <span className="train-inline-guidance__label">Targets adapt to your dog</span>
-              <span className="train-inline-guidance__copy">Calm reps nudge targets up. Stress signs nudge them down.</span>
-            </button>
+            <div className="train-inline-tip" role="note">
+              <span className="train-inline-tip__label">Targets adapt to your dog</span>
+              <span className="train-inline-tip__copy">Calm reps nudge targets up. Stress signs nudge them down.</span>
+              <button
+                type="button"
+                className="train-inline-tip__dismiss"
+                onClick={dismissTrainFirstRunHint}
+              >
+                Got it
+              </button>
+            </div>
           )}
           {phase === "idle" && recoveryMode?.active && (
             <div className="train-recovery-inline" role="note" aria-live="polite">
