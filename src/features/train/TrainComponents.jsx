@@ -51,7 +51,6 @@ export function SessionControl({
   phase,
   elapsed,
   target,
-  name = "your dog",
   onStart,
   onEnd,
   onCancel,

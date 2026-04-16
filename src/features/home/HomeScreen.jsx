@@ -65,20 +65,10 @@ export default function HomeScreen(props) {
   return (
     <div className="tab-content train-screen">
       <div className="train-main">
-        <header className="train-identity-header surface-card">
-          <div className="train-identity-header__badge" aria-hidden="true">
-            <span role="img" aria-label="Dog">🐕</span>
-          </div>
-          <div className="train-identity-header__copy">
-            <h2 className="train-identity-header__name">Train with {name}</h2>
-          </div>
-        </header>
-
         <SessionControl
           phase={phase}
           elapsed={elapsed}
           target={target}
-          name={name}
           onStart={startSession}
           onEnd={endSession}
           onCancel={cancelSession}
