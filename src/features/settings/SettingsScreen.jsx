@@ -32,6 +32,7 @@ export default function SettingsScreen(props) {
   const [activePanel, setActivePanel] = useState(null);
   const [reminderEditorOpen, setReminderEditorOpen] = useState(false);
   const [diagDetailsOpen, setDiagDetailsOpen] = useState(false);
+  const [dangerOpen, setDangerOpen] = useState(false);
   const {
     name,
     activeDogId,
@@ -81,42 +82,96 @@ export default function SettingsScreen(props) {
   return (
     <>
       <div className="tab-content">
-        <div className="section">
+        <div className="section settings-shell">
           <div className="section-title">Calm control</div>
-          <div className="t-helper">Manage profile, routine defaults, and device behavior for {name}.</div>
+          <div className="t-helper">Elegant control for {name}&rsquo;s training rhythm, routine, and account.</div>
 
-          <div className="settings-nav-list" role="list" aria-label="Settings destinations">
-            <div className="settings-section-label">Dog + routine</div>
-            <SettingsNavRow label="Dog profile" value={name} onClick={() => setActivePanel(SETTINGS_PANEL.PROFILE)} />
-            <SettingsNavRow label="Reminders" value={reminderSummary} onClick={() => setActivePanel(SETTINGS_PANEL.REMINDERS)} />
+          <section className="surface-card settings-profile-card" aria-label={`${name} profile`}>
+            <div className="settings-profile-card__head">
+              <div>
+                <div className="settings-simple-title">Active dog</div>
+                <div className="settings-profile-card__name">{name}</div>
+              </div>
+              <button className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={() => setActivePanel(SETTINGS_PANEL.PROFILE)} type="button">
+                View profile
+              </button>
+            </div>
+            <div className="settings-profile-card__meta">
+              <div className="settings-profile-chip">{reminderSummary} reminders</div>
+              <div className="settings-profile-chip">Max {activeProto.sessionsPerDayMax} sessions/day</div>
+              <div className="settings-profile-chip">{Object.keys(patLabels).length} custom labels</div>
+            </div>
+          </section>
+
+          <div className="settings-group" role="list" aria-label="Training routine settings">
+            <div className="settings-section-label">Training routine</div>
+            <div className="settings-inline-card">
+              <div className="settings-row-head">
+                <span className="settings-inline-title">Daily reminder</span>
+                <button className={`notif-toggle secondary-control secondary-control--toggle ${notifEnabled ? "on" : ""}`} onClick={handleToggleNotif} type="button">{notifEnabled ? "On" : "Off"}</button>
+              </div>
+              <div className="settings-inline-row">
+                <span className="settings-secondary-text">Reminder time</span>
+                <button
+                  type="button"
+                  className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button"
+                  onClick={() => setReminderEditorOpen((prev) => !prev)}
+                >
+                  {reminderEditorOpen ? "Done" : notifTime}
+                </button>
+              </div>
+              {notifEnabled && reminderEditorOpen && (
+                <input type="time" value={notifTime} onChange={async (e) => {
+                  const nextTime = e.target.value;
+                  const dogName = dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase())?.dogName ?? "your dog";
+                  const ok = await scheduleNotif(nextTime, dogName);
+                  if (ok) setNotifTime(nextTime);
+                }} className="notif-time-input settings-time-input" />
+              )}
+              {!notifEnabled && reminderEditorOpen && (
+                <div className="settings-secondary-text">Turn reminders on first, then choose a time.</div>
+              )}
+            </div>
             <SettingsNavRow label="Training settings" value={`Up to ${activeProto.sessionsPerDayMax}/day`} onClick={() => setTrainingSettingsOpen(true)} />
             <SettingsNavRow label="Custom labels" value={`${Object.keys(patLabels).length} custom`} onClick={() => setActivePanel(SETTINGS_PANEL.LABELS)} />
           </div>
 
-          <div className="settings-nav-list" role="list" aria-label="Support destinations">
-            <div className="settings-section-label">Guidance + diagnostics</div>
+          <div className="settings-group settings-group--muted" role="list" aria-label="Support destinations">
+            <div className="settings-section-label">Help + diagnostics</div>
             <SettingsNavRow label="Help" value="Guidance" onClick={() => setActivePanel(SETTINGS_PANEL.HELP)} />
             <SettingsNavRow label="Advanced" value="Diagnostics" onClick={() => setActivePanel(SETTINGS_PANEL.ADVANCED)} />
           </div>
 
-          <div className="settings-nav-list" role="list" aria-label="Account destinations">
+          <div className="settings-group" role="list" aria-label="Account destinations">
             <div className="settings-section-label">Account + device</div>
             <SettingsNavRow label="Account" value="Profile & device" onClick={() => setActivePanel(SETTINGS_PANEL.ACCOUNT)} />
           </div>
 
-          <div className="settings-danger-sep" />
-          <div className="settings-nav-list settings-nav-list--danger" role="list" aria-label="Danger zone">
-            <div className="settings-section-label settings-section-label--danger">Danger zone</div>
-            <SettingsNavRow label={`Remove ${name} from this device`} danger onClick={() => {
-              if (window.confirm(`Remove ${name} from this device? This deletes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.`)) {
-                clearDogActivityState(activeDogId);
-                const newDogs = dogsState.filter((d) => d.id !== activeDogId);
-                setDogs(newDogs);
-                save(ACTIVE_DOG_KEY, null);
-                setActiveDogId(null);
-              }
-            }} />
-          </div>
+          <section className="settings-collapsible-card settings-collapsible-card--quiet settings-danger-zone" aria-label="Danger zone">
+            <button
+              className="settings-collapsible-toggle secondary-control--toggle"
+              type="button"
+              onClick={() => setDangerOpen((prev) => !prev)}
+              aria-expanded={dangerOpen}
+              aria-controls="settings-danger-content"
+            >
+              <span className="settings-section-label settings-section-label--danger">Danger zone</span>
+              <span className="settings-collapsible-arrow" aria-hidden="true">{dangerOpen ? "−" : "+"}</span>
+            </button>
+            {dangerOpen ? (
+              <div className="settings-collapsible-inner" id="settings-danger-content">
+                <SettingsNavRow label={`Remove ${name} from this device`} danger onClick={() => {
+                  if (window.confirm(`Remove ${name} from this device? This deletes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.`)) {
+                    clearDogActivityState(activeDogId);
+                    const newDogs = dogsState.filter((d) => d.id !== activeDogId);
+                    setDogs(newDogs);
+                    save(ACTIVE_DOG_KEY, null);
+                    setActiveDogId(null);
+                  }
+                }} />
+              </div>
+            ) : null}
+          </section>
         </div>
       </div>
 
@@ -142,44 +197,6 @@ export default function SettingsScreen(props) {
                 </div>
                 <div className="settings-sync-copy">{syncSummary.detail}</div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activePanel === SETTINGS_PANEL.REMINDERS && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-reminders-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
-            <div className="quick-modal-head">
-              <div className="quick-modal-title" id="settings-reminders-title">Reminders</div>
-              <ModalCloseButton onClick={() => setActivePanel(null)} />
-            </div>
-            <div className="settings-modal-stack">
-              <div className="settings-native-control-row">
-                <span>Daily reminder</span>
-                <button className={`notif-toggle secondary-control secondary-control--toggle ${notifEnabled ? "on" : ""}`} onClick={handleToggleNotif}>{notifEnabled ? "On" : "Off"}</button>
-              </div>
-              <div className="settings-native-control-row">
-                <span>Reminder time</span>
-                <button
-                  type="button"
-                  className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button"
-                  onClick={() => setReminderEditorOpen((prev) => !prev)}
-                >
-                  {reminderEditorOpen ? "Done" : notifTime}
-                </button>
-              </div>
-              {notifEnabled && reminderEditorOpen && (
-                <input type="time" value={notifTime} onChange={async (e) => {
-                  const nextTime = e.target.value;
-                  const dogName = dogs.find((d) => String(d.id || "").trim().toUpperCase() === String(activeDogId || "").trim().toUpperCase())?.dogName ?? "your dog";
-                  const ok = await scheduleNotif(nextTime, dogName);
-                  if (ok) setNotifTime(nextTime);
-                }} className="notif-time-input" />
-              )}
-              {!notifEnabled && reminderEditorOpen && (
-                <div className="settings-secondary-text">Turn reminders on first, then choose a time.</div>
-              )}
             </div>
           </div>
         </div>

@@ -1851,6 +1851,38 @@
   .session-control.is-complete { animation:ringPulse 0.9s ease-in-out 2; }
 
   /* ── Settings: simplified native list pattern ── */
+  .settings-shell { display:grid; gap:var(--space-section-gap); }
+  .settings-profile-card {
+    border:1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius:var(--radius-lg);
+    background:linear-gradient(165deg, color-mix(in srgb, var(--surface-card-bg) 94%, var(--surface-overlay-soft) 6%), var(--surface-card-bg));
+    padding:var(--space-card-padding);
+    display:grid;
+    gap:var(--space-control-gap);
+    box-shadow:var(--shadow-soft);
+  }
+  .settings-profile-card__head { display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-control-gap); }
+  .settings-profile-card__name {
+    color:var(--text);
+    font-size:var(--type-card-heading-size);
+    line-height:var(--type-card-heading-line);
+    letter-spacing:var(--type-card-heading-track);
+    font-weight:var(--type-card-heading-weight);
+  }
+  .settings-profile-card__meta { display:flex; flex-wrap:wrap; gap:8px; }
+  .settings-profile-chip {
+    display:inline-flex;
+    align-items:center;
+    min-height:28px;
+    padding:0 10px;
+    border-radius:999px;
+    background:color-mix(in srgb, var(--surface-muted) 92%, transparent);
+    color:var(--text-muted);
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+  }
+  .settings-group { display:grid; }
+  .settings-group--muted { opacity:0.92; }
   .settings-nav-list { display:grid; margin-bottom:var(--space-section-gap); }
   .settings-section-label {
     margin:0 0 var(--space-1);
@@ -1875,7 +1907,32 @@
     gap:var(--space-control-gap);
     text-align:left;
     cursor:pointer;
+    transition:color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out), transform var(--motion-press) var(--ease-out);
   }
+  .settings-nav-row:hover { color:var(--brown); }
+  .settings-nav-row:active { transform:translateY(1px); }
+  .settings-inline-card {
+    border:1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius:var(--radius-md);
+    background:color-mix(in srgb, var(--surface-card-bg) 94%, transparent);
+    padding:var(--space-card-row-gap) var(--space-control-gap);
+    margin-bottom:var(--space-card-row-gap);
+    display:grid;
+    gap:var(--space-control-gap);
+    transition:border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out);
+  }
+  .settings-inline-card:focus-within {
+    border-color:color-mix(in srgb, var(--primaryBlue) 30%, var(--border));
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--primaryBlue) 12%, transparent);
+  }
+  .settings-inline-title {
+    color:var(--text);
+    font-size:var(--type-body-size);
+    line-height:var(--type-body-line);
+    letter-spacing:var(--type-body-track);
+    font-weight:var(--type-body-weight);
+  }
+  .settings-time-input { animation:fadeIn 180ms ease; }
   .settings-nav-row__label,
   .settings-nav-row__value {
     font-size:var(--type-body-size);
@@ -1899,7 +1956,11 @@
   .settings-native-control-row { display:flex; justify-content:space-between; gap:var(--space-control-gap); align-items:center; color:var(--text); min-height:44px; }
   .settings-secondary-text { color:var(--text-muted); font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); }
   .settings-section-label--danger { color:var(--red); }
-  .settings-danger-sep { height:1px; background:var(--border); margin:var(--space-section-gap) 0 var(--space-control-gap); opacity:0.5; }
+  .settings-danger-zone {
+    margin-top:calc(var(--space-control-gap) * -1);
+    border-top:1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    padding-top:var(--space-control-gap);
+  }
   .history-food-type { text-transform:capitalize; }
   .icon-img { display:inline-block; flex-shrink:0; object-fit:contain; }
   .paw-icon-img { display:inline-block; object-fit:contain; }
