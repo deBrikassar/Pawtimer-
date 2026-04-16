@@ -179,6 +179,33 @@
   .ds-title { font-size:var(--type-hero-title-size); font-weight:var(--type-hero-title-weight); color:var(--brown); line-height:var(--type-hero-title-line); letter-spacing:var(--type-hero-title-track); position:relative; z-index:1; }
   .ds-sub { font-size:var(--type-hero-subtitle-size); font-weight:var(--type-hero-subtitle-weight); color:var(--text-muted); margin-top:8px; position:relative; z-index:1; line-height:var(--type-hero-subtitle-line); letter-spacing:var(--type-hero-subtitle-track); }
   .ds-body { padding:var(--space-3); flex:1; overflow-x:hidden; }
+  .ds-path-grid { display:grid; grid-template-columns:1fr; gap:var(--space-control-gap); margin-bottom:var(--space-section-gap); }
+  .ds-path-card {
+    border:1px solid color-mix(in srgb, var(--border) 86%, var(--warm-accent-border));
+    border-radius:16px;
+    padding:var(--space-card-padding);
+    background:linear-gradient(180deg, var(--surf) 0%, color-mix(in srgb, var(--surface-muted) 20%, var(--warm-accent-soft)) 100%);
+    text-align:left;
+    color:var(--text);
+    cursor:pointer;
+    transition:transform var(--motion-press) var(--ease-out), border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out), background var(--motion-base) var(--ease-out);
+  }
+  .ds-path-card:hover { border-color:color-mix(in srgb, var(--mutedBlue) 46%, var(--border)); box-shadow:var(--shadow); }
+  .ds-path-card.selected { border-color:var(--mutedBlue); box-shadow:var(--surface-focus-shadow-soft); }
+  .ds-path-title { font-size:var(--type-list-row-title-size); line-height:var(--type-list-row-title-line); font-weight:var(--type-list-row-title-weight); letter-spacing:var(--type-list-row-title-track); color:var(--brown); }
+  .ds-path-copy { margin-top:6px; color:var(--text-muted); font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); font-weight:var(--type-secondary-weight); }
+  .ds-join-panel {
+    border:1px solid color-mix(in srgb, var(--border) 88%, var(--mutedBlue));
+    border-radius:16px;
+    padding:0 var(--space-card-padding);
+    margin-bottom:var(--space-section-gap);
+    max-height:0;
+    opacity:0;
+    overflow:hidden;
+    transform:translateY(-4px);
+    transition:max-height 280ms var(--ease-out), opacity 220ms var(--ease-out), transform 280ms var(--ease-out), padding 280ms var(--ease-out);
+  }
+  .ds-join-panel.is-open { max-height:260px; opacity:1; transform:translateY(0); padding:var(--space-card-padding); }
   .ds-section-label { font-size:var(--type-section-eyebrow-size); letter-spacing:var(--type-section-eyebrow-track); color:var(--text-muted); font-weight:var(--type-section-eyebrow-weight); line-height:var(--type-section-eyebrow-line); margin-bottom:var(--space-card-row-gap); text-transform:uppercase; }
   .ds-dog-card { margin-bottom:var(--space-card-row-gap); }
   .ds-dog-name { font-size:var(--type-list-row-title-size); color:var(--brown); font-weight:var(--type-list-row-title-weight); line-height:var(--type-list-row-title-line); letter-spacing:var(--type-list-row-title-track); }
