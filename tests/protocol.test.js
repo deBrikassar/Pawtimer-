@@ -436,7 +436,20 @@ describe("recommendation engine", () => {
     expect(rec.recoveryMode.active).toBe(true);
   });
 
-  it("uses non-hold recommendation type for a small increase after five-session plateau", () => {
+  it("holds after five-session plateau when threshold confirmation is not satisfied", () => {
+    const sessions = [
+      { date: daysAgo(4), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(3), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(2), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: false },
+      { date: hoursAgo(2), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(600);
+    expect(rec.recommendationType).toBe("keep_same_duration");
+  });
+
+  it("allows a small increase after five-session plateau when threshold confirmation is satisfied", () => {
     const sessions = [
       { date: daysAgo(4), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
       { date: daysAgo(3), plannedDuration: 600, actualDuration: 600, distressLevel: "none", belowThreshold: true },
@@ -454,6 +467,29 @@ describe("recommendation engine", () => {
     const sessions = [
       { date: daysAgo(2), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
       { date: daysAgo(1), plannedDuration: 900, actualDuration: 855, distressLevel: "none", belowThreshold: false },
+      { date: hoursAgo(1), plannedDuration: 900, actualDuration: 855, distressLevel: "none", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(900);
+    expect(rec.recommendationType).toBe("keep_same_duration");
+  });
+
+  it("keeps short-session hold behavior unchanged even after plateau guard update", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
+      { date: hoursAgo(2), plannedDuration: 900, actualDuration: 300, distressLevel: "none", belowThreshold: false },
+    ];
+    const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
+    expect(rec.recommendedDuration).toBe(900);
+    expect(rec.recommendationType).toBe("repeat_current_duration");
+  });
+
+  it("keeps near-threshold plateau holds unchanged after plateau guard update", () => {
+    const sessions = [
+      { date: daysAgo(2), plannedDuration: 900, actualDuration: 900, distressLevel: "none", belowThreshold: true },
+      { date: daysAgo(1), plannedDuration: 900, actualDuration: 855, distressLevel: "none", belowThreshold: false },
+      { date: hoursAgo(2), plannedDuration: 900, actualDuration: 855, distressLevel: "none", belowThreshold: false },
       { date: hoursAgo(1), plannedDuration: 900, actualDuration: 855, distressLevel: "none", belowThreshold: false },
     ];
     const rec = buildRecommendation(sessions, { goalSeconds: 3600 });
