@@ -69,9 +69,9 @@ export default function HomeScreen(props) {
   const [trainExplainOpen, setTrainExplainOpen] = useState(false);
   const todaySessions = sessions.filter((s) => isToday(s.date));
   const todayFeedingCount = feedings.filter((f) => isToday(f.date)).length;
-  const recentSessionLogs = [...todaySessions]
+  const latestSession = [...todaySessions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 4);
+    .at(0);
   const sessionBlockedMessage = daily.blockReason === "cap"
     ? `Daily alone-time cap reached (${fmtClock(daily.capSec)}). Try again tomorrow.`
     : daily.blockReason === "max_sessions"
@@ -215,10 +215,6 @@ export default function HomeScreen(props) {
           <div className={`collapsible-body train-today-body ${todayOpen ? "open" : "closed"}`}>
             <div className="settings-collapsible-inner">
               <div className="train-today-list" role="list" aria-label="Today's logged activity">
-                <div className="train-today-row" role="listitem">
-                  <span className="train-today-row__label">Calm-alone reps</span>
-                  <span className="train-today-row__meta">{todaySessions.length} today</span>
-                </div>
                 <button className="train-today-row train-today-row--action" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
                   <span className="train-today-row__label">Walk</span>
                   <span className="train-today-row__meta">{walkPhase === "timing" ? `${fmt(walkElapsed)} live` : `${pattern.todayWalks} today`}</span>
@@ -232,16 +228,11 @@ export default function HomeScreen(props) {
                   <span className="train-today-row__meta">{todayFeedingCount} today</span>
                 </button>
               </div>
-              {recentSessionLogs.length > 0 && (
-                <div className="train-today-mini-log" role="list" aria-label="Recent calm-alone reps">
-                  {recentSessionLogs.map((session) => (
-                    <div className="train-today-mini-log__row" role="listitem" key={session.id || `${session.date}-${session.actualDuration || 0}`}>
-                      <span>{new Date(session.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
-                      <span>{fmt(session.actualDuration || session.seconds || 0)}</span>
-                    </div>
-                  ))}
+              {latestSession ? (
+                <div className="train-today-mini-log" role="status" aria-live="polite">
+                  Latest calm-alone rep: {new Date(latestSession.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · {fmt(latestSession.actualDuration || latestSession.seconds || 0)}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </section>

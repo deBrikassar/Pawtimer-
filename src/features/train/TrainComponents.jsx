@@ -176,7 +176,7 @@ export function SessionControl({
 
 export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
   const clampedGoalPct = Math.max(0, Math.min(goalPct, 100));
-  const thumbPct = Math.max(Math.min(clampedGoalPct, 98), 2);
+  const thumbPosition = Math.max(Math.min(clampedGoalPct, 98), 2);
 
   return (
     <div className="prog-section surface-card surface-card--progress">
@@ -184,8 +184,8 @@ export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
         <svg className="prog-track" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
           <rect className="prog-fill-track" x="0" y="0" width="100" height="8" rx="4" ry="4" />
           <rect className="prog-fill" x="0" y="0" width={clampedGoalPct} height="8" rx="4" ry="4" />
+          <circle className="prog-thumb" cx={thumbPosition} cy="4" r="1.65" />
         </svg>
-        <span className="prog-thumb" style={{ left: `${thumbPct}%` }} aria-hidden="true" />
       </div>
       <div className="prog-meta">
         <span>Current target <strong className="num-stable">{fmt(target)}</strong></span>

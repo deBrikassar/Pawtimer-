@@ -341,10 +341,10 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
   const durationIsValid = historyModal?.mode === "duration"
     ? Number.isFinite(parsedDuration) && (requiresPositiveDuration ? parsedDuration > 0 : parsedDuration >= 0)
     : true;
-  const recentCount = timeline.slice(0, 7).length;
   const sessionCount = timeline.filter((item) => item.kind === "session").length;
   const careCount = timeline.filter((item) => item.kind !== "session").length;
   const lastSession = timeline.find((item) => item.kind === "session");
+  const lastSessionLabel = lastSession ? fmtDate(lastSession.date) : "—";
   const timelineByDay = timeline.reduce((acc, item) => {
     const isoDate = item?.date;
     if (!isoDate) return acc;
@@ -579,8 +579,8 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   <div className="history-summary-label">Support routine logs</div>
                 </div>
                 <div className="history-summary-item">
-                  <div className="history-summary-value">{recentCount}</div>
-                  <div className="history-summary-label">Recent training moments</div>
+                  <div className="history-summary-value">{lastSessionLabel}</div>
+                  <div className="history-summary-label">Latest calm-alone rep</div>
                 </div>
               </div>
               <div className="history-mini-trend" aria-label="Last seven days of training sessions">
@@ -607,7 +607,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                   ))}
                 </div>
               ) : null}
-              {lastSession ? <div className="history-summary-note">Latest calm-alone rep: {fmtDate(lastSession.date)}.</div> : null}
+              {lastSession ? <div className="history-summary-note">Use recent detail cards below to edit or clean up timeline entries.</div> : null}
             </div>
           )}
 
