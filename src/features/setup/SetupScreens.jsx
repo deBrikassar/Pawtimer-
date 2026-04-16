@@ -127,17 +127,50 @@ export function Onboarding({ onComplete, onBack }) {
 
 export function DogSelect({ dogs, onSelect, onCreateNew }) {
   const [joinId, setJoinId] = useState("");
-  const [joinError, setJoinError] = useState("");
+  const [joinState, setJoinState] = useState({ status: "idle", message: "", preview: null });
   const [activePath, setActivePath] = useState(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
 
-  const handleJoin = () => {
-    const id = joinId.trim().toUpperCase();
-    if (id.length < 3 || !id.includes("-")) {
-      setJoinError("Enter a valid dog ID — e.g. LUNA-4829");
+  const normalizeJoinId = (value) => value.replace(/[^a-zA-Z0-9-]/g, "").replace(/\s+/g, "").toUpperCase();
+  const hasValidShape = (value) => value.length >= 4 && /[A-Z]/.test(value) && /\d/.test(value) && value.includes("-");
+
+  const validateJoinId = (value) => {
+    if (!value) return "Enter the shared ID to continue.";
+    if (!value.includes("-")) return "Include the dash in the shared ID (example: LUNA-4829).";
+    if (value.length < 4) return "That ID looks short — please check and try again.";
+    if (!/[A-Z]/.test(value) || !/\d/.test(value)) return "Use letters and numbers from the shared ID.";
+    return "";
+  };
+
+  const handleLookup = async () => {
+    const normalized = normalizeJoinId(joinId);
+    const softValidation = validateJoinId(normalized);
+    if (softValidation) {
+      setJoinState({ status: "invalid", message: softValidation, preview: null });
       return;
     }
-    setJoinError("");
-    onSelect(id, true);
+    if (typeof onSelect !== "function") return;
+    setIsLookingUp(true);
+    const result = await onSelect(normalized, true, { mode: "preview" });
+    if (result?.ok) {
+      setJoinState({
+        status: "ready",
+        message: "Looks good. Review and confirm to join this profile.",
+        preview: result,
+      });
+    } else {
+      setJoinState({
+        status: "not-found",
+        message: result?.message || "We couldn't find that shared ID yet. Please check and retry.",
+        preview: null,
+      });
+    }
+    setIsLookingUp(false);
+  };
+
+  const handleJoinConfirm = async () => {
+    if (!joinState.preview?.normalizedId) return;
+    await onSelect(joinState.preview.normalizedId, true, { mode: "join", preview: joinState.preview });
   };
 
   return (
@@ -172,20 +205,46 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
 
         <div className={`ds-join-panel ${activePath === "join" ? "is-open" : ""}`}>
           <div className="ds-section-label">Join with a dog ID</div>
-          <div className="ds-note">IDs are unique and matched securely, case-insensitive.</div>
+          <div className="ds-note">
+            This shared ID connects one household's dog profile across devices.
+            You'll usually receive it from your partner, trainer, or whoever created the profile in Settings.
+          </div>
           <div className="ds-join-row">
             <input
               className="ds-join-input"
               placeholder="e.g. LUNA-4829"
               value={joinId}
-              onChange={(e) => { setJoinId(e.target.value); setJoinError(""); }}
-              onKeyDown={(e) => e.key === "Enter" && joinId.trim() && handleJoin()}
+              onChange={(e) => {
+                setJoinId(e.target.value);
+                if (joinState.status !== "idle") setJoinState({ status: "idle", message: "", preview: null });
+              }}
+              onBlur={() => {
+                const normalized = normalizeJoinId(joinId);
+                const softValidation = validateJoinId(normalized);
+                if (joinId && softValidation) setJoinState({ status: "invalid", message: softValidation, preview: null });
+              }}
+              onKeyDown={(e) => e.key === "Enter" && joinId.trim() && handleLookup()}
               maxLength={14}
             />
-            <button className="ds-join-btn" onClick={handleJoin}>Join →</button>
+            <button className="ds-join-btn" onClick={handleLookup} disabled={isLookingUp || !hasValidShape(normalizeJoinId(joinId))}>
+              {isLookingUp ? "Checking…" : "Check ID"}
+            </button>
           </div>
-          {joinError && <div className="ds-join-error">{joinError}</div>}
-          <div className="ds-join-hint">Find this ID in PawTimer → Settings.</div>
+          {joinState.message && <div className={`ds-join-feedback ds-join-feedback--${joinState.status}`}>{joinState.message}</div>}
+          {joinState.status === "ready" && joinState.preview && (
+            <div className="ds-join-confirm-card">
+              <div className="ds-join-confirm-eyebrow">Ready to join</div>
+              <div className="ds-join-confirm-title">{joinState.preview.dogName || "Shared dog profile"}</div>
+              <div className="ds-join-confirm-copy">
+                ID: {joinState.preview.normalizedId}
+                {joinState.preview.source ? ` • ${joinState.preview.source}` : ""}
+              </div>
+              <button className="ds-join-btn ds-join-confirm-btn" type="button" onClick={handleJoinConfirm}>
+                Confirm and join
+              </button>
+            </div>
+          )}
+          <div className="ds-join-hint">Find this ID in PawTimer → Settings → Sync devices.</div>
         </div>
 
         {dogs.length > 0 && <>
