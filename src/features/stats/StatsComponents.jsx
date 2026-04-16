@@ -89,6 +89,19 @@ export function StatsSupportRow({ label, value }) {
   );
 }
 
+export function StatsInsightCard({ message, detail, tone = "neutral", index = 0 }) {
+  return (
+    <article
+      className={`stats-insight-card stats-insight-card--${tone}`.trim()}
+      style={{ "--insight-index": index }}
+      aria-live="polite"
+    >
+      <p className="stats-insight-message">{message}</p>
+      {detail ? <p className="stats-insight-detail">{detail}</p> : null}
+    </article>
+  );
+}
+
 export function ProgressHero({
   name,
   headlineStatus,
