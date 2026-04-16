@@ -57,20 +57,26 @@ describe("storage normalization", () => {
     const session = normalizeSession({
       id: "s-missing-both",
       plannedDuration: 120,
-      actualDuration: 60,
+      actualDuration: 120,
     });
 
     expect(session.distressLevel).toBe("none");
+    expect(session.hasKnownDistressOutcome).toBe(false);
+    expect(session.belowThreshold).toBe(false);
   });
 
   it("keeps explicit known distress levels", () => {
     const session = normalizeSession({
       id: "s-explicit-severe",
+      plannedDuration: 120,
+      actualDuration: 120,
       distressLevel: "severe",
       result: "distress",
     });
 
     expect(session.distressLevel).toBe("severe");
+    expect(session.hasKnownDistressOutcome).toBe(true);
+    expect(session.belowThreshold).toBe(false);
   });
 
   it("normalizes known legacy distress aliases", () => {
@@ -88,10 +94,14 @@ describe("storage normalization", () => {
     const session = normalizeSession({
       id: "s-success",
       result: "success",
+      plannedDuration: 120,
+      actualDuration: 120,
       distressLevel: "none",
     });
 
     expect(session.distressLevel).toBe("none");
+    expect(session.hasKnownDistressOutcome).toBe(true);
+    expect(session.belowThreshold).toBe(true);
   });
 
   it("uses explicit distress metadata when result contradicts it", () => {
@@ -115,6 +125,7 @@ describe("storage normalization", () => {
 
     expect(session.distressLevel).toBe("none");
     expect(session.distressSeverity).toBe("none");
+    expect(session.hasKnownDistressOutcome).toBe(false);
   });
 
   it("canonicalizes explicit distress rows from distressLevel", () => {

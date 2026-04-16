@@ -192,6 +192,24 @@ describe("recommendation engine", () => {
     expect(rec.recommendedDuration).toBeLessThanOrEqual(36);
   });
 
+  it("does not treat unknown distress outcomes as promotive calm evidence", () => {
+    const explicitCalmHistory = [
+      { date: daysAgo(1), plannedDuration: 100, actualDuration: 100, distressLevel: "none", belowThreshold: true, hasKnownDistressOutcome: true },
+      { date: daysAgo(0), plannedDuration: 100, actualDuration: 100, distressLevel: "none", belowThreshold: true, hasKnownDistressOutcome: true },
+    ];
+    const malformedHistory = [
+      { date: daysAgo(1), plannedDuration: 100, actualDuration: 100, distressLevel: "none", belowThreshold: true, hasKnownDistressOutcome: true },
+      { date: daysAgo(0), plannedDuration: 100, actualDuration: 100, distressLevel: "none", belowThreshold: true, hasKnownDistressOutcome: false },
+    ];
+
+    const explicitRec = buildRecommendation(explicitCalmHistory, { goalSeconds: 3600 });
+    const malformedRec = buildRecommendation(malformedHistory, { goalSeconds: 3600 });
+
+    expect(explicitRec.recommendedDuration).toBe(115);
+    expect(malformedRec.recommendedDuration).toBeLessThan(explicitRec.recommendedDuration);
+    expect(malformedRec.recommendationType).not.toBe("increase_duration");
+  });
+
 
 
   it("uses latest calm success +15% when last 5 sessions are all calm", () => {
