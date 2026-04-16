@@ -1852,24 +1852,79 @@
 
   /* ── Settings: simplified native list pattern ── */
   .settings-shell { display:grid; gap:var(--space-section-gap); }
-  .settings-profile-card {
-    border:1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  .settings-dog-profile-card {
+    width:100%;
+    border:1px solid color-mix(in srgb, var(--border) 66%, transparent);
     border-radius:var(--radius-lg);
-    background:linear-gradient(165deg, color-mix(in srgb, var(--surface-card-bg) 94%, var(--surface-overlay-soft) 6%), var(--surface-card-bg));
+    background:linear-gradient(160deg, color-mix(in srgb, var(--surface-card-bg) 94%, var(--surface-overlay-soft) 6%), color-mix(in srgb, var(--surface-card-bg) 86%, var(--surface-muted) 14%));
     padding:var(--space-card-padding);
     display:grid;
     gap:var(--space-control-gap);
     box-shadow:var(--shadow-soft);
+    text-align:left;
+    color:var(--text);
+    cursor:pointer;
+    transition:transform var(--motion-press) var(--ease-out), border-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out);
   }
-  .settings-profile-card__head { display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-control-gap); }
-  .settings-profile-card__name {
+  .settings-dog-profile-card:hover {
+    border-color:color-mix(in srgb, var(--brown) 28%, var(--border));
+    box-shadow:0 10px 24px color-mix(in srgb, var(--shadow-soft) 72%, transparent);
+  }
+  .settings-dog-profile-card:active { transform:translateY(1px); }
+  .settings-dog-profile-card:focus-visible {
+    outline:none;
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--primaryBlue) 18%, transparent), var(--shadow-soft);
+  }
+  .settings-dog-profile-card__identity { display:flex; align-items:flex-start; gap:var(--space-control-gap); }
+  .settings-dog-profile-avatar {
+    inline-size:42px;
+    block-size:42px;
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:var(--type-body-lg-size);
+    font-weight:var(--type-card-heading-weight);
+    color:var(--text);
+    background:radial-gradient(circle at 24% 22%, color-mix(in srgb, var(--surface-overlay-soft) 82%, #fff 18%), color-mix(in srgb, var(--surface-muted) 78%, var(--surface-card-bg) 22%));
+    border:1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--surface-card-bg) 66%, transparent);
+    flex-shrink:0;
+  }
+  .settings-dog-profile-card__titles { display:grid; gap:2px; flex:1; }
+  .settings-dog-profile-card__name {
     color:var(--text);
     font-size:var(--type-card-heading-size);
     line-height:var(--type-card-heading-line);
     letter-spacing:var(--type-card-heading-track);
     font-weight:var(--type-card-heading-weight);
   }
-  .settings-profile-card__meta { display:flex; flex-wrap:wrap; gap:8px; }
+  .settings-dog-profile-card__state {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:6px;
+    color:var(--text-muted);
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+  }
+  .settings-dog-profile-card__state-dot {
+    inline-size:7px;
+    block-size:7px;
+    border-radius:999px;
+    background:var(--text-muted);
+  }
+  .settings-dog-profile-card__state-dot--ok { background:var(--green); }
+  .settings-dog-profile-card__state-dot--warn { background:var(--amber); }
+  .settings-dog-profile-card__state-dot--err { background:var(--red); }
+  .settings-dog-profile-card__divider { color:color-mix(in srgb, var(--text-muted) 70%, transparent); }
+  .settings-dog-profile-card__chevron {
+    color:color-mix(in srgb, var(--text-muted) 82%, transparent);
+    font-size:20px;
+    line-height:1;
+    padding-top:3px;
+  }
+  .settings-dog-profile-card__meta { display:flex; flex-wrap:wrap; gap:8px; }
   .settings-profile-chip {
     display:inline-flex;
     align-items:center;

@@ -1,6 +1,7 @@
 import { PATTERN_TYPES } from "../app/helpers";
 import { DeleteIcon, ModalCloseButton } from "../app/ui";
 import { useState } from "react";
+import DogProfileCard from "./DogProfileCard";
 
 const SETTINGS_PANEL = {
   PROFILE: "profile",
@@ -86,22 +87,14 @@ export default function SettingsScreen(props) {
           <div className="section-title">Calm control</div>
           <div className="t-helper">Elegant control for {name}&rsquo;s training rhythm, routine, and account.</div>
 
-          <section className="surface-card settings-profile-card" aria-label={`${name} profile`}>
-            <div className="settings-profile-card__head">
-              <div>
-                <div className="settings-simple-title">Active dog</div>
-                <div className="settings-profile-card__name">{name}</div>
-              </div>
-              <button className="settings-inline-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={() => setActivePanel(SETTINGS_PANEL.PROFILE)} type="button">
-                View profile
-              </button>
-            </div>
-            <div className="settings-profile-card__meta">
-              <div className="settings-profile-chip">{reminderSummary} reminders</div>
-              <div className="settings-profile-chip">Max {activeProto.sessionsPerDayMax} sessions/day</div>
-              <div className="settings-profile-chip">{Object.keys(patLabels).length} custom labels</div>
-            </div>
-          </section>
+          <DogProfileCard
+            dogName={name}
+            reminderSummary={reminderSummary}
+            sessionsPerDayMax={activeProto.sessionsPerDayMax}
+            customLabelCount={Object.keys(patLabels).length}
+            syncSummary={syncSummary}
+            onOpenProfile={() => setActivePanel(SETTINGS_PANEL.PROFILE)}
+          />
 
           <div className="settings-group" role="list" aria-label="Training routine settings">
             <div className="settings-section-label">Training routine</div>
