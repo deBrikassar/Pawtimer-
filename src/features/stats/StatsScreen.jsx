@@ -1,17 +1,20 @@
 import EmptyState from "../../components/EmptyState";
-import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
+import { METRIC_VARIANTS, ProgressHero, StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
 import { fmt } from "../app/helpers";
 import { SproutIcon } from "../app/ui";
 
 export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
   const target = recommendation?.duration ?? 0;
-  const headlineMetricVariant = METRIC_VARIANTS.HEADLINE;
   const standardMetricVariant = METRIC_VARIANTS.STANDARD;
   const ringMetricVariant = METRIC_VARIANTS.RING;
   const headlineSurfaceState = headlineStatusTone?.surfaceState || "today";
   const riskSurfaceState = relapseTone?.surfaceState || "today";
 
   const emotionalMomentum = chartTrendLabel || `${name} is building consistency with each calm session.`;
+  const progressDelta = Math.max(0, target - bestCalm);
+  const nextTargetLabel = progressDelta > 0
+    ? `Next milestone (+${fmt(progressDelta)})`
+    : "Milestone met — hold this rhythm";
   const cadenceLabel = avgSessionsPerDay != null
     ? avgSessionsPerDay >= 1
       ? `Strong cadence: ${avgSessionsPerDay.toFixed(1)} sessions/day.`
@@ -28,21 +31,16 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
           <EmptyState media={<SproutIcon />} title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
         ) : <>
           <StatsSection className="stats-section-hero stats-section-priority">
-            <div
-              className={`stats-headline-card stats-headline-card--hero metric-surface metric-surface--${headlineMetricVariant} surface-state--${headlineSurfaceState}`.trim()}
-              data-metric-variant={headlineMetricVariant}
-              aria-label="Current recommendation"
-            >
-              <div className="stats-headline-topline">
-                <span className="stats-headline-label">{name}'s progress pulse</span>
-                <span className="stats-headline-status">{headlineStatus}</span>
-              </div>
-              <div className="stats-headline-main stats-headline-main--hero">
-                <span className="stats-headline-value">{fmt(target)}</span>
-                <span className="stats-headline-sub">recommended solo stretch</span>
-              </div>
-              <p className="stats-hero-insight">{emotionalMomentum}</p>
-            </div>
+            <ProgressHero
+              name={name}
+              headlineStatus={headlineStatus}
+              headlineSurfaceState={headlineSurfaceState}
+              currentValue={fmt(bestCalm)}
+              currentLabel="Current calm window"
+              targetValue={fmt(target)}
+              targetLabel={nextTargetLabel}
+              insight={emotionalMomentum}
+            />
           </StatsSection>
 
           <StatsSection title="What is shaping today" className="stats-section-signals">

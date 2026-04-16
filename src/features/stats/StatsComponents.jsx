@@ -115,6 +115,51 @@ export function StatsSupportRow({ label, value }) {
   );
 }
 
+export function ProgressHero({
+  name,
+  headlineStatus,
+  headlineSurfaceState = "today",
+  currentValue,
+  currentLabel = "Current window",
+  targetValue,
+  targetLabel = "Next target",
+  insight,
+}) {
+  const dogInitial = (name || "D").trim().charAt(0).toUpperCase();
+
+  return (
+    <div
+      className={`stats-progress-hero metric-surface metric-surface--headline surface-state--${headlineSurfaceState}`.trim()}
+      aria-label={`${name}'s progress hero`}
+    >
+      <span className="stats-progress-hero-aura" aria-hidden="true" />
+      <div className="stats-progress-hero-topline">
+        <div className="stats-progress-dog-chip">
+          <span className="stats-progress-dog-mark" aria-hidden="true">{dogInitial}</span>
+          <span className="stats-progress-dog-name">{name}</span>
+        </div>
+        <span className="stats-progress-headline-status">{headlineStatus}</span>
+      </div>
+
+      <h3 className="stats-progress-headline">{headlineStatus}</h3>
+
+      <div className="stats-progress-values" role="group" aria-label="Current value and next milestone">
+        <div className="stats-progress-value-block">
+          <div className="stats-progress-value">{currentValue}</div>
+          <div className="stats-progress-label">{currentLabel}</div>
+        </div>
+        <div className="stats-progress-value-divider" aria-hidden="true" />
+        <div className="stats-progress-value-block">
+          <div className="stats-progress-value stats-progress-value--target">{targetValue}</div>
+          <div className="stats-progress-label">{targetLabel}</div>
+        </div>
+      </div>
+
+      {insight ? <p className="stats-progress-insight">{insight}</p> : null}
+    </div>
+  );
+}
+
 export function StatsProgressRing({
   value,
   numericValue = null,
