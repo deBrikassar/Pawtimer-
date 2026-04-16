@@ -2,6 +2,38 @@ import { useState } from "react";
 import { CALM_DURATIONS, GOAL_DURATIONS, LEAVE_OPTIONS } from "../app/helpers";
 import { PawIcon } from "../app/ui";
 
+export function WelcomeScreen({ onStart, onManageDogs }) {
+  return (
+    <div className="welcome-screen">
+      <div className="ws-hero">
+        <div className="ws-halo ws-halo--one" aria-hidden="true" />
+        <div className="ws-halo ws-halo--two" aria-hidden="true" />
+        <div className="ws-paw">
+          <PawIcon size={66} />
+        </div>
+        <div className="ws-eyebrow">Calm dog training</div>
+        <h1 className="ws-title">PawTimer</h1>
+        <p className="ws-copy">
+          Gentle, science-led sessions that help your dog feel safer when home alone.
+        </p>
+      </div>
+
+      <div className="ws-footer">
+        <button
+          className="ws-cta button-base button-primary button--lg button-size-primary-cta button--block"
+          type="button"
+          onClick={onStart}
+        >
+          Start setup
+        </button>
+        <button className="ws-secondary" type="button" onClick={onManageDogs}>
+          I already have a dog profile
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function Onboarding({ onComplete, onBack }) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
