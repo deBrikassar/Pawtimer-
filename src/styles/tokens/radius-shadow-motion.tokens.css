@@ -27,9 +27,13 @@
   --motion-fast: 160ms;
   --motion-base: 220ms;
   --motion-slow: 340ms;
+  --motion-screen-enter: 460ms;
+  --motion-sheet-enter: 420ms;
+  --motion-expand: 420ms;
   --motion-dialog-enter: 320ms;
   --ease-standard: cubic-bezier(0.22, 0.6, 0.28, 1);
   --ease-emphasized: cubic-bezier(0.2, 0.95, 0.3, 1);
+  --ease-premium: cubic-bezier(0.16, 0.84, 0.24, 1);
   --ease-out: cubic-bezier(0,0,0.2,1);
 
   --icon-size-xs: 14px;
