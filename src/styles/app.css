@@ -1231,6 +1231,8 @@
   .history-mini-trend-bar--level-3 { height:74%; }
   .history-mini-trend-bar--level-4 { height:100%; }
   .history-mini-trend-day span { font-size:var(--type-micro-text-size); line-height:var(--type-micro-text-line); letter-spacing:var(--type-micro-text-track); color:var(--text-muted); text-transform:uppercase; }
+  .history-insights { display:flex; flex-wrap:wrap; gap:8px; }
+  .history-insight-pill { display:inline-flex; align-items:center; min-height:28px; padding:6px 10px; border-radius:999px; font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); color:var(--brown-muted); background:color-mix(in srgb, var(--surface-muted) 90%, white); border:1px solid color-mix(in srgb, var(--mutedBlue) 18%, var(--border)); }
   .history-day-group { display:grid; gap:var(--space-control-gap); margin-bottom:var(--space-section-gap); }
   .history-day-label { font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); font-weight:var(--type-overline-weight); text-transform:uppercase; color:var(--text-muted); }
   .history-day-track { position:relative; display:grid; gap:var(--space-density-compact-control-gap); }
