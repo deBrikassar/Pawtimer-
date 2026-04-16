@@ -1105,7 +1105,10 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
 
   const plateauDuration = getPlateauDuration(recentWindow);
   if (Number.isFinite(plateauDuration) && plateauDuration > 0) {
-    const microIncrease = clampRateChange(Math.round(plateauDuration * 1.05), lastReferenceDuration);
+    let microIncrease = clampRateChange(Math.round(plateauDuration * 1.05), lastReferenceDuration);
+    if (microIncrease > lastReferenceDuration && !hasThresholdConfirmation(recentWindow)) {
+      microIncrease = lastReferenceDuration;
+    }
     const adjustedForGap = gapReduction > 0
       ? Math.round(microIncrease * (1 - gapReduction))
       : microIncrease;
