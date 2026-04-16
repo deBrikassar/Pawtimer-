@@ -64,7 +64,6 @@ export default function HomeScreen(props) {
     || recommendation?.details?.summary
     || recommendation?.explanation
     || "We temporarily adjusted session targets to rebuild calm confidence before progression resumes.";
-  const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
   const [todayOpen, setTodayOpen] = useState(false);
   const sessionBlockedMessage = daily.blockReason === "cap"
     ? `Daily alone-time cap reached (${fmtClock(daily.capSec)}). Log more sessions tomorrow.`
@@ -77,12 +76,12 @@ export default function HomeScreen(props) {
       <div className="train-main">
         <header className="train-identity-header surface-card">
           <div className="train-identity-header__badge" aria-hidden="true">
-            <Img src="hero-dog.png" size={36} alt="" />
+            <Img src="hero-dog.png" size={44} alt="" />
           </div>
           <div className="train-identity-header__copy">
-            <div className="train-identity-header__eyebrow">Training with</div>
-            <h2 className="train-identity-header__name">{name}</h2>
-            <p className="train-identity-header__mood">Build calm confidence, one short separation at a time.</p>
+            <div className="train-identity-header__eyebrow">{name}'s calm practice</div>
+            <h2 className="train-identity-header__name">Train with {name}</h2>
+            <p className="train-identity-header__mood">A short, gentle rep to help {name} feel safer when alone.</p>
           </div>
         </header>
 
@@ -111,11 +110,32 @@ export default function HomeScreen(props) {
         )}
 
         <section className="train-context-block surface-card">
-          <p className="train-context-block__title">Today’s calm target</p>
-          <p className="train-context-block__value">{fmtClock(target)}</p>
+          <p className="train-context-block__title">Current calm threshold</p>
+          <p className="train-context-block__value">{fmtClock(target)} with {name}</p>
           <p className="train-context-block__meta">
-            Logged today: <strong>{daily.count}</strong> · Goal pace: <strong>{fmt(goalSec)}</strong>
+            Sessions today: <strong>{daily.count}</strong> · Daily pace target: <strong>{fmt(goalSec)}</strong>
           </p>
+          {!daily.canAdd && (
+            <p className="status-msg status-msg--warning">
+              {sessionBlockedMessage}
+            </p>
+          )}
+          {phase === "idle" && showTrainFirstRunHint && (
+            <button
+              type="button"
+              className="train-inline-guidance"
+              onClick={dismissTrainFirstRunHint}
+            >
+              <span className="train-inline-guidance__label">Target adapts</span>
+              <span className="train-inline-guidance__copy">Calm sessions can rise. Stress signs step time down.</span>
+            </button>
+          )}
+          {phase === "idle" && recoveryMode?.active && (
+            <div className="train-recovery-inline" role="note" aria-live="polite">
+              <p className="train-recovery-inline__title">{recoveryModalTitle}</p>
+              <p className="train-recovery-inline__copy">{recoveryModalCopy}</p>
+            </div>
+          )}
         </section>
 
         <SessionRatingPanel
@@ -134,76 +154,6 @@ export default function HomeScreen(props) {
           Img={Img}
           distressTypes={DISTRESS_TYPES}
         />
-
-        {phase === "idle" && showTrainFirstRunHint && (
-          <div className="train-inline-guidance" role="note" aria-live="polite">
-            <span className="train-inline-guidance__label">Target adapts</span>
-            <span className="train-inline-guidance__copy">Calm runs nudge up. Stress signs can step time down.</span>
-          </div>
-        )}
-        {phase === "idle" && recoveryMode?.active && (
-          <button
-            type="button"
-            className="train-recovery-link"
-            onClick={() => setShowRecoveryInfo(true)}
-          >
-            Recovery plan active · view steps
-          </button>
-        )}
-        {showRecoveryInfo && recoveryMode?.active && (
-          <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => setShowRecoveryInfo(false)}>
-            <div className="quick-modal-card modal-card modal-card--dialog-md recovery-explain-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="quick-modal-head">
-                <div className="quick-modal-title">{recoveryModalTitle}</div>
-                <ModalCloseButton onClick={() => setShowRecoveryInfo(false)} />
-              </div>
-              <div className="recovery-explain-steps">
-                {(recoveryMode.stepLabels || []).map((label, idx) => (
-                  <div key={`${label}-${idx}`} className={`recovery-step-chip ${recoveryMode.step >= (idx + 1) ? "is-done" : ""}`}>{label}</div>
-                ))}
-              </div>
-              <p className="recovery-explain-copy">
-                {recoveryModalCopy}
-              </p>
-              {recoveryMode.acceptsAnyCalmSession && (
-                <p className="recovery-explain-copy">
-                  For subtle recovery, calm sessions can be any length—you do not need to match the exact step duration.
-                </p>
-              )}
-              <div className="recovery-explain-meta">
-                <span>{recoveryMode.currentStepLabel || `Step ${Math.max(1, recoveryMode.step)} of ${recoveryMode.totalSessions || 2}`}</span>
-                <span>{recoveryMode.remainingSessions} remaining</span>
-              </div>
-            </div>
-          </div>
-        )}
-        {phase === "idle" && showTrainFirstRunHint && (
-          <div className="quick-modal-overlay train-first-run-overlay" role="dialog" aria-modal="true" aria-labelledby="train-first-run-title" onClick={dismissTrainFirstRunHint}>
-            <div className="quick-modal-card modal-card modal-card--dialog-md train-first-run-card" onClick={(e) => e.stopPropagation()}>
-              <div className="train-first-run-card__eyebrow">First training session</div>
-              <div className="quick-modal-title" id="train-first-run-title">How today's target works</div>
-              <p className="train-first-run-card__copy">
-                <strong>{fmtClock(target)}</strong> is your current calm threshold. End while {name} is still calm.
-              </p>
-              <p className="train-first-run-card__copy">
-                Progress is gradual: calm sessions can increase time, stress signs can decrease it to protect confidence.
-              </p>
-              <button
-                type="button"
-                className="button-base button-primary button--md button--pill train-first-run-card__cta"
-                onClick={dismissTrainFirstRunHint}
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!daily.canAdd && (
-          <p className="status-msg status-msg--warning">
-            {sessionBlockedMessage}
-          </p>
-        )}
 
         {daily.canAdd && daily.count >= Math.max(1, activeProto.sessionsPerDayMax - (pattern.normalizedLeaves >= 7 ? 1 : 0)) && (
           <p className="status-msg status-msg--warning">
