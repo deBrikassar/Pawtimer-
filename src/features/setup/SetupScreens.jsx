@@ -116,6 +116,7 @@ export function Onboarding({ onComplete, onBack }) {
 export function DogSelect({ dogs, onSelect, onCreateNew }) {
   const [joinId, setJoinId] = useState("");
   const [joinError, setJoinError] = useState("");
+  const [activePath, setActivePath] = useState(null);
 
   const handleJoin = () => {
     const id = joinId.trim().toUpperCase();
@@ -132,11 +133,51 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
       <div className="ds-hero">
         <div className="ds-logo"><PawIcon size={68} /></div>
         <div className="ds-title">PawTimer</div>
-        <div className="ds-sub">Separation anxiety training tracker</div>
+        <div className="ds-sub">Choose how you want to get started.</div>
       </div>
       <div className="ds-body">
+        <div className="ds-path-grid">
+          <button
+            className={`ds-path-card ${activePath === "create" ? "selected" : ""}`}
+            type="button"
+            onClick={() => {
+              setActivePath("create");
+              onCreateNew();
+            }}
+          >
+            <div className="ds-path-title">Create new dog</div>
+            <div className="ds-path-copy">Set up your dog's calm plan in under a minute.</div>
+          </button>
+          <button
+            className={`ds-path-card ${activePath === "join" ? "selected" : ""}`}
+            type="button"
+            onClick={() => setActivePath("join")}
+          >
+            <div className="ds-path-title">Join existing dog by ID</div>
+            <div className="ds-path-copy">Use a shared ID to track the same dog together.</div>
+          </button>
+        </div>
+
+        <div className={`ds-join-panel ${activePath === "join" ? "is-open" : ""}`}>
+          <div className="ds-section-label">Join with a dog ID</div>
+          <div className="ds-note">IDs are unique and matched securely, case-insensitive.</div>
+          <div className="ds-join-row">
+            <input
+              className="ds-join-input"
+              placeholder="e.g. LUNA-4829"
+              value={joinId}
+              onChange={(e) => { setJoinId(e.target.value); setJoinError(""); }}
+              onKeyDown={(e) => e.key === "Enter" && joinId.trim() && handleJoin()}
+              maxLength={14}
+            />
+            <button className="ds-join-btn" onClick={handleJoin}>Join →</button>
+          </div>
+          {joinError && <div className="ds-join-error">{joinError}</div>}
+          <div className="ds-join-hint">Find this ID in PawTimer → Settings.</div>
+        </div>
+
         {dogs.length > 0 && <>
-          <div className="ds-section-label">Your dogs</div>
+          <div className="ds-section-label u-mt-section-tight">Your dogs</div>
           {dogs.map((d) => (
             <button key={d.id} className="ds-dog-card surface-row--interactive interactive-row-card" type="button" onClick={() => onSelect(d.id)}>
               <span className="interactive-row-card__icon"><PawIcon size={30} /></span>
@@ -147,33 +188,7 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
               <div className="ds-dog-arrow interactive-row-card__trailing">›</div>
             </button>
           ))}
-          <div className="ds-divider">
-            <div className="ds-divider-line" /><div className="ds-divider-text">or</div><div className="ds-divider-line" />
-          </div>
         </>}
-
-        <button className="ds-btn button-base button-primary button--lg button-size-primary-cta button--block" onClick={onCreateNew}>
-          <PawIcon size={20} color="rgba(255,255,255,0.85)" /> Add a new dog
-        </button>
-
-        <div className="ds-section-label u-mt-section-tight">Join with a dog ID</div>
-        <div className="ds-note">Dog IDs are case-insensitive — matched automatically regardless of case.</div>
-        <div className="t-helper u-mb-card-row">
-          Use the same ID from your partner's phone to track the same dog together.
-        </div>
-        <div className="ds-join-row">
-          <input
-            className="ds-join-input"
-            placeholder="e.g. LUNA-4829"
-            value={joinId}
-            onChange={(e) => { setJoinId(e.target.value); setJoinError(""); }}
-            onKeyDown={(e) => e.key === "Enter" && joinId.trim() && handleJoin()}
-            maxLength={14}
-          />
-          <button className="ds-join-btn" onClick={handleJoin}>Join →</button>
-        </div>
-        {joinError && <div className="ds-join-error">{joinError}</div>}
-        <div className="ds-join-hint">Find the ID in PawTimer → Settings tab.</div>
       </div>
     </div>
   );
