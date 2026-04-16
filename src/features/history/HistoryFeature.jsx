@@ -343,18 +343,58 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
   const recentCount = timeline.slice(0, 7).length;
   const sessionCount = timeline.filter((item) => item.kind === "session").length;
   const careCount = timeline.filter((item) => item.kind !== "session").length;
+  const lastSession = timeline.find((item) => item.kind === "session");
+  const timelineByDay = timeline.reduce((acc, item) => {
+    const isoDate = item?.date;
+    if (!isoDate) return acc;
+    const dayKey = isoDate.slice(0, 10);
+    if (!acc[dayKey]) acc[dayKey] = [];
+    acc[dayKey].push(item);
+    return acc;
+  }, {});
+  const dayGroups = Object.entries(timelineByDay).sort(([a], [b]) => (a < b ? 1 : -1));
+  const recentTrend = (() => {
+    const trendDays = 7;
+    const today = new Date();
+    const buckets = [];
+    for (let offset = trendDays - 1; offset >= 0; offset -= 1) {
+      const bucketDate = new Date(today);
+      bucketDate.setHours(0, 0, 0, 0);
+      bucketDate.setDate(bucketDate.getDate() - offset);
+      const dayKey = bucketDate.toISOString().slice(0, 10);
+      const daySessions = timelineByDay[dayKey]?.filter((item) => item.kind === "session") ?? [];
+      const calmSessions = daySessions.filter((item) => normalizeDistressLevel(item?.data?.distressLevel) === "none").length;
+      buckets.push({
+        dayKey,
+        count: daySessions.length,
+        calmCount: calmSessions,
+        label: bucketDate.toLocaleDateString(undefined, { weekday: "short" }),
+      });
+    }
+    return buckets;
+  })();
+  const trendMax = Math.max(1, ...recentTrend.map((day) => day.count));
+  const trendLevel = (count) => {
+    if (count <= 0) return 0;
+    const ratio = count / trendMax;
+    if (ratio >= 0.8) return 4;
+    if (ratio >= 0.6) return 3;
+    if (ratio >= 0.35) return 2;
+    if (ratio >= 0.15) return 1;
+    return 0;
+  };
 
   const toggleExpandedItem = (itemKey) => {
     setExpandedItemKey((prev) => (prev === itemKey ? null : itemKey));
   };
 
-  const renderHistoryCard = ({ itemKey, title, date, value, badge, syncBadge, expandedContent }) => {
+  const renderHistoryCard = ({ itemKey, title, date, value, badge, syncBadge, expandedContent, kindLabel }) => {
     const isExpanded = expandedItemKey === itemKey;
     const detailsId = `history-details-${itemKey}`;
 
     return (
       <div
-        className={`h-item surface-row--interactive interactive-row-card ${isExpanded ? "is-expanded" : ""}`.trim()}
+        className={`h-item ${isExpanded ? "is-expanded" : ""}`.trim()}
         key={itemKey}
         role="button"
         tabIndex={0}
@@ -369,7 +409,9 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
       >
         <div className="h-body">
           <div className="h-content">
+            <div className="h-marker" aria-hidden="true" />
             <div className="h-info">
+              <div className="h-kind">{kindLabel}</div>
               <div className="h-main">{title}</div>
               <div className="h-meta-line">
                 <span className="h-date">{date}</span>
@@ -397,22 +439,55 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
         <div className="section">
           <div className="history-section-head">
             <div>
-              <div className="section-title">Story timeline</div>
-              <div className="t-helper">A narrative of {name}'s training and support routines over time.</div>
+              <div className="section-title">History</div>
+              <div className="t-helper">A calm view of {name}&rsquo;s training progress.</div>
             </div>
             {sessions.length > 0 && <button className="clear-btn surface-text-button secondary-control secondary-control--inline-text" onClick={actions.clearSessions}>Clear sessions</button>}
           </div>
           {timeline.length > 0 && (
-            <div className="history-story-summary">
-              <span>{recentCount} recent moments</span>
-              <span>{sessionCount} training sessions</span>
-              <span>{careCount} support routine logs</span>
+            <div className="history-summary-surface">
+              <div className="history-summary-grid">
+                <div className="history-summary-item">
+                  <div className="history-summary-value">{sessionCount}</div>
+                  <div className="history-summary-label">Training sessions</div>
+                </div>
+                <div className="history-summary-item">
+                  <div className="history-summary-value">{careCount}</div>
+                  <div className="history-summary-label">Care routine logs</div>
+                </div>
+                <div className="history-summary-item">
+                  <div className="history-summary-value">{recentCount}</div>
+                  <div className="history-summary-label">Recent moments</div>
+                </div>
+              </div>
+              <div className="history-mini-trend" aria-label="Last seven days of training sessions">
+                <div className="history-mini-trend-head">
+                  <span>7-day training rhythm</span>
+                  <span>{recentTrend.reduce((sum, day) => sum + day.count, 0)} sessions</span>
+                </div>
+                <div className="history-mini-trend-bars" role="img" aria-label="Each bar shows number of sessions completed each day">
+                  {recentTrend.map((day) => (
+                    <div className="history-mini-trend-day" key={day.dayKey}>
+                      <div
+                        className={`history-mini-trend-bar history-mini-trend-bar--level-${trendLevel(day.count)}`}
+                        title={`${day.dayKey}: ${day.count} session${day.count === 1 ? "" : "s"}, ${day.calmCount} calm`}
+                      />
+                      <span>{day.label.slice(0, 1)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {lastSession ? <div className="history-summary-note">Latest training session: {fmtDate(lastSession.date)}.</div> : null}
             </div>
           )}
 
           {timeline.length === 0 ? (
             <EmptyState media={<TrendIcon />} title="No activity yet" body={`Start ${name}'s first session and your training history will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
-          ) : timeline.map((item) => {
+          ) : dayGroups.map(([dayKey, items]) => (
+            <div className="history-day-group" key={dayKey}>
+              <div className="history-day-label">{new Date(`${dayKey}T00:00:00`).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</div>
+              <div className="history-day-track">
+                {items.map((item) => {
             if (item.kind === "session") {
               const s = item.data;
               const lv = normalizeDistressLevel(
@@ -425,6 +500,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 title: "Training session",
                 date: fmtDate(s.date),
                 value: fmt(s.actualDuration),
+                kindLabel: "Training",
                 badge: <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>,
                 syncBadge: renderSyncBadge(s),
                 expandedContent: <>
@@ -454,6 +530,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 title: `${walkTypeLabel(w.type)} with ${name}`,
                 date: fmtDate(w.date),
                 value: w.duration ? fmt(w.duration) : "—",
+                kindLabel: "Support",
                 badge: <span className="h-side-label">Duration</span>,
                 syncBadge: renderSyncBadge(w),
                 expandedContent: <>
@@ -483,6 +560,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 itemKey: `p-${p.id}`,
                 title: patLabels[pt.type] || pt.label,
                 date: fmtDate(p.date),
+                kindLabel: "Support",
                 badge: <span className="h-badge badge-pat">Pattern break</span>,
                 syncBadge: renderSyncBadge(p),
                 expandedContent: <>
@@ -510,6 +588,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 title: <span className="history-food-type">{f.foodType}</span>,
                 date: fmtDate(f.date),
                 value: f.amount,
+                kindLabel: "Support",
                 badge: <span className="h-badge badge-feed">Feeding</span>,
                 syncBadge: renderSyncBadge(f),
                 expandedContent: <>
@@ -531,7 +610,8 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               });
             }
             return null;
-          })}
+          })}</div></div>
+          ))}
         </div>
       </div>
 
