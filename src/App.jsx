@@ -1237,22 +1237,6 @@ export default function PawTimer() {
         </div>
       )}
       <div className="app">
-        <div className="header">
-          <div className="header-top">
-            <div className="identity-zone">
-              <label className="dog-photo-btn" title="Tap to change photo">
-                <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoUpload} />
-                {dogPhoto ? <img src={dogPhoto} className="dog-photo-img" alt={appData.name} /> : <div className="dog-photo-placeholder"><PawIcon size={28} /></div>}
-                <div className="dog-photo-overlay"><CameraIcon /></div>
-              </label>
-              <div className="identity-copy">
-                <div className="app-title">{appData.name}</div>
-                <div className="app-subtitle">Calm-alone plan for real departures</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className={`tab-panel tab-panel--${tabMotionDirection}`} key={tab}>
           {tab === "home" && <HomeScreen name={appData.name} sessions={canonicalSessions} recommendation={appData.recommendation} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} showTrainFirstRunHint={trainFirstRunHintVisible} dismissTrainFirstRunHint={completeTrainFirstRunHint} trainTimeChangeInsight={trainTimeChangeInsight} returningTrainNudge={returningTrainNudge} dismissReturningTrainNudge={acknowledgeReturningTrainNudge} openHistory={() => handleTabChange("history")} openProgress={() => handleTabChange("progress")} />}
           {tab === "history" && <HistoryScreen timeline={appData.timeline} sessions={canonicalSessions} name={appData.name} setTab={setTab} patLabels={patLabels} historyModal={historyModal} setHistoryModal={setHistoryModal} actions={historyActions} />}

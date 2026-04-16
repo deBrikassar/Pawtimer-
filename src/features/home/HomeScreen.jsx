@@ -65,6 +65,19 @@ export default function HomeScreen(props) {
   return (
     <div className="tab-content train-screen">
       <div className="train-main">
+        <header className="train-identity-header surface-card">
+          <div className="train-identity-header__badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 10.5 5.6 6.8a1.2 1.2 0 0 1 2-.9L10 8.8h4l2.4-2.9a1.2 1.2 0 0 1 2 .9L17 10.5a6.2 6.2 0 0 1 .7 2.8c0 3.2-2.6 5.7-5.7 5.7s-5.7-2.5-5.7-5.7c0-1 .2-2 .7-2.8Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9.4 13.1c.2 0 .4-.2.4-.4s-.2-.4-.4-.4-.4.2-.4.4.2.4.4.4Zm5.2 0c.2 0 .4-.2.4-.4s-.2-.4-.4-.4-.4.2-.4.4.2.4.4.4Z" fill="currentColor"/>
+              <path d="M10.3 15.3c.5.5 1 .7 1.7.7s1.2-.2 1.7-.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <div className="train-identity-header__copy">
+            <h2 className="train-identity-header__name">Train with {name}</h2>
+          </div>
+        </header>
+
         <SessionControl
           phase={phase}
           elapsed={elapsed}
