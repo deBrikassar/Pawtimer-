@@ -1603,8 +1603,49 @@
     .stats-progress-wave-line,
     .stats-progress-wave-latest-halo { animation:none; }
     .stats-progress-wave-line { stroke-dashoffset:0; }
+    .stats-insight-card { animation:none; }
   }
   .stats-section-supporting { margin-bottom:var(--space-card-row-gap); }
+  .stats-insight-stack { display:grid; gap:8px; margin-bottom:10px; }
+  .stats-insight-card {
+    position:relative;
+    overflow:hidden;
+    border-radius:var(--radius-sm);
+    border:1px solid color-mix(in srgb, var(--border) 80%, var(--warm-accent-border));
+    background:linear-gradient(120deg, color-mix(in srgb, var(--surf) 90%, white), color-mix(in srgb, var(--surface-gradient-raised) 86%, white));
+    padding:12px var(--stats-content-inset, var(--space-card-padding));
+    display:grid;
+    gap:4px;
+    box-shadow:var(--shadow);
+    animation:statsInsightEnter 460ms var(--ease-out) both;
+    animation-delay:calc(var(--insight-index, 0) * 80ms);
+  }
+  .stats-insight-card::after {
+    content:"";
+    position:absolute;
+    inset:0 auto 0 0;
+    width:3px;
+    background:var(--green-dark);
+    opacity:0.78;
+  }
+  .stats-insight-card--caution::after { background:color-mix(in srgb, var(--orange) 72%, var(--brown)); }
+  .stats-insight-card--positive::after { background:color-mix(in srgb, var(--green-dark) 86%, var(--green)); }
+  .stats-insight-message {
+    margin:0;
+    font-size:var(--type-secondary-size);
+    line-height:var(--type-secondary-line);
+    letter-spacing:var(--type-secondary-track);
+    font-weight:var(--type-secondary-weight);
+    color:var(--brown);
+  }
+  .stats-insight-detail {
+    margin:0;
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+    letter-spacing:var(--type-helper-text-track);
+    font-weight:var(--type-helper-text-weight);
+    color:var(--text-muted);
+  }
   .stats-support-list { background:var(--surf); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow); overflow:hidden; }
   .stats-support-list--insights { background:var(--surface-gradient-raised); border-color:color-mix(in srgb, var(--border) 88%, var(--warm-accent-border)); }
   .stats-support-row { padding-inline:var(--space-inline-control-padding); padding-left:var(--stats-content-inset, var(--space-card-padding)); animation:surfaceEnter var(--motion-enter) var(--ease-out); }
@@ -1634,6 +1675,10 @@
   @media (max-width: 380px) {
     .stats-row-core-trimmed { gap:clamp(8px, 2.5vw, var(--space-control-gap)); }
     .stat-card { padding:clamp(10px, 3vw, var(--space-inline-control-padding)); padding-left:var(--stats-content-inset, var(--space-card-padding)); }
+  }
+  @keyframes statsInsightEnter {
+    from { opacity:0; transform:translate3d(0, 8px, 0); filter:saturate(0.94); }
+    to { opacity:1; transform:translate3d(0, 0, 0); filter:saturate(1); }
   }
   /* ── Settings tab ── */
   .share-card  { padding:var(--space-surface-card); margin-bottom:0; display:flex; flex-direction:column; gap:var(--space-card-row-gap); }

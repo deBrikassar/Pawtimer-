@@ -12,6 +12,96 @@ const resolveActivityDate = (entry = {}) => (
   ?? entry?.created_at
   ?? null
 );
+const YESTERDAY_MS = 24 * 60 * 60 * 1000;
+
+export function buildProgressInsights({
+  chartData = [],
+  canonicalSessions = [],
+  recommendationDuration = null,
+  lastPlannedDuration = null,
+  decisionState = null,
+  streak = 0,
+}) {
+  const insights = [];
+  const pushInsight = (insight) => {
+    if (!insight || insights.some((existing) => existing.id === insight.id)) return;
+    insights.push(insight);
+  };
+
+  const durations = chartData
+    .map((item) => Number(item.durationSeconds))
+    .filter((value) => Number.isFinite(value));
+  const recentSlice = durations.slice(-4);
+  const previousSlice = durations.slice(-8, -4);
+  const recentAvg = recentSlice.length
+    ? recentSlice.reduce((sum, value) => sum + value, 0) / recentSlice.length
+    : null;
+  const previousAvg = previousSlice.length
+    ? previousSlice.reduce((sum, value) => sum + value, 0) / previousSlice.length
+    : null;
+
+  const lastSession = canonicalSessions.at(-1);
+  const prevSession = canonicalSessions.at(-2);
+  const lastSessionTime = new Date(resolveActivityDate(lastSession)).getTime();
+  const now = Date.now();
+  const happenedYesterday = Number.isFinite(lastSessionTime)
+    && (now - lastSessionTime) >= YESTERDAY_MS
+    && (now - lastSessionTime) < (YESTERDAY_MS * 2);
+  const wasHighStress = ["active", "severe"].includes(lastSession?.distressLevel);
+  const pushedTooFast = Number.isFinite(lastSession?.actualDuration)
+    && Number.isFinite(prevSession?.actualDuration)
+    && lastSession.actualDuration > prevSession.actualDuration * 1.2
+    && wasHighStress;
+
+  if (happenedYesterday && pushedTooFast) {
+    pushInsight({
+      id: "yesterday-pacing",
+      tone: "caution",
+      message: "You pushed too fast yesterday.",
+      detail: "Last session spiked with stress, so today should stay gentler.",
+    });
+  }
+
+  if (Number.isFinite(lastPlannedDuration) && Number.isFinite(recommendationDuration) && recommendationDuration < lastPlannedDuration) {
+    pushInsight({
+      id: "reduced-time",
+      tone: "caution",
+      message: "Time was reduced to protect calmness.",
+      detail: `Target shifted from ${fmt(lastPlannedDuration)} to ${fmt(recommendationDuration)} for steadier confidence.`,
+    });
+  }
+
+  if (previousAvg != null && recentAvg != null && recentAvg > previousAvg * 1.05 && previousAvg > 0) {
+    pushInsight({
+      id: "recovering",
+      tone: "positive",
+      message: "Progress is recovering.",
+      detail: `Recent sessions are trending longer (${fmt(Math.round(recentAvg))} average).`,
+    });
+  }
+
+  if (streak >= 2 && decisionState?.uiTone !== "risk_high") {
+    pushInsight({
+      id: "stable-streak",
+      tone: "positive",
+      message: "Stable streak restored.",
+      detail: streak >= 4
+        ? `${streak} calm sessions in a row are reinforcing predictability.`
+        : "Consecutive calm sessions are rebuilding rhythm.",
+    });
+  }
+
+  if (!insights.length && recentAvg != null && previousAvg != null) {
+    pushInsight({
+      id: "steady-base",
+      tone: "neutral",
+      message: "Progress is holding steady.",
+      detail: "Consistency is more important than bigger jumps right now.",
+    });
+  }
+
+  return insights.slice(0, 3);
+}
 
 const statusTone = (value, { good, warn, invert = false }) => {
   if (value == null) return getInformationalTone("neutral");
@@ -199,6 +289,14 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     if (recentAvg < previousAvg * 0.92) return "Trend: Declining";
     return "Trend: Plateau";
   })();
+  const contextualInsights = buildProgressInsights({
+    chartData,
+    canonicalSessions,
+    recommendationDuration: unifiedRecommendation?.duration,
+    lastPlannedDuration,
+    decisionState,
+    streak,
+  });
 
   const timeline = [
     ...canonicalSessions
@@ -258,6 +356,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     headlineStatus,
     headlineStatusTone,
     chartTrendLabel,
+    contextualInsights,
     timeline,
     distressCounts,
     distressLabel,

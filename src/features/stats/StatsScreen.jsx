@@ -1,9 +1,9 @@
 import EmptyState from "../../components/EmptyState";
-import { METRIC_VARIANTS, ProgressHero, StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
+import { METRIC_VARIANTS, ProgressHero, StatsChartSection, StatsInsightCard, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
 import { fmt } from "../app/helpers";
 import { SproutIcon } from "../app/ui";
 
-export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
+export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone, contextualInsights = [] }) {
   const target = recommendation?.duration ?? 0;
   const standardMetricVariant = METRIC_VARIANTS.STANDARD;
   const ringMetricVariant = METRIC_VARIANTS.RING;
@@ -75,6 +75,19 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
           </StatsSection>
 
           <StatsSection title="Contextual insights" className="stats-section-supporting">
+            {contextualInsights.length > 0 ? (
+              <div className="stats-insight-stack" role="list" aria-label="Progress movement insights">
+                {contextualInsights.map((insight, index) => (
+                  <StatsInsightCard
+                    key={insight.id || `${insight.message}-${index}`}
+                    message={insight.message}
+                    detail={insight.detail}
+                    tone={insight.tone}
+                    index={index}
+                  />
+                ))}
+              </div>
+            ) : null}
             <div className="stats-support-list stats-support-list--insights">
               <StatsSupportRow label="Weekly solo time" value={fmt(aloneLastWeek)} />
               <StatsSupportRow label="Session cadence" value={cadenceLabel} />
