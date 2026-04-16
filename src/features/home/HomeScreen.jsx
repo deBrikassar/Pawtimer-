@@ -1,5 +1,4 @@
 import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
-import { METRIC_VARIANTS, StatsProgressRing } from "../stats/StatsComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton } from "../app/ui";
 import { useState } from "react";
@@ -106,46 +105,18 @@ export default function HomeScreen(props) {
           distressTypes={DISTRESS_TYPES}
         />
 
-        {phase === "idle" && (() => {
-          const goalFrac = Math.min(goalPct / 100, 1);
-          const sessFrac = activeProto.sessionsPerDayMax > 0 ? Math.min(daily.count / activeProto.sessionsPerDayMax, 1) : 0;
-          const nextSessionLabel = fmtClock(target);
-          const ringMetricVariant = METRIC_VARIANTS.RING;
-          return (
-            <div
-              className={`stats-rings-card metric-surface metric-surface--${ringMetricVariant} ${recoveryMode?.active ? "stats-rings-card--recovery-active" : ""}`.trim()}
-              role={recoveryMode?.active ? "button" : undefined}
-              tabIndex={recoveryMode?.active ? 0 : undefined}
-              onClick={recoveryMode?.active ? () => setShowRecoveryInfo(true) : undefined}
-              onKeyDown={recoveryMode?.active ? (e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  setShowRecoveryInfo(true);
-                }
-              } : undefined}
-            >
-              <StatsProgressRing
-                value={nextSessionLabel}
-                numericValue={target}
-                formatValue={fmtClock}
-                label="Next session"
-                progress={goalFrac}
-                fillClassName="ring-fill-1"
-                className="ring-col--next-session"
-                ringWrapClassName={recoveryMode?.active ? "ring-wrap--recovery-pulse" : ""}
-                showRecoveryPulse={recoveryMode?.active}
-              />
-              <div className="ring-col-sep" />
-              <StatsProgressRing
-                value={daily.count}
-                numericValue={daily.count}
-                label="Sessions today"
-                progress={sessFrac}
-                fillClassName="ring-fill-2"
-              />
-            </div>
-          );
-        })()}
+        {phase === "idle" && (
+          <button
+            type="button"
+            className={`train-focus-strip ${recoveryMode?.active ? "train-focus-strip--recovery" : ""}`.trim()}
+            onClick={recoveryMode?.active ? () => setShowRecoveryInfo(true) : undefined}
+            disabled={!recoveryMode?.active}
+          >
+            <span className="train-focus-strip__label">Focus now</span>
+            <span className="train-focus-strip__value">{fmtClock(target)} calm session</span>
+            <span className="train-focus-strip__meta">{daily.count} logged today</span>
+          </button>
+        )}
         {showRecoveryInfo && recoveryMode?.active && (
           <div className="quick-modal-overlay" role="dialog" aria-modal="true" onClick={() => setShowRecoveryInfo(false)}>
             <div className="quick-modal-card modal-card modal-card--dialog-md recovery-explain-modal" onClick={(e) => e.stopPropagation()}>
@@ -187,7 +158,8 @@ export default function HomeScreen(props) {
         )}
 
         <div className="tool-group-card surface-card surface-card--tool-group">
-          <div className="section-title">Today's logs</div>
+          <div className="section-title">Support routines</div>
+          <div className="t-helper">Quick log items that support training, without leaving Train.</div>
           <div className="quick-actions-row">
             <button className="quick-action-btn" type="button" onClick={walkPhase === "idle" ? startWalk : undefined}>
               <span className="quick-action-label">Walk</span>
