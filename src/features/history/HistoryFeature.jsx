@@ -3,7 +3,7 @@ import EmptyState from "../../components/EmptyState";
 import { InlineBanner } from "../../components/primitives";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
-import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, sessionDetailBadges, walkTypeLabel } from "../app/helpers";
+import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, walkTypeLabel } from "../app/helpers";
 import { ClockIcon, DeleteIcon, EditIcon, ModalCloseButton, TrendIcon } from "../app/ui";
 import { logSyncDebug, mergeSessionWithDerivedFields, normalizeSession } from "../app/storage";
 
@@ -35,15 +35,6 @@ function HistoryDetailGroup({ label, children }) {
     <div className="h-detail-group">
       <div className="h-detail-label">{label}</div>
       <div className="h-detail-body">{children}</div>
-    </div>
-  );
-}
-
-function HistoryChipList({ items }) {
-  if (!items?.length) return <div className="h-detail-empty">No extra notes logged yet.</div>;
-  return (
-    <div className="h-chip-list">
-      {items.map((item) => <span className="h-chip" key={item}>{item}</span>)}
     </div>
   );
 }
@@ -332,8 +323,7 @@ const renderSyncBadge = (entry) => {
 };
 
 export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
-  const [expandedItemKey, setExpandedItemKey] = useState(null);
-  const [sessionDetail, setSessionDetail] = useState(null);
+  const [activityDetail, setActivityDetail] = useState(null);
   const [clearSessionsConfirmOpen, setClearSessionsConfirmOpen] = useState(false);
   const parsedDuration = historyModal?.mode === "duration" ? parseDurationInput(historyModal.value) : null;
   const requiresPositiveDuration = historyModal?.kind === "session";
@@ -341,10 +331,6 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
   const durationIsValid = historyModal?.mode === "duration"
     ? Number.isFinite(parsedDuration) && (requiresPositiveDuration ? parsedDuration > 0 : parsedDuration >= 0)
     : true;
-  const sessionCount = timeline.filter((item) => item.kind === "session").length;
-  const careCount = timeline.filter((item) => item.kind !== "session").length;
-  const lastSession = timeline.find((item) => item.kind === "session");
-  const lastSessionLabel = lastSession ? fmtDate(lastSession.date) : "—";
   const timelineByDay = timeline.reduce((acc, item) => {
     const isoDate = item?.date;
     if (!isoDate) return acc;
@@ -364,170 +350,50 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
       bucketDate.setDate(bucketDate.getDate() - offset);
       const dayKey = bucketDate.toISOString().slice(0, 10);
       const daySessions = timelineByDay[dayKey]?.filter((item) => item.kind === "session") ?? [];
-      const calmSessions = daySessions.filter((item) => normalizeDistressLevel(item?.data?.distressLevel) === "none").length;
       buckets.push({
         dayKey,
         count: daySessions.length,
-        calmCount: calmSessions,
         label: bucketDate.toLocaleDateString(undefined, { weekday: "short" }),
       });
     }
     return buckets;
   })();
-  const historyInsights = (() => {
-    const sessionItems = timeline
-      .filter((item) => item.kind === "session")
-      .map((item) => item.data)
-      .filter((session) => session?.date)
-      .sort((a, b) => (a.date > b.date ? 1 : -1));
-    if (sessionItems.length < 2) return [];
-
-    const scoreDistress = (session) => {
-      const level = normalizeDistressLevel(
-        session?.distressLevel
-        ?? (session?.result === "success" ? "none" : (session?.result === "distress" ? "strong" : null)),
-      );
-      if (level === "none") return 0;
-      if (level === "subtle") return 1;
-      if (level === "active") return 2;
-      return 3;
-    };
-
-    const average = (values) => values.reduce((sum, value) => sum + value, 0) / values.length;
-    const latestSessions = sessionItems.slice(-6);
-    const latestThree = latestSessions.slice(-3);
-    const previousThree = latestSessions.slice(0, 3);
-    const insightPool = [];
-
-    if (latestThree.length === 3 && previousThree.length === 3) {
-      const recentDistress = average(latestThree.map(scoreDistress));
-      const priorDistress = average(previousThree.map(scoreDistress));
-      if (recentDistress + 0.35 < priorDistress) {
-        insightPool.push("Improving over recent sessions.");
-      }
-    }
-
-    const todayKey = new Date().toISOString().slice(0, 10);
-    const todaySessions = sessionItems.filter((session) => session.date.slice(0, 10) === todayKey);
-    if (todaySessions.length >= 2) {
-      const todayDurations = todaySessions
-        .map((session) => (Number.isFinite(session.actualDuration) ? session.actualDuration : 0))
-        .filter((duration) => duration > 0);
-      const todayDistressAvg = average(todaySessions.map(scoreDistress));
-      if (todayDurations.length >= 2 && todayDistressAvg <= 1) {
-        const spread = Math.max(...todayDurations) - Math.min(...todayDurations);
-        if (spread <= 120) insightPool.push("More stable today.");
-      }
-    }
-
-    const distressScores = sessionItems.map(scoreDistress);
-    const mostRecentStressIndex = distressScores.reduce((latestIndex, score, index) => (score >= 2 ? index : latestIndex), -1);
-    if (mostRecentStressIndex >= 0 && mostRecentStressIndex + 2 < sessionItems.length) {
-      const preStressDuration = sessionItems
-        .slice(Math.max(0, mostRecentStressIndex - 2), mostRecentStressIndex)
-        .map((session) => session.actualDuration)
-        .filter((duration) => Number.isFinite(duration) && duration > 0);
-      const postStressDuration = sessionItems
-        .slice(mostRecentStressIndex + 1, mostRecentStressIndex + 3)
-        .map((session) => session.actualDuration)
-        .filter((duration) => Number.isFinite(duration) && duration > 0);
-      if (preStressDuration.length && postStressDuration.length) {
-        if (average(postStressDuration) <= average(preStressDuration) * 0.82) {
-          insightPool.push("Shorter sessions after a stress event.");
-        }
-      }
-    }
-
-    if (sessionItems.length >= 4) {
-      const lastTwoScores = sessionItems.slice(-2).map(scoreDistress);
-      const priorScores = sessionItems.slice(-6, -2).map(scoreDistress);
-      const hadStressBefore = priorScores.some((score) => score >= 2);
-      const nowCalm = lastTwoScores.every((score) => score <= 1);
-      if (hadStressBefore && nowCalm) {
-        insightPool.push("Back on track.");
-      }
-    }
-
-    if (!insightPool.length) {
-      return ["Steady rhythm this week."];
-    }
-    return insightPool.slice(0, 2);
-  })();
-  const trendMax = Math.max(1, ...recentTrend.map((day) => day.count));
-  const trendLevel = (count) => {
-    if (count <= 0) return 0;
-    const ratio = count / trendMax;
-    if (ratio >= 0.8) return 4;
-    if (ratio >= 0.6) return 3;
-    if (ratio >= 0.35) return 2;
-    if (ratio >= 0.15) return 1;
-    return 0;
-  };
-
-  const toggleExpandedItem = (itemKey) => {
-    setExpandedItemKey((prev) => (prev === itemKey ? null : itemKey));
-  };
+  const weeklyRhythmLabel = recentTrend.some((day) => day.count > 0) ? "Weekly rhythm" : "No sessions this week";
 
   useEffect(() => {
-    if (!sessionDetail) return;
+    if (!activityDetail) return;
     const closeOnEscape = (event) => {
-      if (event.key === "Escape") setSessionDetail(null);
+      if (event.key === "Escape") setActivityDetail(null);
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [sessionDetail]);
+  }, [activityDetail]);
 
-  const renderHistoryCard = ({ itemKey, title, date, value, badge, syncBadge, expandedContent, kindLabel, onActivate }) => {
-    const isExpanded = expandedItemKey === itemKey;
-    const detailsId = `history-details-${itemKey}`;
-    const isInteractiveCard = typeof onActivate === "function" || Boolean(expandedContent);
-    const cardClassName = `h-item ${isExpanded ? "is-expanded" : ""} ${typeof onActivate === "function" ? "is-tap-card" : ""}`.trim();
-
-    const handleActivate = () => {
-      if (typeof onActivate === "function") {
-        onActivate();
-        return;
-      }
-      if (expandedContent) toggleExpandedItem(itemKey);
-    };
-
+  const renderHistoryCard = ({ itemKey, title, date, duration, status, onActivate }) => {
     return (
       <div
-        className={cardClassName}
+        className="h-item is-tap-card"
         key={itemKey}
-        role={isInteractiveCard ? "button" : undefined}
-        tabIndex={isInteractiveCard ? 0 : undefined}
-        aria-expanded={expandedContent ? isExpanded : undefined}
-        aria-controls={expandedContent ? detailsId : undefined}
-        onClick={isInteractiveCard ? handleActivate : undefined}
+        role="button"
+        tabIndex={0}
+        onClick={onActivate}
         onKeyDown={(event) => {
-          if (!isInteractiveCard) return;
           if (event.key !== "Enter" && event.key !== " ") return;
           event.preventDefault();
-          handleActivate();
+          onActivate();
         }}
       >
+        <div className="h-rail" aria-hidden="true">
+          <div className="h-marker" />
+        </div>
         <div className="h-body">
-          <div className="h-content">
-            <div className="h-marker" aria-hidden="true" />
-            <div className="h-info">
-              <div className="h-kind">{kindLabel}</div>
-              <div className="h-main">{title}</div>
-              <div className="h-meta-line">
-                <span className="h-date">{date}</span>
-                {syncBadge}
-              </div>
-            </div>
-            <div className="h-side">
-              {value ? <div className="h-value">{value}</div> : null}
-              {badge}
-            </div>
+          <div className="h-main">{title}</div>
+          <div className="h-meta-line">
+            <span className="h-duration">{duration}</span>
+            <span className="h-meta-divider" aria-hidden="true">•</span>
+            <span className="h-date">{date}</span>
           </div>
-          {isExpanded ? (
-            <div className="h-expand" id={detailsId}>
-              {expandedContent}
-            </div>
-          ) : null}
+          <div className="h-status-row">{status}</div>
         </div>
       </div>
     );
@@ -540,7 +406,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
           <div className="history-section-head">
             <div>
               <div className="section-title">History</div>
-              <div className="t-helper">A timeline of {name}&rsquo;s calm-alone reps and support routine.</div>
+              <div className="t-helper">Weekly rhythm and activity timeline.</div>
             </div>
             {sessions.length > 0 && <button className="clear-btn surface-text-button secondary-control secondary-control--inline-text" onClick={() => setClearSessionsConfirmOpen((prev) => !prev)}>{clearSessionsConfirmOpen ? "Cancel" : "Clear sessions"}</button>}
           </div>
@@ -569,45 +435,19 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
           ) : null}
           {timeline.length > 0 && (
             <div className="history-summary-surface">
-              <div className="history-summary-grid">
-                <div className="history-summary-item">
-                  <div className="history-summary-value">{sessionCount}</div>
-                  <div className="history-summary-label">Calm-alone reps</div>
-                </div>
-                <div className="history-summary-item">
-                  <div className="history-summary-value">{careCount}</div>
-                  <div className="history-summary-label">Support routine logs</div>
-                </div>
-                <div className="history-summary-item">
-                  <div className="history-summary-value">{lastSessionLabel}</div>
-                  <div className="history-summary-label">Latest calm-alone rep</div>
-                </div>
-              </div>
               <div className="history-mini-trend" aria-label="Last seven days of training sessions">
                 <div className="history-mini-trend-head">
-                  <span>7-day calm-alone rhythm</span>
-                  <span>{recentTrend.reduce((sum, day) => sum + day.count, 0)} reps</span>
+                  <span>{weeklyRhythmLabel}</span>
                 </div>
-                <div className="history-mini-trend-bars" role="img" aria-label="Each bar shows number of sessions completed each day">
+                <div className="history-mini-trend-dots" role="img" aria-label="Each dot shows whether a session was completed on that day">
                   {recentTrend.map((day) => (
-                    <div className="history-mini-trend-day" key={day.dayKey}>
-                      <div
-                        className={`history-mini-trend-bar history-mini-trend-bar--level-${trendLevel(day.count)}`}
-                        title={`${day.dayKey}: ${day.count} session${day.count === 1 ? "" : "s"}, ${day.calmCount} calm`}
-                      />
+                    <div className="history-mini-trend-dot-wrap" key={day.dayKey}>
+                      <div className={`history-mini-trend-dot ${day.count > 0 ? "is-active" : ""}`} title={`${day.dayKey}: ${day.count > 0 ? "session logged" : "no session"}`} />
                       <span>{day.label.slice(0, 1)}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              {historyInsights.length > 0 ? (
-                <div className="history-insights" aria-label="History summary insights">
-                  {historyInsights.map((insight) => (
-                    <span className="history-insight-pill" key={insight}>{insight}</span>
-                  ))}
-                </div>
-              ) : null}
-              {lastSession ? <div className="history-summary-note">Use recent detail cards below to edit or clean up timeline entries.</div> : null}
             </div>
           )}
 
@@ -628,11 +468,14 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 itemKey: `s-${s.id}`,
                 title: "Calm-alone training rep",
                 date: fmtDate(s.date),
-                value: fmt(s.actualDuration),
-                kindLabel: "Calm-alone",
-                onActivate: () => setSessionDetail(s),
-                badge: <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>,
-                syncBadge: renderSyncBadge(s),
+                duration: fmt(s.actualDuration),
+                onActivate: () => setActivityDetail({ kind: "session", item: s, title: "Calm-alone training rep", duration: fmt(s.actualDuration), status: lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress" }),
+                status: (
+                  <>
+                    <span className={`h-badge badge-${lv}`}>{lv === "none" ? "No distress" : lv === "subtle" ? "Subtle stress" : lv === "active" ? "Active distress" : "Severe distress"}</span>
+                    {renderSyncBadge(s)}
+                  </>
+                ),
               });
             }
             if (item.kind === "walk") {
@@ -641,28 +484,14 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 itemKey: `w-${w.id}`,
                 title: `${walkTypeLabel(w.type)} with ${name}`,
                 date: fmtDate(w.date),
-                value: w.duration ? fmt(w.duration) : "—",
-                kindLabel: "Support",
-                badge: <span className="h-side-label">Duration</span>,
-                syncBadge: renderSyncBadge(w),
-                expandedContent: <>
-                  <div className="h-expand-grid">
-                    <HistoryDetailGroup label="Walk details">
-                      <HistoryChipList items={["Walk logged for decompression support", `Type: ${walkTypeLabel(w.type)}`]} />
-                    </HistoryDetailGroup>
-                  </div>
-                  <div className="h-expand-footer">
-                    <HistoryDetailGroup label="Actions">
-                      <HistoryActionGroup
-                        actions={[
-                          { key: "time", className: "h-edit", label: "Edit walk time", icon: <ClockIcon />, onClick: () => actions.editWalkTime(w.id, setHistoryModal) },
-                          { key: "duration", className: "h-edit", label: "Edit walk duration", icon: <EditIcon />, onClick: () => actions.editWalkDuration(w.id, setHistoryModal) },
-                          { key: "delete", className: "h-del", label: "Delete walk", icon: <DeleteIcon />, onClick: () => actions.requestHistoryDelete("walk", w, setHistoryModal) },
-                        ]}
-                      />
-                    </HistoryDetailGroup>
-                  </div>
-                </>,
+                duration: w.duration ? fmt(w.duration) : "No duration",
+                onActivate: () => setActivityDetail({ kind: "walk", item: w, title: `${walkTypeLabel(w.type)} with ${name}`, duration: w.duration ? fmt(w.duration) : "No duration", status: "Logged" }),
+                status: (
+                  <>
+                    <span className="h-badge badge-pat">Logged</span>
+                    {renderSyncBadge(w)}
+                  </>
+                ),
               });
             }
             if (item.kind === "pat") {
@@ -672,25 +501,14 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 itemKey: `p-${p.id}`,
                 title: patLabels[pt.type] || pt.label,
                 date: fmtDate(p.date),
-                kindLabel: "Support",
-                badge: <span className="h-badge badge-pat">Pattern break</span>,
-                syncBadge: renderSyncBadge(p),
-                expandedContent: <>
-                  <div className="h-expand-grid">
-                    <HistoryDetailGroup label="Pattern details">
-                      <HistoryChipList items={["Departure-cue support item", pt.desc]} />
-                    </HistoryDetailGroup>
-                  </div>
-                  <div className="h-expand-footer">
-                    <HistoryDetailGroup label="Actions">
-                      <HistoryActionGroup
-                        actions={[
-                          { key: "delete", className: "h-del", label: "Delete pattern break", icon: <DeleteIcon />, onClick: () => actions.requestHistoryDelete("pattern", p, setHistoryModal) },
-                        ]}
-                      />
-                    </HistoryDetailGroup>
-                  </div>
-                </>,
+                duration: "—",
+                onActivate: () => setActivityDetail({ kind: "pattern", item: p, title: patLabels[pt.type] || pt.label, duration: "—", status: "Pattern break" }),
+                status: (
+                  <>
+                    <span className="h-badge badge-pat">Pattern break</span>
+                    {renderSyncBadge(p)}
+                  </>
+                ),
               });
             }
             if (item.kind === "feeding") {
@@ -699,26 +517,14 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 itemKey: `f-${f.id}`,
                 title: <span className="history-food-type">{f.foodType}</span>,
                 date: fmtDate(f.date),
-                value: f.amount,
-                kindLabel: "Support",
-                badge: <span className="h-badge badge-feed">Feeding</span>,
-                syncBadge: renderSyncBadge(f),
-                expandedContent: <>
-                  <div className="h-expand-grid">
-                    <HistoryDetailGroup label="Meal details">
-                      <HistoryChipList items={["Meal recorded for routine consistency", `Amount: ${f.amount}`, `Type: ${f.foodType}`]} />
-                    </HistoryDetailGroup>
-                  </div>
-                  <div className="h-expand-footer">
-                    <HistoryDetailGroup label="Actions">
-                      <HistoryActionGroup
-                        actions={[
-                          { key: "delete", className: "h-del", label: "Delete feeding", icon: <DeleteIcon />, onClick: () => actions.requestHistoryDelete("feeding", f, setHistoryModal) },
-                        ]}
-                      />
-                    </HistoryDetailGroup>
-                  </div>
-                </>,
+                duration: f.amount,
+                onActivate: () => setActivityDetail({ kind: "feeding", item: f, title: f.foodType, duration: f.amount, status: "Feeding" }),
+                status: (
+                  <>
+                    <span className="h-badge badge-feed">Feeding</span>
+                    {renderSyncBadge(f)}
+                  </>
+                ),
               });
             }
             return null;
@@ -785,38 +591,36 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
         </div>
       )}
 
-      {sessionDetail && (
+      {activityDetail && (
         <div
           className="history-session-sheet-overlay"
           role="dialog"
           aria-modal="true"
           aria-labelledby="history-session-sheet-title"
-          onClick={() => setSessionDetail(null)}
+          onClick={() => setActivityDetail(null)}
         >
-          <div className="history-session-sheet modal-card modal-card--dialog-md" onClick={(event) => event.stopPropagation()}>
+          <div className="history-session-sheet modal-card modal-card--dialog-md modal-card--sheet" onClick={(event) => event.stopPropagation()}>
             <div className="history-session-sheet-grabber" aria-hidden="true" />
             <div className="quick-modal-head">
-              <div className="section-title section-title--flush" id="history-session-sheet-title">Calm-alone rep details</div>
-              <ModalCloseButton onClick={() => setSessionDetail(null)} />
+              <div className="section-title section-title--flush" id="history-session-sheet-title">Activity details</div>
+              <ModalCloseButton onClick={() => setActivityDetail(null)} />
             </div>
             <div className="history-session-sheet-meta">
-              <div className="history-session-sheet-value">{fmt(sessionDetail.actualDuration)}</div>
-              <div className="history-session-sheet-date">{fmtDate(sessionDetail.date)}</div>
+              <div className="history-session-sheet-value">{activityDetail.title}</div>
+              <div className="history-session-sheet-date">{activityDetail.duration} · {fmtDate(activityDetail.item.date)}</div>
             </div>
-            <HistoryDetailGroup label="Details">
-              <HistoryChipList items={sessionDetailBadges(sessionDetail)} />
-            </HistoryDetailGroup>
+            <HistoryDetailGroup label="Status">{activityDetail.status}</HistoryDetailGroup>
             <HistoryDetailGroup label="Actions">
               <HistoryActionGroup
-                actions={[
+                actions={activityDetail.kind === "session" ? [
                   {
                     key: "time",
                     className: "h-edit",
                     label: "Edit session time",
                     icon: <ClockIcon />,
                     onClick: () => {
-                      actions.editSessionTime(sessionDetail.id, setHistoryModal);
-                      setSessionDetail(null);
+                      actions.editSessionTime(activityDetail.item.id, setHistoryModal);
+                      setActivityDetail(null);
                     },
                   },
                   {
@@ -825,8 +629,8 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                     label: "Edit session duration",
                     icon: <EditIcon />,
                     onClick: () => {
-                      actions.editSessionDuration(sessionDetail.id, setHistoryModal);
-                      setSessionDetail(null);
+                      actions.editSessionDuration(activityDetail.item.id, setHistoryModal);
+                      setActivityDetail(null);
                     },
                   },
                   {
@@ -835,10 +639,18 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                     label: "Delete session",
                     icon: <DeleteIcon />,
                     onClick: () => {
-                      actions.requestHistoryDelete("session", sessionDetail, setHistoryModal);
-                      setSessionDetail(null);
+                      actions.requestHistoryDelete("session", activityDetail.item, setHistoryModal);
+                      setActivityDetail(null);
                     },
                   },
+                ] : activityDetail.kind === "walk" ? [
+                  { key: "time", className: "h-edit", label: "Edit walk time", icon: <ClockIcon />, onClick: () => { actions.editWalkTime(activityDetail.item.id, setHistoryModal); setActivityDetail(null); } },
+                  { key: "duration", className: "h-edit", label: "Edit walk duration", icon: <EditIcon />, onClick: () => { actions.editWalkDuration(activityDetail.item.id, setHistoryModal); setActivityDetail(null); } },
+                  { key: "delete", className: "h-del", label: "Delete walk", icon: <DeleteIcon />, onClick: () => { actions.requestHistoryDelete("walk", activityDetail.item, setHistoryModal); setActivityDetail(null); } },
+                ] : activityDetail.kind === "pattern" ? [
+                  { key: "delete", className: "h-del", label: "Delete pattern break", icon: <DeleteIcon />, onClick: () => { actions.requestHistoryDelete("pattern", activityDetail.item, setHistoryModal); setActivityDetail(null); } },
+                ] : [
+                  { key: "delete", className: "h-del", label: "Delete feeding", icon: <DeleteIcon />, onClick: () => { actions.requestHistoryDelete("feeding", activityDetail.item, setHistoryModal); setActivityDetail(null); } },
                 ]}
               />
             </HistoryDetailGroup>
