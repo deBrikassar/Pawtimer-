@@ -1885,6 +1885,76 @@
   .tab-panel--forward { animation-name: tabSlideForward; }
   .tab-panel--backward { animation-name: tabSlideBackward; }
   .stats-tab-content { position:relative; }
+  .stats-section-minimal .stats-section-title { margin-bottom:10px; }
+  .stats-simple-hero {
+    display:grid;
+    gap:8px;
+    padding:clamp(16px, 3.5vw, 22px);
+  }
+  .stats-simple-status {
+    justify-self:start;
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+    letter-spacing:var(--type-helper-text-track);
+    font-weight:var(--type-helper-text-weight);
+    color:var(--metric-surface-accent);
+    text-transform:uppercase;
+  }
+  .stats-simple-duration {
+    font-family:var(--font-ui);
+    font-size:var(--type-metric-headline-size);
+    line-height:var(--type-metric-headline-line);
+    letter-spacing:var(--type-metric-headline-track);
+    font-weight:var(--type-metric-headline-weight);
+    color:var(--brown);
+    font-variant-numeric:tabular-nums;
+  }
+  .stats-simple-label {
+    font-size:var(--type-metric-label-size);
+    line-height:var(--type-metric-label-line);
+    letter-spacing:var(--type-metric-label-track);
+    font-weight:var(--type-metric-label-weight);
+    color:var(--text-muted);
+  }
+  .stats-goal-progress {
+    display:grid;
+    gap:10px;
+    padding:var(--space-inline-control-padding);
+  }
+  .stats-goal-progress-topline {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:var(--space-control-gap);
+    font-size:var(--type-secondary-size);
+    line-height:var(--type-secondary-line);
+    letter-spacing:var(--type-secondary-track);
+    font-weight:var(--type-secondary-weight);
+    color:var(--text-muted);
+  }
+  .stats-goal-progress-track {
+    position:relative;
+    width:100%;
+    height:10px;
+    border-radius:999px;
+    overflow:hidden;
+    background:color-mix(in srgb, var(--green-light) 20%, var(--surf));
+    border:1px solid color-mix(in srgb, var(--green-dark) 14%, transparent);
+  }
+  .stats-goal-progress-fill {
+    display:block;
+    height:100%;
+    border-radius:inherit;
+    background:color-mix(in srgb, var(--green-dark) 86%, var(--brown));
+  }
+  .stats-next-step {
+    padding:var(--space-inline-control-padding);
+    font-size:var(--type-body-lg-size);
+    line-height:var(--type-body-lg-line);
+    letter-spacing:var(--type-body-lg-track);
+    font-weight:var(--type-body-lg-weight);
+    color:var(--brown);
+  }
   .train-screen { padding-top:var(--space-3); }
   .train-screen .train-main { gap:var(--space-section-gap); }
   .train-screen .prog-section,
