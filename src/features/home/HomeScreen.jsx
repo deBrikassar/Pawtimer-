@@ -1,6 +1,6 @@
 import { SessionControl, SessionRatingPanel } from "../train/TrainComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
-import { Img, ModalCloseButton } from "../app/ui";
+import { Img, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
 
 export default function HomeScreen(props) {
@@ -161,8 +161,8 @@ export default function HomeScreen(props) {
         </section>
 
         {(walkPhase !== "idle" || patOpen) && (
-          <div className="quick-modal-overlay quick-modal-overlay--sheet" role="dialog" aria-modal="true" onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
-            <div className="quick-modal-card modal-card modal-card--dialog-md modal-card--sheet quick-modal-card--sheet" onClick={(e) => e.stopPropagation()}>
+          <ViewportModal open onClose={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
+            <div className="quick-modal-card modal-card modal-card--dialog-md modal-card--sheet quick-modal-card--sheet">
               <div className="history-session-sheet-grabber" aria-hidden="true" />
               <div className="quick-modal-head">
                 <div className="quick-modal-title">{walkPhase !== "idle" ? "Log walk" : "Log pattern break"}</div>
@@ -215,12 +215,12 @@ export default function HomeScreen(props) {
                 </div>
               )}
             </div>
-          </div>
+          </ViewportModal>
         )}
 
         {feedingOpen && (
-          <div className="feeding-overlay quick-modal-overlay--sheet" role="dialog" aria-modal="true" aria-labelledby="feeding-title" onClick={cancelFeedingForm}>
-            <div className="feeding-card modal-card modal-card--dialog-sm modal-card--sheet quick-modal-card--sheet quick-modal-card--sheet-compact" onClick={(e) => e.stopPropagation()}>
+          <ViewportModal open onClose={cancelFeedingForm} overlayClassName="feeding-overlay" labelledBy="feeding-title">
+            <div className="feeding-card modal-card modal-card--dialog-sm modal-card--sheet quick-modal-card--sheet quick-modal-card--sheet-compact">
               <div className="history-session-sheet-grabber" aria-hidden="true" />
               <div className="quick-modal-head">
                 <div className="section-title section-title--flush" id="feeding-title">Log feeding</div>
@@ -254,7 +254,7 @@ export default function HomeScreen(props) {
                 <button className="walk-end-btn button-base button-primary button--md button--pill" type="button" onClick={saveFeeding}>Save</button>
               </div>
             </div>
-          </div>
+          </ViewportModal>
         )}
       </div>
     </div>
