@@ -1265,12 +1265,6 @@
     overflow:auto;
     padding:var(--space-modal-padding);
   }
-  .rating-actions {
-    flex:0 0 auto;
-    padding:var(--space-1) var(--space-modal-padding) calc(var(--space-modal-padding) + env(safe-area-inset-bottom, 0px));
-    border-top:1px solid color-mix(in srgb, var(--border) 78%, transparent);
-    background:linear-gradient(180deg, color-mix(in srgb, var(--surf) 24%, transparent) 0%, var(--surf) 56%);
-  }
   .rating-sheet {
     width:100%;
     border-radius:24px 24px 18px 18px;
@@ -1294,6 +1288,14 @@
   .btn-strong { background:var(--status-attention-bg); color:var(--status-attention-fg); border-color:color-mix(in srgb, var(--status-attention-fg) 24%, var(--border)); }
   .btn-severe { background:var(--status-danger-bg); color:var(--status-danger-fg); border-color:color-mix(in srgb, var(--status-danger-fg) 24%, var(--border)); }
   .btn-result:hover { transform:translateY(-2px); }
+  .rating-inline-cancel {
+    margin-top:var(--space-1);
+    min-height:44px;
+    width:100%;
+    border-color:color-mix(in srgb, var(--border) 96%, var(--surf));
+    color:var(--brown);
+    background:color-mix(in srgb, var(--surf) 92%, transparent);
+  }
   .rating-adapt-note {
     margin:var(--space-control-gap) 0 var(--space-1);
     padding:var(--space-1) var(--space-2);
@@ -1307,7 +1309,6 @@
     font-weight:var(--type-secondary-weight);
   }
   .outcome-details { margin-top:var(--space-2); padding:var(--space-2); border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-muted); display:flex; flex-direction:column; gap:var(--space-1); }
-  .rating-cancel-btn { min-height:44px; width:100%; }
   @media (max-height: 760px) {
     .rating-overlay {
       padding:var(--space-1) var(--space-2) calc(74px + env(safe-area-inset-bottom, 0px));
@@ -1327,9 +1328,6 @@
     }
     .btn-result {
       padding:var(--space-field-padding-compact);
-    }
-    .rating-actions {
-      padding:var(--space-1) var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
     }
   }
   .field-label { font-size:var(--type-secondary-size); color:var(--brown); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); }
