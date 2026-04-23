@@ -343,16 +343,21 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
   const recentTrend = (() => {
     const trendDays = 7;
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sessionCountsByDay = sessions.reduce((acc, session) => {
+      const dayKey = toDateInputValue(session?.date);
+      if (!dayKey) return acc;
+      acc[dayKey] = (acc[dayKey] ?? 0) + 1;
+      return acc;
+    }, {});
     const buckets = [];
     for (let offset = trendDays - 1; offset >= 0; offset -= 1) {
       const bucketDate = new Date(today);
-      bucketDate.setHours(0, 0, 0, 0);
-      bucketDate.setDate(bucketDate.getDate() - offset);
-      const dayKey = bucketDate.toISOString().slice(0, 10);
-      const daySessions = timelineByDay[dayKey]?.filter((item) => item.kind === "session") ?? [];
+      bucketDate.setDate(today.getDate() - offset);
+      const dayKey = toDateInputValue(bucketDate);
       buckets.push({
         dayKey,
-        count: daySessions.length,
+        count: sessionCountsByDay[dayKey] ?? 0,
         label: bucketDate.toLocaleDateString(undefined, { weekday: "short" }),
       });
     }
