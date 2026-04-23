@@ -1339,8 +1339,9 @@
   .history-mini-trend-head { display:flex; align-items:center; gap:var(--space-control-gap); font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); color:var(--text-muted); }
   .history-mini-trend-dots { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:8px; }
   .history-mini-trend-dot-wrap { display:grid; justify-items:center; gap:4px; }
-  .history-mini-trend-dot { width:10px; height:10px; border-radius:50%; background:color-mix(in srgb, var(--border) 90%, transparent); }
-  .history-mini-trend-dot.is-active { background:color-mix(in srgb, var(--mutedBlue) 72%, var(--primaryBlue)); }
+  .history-mini-trend-bar { width:12px; height:30px; border-radius:999px; background:color-mix(in srgb, var(--border) 90%, transparent); position:relative; overflow:hidden; }
+  .history-mini-trend-bar-fill { position:absolute; left:0; right:0; bottom:0; min-height:0; border-radius:999px; background:color-mix(in srgb, var(--border) 86%, transparent); transition:height var(--motion-enter) var(--ease-out), background-color var(--motion-enter) var(--ease-out); }
+  .history-mini-trend-bar-fill.is-active { background:color-mix(in srgb, var(--mutedBlue) 72%, var(--primaryBlue)); }
   .history-mini-trend-dot-wrap span { font-size:var(--type-micro-text-size); line-height:var(--type-micro-text-line); letter-spacing:var(--type-micro-text-track); color:var(--text-muted); text-transform:uppercase; }
   .history-day-group { display:grid; gap:var(--space-control-gap); margin-bottom:var(--space-section-gap); }
   .history-day-label { font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); font-weight:var(--type-overline-weight); text-transform:uppercase; color:var(--text-muted); }

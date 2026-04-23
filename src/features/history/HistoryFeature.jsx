@@ -358,6 +358,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
     }
     return buckets;
   })();
+  const maxRecentTrendCount = recentTrend.reduce((max, day) => Math.max(max, day.count), 0);
   const weeklyRhythmLabel = recentTrend.some((day) => day.count > 0) ? "Weekly rhythm" : "No sessions this week";
 
   useEffect(() => {
@@ -439,16 +440,21 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 <div className="history-mini-trend-head">
                   <span>{weeklyRhythmLabel}</span>
                 </div>
-                <div className="history-mini-trend-dots" role="img" aria-label="Each dot shows how many sessions were completed on that day">
-                  {recentTrend.map((day) => (
-                    <div className="history-mini-trend-dot-wrap" key={day.dayKey}>
-                      <div
-                        className={`history-mini-trend-dot ${day.count > 0 ? "is-active" : ""}`}
-                        title={`${day.dayKey}: ${day.count} completed training ${day.count === 1 ? "session" : "sessions"}`}
-                      />
-                      <span>{`${day.label.slice(0, 1)} ${day.count}`}</span>
-                    </div>
-                  ))}
+                <div className="history-mini-trend-dots" role="img" aria-label="Each bar shows completed training sessions for that day, scaled within this week">
+                  {recentTrend.map((day) => {
+                    const scaledHeight = maxRecentTrendCount > 0 ? (day.count / maxRecentTrendCount) * 100 : 0;
+                    return (
+                      <div className="history-mini-trend-dot-wrap" key={day.dayKey}>
+                        <div className="history-mini-trend-bar" title={`${day.dayKey}: ${day.count} completed training ${day.count === 1 ? "session" : "sessions"}`}>
+                          <div
+                            className={`history-mini-trend-bar-fill ${day.count > 0 ? "is-active" : ""}`}
+                            style={{ height: `${scaledHeight}%` }}
+                          />
+                        </div>
+                        <span>{`${day.label.slice(0, 1)} ${day.count}`}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
