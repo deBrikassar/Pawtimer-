@@ -358,7 +358,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
     }
     return buckets;
   })();
-  const maxRecentTrendCount = recentTrend.reduce((max, day) => Math.max(max, day.count), 0);
+  const MAX_DAILY_SESSIONS = 5;
   const weeklyRhythmLabel = recentTrend.some((day) => day.count > 0) ? "Weekly rhythm" : "No sessions this week";
 
   useEffect(() => {
@@ -440,9 +440,9 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 <div className="history-mini-trend-head">
                   <span>{weeklyRhythmLabel}</span>
                 </div>
-                <div className="history-mini-trend-dots" role="img" aria-label="Each bar shows completed training sessions for that day, scaled within this week">
+                <div className="history-mini-trend-dots" role="img" aria-label="Each bar shows completed training sessions for that day, scaled to a 5-session daily maximum">
                   {recentTrend.map((day) => {
-                    const scaledHeight = maxRecentTrendCount > 0 ? (day.count / maxRecentTrendCount) * 100 : 0;
+                    const scaledHeight = Math.min((day.count / MAX_DAILY_SESSIONS) * 100, 100);
                     return (
                       <div className="history-mini-trend-dot-wrap" key={day.dayKey}>
                         <div className="history-mini-trend-bar" title={`${day.dayKey}: ${day.count} completed training ${day.count === 1 ? "session" : "sessions"}`}>
