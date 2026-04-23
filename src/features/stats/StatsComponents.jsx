@@ -11,12 +11,27 @@ export const METRIC_VARIANTS = Object.freeze({
 const WAVE_CHART_WIDTH = 720;
 const WAVE_CHART_HEIGHT = 220;
 const WAVE_CHART_PADDING = { top: 18, right: 20, bottom: 32, left: 20 };
-function buildLinearPath(points = []) {
+function buildSmoothPathThroughPoints(points = [], tension = 0.18) {
   if (!points.length) return "";
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
-  return points.reduce((path, point, index) => (
-    index === 0 ? `M ${point.x} ${point.y}` : `${path} L ${point.x} ${point.y}`
-  ), "");
+
+  let path = `M ${points[0].x} ${points[0].y}`;
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const previous = points[index - 1] ?? points[index];
+    const current = points[index];
+    const next = points[index + 1];
+    const afterNext = points[index + 2] ?? next;
+
+    const c1x = current.x + ((next.x - previous.x) * tension);
+    const c1y = current.y + ((next.y - previous.y) * tension);
+    const c2x = next.x - ((afterNext.x - current.x) * tension);
+    const c2y = next.y - ((afterNext.y - current.y) * tension);
+
+    path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${next.x} ${next.y}`;
+  }
+
+  return path;
 }
 
 function useAnimatedValue(value, { duration = 180, round = false } = {}) {
@@ -248,7 +263,6 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
     );
   }
 
-  const gradientId = useId();
   const areaGradientId = useId();
   const hasGoal = Number.isFinite(goalSec) && goalSec > 0;
   const goalMinutes = hasGoal ? goalSec / 60 : null;
@@ -279,7 +293,7 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
     return { x, y, entry, index };
   });
 
-  const wavePath = buildLinearPath(points);
+  const wavePath = buildSmoothPathThroughPoints(points);
 
   const areaPath = `${wavePath} L ${points.at(-1).x} ${chartBottom} L ${points[0].x} ${chartBottom} Z`;
   const latestPoint = points.at(-1);
@@ -296,10 +310,6 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
       <div className="stats-progress-wave" role="img" aria-label={`${name}'s recent session durations`}>
         <svg viewBox={`0 0 ${WAVE_CHART_WIDTH} ${WAVE_CHART_HEIGHT}`} className="stats-progress-wave-svg" preserveAspectRatio="none">
           <defs>
-            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="color-mix(in srgb, var(--brown) 82%, var(--green-dark))" />
-              <stop offset="100%" stopColor="var(--green-dark)" />
-            </linearGradient>
             <linearGradient id={areaGradientId} x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="color-mix(in srgb, var(--green-light) 30%, transparent)" />
               <stop offset="100%" stopColor="transparent" />
@@ -323,16 +333,22 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
             />
           ) : null}
 
-          <path d={areaPath} fill={`url(#${areaGradientId})`} className="stats-progress-wave-area" />
-          <path d={wavePath} fill="none" stroke={`url(#${gradientId})`} className="stats-progress-wave-line" />
+          <path d={areaPath} fill={`url(#${areaGradientId})`} opacity="0.45" />
+          <path
+            d={wavePath}
+            fill="none"
+            stroke="var(--green-dark)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           {points.map((point) => (
             <circle
               key={`point-${point.index}`}
               cx={point.x}
               cy={point.y}
-              r="2.2"
+              r="2.4"
               fill="var(--green-dark)"
-              opacity="0.75"
             />
           ))}
 
