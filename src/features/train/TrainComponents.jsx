@@ -157,6 +157,9 @@ export function SessionRatingPanel({
               <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
             </button>
           </div>
+          <button className="button-base button-ghost button--md button--block rating-inline-cancel" onClick={onCancel}>
+            Cancel
+          </button>
           {sessionOutcome && sessionOutcome !== "none" && (
             <div className="outcome-details">
               <label className="field-label" htmlFor="latency-input">Latency to first stress (seconds)</label>
@@ -193,11 +196,6 @@ export function SessionRatingPanel({
               </button>
             </div>
           )}
-        </div>
-        <div className="rating-actions">
-          <button className="session-cancel-btn button-base button-ghost button--md button--block rating-cancel-btn" onClick={onCancel}>
-            Cancel
-          </button>
         </div>
       </div>
     </div>
