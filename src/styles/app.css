@@ -1899,6 +1899,7 @@
     font-weight:var(--type-helper-text-weight);
     color:var(--metric-surface-accent);
     text-transform:uppercase;
+    opacity:0.86;
   }
   .stats-simple-duration {
     font-family:var(--font-ui);
@@ -1918,7 +1919,7 @@
   }
   .stats-goal-progress {
     display:grid;
-    gap:10px;
+    gap:8px;
     padding:var(--space-inline-control-padding);
   }
   .stats-goal-progress-topline {
@@ -1930,6 +1931,20 @@
     line-height:var(--type-secondary-line);
     letter-spacing:var(--type-secondary-track);
     font-weight:var(--type-secondary-weight);
+    color:var(--text-muted);
+  }
+  .stats-goal-progress-meta {
+    font-size:var(--type-secondary-size);
+    line-height:var(--type-secondary-line);
+    letter-spacing:var(--type-secondary-track);
+    font-weight:var(--type-secondary-weight);
+    color:color-mix(in srgb, var(--text) 84%, var(--text-muted));
+  }
+  .stats-goal-progress-insight {
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+    letter-spacing:var(--type-helper-text-track);
+    font-weight:var(--type-helper-text-weight);
     color:var(--text-muted);
   }
   .stats-goal-progress-track {
@@ -1948,12 +1963,21 @@
     background:color-mix(in srgb, var(--green-dark) 86%, var(--brown));
   }
   .stats-next-step {
+    display:grid;
+    gap:4px;
     padding:var(--space-inline-control-padding);
     font-size:var(--type-body-lg-size);
     line-height:var(--type-body-lg-line);
     letter-spacing:var(--type-body-lg-track);
     font-weight:var(--type-body-lg-weight);
     color:var(--brown);
+  }
+  .stats-next-step-hint {
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+    letter-spacing:var(--type-helper-text-track);
+    font-weight:var(--type-helper-text-weight);
+    color:var(--text-muted);
   }
   .train-screen { padding-top:var(--space-3); }
   .train-screen .train-main { gap:var(--space-section-gap); }
