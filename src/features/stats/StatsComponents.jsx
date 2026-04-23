@@ -11,6 +11,89 @@ export const METRIC_VARIANTS = Object.freeze({
 const WAVE_CHART_WIDTH = 720;
 const WAVE_CHART_HEIGHT = 220;
 const WAVE_CHART_PADDING = { top: 18, right: 20, bottom: 32, left: 20 };
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function toDayTimestamp(entry) {
+  const rawValue = entry?.dayKey ?? entry?.dateKey ?? entry?.date;
+  if (!rawValue) return null;
+  const parsed = new Date(rawValue);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
+}
+
+function normalizeContinuousChartData(chartData = []) {
+  if (!chartData.length) return [];
+
+  const normalized = chartData.map((entry, index) => ({
+    ...entry,
+    _sourceIndex: index,
+    _dayTs: toDayTimestamp(entry),
+  }));
+
+  const supportsDailyFill = normalized.every((entry) => Number.isFinite(entry._dayTs));
+  const baseSeries = (() => {
+    if (!supportsDailyFill) return normalized;
+
+    const byDay = new Map();
+    normalized.forEach((entry) => {
+      byDay.set(entry._dayTs, entry);
+    });
+
+    const startTs = normalized[0]._dayTs;
+    const endTs = normalized.at(-1)._dayTs;
+    const filled = [];
+    let carryEntry = normalized[0];
+
+    for (let dayTs = startTs; dayTs <= endTs; dayTs += DAY_MS) {
+      const directEntry = byDay.get(dayTs);
+      if (directEntry) {
+        carryEntry = directEntry;
+        filled.push(directEntry);
+      } else if (carryEntry) {
+        filled.push({
+          ...carryEntry,
+          _isInterpolated: true,
+          _dayTs: dayTs,
+        });
+      }
+    }
+
+    return filled;
+  })();
+
+  let lastKnownMinutes = null;
+  return baseSeries.map((entry) => {
+    const rawMinutes = Number(entry.durationMinutes);
+    const safeMinutes = Number.isFinite(rawMinutes)
+      ? rawMinutes
+      : (lastKnownMinutes ?? 0);
+    lastKnownMinutes = safeMinutes;
+    return { ...entry, _continuousMinutes: safeMinutes };
+  });
+}
+
+function buildSmoothPath(points = []) {
+  if (!points.length) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+
+  let path = `M ${points[0].x} ${points[0].y}`;
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const prev = points[index - 1] ?? points[index];
+    const current = points[index];
+    const next = points[index + 1];
+    const afterNext = points[index + 2] ?? next;
+
+    const c1x = current.x + ((next.x - prev.x) / 6);
+    const c1y = current.y + ((next.y - prev.y) / 6);
+    const c2x = next.x - ((afterNext.x - current.x) / 6);
+    const c2y = next.y - ((afterNext.y - current.y) / 6);
+
+    path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${next.x} ${next.y}`;
+  }
+
+  return path;
+}
 
 function useAnimatedValue(value, { duration = 180, round = false } = {}) {
   const [displayValue, setDisplayValue] = useState(value);
@@ -245,7 +328,8 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
   const areaGradientId = useId();
   const hasGoal = Number.isFinite(goalSec) && goalSec > 0;
   const goalMinutes = hasGoal ? goalSec / 60 : null;
-  const values = chartData.map((entry) => Number(entry.durationMinutes) || 0);
+  const continuousChartData = normalizeContinuousChartData(chartData);
+  const values = continuousChartData.map((entry) => entry._continuousMinutes);
   const minY = Math.min(...values);
   const maxY = Math.max(...values);
   const range = Math.max(1, maxY - minY);
@@ -253,19 +337,14 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
   const chartTop = WAVE_CHART_PADDING.top;
   const chartWidth = WAVE_CHART_WIDTH - WAVE_CHART_PADDING.left - WAVE_CHART_PADDING.right;
 
-  const points = chartData.map((entry, index) => {
-    const ratioX = chartData.length === 1 ? 0 : index / (chartData.length - 1);
+  const points = continuousChartData.map((entry, index) => {
+    const ratioX = continuousChartData.length === 1 ? 0 : index / (continuousChartData.length - 1);
     const x = WAVE_CHART_PADDING.left + (ratioX * chartWidth);
-    const y = chartBottom - (((Number(entry.durationMinutes) || 0) - minY) / range) * (chartBottom - chartTop);
+    const y = chartBottom - ((entry._continuousMinutes - minY) / range) * (chartBottom - chartTop);
     return { x, y, entry, index };
   });
 
-  const wavePath = points.reduce((acc, point, index) => {
-    if (index === 0) return `M ${point.x} ${point.y}`;
-    const previousPoint = points[index - 1];
-    const midX = (previousPoint.x + point.x) / 2;
-    return `${acc} Q ${previousPoint.x} ${previousPoint.y} ${midX} ${((previousPoint.y + point.y) / 2)} T ${point.x} ${point.y}`;
-  }, "");
+  const wavePath = buildSmoothPath(points);
 
   const areaPath = `${wavePath} L ${points.at(-1).x} ${chartBottom} L ${points[0].x} ${chartBottom} Z`;
   const latestPoint = points.at(-1);
