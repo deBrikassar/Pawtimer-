@@ -439,11 +439,14 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                 <div className="history-mini-trend-head">
                   <span>{weeklyRhythmLabel}</span>
                 </div>
-                <div className="history-mini-trend-dots" role="img" aria-label="Each dot shows whether a session was completed on that day">
+                <div className="history-mini-trend-dots" role="img" aria-label="Each dot shows how many sessions were completed on that day">
                   {recentTrend.map((day) => (
                     <div className="history-mini-trend-dot-wrap" key={day.dayKey}>
-                      <div className={`history-mini-trend-dot ${day.count > 0 ? "is-active" : ""}`} title={`${day.dayKey}: ${day.count > 0 ? "session logged" : "no session"}`} />
-                      <span>{day.label.slice(0, 1)}</span>
+                      <div
+                        className={`history-mini-trend-dot ${day.count > 0 ? "is-active" : ""}`}
+                        title={`${day.dayKey}: ${day.count} completed training ${day.count === 1 ? "session" : "sessions"}`}
+                      />
+                      <span>{`${day.label.slice(0, 1)} ${day.count}`}</span>
                     </div>
                   ))}
                 </div>
