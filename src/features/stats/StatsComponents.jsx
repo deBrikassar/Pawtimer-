@@ -11,123 +11,12 @@ export const METRIC_VARIANTS = Object.freeze({
 const WAVE_CHART_WIDTH = 720;
 const WAVE_CHART_HEIGHT = 220;
 const WAVE_CHART_PADDING = { top: 18, right: 20, bottom: 32, left: 20 };
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function toDayTimestamp(entry) {
-  const rawValue = entry?.dayKey ?? entry?.dateKey ?? entry?.date;
-  if (!rawValue) return null;
-  const parsed = new Date(rawValue);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
-}
-
-function normalizeContinuousChartData(chartData = []) {
-  if (!chartData.length) return [];
-
-  const normalized = chartData.map((entry, index) => ({
-    ...entry,
-    _sourceIndex: index,
-    _dayTs: toDayTimestamp(entry),
-  }));
-
-  const supportsDailyFill = normalized.every((entry) => Number.isFinite(entry._dayTs));
-  const baseSeries = (() => {
-    if (!supportsDailyFill) return normalized;
-
-    const byDay = new Map();
-    normalized.forEach((entry) => {
-      byDay.set(entry._dayTs, entry);
-    });
-
-    const startTs = normalized[0]._dayTs;
-    const endTs = normalized.at(-1)._dayTs;
-    const filled = [];
-    let carryEntry = normalized[0];
-
-    for (let dayTs = startTs; dayTs <= endTs; dayTs += DAY_MS) {
-      const directEntry = byDay.get(dayTs);
-      if (directEntry) {
-        carryEntry = directEntry;
-        filled.push(directEntry);
-      } else if (carryEntry) {
-        filled.push({
-          ...carryEntry,
-          _isInterpolated: true,
-          _dayTs: dayTs,
-        });
-      }
-    }
-
-    return filled;
-  })();
-
-  let lastKnownMinutes = null;
-  return baseSeries.map((entry) => {
-    const rawMinutes = Number(entry.durationMinutes);
-    const safeMinutes = Number.isFinite(rawMinutes)
-      ? rawMinutes
-      : (lastKnownMinutes ?? 0);
-    lastKnownMinutes = safeMinutes;
-    return { ...entry, _continuousMinutes: safeMinutes };
-  });
-}
-
-function smoothChartValues(values = []) {
-  if (values.length <= 2) return values;
-
-  return values.map((value, index) => {
-    if (index === 0 || index === values.length - 1) return value;
-    const prev = values[index - 1];
-    const next = values[index + 1];
-    return ((prev * 0.2) + (value * 0.6) + (next * 0.2));
-  });
-}
-
-function buildMonotonePath(points = []) {
+function buildLinearPath(points = []) {
   if (!points.length) return "";
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
-  if (points.length === 2) return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
-
-  const slopes = [];
-  for (let i = 0; i < points.length - 1; i += 1) {
-    const dx = points[i + 1].x - points[i].x;
-    slopes.push(dx === 0 ? 0 : (points[i + 1].y - points[i].y) / dx);
-  }
-
-  const tangents = new Array(points.length).fill(0);
-  tangents[0] = slopes[0];
-  tangents[points.length - 1] = slopes.at(-1);
-
-  for (let i = 1; i < points.length - 1; i += 1) {
-    const previousSlope = slopes[i - 1];
-    const nextSlope = slopes[i];
-
-    if (previousSlope === 0 || nextSlope === 0 || previousSlope * nextSlope < 0) {
-      tangents[i] = 0;
-      continue;
-    }
-
-    const absPrev = Math.abs(previousSlope);
-    const absNext = Math.abs(nextSlope);
-    tangents[i] = ((Math.sign(previousSlope) + Math.sign(nextSlope))
-      * Math.min(absPrev, absNext, ((absPrev + absNext) / 2)));
-  }
-
-  let path = `M ${points[0].x} ${points[0].y}`;
-
-  for (let index = 0; index < points.length - 1; index += 1) {
-    const current = points[index];
-    const next = points[index + 1];
-    const dx = next.x - current.x;
-    const c1x = current.x + (dx / 3);
-    const c1y = current.y + ((tangents[index] * dx) / 3);
-    const c2x = next.x - (dx / 3);
-    const c2y = next.y - ((tangents[index + 1] * dx) / 3);
-
-    path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${next.x} ${next.y}`;
-  }
-
-  return path;
+  return points.reduce((path, point, index) => (
+    index === 0 ? `M ${point.x} ${point.y}` : `${path} L ${point.x} ${point.y}`
+  ), "");
 }
 
 function useAnimatedValue(value, { duration = 180, round = false } = {}) {
@@ -363,9 +252,19 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
   const areaGradientId = useId();
   const hasGoal = Number.isFinite(goalSec) && goalSec > 0;
   const goalMinutes = hasGoal ? goalSec / 60 : null;
-  const continuousChartData = normalizeContinuousChartData(chartData);
-  const rawValues = continuousChartData.map((entry) => entry._continuousMinutes);
-  const values = smoothChartValues(rawValues);
+  const renderableChartData = chartData.filter((entry) => Number.isFinite(Number(entry.durationMinutes)));
+  if (renderableChartData.length <= 1) {
+    return (
+      <EmptyState
+        media={<TrendIcon />}
+        title="Almost there"
+        body={`Complete 2 more reps to see ${name}'s progress chart.`}
+        ctaLabel="Start training →"
+        onCta={() => setTab("home")}
+      />
+    );
+  }
+  const values = renderableChartData.map((entry) => Number(entry.durationMinutes));
   const minY = Math.min(...values);
   const maxY = Math.max(...values);
   const range = Math.max(1, maxY - minY);
@@ -373,14 +272,14 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
   const chartTop = WAVE_CHART_PADDING.top;
   const chartWidth = WAVE_CHART_WIDTH - WAVE_CHART_PADDING.left - WAVE_CHART_PADDING.right;
 
-  const points = continuousChartData.map((entry, index) => {
-    const ratioX = continuousChartData.length === 1 ? 0 : index / (continuousChartData.length - 1);
+  const points = renderableChartData.map((entry, index) => {
+    const ratioX = renderableChartData.length === 1 ? 0 : index / (renderableChartData.length - 1);
     const x = WAVE_CHART_PADDING.left + (ratioX * chartWidth);
     const y = chartBottom - ((values[index] - minY) / range) * (chartBottom - chartTop);
     return { x, y, entry, index };
   });
 
-  const wavePath = buildMonotonePath(points);
+  const wavePath = buildLinearPath(points);
 
   const areaPath = `${wavePath} L ${points.at(-1).x} ${chartBottom} L ${points[0].x} ${chartBottom} Z`;
   const latestPoint = points.at(-1);
@@ -426,6 +325,16 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
 
           <path d={areaPath} fill={`url(#${areaGradientId})`} className="stats-progress-wave-area" />
           <path d={wavePath} fill="none" stroke={`url(#${gradientId})`} className="stats-progress-wave-line" />
+          {points.map((point) => (
+            <circle
+              key={`point-${point.index}`}
+              cx={point.x}
+              cy={point.y}
+              r="2.2"
+              fill="var(--green-dark)"
+              opacity="0.75"
+            />
+          ))}
 
           {latestPoint ? (
             <g transform={`translate(${latestPoint.x} ${latestPoint.y})`} className="stats-progress-wave-latest">
