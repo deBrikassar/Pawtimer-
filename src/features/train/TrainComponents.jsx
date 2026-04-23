@@ -47,9 +47,13 @@ export function SessionControl({
           <section className="train-hero" aria-hidden="true">
             <div className="train-hero__dog">
               <svg viewBox="0 0 120 120" width="120" height="120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M24 44 31 31l10 8m55 5-7-13-10 8M35 49c0-9 8-16 18-16h14c10 0 18 7 18 16v9c0 14-11 25-25 25S35 72 35 58v-9Z" className="train-hero__line"/>
-                <path d="M50 56h.01M70 56h.01" className="train-hero__line train-hero__line--face"/>
-                <path d="M53 67c2 2 4.5 3 7 3s5-1 7-3" className="train-hero__line"/>
+                <g className="train-hero__line">
+                  <path d="M37 81c7 0 11-3 14-9l5-10c2.8-5.5 8.3-8.8 14.6-8.8h8.5c5.2 0 9.4 4.2 9.4 9.4 0 4.9-3.7 9-8.5 9.4l-9.3.7c-3.2.2-5.9 2.3-6.9 5.3L63 81" />
+                  <path d="M53 54 47 46c-1.4-1.9-1-4.7 1-6.1l5-3.7 4.8 6.6" />
+                  <path d="M42 82h28" />
+                  <path d="M37 80c-3.6 0-6.5 2.9-6.5 6.5" />
+                  <path d="M42.2 55.2c-3.7 4.6-5.7 10.4-5.7 16.3V80" />
+                </g>
               </svg>
             </div>
             <p className="train-hero__title">Ready to focus?</p>

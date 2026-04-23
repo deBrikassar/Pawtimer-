@@ -406,17 +406,17 @@
     border-radius: 999px;
     display: grid;
     place-items: center;
+    padding: 10px;
     background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--green-light) 26%, #fff), color-mix(in srgb, var(--surf) 98%, var(--surface-muted)));
     border: 1px solid color-mix(in srgb, var(--green) 24%, var(--border));
   }
   .train-hero__line {
-    stroke: color-mix(in srgb, var(--green-dark) 72%, var(--brown));
-    stroke-width: 1.9;
+    stroke: color-mix(in srgb, var(--green-dark) 78%, var(--green));
+    stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
     fill: none;
   }
-  .train-hero__line--face { stroke-width: 2.8; }
   .train-hero__title {
     margin: 0;
     color: var(--brown);
