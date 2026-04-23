@@ -72,22 +72,57 @@ function normalizeContinuousChartData(chartData = []) {
   });
 }
 
-function buildSmoothPath(points = []) {
+function smoothChartValues(values = []) {
+  if (values.length <= 2) return values;
+
+  return values.map((value, index) => {
+    if (index === 0 || index === values.length - 1) return value;
+    const prev = values[index - 1];
+    const next = values[index + 1];
+    return ((prev * 0.2) + (value * 0.6) + (next * 0.2));
+  });
+}
+
+function buildMonotonePath(points = []) {
   if (!points.length) return "";
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  if (points.length === 2) return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+
+  const slopes = [];
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const dx = points[i + 1].x - points[i].x;
+    slopes.push(dx === 0 ? 0 : (points[i + 1].y - points[i].y) / dx);
+  }
+
+  const tangents = new Array(points.length).fill(0);
+  tangents[0] = slopes[0];
+  tangents[points.length - 1] = slopes.at(-1);
+
+  for (let i = 1; i < points.length - 1; i += 1) {
+    const previousSlope = slopes[i - 1];
+    const nextSlope = slopes[i];
+
+    if (previousSlope === 0 || nextSlope === 0 || previousSlope * nextSlope < 0) {
+      tangents[i] = 0;
+      continue;
+    }
+
+    const absPrev = Math.abs(previousSlope);
+    const absNext = Math.abs(nextSlope);
+    tangents[i] = ((Math.sign(previousSlope) + Math.sign(nextSlope))
+      * Math.min(absPrev, absNext, ((absPrev + absNext) / 2)));
+  }
 
   let path = `M ${points[0].x} ${points[0].y}`;
 
   for (let index = 0; index < points.length - 1; index += 1) {
-    const prev = points[index - 1] ?? points[index];
     const current = points[index];
     const next = points[index + 1];
-    const afterNext = points[index + 2] ?? next;
-
-    const c1x = current.x + ((next.x - prev.x) / 6);
-    const c1y = current.y + ((next.y - prev.y) / 6);
-    const c2x = next.x - ((afterNext.x - current.x) / 6);
-    const c2y = next.y - ((afterNext.y - current.y) / 6);
+    const dx = next.x - current.x;
+    const c1x = current.x + (dx / 3);
+    const c1y = current.y + ((tangents[index] * dx) / 3);
+    const c2x = next.x - (dx / 3);
+    const c2y = next.y - ((tangents[index + 1] * dx) / 3);
 
     path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${next.x} ${next.y}`;
   }
@@ -329,7 +364,8 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
   const hasGoal = Number.isFinite(goalSec) && goalSec > 0;
   const goalMinutes = hasGoal ? goalSec / 60 : null;
   const continuousChartData = normalizeContinuousChartData(chartData);
-  const values = continuousChartData.map((entry) => entry._continuousMinutes);
+  const rawValues = continuousChartData.map((entry) => entry._continuousMinutes);
+  const values = smoothChartValues(rawValues);
   const minY = Math.min(...values);
   const maxY = Math.max(...values);
   const range = Math.max(1, maxY - minY);
@@ -340,11 +376,11 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
   const points = continuousChartData.map((entry, index) => {
     const ratioX = continuousChartData.length === 1 ? 0 : index / (continuousChartData.length - 1);
     const x = WAVE_CHART_PADDING.left + (ratioX * chartWidth);
-    const y = chartBottom - ((entry._continuousMinutes - minY) / range) * (chartBottom - chartTop);
+    const y = chartBottom - ((values[index] - minY) / range) * (chartBottom - chartTop);
     return { x, y, entry, index };
   });
 
-  const wavePath = buildSmoothPath(points);
+  const wavePath = buildMonotonePath(points);
 
   const areaPath = `${wavePath} L ${points.at(-1).x} ${chartBottom} L ${points[0].x} ${chartBottom} Z`;
   const latestPoint = points.at(-1);
