@@ -47,9 +47,9 @@ export function SessionControl({
           <section className="train-hero" aria-hidden="true">
             <div className="train-hero__dog">
               <svg viewBox="0 0 120 120" width="120" height="120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M34 48 29 35c-.9-2.2 1.8-4 3.6-2.5l7 6.2h40l7-6.2c1.8-1.5 4.5.3 3.6 2.5L85 48a23.8 23.8 0 0 1 3 11.2C88 72.3 75.4 84 60 84S32 72.3 32 59.2A23.8 23.8 0 0 1 34 48Z" className="train-hero__line"/>
-                <path d="M47.5 57.4a1.7 1.7 0 1 0 0-.1Zm25 0a1.7 1.7 0 1 0 0-.1Z" className="train-hero__dot"/>
-                <path d="M50.5 66.5c2.7 2.4 5.8 3.5 9.5 3.5s6.8-1.1 9.5-3.5" className="train-hero__line"/>
+                <path d="M24 44 31 31l10 8m55 5-7-13-10 8M35 49c0-9 8-16 18-16h14c10 0 18 7 18 16v9c0 14-11 25-25 25S35 72 35 58v-9Z" className="train-hero__line"/>
+                <path d="M50 56h.01M70 56h.01" className="train-hero__line train-hero__line--face"/>
+                <path d="M53 67c2 2 4.5 3 7 3s5-1 7-3" className="train-hero__line"/>
               </svg>
             </div>
             <p className="train-hero__title">Ready to focus?</p>
@@ -59,8 +59,10 @@ export function SessionControl({
           <section className="session-sheet surface-card" aria-live={isRunning ? "polite" : undefined}>
             {!isRunning ? (
               <>
-                <div className="session-sheet__label">Session time</div>
-                <div className="session-sheet__planned num-stable">{fmt(target)}</div>
+                <div className="session-sheet__time-block">
+                  <div className="session-sheet__label">Session time</div>
+                  <div className="session-sheet__planned num-stable">{fmt(target)}</div>
+                </div>
                 <button
                   className={`session-sheet__cta button-base button-primary button--md button--pill ${pressing ? "is-pressing" : ""}`}
                   onClick={isIdle && canStart ? startWithFeedback : undefined}
@@ -73,8 +75,10 @@ export function SessionControl({
               </>
             ) : (
               <>
-                <div className="session-sheet__label">Session time</div>
-                <div className="session-sheet__elapsed num-stable">{fmt(displayElapsed)} / {fmt(target)}</div>
+                <div className="session-sheet__time-block">
+                  <div className="session-sheet__label">Session time</div>
+                  <div className="session-sheet__elapsed num-stable">{fmt(displayElapsed)} / {fmt(target)}</div>
+                </div>
                 <div className="session-sheet__progress" role="progressbar" aria-label="Session progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(frac * 100)}>
                   <span className="session-sheet__progress-fill" style={{ width: `${Math.max(0, Math.min(frac * 100, 100))}%` }} />
                 </div>

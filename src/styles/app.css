@@ -411,11 +411,12 @@
   }
   .train-hero__line {
     stroke: color-mix(in srgb, var(--green-dark) 72%, var(--brown));
-    stroke-width: 2;
+    stroke-width: 1.9;
     stroke-linecap: round;
     stroke-linejoin: round;
+    fill: none;
   }
-  .train-hero__dot { fill: color-mix(in srgb, var(--green-dark) 72%, var(--brown)); }
+  .train-hero__line--face { stroke-width: 2.8; }
   .train-hero__title {
     margin: 0;
     color: var(--brown);
@@ -447,12 +448,19 @@
     text-transform: uppercase;
     color: var(--text-muted);
     font-weight: var(--type-helper-text-weight);
+    text-align: center;
+  }
+  .session-sheet__time-block {
+    display: grid;
+    gap: 6px;
+    justify-items: center;
+    text-align: center;
   }
   .session-sheet__planned,
   .session-sheet__elapsed {
     color: var(--brown);
-    font-size: clamp(1.8rem, 7vw, 2.4rem);
-    line-height: 1.06;
+    font-size: clamp(1.35rem, 5.2vw, 1.82rem);
+    line-height: 1.14;
     font-weight: var(--type-metric-xl-weight);
   }
   .session-sheet__cta {
