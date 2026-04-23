@@ -1154,6 +1154,26 @@
   .tool-expand { background:var(--surface-muted); padding:var(--space-inline-control-padding); border-top:1px solid var(--border); }
   .tool-expand--modal { border-top:none; border-radius:12px; }
   .quick-modal-overlay { position:fixed; inset:0; background:var(--surface-overlay-strong); display:flex; align-items:center; justify-content:center; z-index:80; backdrop-filter:blur(8px); padding:var(--space-card-padding); animation:overlayFadeIn var(--motion-sheet-enter) var(--ease-standard); }
+  .viewport-modal-overlay {
+    position:fixed;
+    inset:0;
+    width:100vw;
+    height:100vh;
+    height:100dvh;
+    z-index:260;
+  }
+  .viewport-modal-panel {
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    width:min(100%, calc(100vw - 32px));
+    max-width:calc(100vw - 32px);
+    max-height:calc(100vh - 32px);
+    max-height:calc(100dvh - 32px);
+    overflow:auto;
+    overscroll-behavior:contain;
+  }
   .quick-modal-card { --modal-card-max-width:min(430px, calc(100vw - (2 * var(--space-card-padding)))); --modal-card-max-height:min(82vh, 760px); }
   .quick-modal-overlay--sheet { align-items:flex-end; }
   .quick-modal-card--sheet {

@@ -1,5 +1,5 @@
 import { PATTERN_TYPES } from "../app/helpers";
-import { DeleteIcon, ModalCloseButton } from "../app/ui";
+import { DeleteIcon, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
 
 const SETTINGS_PANEL = {
@@ -121,8 +121,8 @@ export default function SettingsScreen(props) {
       </div>
 
       {activePanel === SETTINGS_PANEL.PROFILE && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-profile-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+        <ViewportModal open onClose={() => setActivePanel(null)} labelledBy="settings-profile-title">
+          <div className="quick-modal-card modal-card modal-card--dialog-md">
             <div className="quick-modal-head">
               <div className="quick-modal-title" id="settings-profile-title">Dog profile</div>
               <ModalCloseButton onClick={() => setActivePanel(null)} />
@@ -144,12 +144,12 @@ export default function SettingsScreen(props) {
               </div>
             </div>
           </div>
-        </div>
+        </ViewportModal>
       )}
 
       {activePanel === SETTINGS_PANEL.REMINDERS && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-reminders-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+        <ViewportModal open onClose={() => setActivePanel(null)} labelledBy="settings-reminders-title">
+          <div className="quick-modal-card modal-card modal-card--dialog-md">
             <div className="quick-modal-head">
               <div className="quick-modal-title" id="settings-reminders-title">Reminders</div>
               <ModalCloseButton onClick={() => setActivePanel(null)} />
@@ -182,12 +182,12 @@ export default function SettingsScreen(props) {
               )}
             </div>
           </div>
-        </div>
+        </ViewportModal>
       )}
 
       {activePanel === SETTINGS_PANEL.LABELS && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-labels-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+        <ViewportModal open onClose={() => setActivePanel(null)} labelledBy="settings-labels-title">
+          <div className="quick-modal-card modal-card modal-card--dialog-md">
             <div className="quick-modal-head">
               <div className="quick-modal-title" id="settings-labels-title">Custom labels</div>
               <ModalCloseButton onClick={() => setActivePanel(null)} />
@@ -208,12 +208,12 @@ export default function SettingsScreen(props) {
               ))}
             </div>
           </div>
-        </div>
+        </ViewportModal>
       )}
 
       {activePanel === SETTINGS_PANEL.HELP && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-help-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+        <ViewportModal open onClose={() => setActivePanel(null)} labelledBy="settings-help-title">
+          <div className="quick-modal-card modal-card modal-card--dialog-md">
             <div className="quick-modal-head">
               <div className="quick-modal-title" id="settings-help-title">Help</div>
               <ModalCloseButton onClick={() => setActivePanel(null)} />
@@ -227,12 +227,12 @@ export default function SettingsScreen(props) {
               <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions, {activeProto.maxDailyAloneMinutes} min/day, and {pattern.recMin}–{pattern.recMax} pattern breaks.</div></div>
             </div>
           </div>
-        </div>
+        </ViewportModal>
       )}
 
       {activePanel === SETTINGS_PANEL.ADVANCED && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-advanced-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+        <ViewportModal open onClose={() => setActivePanel(null)} labelledBy="settings-advanced-title">
+          <div className="quick-modal-card modal-card modal-card--dialog-md">
             <div className="quick-modal-head">
               <div className="quick-modal-title" id="settings-advanced-title">Advanced</div>
               <ModalCloseButton onClick={() => setActivePanel(null)} />
@@ -280,12 +280,12 @@ export default function SettingsScreen(props) {
               {diagDetailsOpen && syncDiagResult && <div className="settings-advanced-group settings-advanced-group--technical"><div className={`diag-summary ${syncDiagResult.checks?.summary?.ok ? "ok" : "err"}`}>{syncDiagResult.checks?.summary?.ok ? "All checks passed" : "Some checks failed"}</div><pre className="diag-json">{JSON.stringify(syncDiagResult, null, 2)}</pre></div>}
             </div>
           </div>
-        </div>
+        </ViewportModal>
       )}
 
       {activePanel === SETTINGS_PANEL.ACCOUNT && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-account-title" onClick={() => setActivePanel(null)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+        <ViewportModal open onClose={() => setActivePanel(null)} labelledBy="settings-account-title">
+          <div className="quick-modal-card modal-card modal-card--dialog-md">
             <div className="quick-modal-head">
               <div className="quick-modal-title" id="settings-account-title">Account</div>
               <ModalCloseButton onClick={() => setActivePanel(null)} />
@@ -307,12 +307,12 @@ export default function SettingsScreen(props) {
               </button>
             </div>
           </div>
-        </div>
+        </ViewportModal>
       )}
 
       {trainingSettingsOpen && (
-        <div className="quick-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="training-settings-title" onClick={() => setTrainingSettingsOpen(false)}>
-          <div className="quick-modal-card modal-card modal-card--dialog-md" onClick={(e) => e.stopPropagation()}>
+        <ViewportModal open onClose={() => setTrainingSettingsOpen(false)} labelledBy="training-settings-title">
+          <div className="quick-modal-card modal-card modal-card--dialog-md">
             <div className="quick-modal-head">
               <div className="quick-modal-title" id="training-settings-title">Edit training plan</div>
               <ModalCloseButton onClick={() => setTrainingSettingsOpen(false)} />
@@ -345,7 +345,7 @@ export default function SettingsScreen(props) {
               </div>
             )}
           </div>
-        </div>
+        </ViewportModal>
       )}
     </>
   );

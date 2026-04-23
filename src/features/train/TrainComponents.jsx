@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ViewportModal } from "../app/ui";
 
 function SessionActionRow({ onEnd, onCancel }) {
   return (
@@ -132,8 +133,8 @@ export function SessionRatingPanel({
   if (phase !== "rating") return null;
 
   return (
-    <div className="rating-overlay" role="presentation">
-      <div className="rating-screen session-feedback modal-card modal-card--dialog-md" role="dialog" aria-modal="true" aria-labelledby="session-rating-title">
+    <ViewportModal open onClose={onCancel} overlayClassName="rating-overlay" labelledBy="session-rating-title">
+      <div className="rating-screen session-feedback modal-card modal-card--dialog-md">
         <div className="rating-scroll-body">
           <div className="rating-title" id="session-rating-title">Was there any stress?</div>
           <div className="rating-sub">
@@ -198,6 +199,6 @@ export function SessionRatingPanel({
           )}
         </div>
       </div>
-    </div>
+    </ViewportModal>
   );
 }

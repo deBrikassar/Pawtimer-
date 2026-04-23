@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 // ─── Embedded icon data URIs (base64, 64×64px, rounded corners) ─────────────
 export const ICONS = {
@@ -30,6 +31,48 @@ export const ModalCloseButton = ({ onClick, label = "Close dialog" }) => (
     <span aria-hidden="true">×</span>
   </button>
 );
+
+export const ViewportModal = ({
+  open = false,
+  onClose,
+  overlayClassName = "",
+  panelClassName = "",
+  role = "dialog",
+  ariaModal = true,
+  labelledBy,
+  describedBy,
+  children,
+}) => {
+  useEffect(() => {
+    if (!open) return undefined;
+    const onEscape = (event) => {
+      if (event.key === "Escape") onClose?.();
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [open, onClose]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className={`quick-modal-overlay viewport-modal-overlay ${overlayClassName}`.trim()}
+      role={role}
+      aria-modal={ariaModal}
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
+      onClick={() => onClose?.()}
+    >
+      <div
+        className={`viewport-modal-panel ${panelClassName}`.trim()}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {children}
+      </div>
+    </div>,
+    document.body,
+  );
+};
 const SvgIcon = ({ children, strokeWidth = 1.9, className = "" }) => (
   <svg
     className={className}

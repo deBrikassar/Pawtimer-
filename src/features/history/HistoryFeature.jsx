@@ -4,7 +4,7 @@ import { InlineBanner } from "../../components/primitives";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
 import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, walkTypeLabel } from "../app/helpers";
-import { ClockIcon, DeleteIcon, EditIcon, ModalCloseButton, TrendIcon } from "../app/ui";
+import { ClockIcon, DeleteIcon, EditIcon, ModalCloseButton, TrendIcon, ViewportModal } from "../app/ui";
 import { logSyncDebug, mergeSessionWithDerivedFields, normalizeSession } from "../app/storage";
 
 function HistoryActionGroup({ actions }) {
@@ -548,8 +548,8 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
       </div>
 
       {historyModal && (
-        <div className="activity-time-overlay quick-modal-overlay--sheet" role="dialog" aria-modal="true" aria-labelledby="history-modal-title" onClick={() => setHistoryModal(null)}>
-          <div className="activity-time-card history-modal-card modal-card modal-card--dialog-sm modal-card--sheet" onClick={(e) => e.stopPropagation()}>
+        <ViewportModal open onClose={() => setHistoryModal(null)} overlayClassName="activity-time-overlay" labelledBy="history-modal-title">
+          <div className="activity-time-card history-modal-card modal-card modal-card--dialog-sm modal-card--sheet">
             <div className="history-session-sheet-grabber" aria-hidden="true" />
             <div className="quick-modal-head">
               <div className="section-title section-title--flush" id="history-modal-title">
@@ -602,18 +602,17 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               </div>
             </>}
           </div>
-        </div>
+        </ViewportModal>
       )}
 
       {activityDetail && (
-        <div
-          className="history-session-sheet-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="history-session-sheet-title"
-          onClick={() => setActivityDetail(null)}
+        <ViewportModal
+          open
+          onClose={() => setActivityDetail(null)}
+          overlayClassName="history-session-sheet-overlay"
+          labelledBy="history-session-sheet-title"
         >
-          <div className="history-session-sheet modal-card modal-card--dialog-md modal-card--sheet" onClick={(event) => event.stopPropagation()}>
+          <div className="history-session-sheet modal-card modal-card--dialog-md modal-card--sheet">
             <div className="history-session-sheet-grabber" aria-hidden="true" />
             <div className="quick-modal-head">
               <div className="section-title section-title--flush" id="history-session-sheet-title">Activity details</div>
@@ -669,7 +668,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
               />
             </HistoryDetailGroup>
           </div>
-        </div>
+        </ViewportModal>
       )}
     </>
   );
