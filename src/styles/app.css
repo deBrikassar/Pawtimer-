@@ -1285,6 +1285,8 @@
     font-weight:var(--type-secondary-weight);
   }
   .outcome-details { margin-top:var(--space-2); padding:var(--space-2); border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-muted); display:flex; flex-direction:column; gap:var(--space-1); }
+  .rating-footer-actions { margin-top:var(--space-2); display:flex; justify-content:flex-start; }
+  .rating-footer-actions .session-cancel-btn { min-height:44px; width:100%; }
   .field-label { font-size:var(--type-secondary-size); color:var(--brown); font-weight:var(--type-secondary-weight); line-height:var(--type-secondary-line); }
   /* Form controls: default field */
   .text-input { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:var(--space-field-padding-default); font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:var(--brown); background:var(--surf); }
