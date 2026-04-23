@@ -192,9 +192,11 @@ export function SessionRatingPanel({
             </button>
           </div>
         )}
-        <button className="session-cancel-btn button-base button-ghost button--md button--block" onClick={onCancel}>
-          Discard this session
-        </button>
+        <div className="rating-footer-actions">
+          <button className="session-cancel-btn button-base button-ghost button--md button--block" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );
