@@ -437,6 +437,23 @@
     pointer-events:none;
     z-index:0;
   }
+  .sc-dog-hero {
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(24px, 8%, 34px);
+    z-index:0;
+    pointer-events:none;
+  }
+  .sc-dog-hero img {
+    width:100%;
+    height:100%;
+    max-width:180px;
+    max-height:180px;
+    object-fit:contain;
+  }
   .sc-time { position:relative; z-index:1; opacity:1; transform:scale(1); transition:opacity 320ms ease-in-out, transform 320ms ease-in-out; display:flex; flex-direction:column; align-items:center; gap:4px; max-width:188px; }
   .sc-time-value { font-size:clamp(2rem, 8.6vw, 2.8rem); line-height:1.03; font-weight:var(--type-metric-xl-weight); color:var(--green-dark); letter-spacing:var(--type-metric-xl-track); font-variant-numeric:tabular-nums; }
   .session-control.state-warning .sc-time-value { color:var(--brown); }

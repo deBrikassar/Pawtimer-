@@ -72,6 +72,9 @@ export function SessionControl({
           </svg>
 
           <div className="sc-content">
+            <div className="sc-dog-hero" aria-hidden="true">
+              <img src="/icons/dog-base.svg" alt="" />
+            </div>
             <div className="sc-idle" aria-hidden={isRunning}>
               <div className="sc-idle-label">
                 <span>Start</span>
