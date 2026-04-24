@@ -1383,11 +1383,12 @@
     background:transparent;
     color:var(--brown);
     cursor:pointer;
-    transition:background-color var(--motion-base) var(--ease-out);
+    transition:background-color var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out);
     display:flex;
     align-items:flex-start;
     gap:12px;
     text-align:left;
+    box-shadow:inset 0 -1px 0 color-mix(in srgb, var(--border) 52%, transparent);
   }
   .result-option__radio {
     width:18px;
@@ -1404,6 +1405,7 @@
     flex:0 0 auto;
     margin-top:2px;
     background:transparent;
+    transition:background-color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out), color var(--motion-base) var(--ease-out);
   }
   .result-option__text {
     display:grid;
@@ -1424,14 +1426,22 @@
     color:var(--text-muted);
   }
   .result-option.is-selected {
-    background:color-mix(in srgb, var(--green-dark) 8%, transparent);
+    background:rgba(60, 140, 100, 0.08);
+    box-shadow:inset 0 0 0 1px rgba(60, 140, 100, 0.2);
   }
   .result-option.is-selected .result-option__radio {
-    border-color:color-mix(in srgb, var(--green-dark) 48%, var(--border));
-    background:color-mix(in srgb, var(--green-dark) 14%, var(--surf));
+    border-color:var(--green-dark);
+    background:var(--green-dark);
+    color:#fff;
+  }
+  .result-option.is-selected .result-option__title {
+    color:color-mix(in srgb, var(--green-dark) 78%, var(--brown));
   }
   .result-option:hover {
-    background:color-mix(in srgb, var(--surf) 85%, transparent);
+    background:rgba(0, 0, 0, 0.03);
+  }
+  .result-option.is-selected:hover {
+    background:rgba(60, 140, 100, 0.1);
   }
   .rating-inline-cancel {
     margin:var(--space-1) auto 0;
