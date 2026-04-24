@@ -410,12 +410,13 @@
     background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--green-light) 26%, #fff), color-mix(in srgb, var(--surf) 98%, var(--surface-muted)));
     border: 1px solid color-mix(in srgb, var(--green) 24%, var(--border));
   }
-  .train-hero__line {
-    stroke: color-mix(in srgb, var(--green-dark) 78%, var(--green));
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    fill: none;
+  .train-hero__asset {
+    width: 100%;
+    height: 100%;
+    max-width: 108px;
+    max-height: 108px;
+    object-fit: contain;
+    display: block;
   }
   .train-hero__title {
     margin: 0;
