@@ -46,7 +46,7 @@ export function SessionControl({
         <div className="session-control-wrap">
           <section className="train-hero" aria-hidden="true">
             <div className="train-hero__dog">
-              <img className="train-hero__asset" src="/icons/dog-base.svg" alt="Dog" />
+              <img className="train-hero__asset" src="/icons/dog-base.svg" alt="" />
             </div>
             <p className="train-hero__title">Ready to focus?</p>
             <p className="train-hero__copy">Short, consistent sessions make the biggest difference.</p>
