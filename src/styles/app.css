@@ -386,7 +386,7 @@
   .prog-meta strong { color:var(--brown); font-weight:var(--font-semibold); }
 
   /* ── Session control — single morphing button/timer ── */
-  .session-control-wrap { margin-top:0; display:flex; justify-content:center; padding:6px 0 2px; }
+  .session-control-wrap { margin-top:0; display:flex; flex-direction:column; align-items:center; gap:14px; padding:6px 0 2px; }
   .session-control {
     position:relative; width:clamp(248px, 74vw, 312px); aspect-ratio:1/1;
     border:none; border-radius:50%; cursor:pointer;
@@ -523,6 +523,63 @@
     text-align:center;
     font-size:var(--type-helper-text-size);
     color:var(--text-muted);
+  }
+  .session-panel {
+    width:min(100%, 360px);
+    padding:14px 14px 16px;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .session-panel__eyebrow {
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+    letter-spacing:0.06em;
+    font-weight:600;
+    color:var(--text-muted);
+  }
+  .session-panel__time {
+    font-size:clamp(1.5rem, 7vw, 2rem);
+    font-weight:var(--type-metric-xl-weight);
+    color:var(--green-dark);
+    line-height:1.05;
+    font-variant-numeric:tabular-nums;
+  }
+  .session-panel__plan,
+  .session-panel__helper,
+  .session-panel__over {
+    margin:0;
+    font-size:var(--type-helper-text-size);
+    line-height:var(--type-helper-text-line);
+    color:var(--text-muted);
+  }
+  .session-panel__over { color:var(--green-dark); font-weight:600; }
+  .session-panel__progress {
+    height:8px;
+    width:100%;
+    border-radius:999px;
+    background:color-mix(in srgb, var(--surface-muted) 74%, white);
+    overflow:hidden;
+  }
+  .session-panel__progress-fill {
+    display:block;
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg, var(--green-dark), var(--green));
+    transition:width 320ms linear;
+  }
+  .session-start-btn {
+    width:min(100%, 296px);
+    margin:4px auto 0;
+  }
+  .session-panel .session-actions {
+    margin-top:4px;
+    width:100%;
+  }
+  .session-panel .session-end-btn,
+  .session-panel .session-cancel-btn {
+    width:min(100%, 296px);
   }
 
   .readiness-hint { margin:var(--space-card-row-gap) auto 0; width:min(100%, 320px); padding:var(--space-inline-control-padding); border-radius:12px; border:1px solid var(--border); background:var(--surface-muted); display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); }
