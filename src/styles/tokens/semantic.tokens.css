@@ -17,7 +17,7 @@
   --softBlue: var(--color-info-50);
   --softBlueHover: var(--color-info-100);
   --softBlueBorder: var(--color-info-200);
-  --mutedBlue: #8C7A67;
+  --mutedBlue: #7C8178;
 
   --green: var(--color-primary-200);
   --green-light: #D7E8D2;
@@ -28,7 +28,7 @@
   --blue-dark: var(--primaryBlue);
   --blue-darker: var(--color-info-600);
   --blue-muted: var(--mutedBlue);
-  --blue-wash: rgba(124,103,81,0.08);
+  --blue-wash: rgba(114,123,112,0.08);
 
   --brown: var(--text);
   --brown-mid: var(--text-muted);
@@ -43,13 +43,13 @@
   --warning: var(--amber);
   --info: var(--primaryBlue);
 
-  --surface-muted: #F6F1E8;
-  --surface-tint: #F8F3EB;
+  --surface-muted: #F3F4F0;
+  --surface-tint: #F6F7F3;
   --surface-hero-top: var(--color-bg-subtle);
-  --surface-hero-mid: #F7F0E5;
-  --surface-overlay: rgba(36,27,19,0.30);
-  --surface-overlay-strong: rgba(36,27,19,0.38);
-  --surface-frost: rgba(255,249,241,0.94);
+  --surface-hero-mid: #F1F3EE;
+  --surface-overlay: rgba(30,34,30,0.28);
+  --surface-overlay-strong: rgba(30,34,30,0.36);
+  --surface-frost: rgba(250,251,248,0.94);
 
   --surface-gradient-soft: linear-gradient(180deg, var(--surf) 0%, var(--surface-tint) 100%);
   --surface-gradient-raised: linear-gradient(180deg, var(--surf) 0%, var(--color-surface-raised) 100%);
@@ -73,6 +73,6 @@
   --status-danger-fg: var(--danger);
   --status-attention-bg: rgba(200,120,78,0.12);
   --status-attention-fg: color-mix(in srgb, var(--orange) 56%, var(--danger));
-  --status-neutral-bg: rgba(90,71,53,0.08);
+  --status-neutral-bg: rgba(95,101,92,0.08);
   --status-sync-local-fg: #9a6a19;
 }

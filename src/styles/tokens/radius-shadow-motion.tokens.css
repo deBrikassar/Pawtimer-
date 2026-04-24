@@ -13,10 +13,10 @@
   --control-touch-target-lg: 52px;
 
   /* soft depth */
-  --shadow: 0 10px 24px rgba(47,33,20,0.07);
-  --shadow-lg: 0 20px 44px rgba(47,33,20,0.12);
-  --surface-focus-shadow-soft: 0 10px 24px rgba(47,33,20,0.06);
-  --surface-dock-shadow: 0 -10px 30px rgba(47,33,20,0.06);
+  --shadow: 0 10px 24px rgba(33,39,32,0.07);
+  --shadow-lg: 0 20px 44px rgba(33,39,32,0.12);
+  --surface-focus-shadow-soft: 0 10px 24px rgba(33,39,32,0.06);
+  --surface-dock-shadow: 0 -10px 30px rgba(33,39,32,0.06);
   --surface-toast-shadow: 0 8px 32px rgba(36,27,19,0.24);
   --surface-metric-radius: var(--radius-md);
   --surface-metric-shadow: 0 10px 24px rgba(15,23,42,0.05);
