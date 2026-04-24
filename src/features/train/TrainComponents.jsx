@@ -133,7 +133,6 @@ export function SessionRatingPanel({
   setDistressTypeDraft,
   onCancel,
   fmt,
-  Img,
   distressTypes,
 }) {
   if (phase !== "rating") return null;
@@ -146,25 +145,57 @@ export function SessionRatingPanel({
           <div className="rating-sub">
             {fmt(finalElapsed)} session — how did {name} handle it?
           </div>
-          <div className="result-grid">
-            <button className="btn-result btn-none" onClick={() => { setSessionOutcome("none"); recordResult("none"); }}>
-              <Img src="result-calm.png" size={36} alt="No distress"/>
-              <div><div>No distress</div><div className="result-desc">{name} was completely calm</div></div>
+          <div className="result-list" role="radiogroup" aria-label="Stress rating">
+            <button
+              className={`result-option ${sessionOutcome === "none" ? "is-selected" : ""}`.trim()}
+              onClick={() => { setSessionOutcome("none"); recordResult("none"); }}
+              role="radio"
+              aria-checked={sessionOutcome === "none"}
+            >
+              <span className="result-option__radio" aria-hidden="true">{sessionOutcome === "none" ? "✓" : ""}</span>
+              <span className="result-option__text">
+                <span className="result-option__title">No distress</span>
+                <span className="result-option__subtitle">{name} was completely calm</span>
+              </span>
             </button>
-            <button className="btn-result btn-mild" onClick={() => setSessionOutcome("subtle")}>
-              <Img src="result-mild.png" size={36} alt="Subtle stress"/>
-              <div><div>Subtle stress</div><div className="result-desc">Mild/passive signs (restless, lip licking, etc.)</div></div>
+            <button
+              className={`result-option ${sessionOutcome === "subtle" ? "is-selected" : ""}`.trim()}
+              onClick={() => setSessionOutcome("subtle")}
+              role="radio"
+              aria-checked={sessionOutcome === "subtle"}
+            >
+              <span className="result-option__radio" aria-hidden="true">{sessionOutcome === "subtle" ? "✓" : ""}</span>
+              <span className="result-option__text">
+                <span className="result-option__title">Subtle stress</span>
+                <span className="result-option__subtitle">Mild/passive signs (restless, lip licking, etc.)</span>
+              </span>
             </button>
-            <button className="btn-result btn-strong" onClick={() => setSessionOutcome("active")}>
-              <Img src="result-strong.png" size={36} alt="Active distress"/>
-              <div><div>Active distress</div><div className="result-desc">Barking, pacing, unable to settle</div></div>
+            <button
+              className={`result-option ${sessionOutcome === "active" ? "is-selected" : ""}`.trim()}
+              onClick={() => setSessionOutcome("active")}
+              role="radio"
+              aria-checked={sessionOutcome === "active"}
+            >
+              <span className="result-option__radio" aria-hidden="true">{sessionOutcome === "active" ? "✓" : ""}</span>
+              <span className="result-option__text">
+                <span className="result-option__title">Active distress</span>
+                <span className="result-option__subtitle">Barking, pacing, unable to settle</span>
+              </span>
             </button>
-            <button className="btn-result btn-severe" onClick={() => setSessionOutcome("severe")}>
-              <Img src="result-strong.png" size={36} alt="Severe distress"/>
-              <div><div>Severe distress</div><div className="result-desc">Panic, escape attempt, major breakdown</div></div>
+            <button
+              className={`result-option ${sessionOutcome === "severe" ? "is-selected" : ""}`.trim()}
+              onClick={() => setSessionOutcome("severe")}
+              role="radio"
+              aria-checked={sessionOutcome === "severe"}
+            >
+              <span className="result-option__radio" aria-hidden="true">{sessionOutcome === "severe" ? "✓" : ""}</span>
+              <span className="result-option__text">
+                <span className="result-option__title">Severe distress</span>
+                <span className="result-option__subtitle">Panic, escape attempt, major breakdown</span>
+              </span>
             </button>
           </div>
-          <button className="button-base button-ghost button--md button--block rating-inline-cancel" onClick={onCancel}>
+          <button className="button-base button-ghost button--md rating-inline-cancel" onClick={onCancel}>
             Cancel
           </button>
           {sessionOutcome && sessionOutcome !== "none" && (
