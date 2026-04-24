@@ -34,10 +34,10 @@ export function WelcomeScreen({ onStart, onManageDogs }) {
           type="button"
           onClick={onStart}
         >
-          Start first-time setup
+          Start setup
         </button>
         <button className="ws-secondary" type="button" onClick={onManageDogs}>
-          I already have a dog ID
+          Join with dog ID
         </button>
       </div>
     </div>
@@ -131,10 +131,9 @@ export function Onboarding({ onComplete, onBack }) {
   );
 }
 
-export function DogSelect({ dogs, onSelect, onCreateNew }) {
+export function DogSelect({ onSelect }) {
   const [joinId, setJoinId] = useState("");
-  const [joinState, setJoinState] = useState({ status: "idle", message: "", preview: null });
-  const [activePath, setActivePath] = useState(null);
+  const [joinState, setJoinState] = useState({ status: "idle", message: "" });
   const [isLookingUp, setIsLookingUp] = useState(false);
 
   const normalizeJoinId = (value) => value.replace(/[^a-zA-Z0-9-]/g, "").replace(/\s+/g, "").toUpperCase();
@@ -152,31 +151,14 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
     const normalized = normalizeJoinId(joinId);
     const softValidation = validateJoinId(normalized);
     if (softValidation) {
-      setJoinState({ status: "invalid", message: softValidation, preview: null });
+      setJoinState({ status: "invalid", message: softValidation });
       return;
     }
     if (typeof onSelect !== "function") return;
     setIsLookingUp(true);
-    const result = await onSelect(normalized, true, { mode: "preview" });
-    if (result?.ok) {
-      setJoinState({
-        status: "ready",
-        message: "ID found. Review and confirm to join.",
-        preview: result,
-      });
-    } else {
-      setJoinState({
-        status: "not-found",
-        message: result?.message || "We couldn't find that ID. Please check and try again.",
-        preview: null,
-      });
-    }
+    const result = await onSelect(normalized, true, { mode: "join" });
+    if (!result?.ok) setJoinState({ status: "not-found", message: result?.message || "We couldn't find that ID. Please check and try again." });
     setIsLookingUp(false);
-  };
-
-  const handleJoinConfirm = async () => {
-    if (!joinState.preview?.normalizedId) return;
-    await onSelect(joinState.preview.normalizedId, true, { mode: "join", preview: joinState.preview });
   };
 
   return (
@@ -184,37 +166,11 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
       <div className="ds-hero">
         <div className="ds-logo"><PawIcon size={68} /></div>
         <div className="ds-title">PawTimer</div>
-        <div className="ds-sub">Pick the fastest way to get into your dog&apos;s training plan.</div>
+        <div className="ds-sub">Join with dog ID</div>
       </div>
       <div className="ds-body">
-        <div className="ds-path-grid">
-          <button
-            className={`ds-path-card ${activePath === "create" ? "selected" : ""}`}
-            type="button"
-            onClick={() => {
-              setActivePath("create");
-              onCreateNew();
-            }}
-          >
-            <div className="ds-path-title">Create a new plan</div>
-            <div className="ds-path-copy">Best for first-time setup. We&apos;ll choose a calm starting target.</div>
-          </button>
-          <button
-            className={`ds-path-card ${activePath === "join" ? "selected" : ""}`}
-            type="button"
-            onClick={() => setActivePath("join")}
-          >
-            <div className="ds-path-title">Join with dog ID</div>
-            <div className="ds-path-copy">Best when someone already set up this dog profile.</div>
-          </button>
-        </div>
-
-        <div className={`ds-join-panel ${activePath === "join" ? "is-open" : ""}`}>
-          <div className="ds-section-label">Join using dog ID</div>
-          <div className="ds-note">
-            This ID links one dog profile across devices.
-            You&apos;ll usually get it from your partner, trainer, or whoever set up the profile.
-          </div>
+        <div className="ds-join-panel is-open">
+          <div className="ds-section-label">Enter dog ID</div>
           <div className="ds-join-row">
             <input
               className="ds-join-input"
@@ -222,50 +178,23 @@ export function DogSelect({ dogs, onSelect, onCreateNew }) {
               value={joinId}
               onChange={(e) => {
                 setJoinId(e.target.value);
-                if (joinState.status !== "idle") setJoinState({ status: "idle", message: "", preview: null });
+                if (joinState.status !== "idle") setJoinState({ status: "idle", message: "" });
               }}
               onBlur={() => {
                 const normalized = normalizeJoinId(joinId);
                 const softValidation = validateJoinId(normalized);
-                if (joinId && softValidation) setJoinState({ status: "invalid", message: softValidation, preview: null });
+                if (joinId && softValidation) setJoinState({ status: "invalid", message: softValidation });
               }}
               onKeyDown={(e) => e.key === "Enter" && joinId.trim() && handleLookup()}
               maxLength={14}
             />
             <button className="ds-join-btn" onClick={handleLookup} disabled={isLookingUp || !hasValidShape(normalizeJoinId(joinId))}>
-              {isLookingUp ? "Checking…" : "Check ID"}
+              {isLookingUp ? "Joining…" : "Join"}
             </button>
           </div>
           {joinState.message && <div className={`ds-join-feedback ds-join-feedback--${joinState.status}`}>{joinState.message}</div>}
-          {joinState.status === "ready" && joinState.preview && (
-            <div className="ds-join-confirm-card">
-              <div className="ds-join-confirm-eyebrow">Ready</div>
-              <div className="ds-join-confirm-title">{joinState.preview.dogName || "Shared dog profile"}</div>
-              <div className="ds-join-confirm-copy">
-                ID: {joinState.preview.normalizedId}
-                {joinState.preview.source ? ` • ${joinState.preview.source}` : ""}
-              </div>
-              <button className="ds-join-btn ds-join-confirm-btn" type="button" onClick={handleJoinConfirm}>
-                Join this profile
-              </button>
-            </div>
-          )}
           <div className="ds-join-hint">Find this ID in Settings → Dog profile.</div>
         </div>
-
-        {dogs.length > 0 && <>
-          <div className="ds-section-label u-mt-section-tight">Your dogs</div>
-          {dogs.map((d) => (
-            <button key={d.id} className="ds-dog-card surface-row--interactive interactive-row-card" type="button" onClick={() => onSelect(d.id)}>
-              <span className="interactive-row-card__icon"><PawIcon size={30} /></span>
-              <div className="interactive-row-card__content">
-                <div className="ds-dog-name">{d.dogName || "Your dog"}</div>
-                <div className="ds-dog-id">ID: {d.id}</div>
-              </div>
-              <div className="ds-dog-arrow interactive-row-card__trailing">›</div>
-            </button>
-          ))}
-        </>}
       </div>
     </div>
   );
