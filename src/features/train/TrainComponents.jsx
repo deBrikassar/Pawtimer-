@@ -147,7 +147,7 @@ export function SessionRatingPanel({
           </div>
           <div className="result-list" role="radiogroup" aria-label="Stress rating">
             <button
-              className={`result-option ${sessionOutcome === "none" ? "is-selected" : ""}`.trim()}
+              className={`result-option result-option--none ${sessionOutcome === "none" ? "is-selected" : ""}`.trim()}
               onClick={() => { setSessionOutcome("none"); recordResult("none"); }}
               role="radio"
               aria-checked={sessionOutcome === "none"}
@@ -159,7 +159,7 @@ export function SessionRatingPanel({
               </span>
             </button>
             <button
-              className={`result-option ${sessionOutcome === "subtle" ? "is-selected" : ""}`.trim()}
+              className={`result-option result-option--subtle ${sessionOutcome === "subtle" ? "is-selected" : ""}`.trim()}
               onClick={() => setSessionOutcome("subtle")}
               role="radio"
               aria-checked={sessionOutcome === "subtle"}
@@ -171,7 +171,7 @@ export function SessionRatingPanel({
               </span>
             </button>
             <button
-              className={`result-option ${sessionOutcome === "active" ? "is-selected" : ""}`.trim()}
+              className={`result-option result-option--active ${sessionOutcome === "active" ? "is-selected" : ""}`.trim()}
               onClick={() => setSessionOutcome("active")}
               role="radio"
               aria-checked={sessionOutcome === "active"}
@@ -183,7 +183,7 @@ export function SessionRatingPanel({
               </span>
             </button>
             <button
-              className={`result-option ${sessionOutcome === "severe" ? "is-selected" : ""}`.trim()}
+              className={`result-option result-option--severe ${sessionOutcome === "severe" ? "is-selected" : ""}`.trim()}
               onClick={() => setSessionOutcome("severe")}
               role="radio"
               aria-checked={sessionOutcome === "severe"}
