@@ -133,7 +133,7 @@ export default function SettingsScreen(props) {
                   <div className="settings-simple-title">Dog ID</div>
                   <div className="settings-id-value">{activeDogId}</div>
                 </div>
-                <button className="copy-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
+                <button type="button" className="copy-btn button-size-secondary-pill secondary-control secondary-control--compact-button" onClick={copyDogId} aria-label="Copy dog ID">Copy</button>
               </div>
               <div className="settings-sync-summary" aria-live="polite">
                 <div className={`sync-badge sync-state-${syncSummary.badgeState}`} title={syncSummary.detail}>
