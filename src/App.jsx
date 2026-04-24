@@ -1153,7 +1153,29 @@ export default function PawTimer() {
     pushWithSyncStatus("feeding", entry).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
     setFeedingOpen(false); showToast("Feeding logged.");
   };
-  const copyDogId = () => { navigator.clipboard?.writeText(activeDogId).catch(() => {}); showToast(`ID copied: ${activeDogId}`); };
+  const copyDogId = async () => {
+    if (!activeDogId) return;
+
+    const writeToClipboard = async () => {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(activeDogId);
+        return;
+      }
+
+      const el = document.createElement("textarea");
+      el.value = activeDogId;
+      el.setAttribute("readonly", "");
+      el.style.position = "absolute";
+      el.style.left = "-9999px";
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    };
+
+    writeToClipboard().catch(() => {});
+    showToast("Copied");
+  };
   const handlePhotoUpload = (e) => { const file = e.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => setDogPhoto(ev.target.result); reader.readAsDataURL(file); };
 
   const historyActions = useHistoryEditing({
