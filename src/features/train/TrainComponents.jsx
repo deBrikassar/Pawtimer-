@@ -3,7 +3,7 @@ import { ViewportModal } from "../app/ui";
 
 function SessionActionRow({ onEnd, onCancel }) {
   return (
-    <div className="session-actions">
+    <div className="session-actions is-running">
       <button className="session-end-btn button-base button-primary button--md button--pill" onClick={onEnd}>End Session</button>
       <button className="session-cancel-btn button-base button-ghost button--md button--pill" onClick={onCancel}>Cancel (don't save)</button>
     </div>
@@ -23,8 +23,6 @@ export function SessionControl({
   startBlockedMessage = "Session limit reached for today.",
 }) {
   const [pressing, setPressing] = useState(false);
-  const remaining = Math.max(target - elapsed, 0);
-  const remainingSeconds = Math.max(Math.ceil(remaining), 0);
   const overTargetSeconds = Math.max(elapsed - target, 0);
   const radius = 103;
   const circumference = 2 * Math.PI * radius;
@@ -32,7 +30,6 @@ export function SessionControl({
   const isRunning = phase === "running";
   const isIdle = phase === "idle";
   const isPastTarget = elapsed > target;
-  const timerValue = isRunning ? elapsed : remainingSeconds;
 
   const startWithFeedback = () => {
     if (!onStart || !canStart) return;
@@ -46,18 +43,9 @@ export function SessionControl({
   return (
     <>
       {phase !== "rating" && (<div className="session-control-wrap">
-        <button
+        <div
           className={`session-control ${isRunning ? "is-running" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""} ${isPastTarget ? "is-over-target" : ""}`}
-          onClick={isIdle && canStart ? startWithFeedback : undefined}
-          disabled={isIdle && !canStart}
-          aria-label={isRunning
-            ? (isPastTarget
-              ? `${fmt(overTargetSeconds)} over target in current session`
-              : `${fmt(remainingSeconds)} remaining in current session`)
-            : canStart
-              ? `Start ${fmt(target)} session`
-              : startBlockedMessage}
-          aria-live={isRunning ? "polite" : undefined}
+          aria-hidden="true"
         >
           <svg className="sc-ring-svg" viewBox="0 0 226 226" aria-hidden="true">
             <circle className="sc-track" cx="113" cy="113" r={radius} />
@@ -75,22 +63,37 @@ export function SessionControl({
             <div className="sc-dog-hero" aria-hidden="true">
               <img src="/icons/dog-base.svg" alt="" />
             </div>
-            <div className="sc-idle" aria-hidden={isRunning}>
-              <div className="sc-idle-label">
-                <span>Start</span>
-                <span>{canStart ? "Session" : "Blocked"}</span>
-              </div>
-            </div>
-
-            <div className="sc-time">
-              <div className="sc-time-value">{fmt(timerValue)}</div>
-              {isPastTarget && <div className="sc-over-target">+{fmt(overTargetSeconds)} over target</div>}
-            </div>
           </div>
-        </button>
-      </div>)}
+        </div>
 
-      {isRunning && <SessionActionRow onEnd={onEnd} onCancel={onCancel} />}
+        <div className="session-panel surface-card">
+          <div className="session-panel__eyebrow">SESSION TIME</div>
+          <div className="session-panel__time">{isRunning ? `${fmt(elapsed)} / ${fmt(target)}` : fmt(target)}</div>
+          {!isRunning && <div className="session-panel__plan">Planned duration: {fmt(target)}</div>}
+          {isRunning && (
+            <div className="session-panel__progress" aria-hidden="true">
+              <span className="session-panel__progress-fill" style={{ width: `${Math.min(frac, 1) * 100}%` }} />
+            </div>
+          )}
+          {isRunning && isPastTarget && <div className="session-panel__over">+{fmt(overTargetSeconds)} over target</div>}
+
+          {isIdle ? (
+            <>
+              <button
+                className="session-start-btn button-base button-primary button--md button--pill"
+                onClick={canStart ? startWithFeedback : undefined}
+                disabled={!canStart}
+                aria-label={canStart ? `Start ${fmt(target)} session` : startBlockedMessage}
+              >
+                Start session
+              </button>
+              <p className="session-panel__helper">{canStart ? "Recommended next session" : startBlockedMessage}</p>
+            </>
+          ) : (
+            <SessionActionRow onEnd={onEnd} onCancel={onCancel} />
+          )}
+        </div>
+      </div>)}
     </>
   );
 }
