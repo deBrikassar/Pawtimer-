@@ -125,11 +125,11 @@ export default function HomeScreen(props) {
         <section className="train-today surface-card settings-collapsible-card settings-collapsible-card--quiet">
           <button
             type="button"
-            className="settings-collapsible-toggle secondary-control--toggle"
+            className="settings-collapsible-toggle secondary-control--toggle train-today-toggle"
             aria-expanded={todayOpen}
             onClick={() => setTodayOpen((prev) => !prev)}
           >
-            <div>
+            <div className="train-today-toggle__copy">
               <div className="section-title section-title--flush">Today&apos;s care log</div>
               <div className="t-helper">{todaySessions.length} calm reps · walks, breaks, feeding</div>
             </div>
