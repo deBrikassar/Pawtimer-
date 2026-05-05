@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ViewportModal } from "../app/ui";
 
-function SessionActionRow({ onEnd, onCancel }) {
+function SessionActionRow({ onCancel }) {
   return (
     <div className="session-actions is-running">
-      <button className="session-end-btn button-base button-primary button--md button--pill" onClick={onEnd}>End Session</button>
       <button className="session-cancel-btn button-base button-ghost button--md button--pill" onClick={onCancel}>Cancel (don't save)</button>
     </div>
   );
@@ -23,6 +22,7 @@ export function SessionControl({
   startBlockedMessage = "Session limit reached for today.",
 }) {
   const [pressing, setPressing] = useState(false);
+  const triggerLockRef = useRef(false);
   const overTargetSeconds = Math.max(elapsed - target, 0);
   const radius = 103;
   const circumference = 2 * Math.PI * radius;
@@ -30,73 +30,53 @@ export function SessionControl({
   const isRunning = phase === "running";
   const isIdle = phase === "idle";
   const isPastTarget = elapsed > target;
-  const canStartFromDog = isIdle && canStart;
+  const isDogInteractive = isIdle ? canStart : isRunning;
 
-  const startWithFeedback = () => {
-    if (!onStart || !canStart) return;
+  const runDogAction = () => {
+    if (triggerLockRef.current) return;
+    if (isIdle && (!onStart || !canStart)) return;
+    if (isRunning && !onEnd) return;
+    triggerLockRef.current = true;
     setPressing(true);
     setTimeout(() => {
       setPressing(false);
-      onStart();
+      if (isIdle) onStart();
+      if (isRunning) onEnd();
+      triggerLockRef.current = false;
     }, 120);
   };
 
   return (
     <>
       {phase !== "rating" && (<div className="session-control-wrap">
-        {isIdle ? (
-          <button
-            type="button"
-            className={`session-control is-idle ${pressing ? "is-pressing" : ""}`.trim()}
-            onClick={canStart ? startWithFeedback : undefined}
-            disabled={!canStart}
-            aria-label="Start training session"
-          >
-            <svg className="sc-ring-svg" viewBox="0 0 226 226" aria-hidden="true">
-              <circle className="sc-track" cx="113" cy="113" r={radius} />
-              <circle
-                className="sc-progress is-dim"
-                cx="113"
-                cy="113"
-                r={radius}
-                strokeDasharray={circumference}
-                strokeDashoffset={circumference * (1 - frac)}
-              />
-            </svg>
-            <div className="sc-content">
-              <div className="sc-dog-hero" aria-hidden="true">
-                <img src="/icons/dog-base.svg" alt="" />
-              </div>
-            </div>
-          </button>
-        ) : (
-          <div
-            className={`session-control ${isRunning ? "is-running" : ""} ${completed ? "is-complete" : ""} ${isPastTarget ? "is-over-target" : ""}`.trim()}
-            aria-hidden="true"
-          >
-            <svg className="sc-ring-svg" viewBox="0 0 226 226" aria-hidden="true">
-              <circle className="sc-track" cx="113" cy="113" r={radius} />
-              <circle
-                className={`sc-progress ${isRunning || completed ? "" : "is-dim"}`.trim()}
-                cx="113"
-                cy="113"
-                r={radius}
-                strokeDasharray={circumference}
-                strokeDashoffset={circumference * (1 - frac)}
-              />
-            </svg>
-            <div className="sc-content">
-              <div className="sc-dog-hero" aria-hidden="true">
-                <img src="/icons/dog-base.svg" alt="" />
-              </div>
+        <button
+          type="button"
+          className={`session-control ${isIdle ? "is-idle" : ""} ${isRunning ? "is-running is-active" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""} ${isPastTarget ? "is-over-target" : ""}`.trim()}
+          onClick={isDogInteractive ? runDogAction : undefined}
+          disabled={!isDogInteractive}
+          aria-label={isRunning ? "End training session" : "Start training session"}
+        >
+          <svg className="sc-ring-svg" viewBox="0 0 226 226" aria-hidden="true">
+            <circle className="sc-track" cx="113" cy="113" r={radius} />
+            <circle
+              className={`sc-progress ${isRunning || completed ? "" : "is-dim"}`.trim()}
+              cx="113"
+              cy="113"
+              r={radius}
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference * (1 - frac)}
+            />
+          </svg>
+          <div className="sc-content">
+            <div className="sc-dog-hero" aria-hidden="true">
+              <img src="/icons/dog-base.svg" alt="" />
             </div>
           </div>
-        )}
+        </button>
 
-        <div className="session-panel surface-card">
+        <div className="session-panel">
           <div className="session-panel__eyebrow">SESSION TIME</div>
           <div className="session-panel__time">{isRunning ? `${fmt(elapsed)} / ${fmt(target)}` : fmt(target)}</div>
-          {!isRunning && <div className="session-panel__plan">Planned duration: {fmt(target)}</div>}
           {isRunning && (
             <div className="session-panel__progress" aria-hidden="true">
               <span className="session-panel__progress-fill" style={{ width: `${Math.min(frac, 1) * 100}%` }} />
@@ -104,11 +84,7 @@ export function SessionControl({
           )}
           {isRunning && isPastTarget && <div className="session-panel__over">+{fmt(overTargetSeconds)} over target</div>}
 
-          {isIdle ? (
-            <p className="session-panel__helper">{canStartFromDog ? "Tap the dog to start training" : startBlockedMessage}</p>
-          ) : (
-            <SessionActionRow onEnd={onEnd} onCancel={onCancel} />
-          )}
+          {!isIdle && <SessionActionRow onCancel={onCancel} />}
         </div>
       </div>)}
     </>
