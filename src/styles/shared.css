@@ -756,15 +756,26 @@
 .settings-btn {
   min-height: var(--control-touch-target-md);
   padding-block: 12px;
-  justify-content: flex-start;
-  text-align: left;
+  justify-content: center;
+  text-align: center;
   box-shadow: var(--shadow);
+}
+
+.settings-btn__label {
+  text-align: center;
 }
 
 .settings-btn.button-danger {
   box-shadow: var(--shadow);
 }
 
+
+:is(.walk-cancel-btn, .walk-end-btn, .button-base, .shared-button, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta, .ds-join-btn, .ob-back-btn, .ob-btn-next, .ws-secondary, .ws-cta, .clear-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
 
 :is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta):active:not(:disabled) {
   transform: scale(0.96);
