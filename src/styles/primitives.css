@@ -354,17 +354,22 @@
   display: grid;
   gap: var(--space-card-row-gap);
   place-items: center;
+  justify-items: center;
+  align-content: center;
+  min-height: clamp(260px, 48vh, 360px);
 }
 
 .pt-empty-state__title {
   color: var(--brown);
   font-size: var(--type-card-heading-size);
   line-height: var(--type-card-heading-line);
+  max-width: 24ch;
+  margin: 0 auto;
 }
 
 .pt-empty-state__body {
   color: var(--text-muted);
-  max-width: 42ch;
+  max-width: 34ch;
   font-size: var(--type-body-size);
   line-height: var(--type-body-line);
 }
