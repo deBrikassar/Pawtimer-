@@ -1839,6 +1839,11 @@
   .stats-section-signals .stats-section-title,
   .stats-section-journey .stats-section-title,
   .stats-section-supporting .stats-section-title { margin-bottom:clamp(10px, 2.5vw, var(--space-control-gap)); }
+  .stats-goal-progress { display:grid; gap:8px; padding:0 var(--stats-content-inset, var(--space-card-padding)); }
+  .stats-goal-progress-value { font-size:var(--type-secondary-size); line-height:var(--type-secondary-line); letter-spacing:var(--type-secondary-track); font-weight:var(--type-secondary-weight); color:var(--text); font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .stats-goal-progress-empty { font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); color:var(--text-muted); }
+  .stats-goal-progress-track { height:10px; width:100%; border-radius:999px; background:color-mix(in srgb, var(--green-light) 14%, var(--surf)); border:1px solid color-mix(in srgb, var(--green-dark) 12%, transparent); overflow:hidden; }
+  .stats-goal-progress-fill { display:block; height:100%; min-width:0; border-radius:inherit; background:color-mix(in srgb, var(--green-dark) 82%, var(--brown)); transition:width var(--motion-base) var(--ease-out); }
   .stats-row   { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-control-gap); margin-bottom:0; align-items:stretch; }
   .stats-row-core { gap:var(--space-section-gap); }
   .stats-row-core-trimmed { grid-template-columns:repeat(3, minmax(0, 1fr)); }
