@@ -5,6 +5,10 @@ import { SproutIcon } from "../app/ui";
 
 export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
   const target = recommendation?.duration ?? 0;
+  const hasValidProgressDurations = Number.isFinite(bestCalm) && bestCalm >= 0 && Number.isFinite(target) && target > 0;
+  const progressRatio = hasValidProgressDurations
+    ? Math.max(0, Math.min(bestCalm / target, 1))
+    : null;
   const headlineMetricVariant = METRIC_VARIANTS.HEADLINE;
   const standardMetricVariant = METRIC_VARIANTS.STANDARD;
   const ringMetricVariant = METRIC_VARIANTS.RING;
@@ -53,6 +57,24 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
                 className={`stat-card--key-metric stat-card-risk surface-state--${riskSurfaceState}`}
                 variant={standardMetricVariant}
               />
+            </div>
+          </StatsSection>
+
+          <StatsSection title="Progress toward current goal" className="stats-section-goal-progress">
+            <div className="stats-goal-progress" role="group" aria-label="Progress toward current goal">
+              {hasValidProgressDurations ? (
+                <>
+                  <div className="stats-goal-progress-value">{fmt(bestCalm)} / {fmt(target, { hoursMinutesOnly: true })}</div>
+                  <div className="stats-goal-progress-track" aria-hidden="true">
+                    <span className="stats-goal-progress-fill" style={{ width: `${progressRatio * 100}%` }} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="stats-goal-progress-empty">Start your first session to track progress</div>
+                  <div className="stats-goal-progress-track" aria-hidden="true" />
+                </>
+              )}
             </div>
           </StatsSection>
 
