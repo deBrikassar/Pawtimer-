@@ -77,11 +77,6 @@ export function SessionControl({
         <div className="session-panel">
           <div className="session-panel__eyebrow">SESSION TIME</div>
           <div className="session-panel__time">{isRunning ? `${fmt(elapsed)} / ${fmt(target)}` : fmt(target)}</div>
-          {isRunning && (
-            <div className="session-panel__progress" aria-hidden="true">
-              <span className="session-panel__progress-fill" style={{ width: `${Math.min(frac, 1) * 100}%` }} />
-            </div>
-          )}
           {isRunning && isPastTarget && <div className="session-panel__over">+{fmt(overTargetSeconds)} over target</div>}
 
           {!isIdle && <SessionActionRow onCancel={onCancel} />}
