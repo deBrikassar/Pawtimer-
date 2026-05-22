@@ -413,7 +413,47 @@
   font-size: var(--type-body-size);
   line-height: var(--type-body-line);
 }
+/* ── НЕЙОМОРФНЫЕ КНОПКИ (NEUMORPHIC ACTION BUTTONS) ── */
+.pt-button--neu {
+  --neu-bg:           #d4eadd;
+  --neu-shadow-light: #eaf7f0;
+  --neu-shadow-dark:  #aec9ba;
+  --neu-accent:       #e05555;
 
+  width:  72px;
+  height: 72px;
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--neu-bg);
+  color: var(--brown);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+     10px  10px 22px var(--neu-shadow-dark),
+    -10px -10px 22px var(--neu-shadow-light);
+
+  transition: box-shadow 0.2s ease, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+
+.pt-button--neu:hover:not(:disabled) {
+  box-shadow:
+     13px  13px 26px var(--neu-shadow-dark),
+    -13px -13px 26px var(--neu-shadow-light);
+  transform: translateY(-1px);
+}
+
+.pt-button--neu:active {
+  box-shadow:
+    inset  5px  5px 10px var(--neu-shadow-dark),
+    inset -5px -5px 10px var(--neu-shadow-light);
+  transform: scale(0.96);
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   * {
