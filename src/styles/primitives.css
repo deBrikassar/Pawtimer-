@@ -413,7 +413,88 @@
   font-size: var(--type-body-size);
   line-height: var(--type-body-line);
 }
+/* ── НЕЙОМОРФНЫЕ КНОПКИ (NEUMORPHIC ACTION BUTTONS) ── */
+/*
+  Используется для круглых кнопок действия (Pause, Finish и т.п.)
+  Фоновый цвет --neu-bg должен совпадать с фоном экрана где кнопки лежат.
+  Если фон светлый (белый/кремовый) — переменные ниже работают "из коробки".
+*/
 
+.pt-button--neu {
+  --neu-bg:           #eef1f6;
+  --neu-shadow-light: #ffffff;
+  --neu-shadow-dark:  #c8cdd8;
+  --neu-accent:       #e05555;   /* цвет рамки для destructive-варианта */
+
+  width:  72px;
+  height: 72px;
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--neu-bg);
+  color: var(--brown);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+     6px  6px 14px var(--neu-shadow-dark),
+    -6px -6px 14px var(--neu-shadow-light);
+
+  transition:
+    box-shadow   0.2s ease,
+    transform    0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  cursor: pointer;
+}
+
+/* Hover — тень чуть глубже, кнопка «приподнимается» */
+.pt-button--neu:hover:not(:disabled) {
+  box-shadow:
+     9px  9px 18px var(--neu-shadow-dark),
+    -9px -9px 18px var(--neu-shadow-light);
+  transform: translateY(-1px);
+}
+
+/* Active — тень вдавлена внутрь, кнопка «нажата» */
+.pt-button--neu:active {
+  box-shadow:
+    inset  4px  4px  9px var(--neu-shadow-dark),
+    inset -4px -4px  9px var(--neu-shadow-light);
+  transform: scale(0.96);
+}
+
+/* Destructive / Finish — красная обводка поверх объёма */
+.pt-button--neu-danger {
+  box-shadow:
+     6px  6px 14px var(--neu-shadow-dark),
+    -6px -6px 14px var(--neu-shadow-light),
+    inset 0 0 0 2px var(--neu-accent);
+}
+
+.pt-button--neu-danger:hover:not(:disabled) {
+  box-shadow:
+     9px  9px 18px var(--neu-shadow-dark),
+    -9px -9px 18px var(--neu-shadow-light),
+    inset 0 0 0 2px var(--neu-accent);
+  transform: translateY(-1px);
+}
+
+.pt-button--neu-danger:active {
+  box-shadow:
+    inset  4px  4px  9px var(--neu-shadow-dark),
+    inset -4px -4px  9px var(--neu-shadow-light),
+    inset 0 0 0 2px var(--neu-accent);
+  transform: scale(0.96);
+}
+
+.pt-button--neu:disabled,
+.pt-button--neu-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: scale(1) !important;
+}
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
   * {
