@@ -421,10 +421,10 @@
 */
 
 .pt-button--neu {
-  --neu-bg:           #eef1f6;
-  --neu-shadow-light: #ffffff;
-  --neu-shadow-dark:  #c8cdd8;
-  --neu-accent:       #e05555;   /* цвет рамки для destructive-варианта */
+ --neu-bg:           #F7D6C1;
+ --neu-shadow-light: #fff5ee;   /* осветлённый персик */
+ --neu-shadow-dark:  #d4b09a;   /* затемнённый персик */
+ --neu-accent:       #e05555;
 
   width:  72px;
   height: 72px;
@@ -439,8 +439,8 @@
   justify-content: center;
 
   box-shadow:
-     6px  6px 14px var(--neu-shadow-dark),
-    -6px -6px 14px var(--neu-shadow-light);
+     10px  10px 22px var(--neu-shadow-dark),
+    -10px -10px 22px var(--neu-shadow-light);
 
   transition:
     box-shadow   0.2s ease,
@@ -468,8 +468,8 @@
 /* Destructive / Finish — красная обводка поверх объёма */
 .pt-button--neu-danger {
   box-shadow:
-     6px  6px 14px var(--neu-shadow-dark),
-    -6px -6px 14px var(--neu-shadow-light),
+     10px  10px 22px var(--neu-shadow-dark),
+    -10px -10px 22px var(--neu-shadow-light);
     inset 0 0 0 2px var(--neu-accent);
 }
 
