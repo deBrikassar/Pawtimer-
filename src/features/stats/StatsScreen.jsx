@@ -3,11 +3,12 @@ import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, Stat
 import { fmt } from "../app/helpers";
 import { SproutIcon } from "../app/ui";
 
-export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
+export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, overallGoalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
   const target = recommendation?.duration ?? 0;
-  const hasValidProgressDurations = Number.isFinite(bestCalm) && bestCalm >= 0 && Number.isFinite(target) && target > 0;
-  const progressRatio = hasValidProgressDurations
-    ? Math.max(0, Math.min(bestCalm / target, 1))
+  const hasValidBestCalm = Number.isFinite(bestCalm) && bestCalm >= 0;
+  const hasOverallGoal = Number.isFinite(overallGoalSec) && overallGoalSec > 0;
+  const progressRatio = hasValidBestCalm && hasOverallGoal
+    ? Math.max(0, Math.min(bestCalm / overallGoalSec, 1))
     : null;
   const headlineMetricVariant = METRIC_VARIANTS.HEADLINE;
   const standardMetricVariant = METRIC_VARIANTS.STANDARD;
@@ -60,18 +61,18 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
             </div>
           </StatsSection>
 
-          <StatsSection title="Progress toward current goal" className="stats-section-goal-progress">
-            <div className="stats-goal-progress" role="group" aria-label="Progress toward current goal">
-              {hasValidProgressDurations ? (
+          <StatsSection title="Overall training progress" className="stats-section-goal-progress">
+            <div className="stats-goal-progress" role="group" aria-label="Overall training progress">
+              {hasValidBestCalm && hasOverallGoal ? (
                 <>
-                  <div className="stats-goal-progress-value">{fmt(bestCalm)} / {fmt(target, { hoursMinutesOnly: true })}</div>
+                  <div className="stats-goal-progress-value">{fmt(bestCalm)} / {fmt(overallGoalSec, { hoursMinutesOnly: true })} goal</div>
                   <div className="stats-goal-progress-track" aria-hidden="true">
                     <span className="stats-goal-progress-fill" style={{ width: `${progressRatio * 100}%` }} />
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="stats-goal-progress-empty">Start your first session to track progress</div>
+                  <div className="stats-goal-progress-empty">{hasValidBestCalm ? "Set a training goal to track overall progress" : "Start your first session to track progress"}</div>
                   <div className="stats-goal-progress-track" aria-hidden="true" />
                 </>
               )}
