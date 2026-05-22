@@ -1,109 +1,54 @@
 /* Shared reusable primitives used across screens.
    Screen/component-specific class ownership stays in app.css. */
 
+/* ==========================================================================
+   1. СТЕКЛЯННЫЕ ПРИМИТИВЫ ДЛЯ КАРТОЧЕК (GLASSMORPHISM)
+   ========================================================================== */
+
 .shared-card,
 .surface-card,
-.surface-card-default {
-  background: var(--surface-gradient-soft);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow);
-  animation: surfaceEnter var(--motion-enter) var(--ease-out);
-}
-
-.surface-card--tool-group {
-  background: linear-gradient(180deg, var(--surf) 0%, color-mix(in srgb, var(--surf-soft) 28%, var(--surf)) 100%);
-  border-color: color-mix(in srgb, var(--border) 90%, var(--surf));
-  border-radius: 18px;
-}
-
-.surface-card--chart {
-  background: var(--surf);
-  border-color: var(--border);
-  border-radius: var(--radius);
-}
-
-.surface-card--progress {
-  background: var(--surface-gradient-raised);
-  border-color: color-mix(in srgb, var(--border) 92%, white);
-  border-radius: 16px;
-}
-
-/* Explicit spacing-density modifiers.
-   Default is inherited from :root; use compact/roomy only where needed. */
-.density-default {
-  --space-density-surface: var(--space-density-default-surface);
-  --space-density-section-gap: var(--space-density-default-section-gap);
-  --space-density-row-gap: var(--space-density-default-row-gap);
-  --space-density-control-gap: var(--space-density-default-control-gap);
-}
-
-.density-compact {
-  --space-density-surface: var(--space-density-compact-surface);
-  --space-density-section-gap: var(--space-density-compact-section-gap);
-  --space-density-row-gap: var(--space-density-compact-row-gap);
-  --space-density-control-gap: var(--space-density-compact-control-gap);
-}
-
-.density-roomy {
-  --space-density-surface: var(--space-density-roomy-surface);
-  --space-density-section-gap: var(--space-density-roomy-section-gap);
-  --space-density-row-gap: var(--space-density-roomy-row-gap);
-  --space-density-control-gap: var(--space-density-roomy-control-gap);
-}
-
-.surface-card-elevated {
-  background: var(--surface-gradient-raised);
-  border: var(--border-width-strong) solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  animation: surfaceEnter var(--motion-enter) var(--ease-out);
-}
-
-.surface-card-interactive {
-  background: var(--surface-gradient-raised);
-  border: var(--border-width-strong) solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition:
-    border-color var(--motion-base) var(--ease-standard),
-    background var(--motion-base) var(--ease-standard),
-    box-shadow var(--motion-base) var(--ease-standard),
-    transform var(--motion-fast) var(--ease-standard);
-}
-
-.surface-card-interactive:hover {
-  border-color: color-mix(in srgb, var(--mutedBlue) 52%, var(--border));
-  transform: translateY(-1px);
-}
-
-.surface-card-interactive:focus-visible {
-  outline: none;
-  border-color: var(--blue-dark);
-}
-
-.surface-card-interactive.is-selected,
-.surface-card-interactive[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--primaryBlue) 70%, var(--warm-accent-border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 90%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
-}
-
+.surface-card-default,
+.surface-card--tool-group,
+.surface-card--chart,
+.surface-card--progress,
+.surface-card-elevated,
 .surface-card-panel,
-.surface-card-inset {
-  background: linear-gradient(180deg, var(--surface-muted) 0%, color-mix(in srgb, var(--surface-muted) 94%, var(--warm-accent-soft)) 100%);
-  border: var(--border-width-strong) solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surf) 60%, transparent);
+.surface-card-inset,
+:is(.share-card, .stat-card),
+.stats-rings-card,
+.tool-group-card {
+  /* Полный отказ от плотных градиентов в пользу чистого матового стекла */
+  background: rgba(255, 255, 255, 0.35) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  
+  /* Элегантный, едва заметный светящийся стык на гранях */
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  border-radius: 24px !important; /* Приведение к единому стандарту скруглений */
+  
+  /* Глубокие, но очень мягкие, не серые тени */
+  box-shadow: 0 8px 32px 0 rgba(142, 197, 252, 0.04), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  
+  /* Плавный вход карточек при рендере */
+  animation: surfaceEnter var(--motion-enter) var(--ease-out) both;
+  transform: translateZ(0);
 }
 
-.surface-card-modal {
-  background: var(--surf);
-  border: var(--border-width-strong) solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+/* Специфический инсет-эффект для внутренних панелей */
+.surface-card-panel,
+.surface-card-inset,
+.surface-compact-info {
+  background: rgba(255, 255, 255, 0.20) !important;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
+/* ==========================================================================
+   2. ПЛАВНЫЕ МОДАЛЬНЫЕ ОКНА
+   ========================================================================== */
+
+.surface-card-modal,
 .modal-card {
   --modal-card-max-width: min(100%, 420px);
   --modal-card-max-height: none;
@@ -114,753 +59,145 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-control-gap);
-  background: var(--surface-gradient-raised);
-  border: var(--border-width-strong) solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  
+  /* Более плотное стекло для читаемости текста в поп-апах */
+  background: rgba(255, 255, 255, 0.70) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06) !important;
   animation: slideUp var(--motion-dialog-enter) var(--ease-emphasized);
 }
 
-.modal-card--sheet {
-  align-self: flex-end;
-}
+/* ==========================================================================
+   3. ИНТЕРАКТИВНЫЕ СТРОКИ И СЛOTS (КЛИКАБЕЛЬНЫЕ КАРТОЧКИ)
+   ========================================================================== */
 
-.modal-card--dialog-sm {
-  --modal-card-max-width: min(100%, 360px);
-}
-
-.modal-card--dialog-md {
-  --modal-card-max-width: min(100%, 430px);
-}
-
-.shared-pill {
-  border-radius: var(--radius-pill);
-  font-size: var(--type-overline-size);
-  line-height: var(--type-overline-line);
-  font-weight: var(--type-overline-weight);
-}
-
-.shared-section-heading {
-  color: var(--brown);
-  font-weight: var(--type-section-title-weight);
-  letter-spacing: var(--type-section-title-track);
-}
-
-.shared-stat-tile {
-  background: var(--surf);
-  border-radius: var(--radius-sm);
-  border: var(--border-width-strong) solid var(--border);
-}
-
-
-.surface-row,
-.info-row {
-  display:grid;
-  grid-template-columns:minmax(0, 1fr) max-content;
-  align-items:baseline;
-  column-gap:var(--row-gap-default);
-  padding-block:var(--space-control-gap);
-  border-bottom:1px solid var(--border);
-}
-
-.surface-row:last-child,
-.info-row:last-child {
-  border-bottom:none;
-  padding-bottom:0;
-}
-
-.surface-row__label-wrap,
-.info-row__label-wrap {
-  min-width:0;
-}
-
-.surface-row__label,
-.info-row__label {
-  display:block;
-  font-size:var(--type-field-label-size);
-  line-height:var(--type-field-label-line);
-  letter-spacing:var(--type-field-label-track);
-  font-weight:var(--type-field-label-weight);
-  color:var(--text-muted);
-  overflow-wrap:anywhere;
-}
-
-.surface-row__value,
-.info-row__value {
-  justify-self:end;
-  align-self:baseline;
-  font-size:var(--type-field-value-size);
-  line-height:var(--type-field-value-line);
-  letter-spacing:var(--type-field-value-track);
-  font-weight:var(--type-field-value-weight);
-  color:var(--brown);
-  text-align:right;
-  font-variant-numeric:tabular-nums;
-  font-feature-settings:"tnum" 1;
-  white-space:nowrap;
-}
-
-@media (max-width: 560px) {
-  .info-row {
-    grid-template-columns:minmax(0, 1fr);
-    row-gap:4px;
-  }
-
-  .surface-row__value,
-  .info-row__value {
-    justify-self:start;
-    text-align:left;
-    white-space:normal;
-  }
-}
-
+.surface-card-interactive,
 .surface-row--interactive,
-.interactive-row-card {
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap:var(--space-control-gap);
-  padding:var(--space-card-padding);
-  border:var(--border-width-strong) solid var(--border);
-  border-radius:var(--radius-sm);
-  background:var(--surface-gradient-raised);
-  box-shadow:var(--shadow);
-  cursor:pointer;
-  text-align:left;
-  transition:
-    border-color var(--motion-base) var(--ease-standard),
-    background var(--motion-base) var(--ease-standard),
-    box-shadow var(--motion-base) var(--ease-standard),
-    transform var(--motion-fast) var(--ease-standard),
-    color var(--motion-base) var(--ease-standard);
+.interactive-row-card,
+:is(.ob-option, .ob-dur-btn) {
+  background: rgba(255, 255, 255, 0.40) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 16px !important;
+  cursor: pointer;
+  
+  /* Ультра-плавный отклик на пальцы/ховер */
+  transition: transform var(--motion-fast) cubic-bezier(0.2, 0.8, 0.2, 1),
+              background-color var(--motion-base) var(--ease-standard),
+              border-color var(--motion-base) var(--ease-standard),
+              box-shadow var(--motion-base) var(--ease-standard) !important;
 }
 
+/* Эффект парения при наведении */
+.surface-card-interactive:hover,
 .surface-row--interactive:hover,
-.interactive-row-card:hover {
-  border-color:color-mix(in srgb, var(--mutedBlue) 52%, var(--border));
-  transform:translateY(-1px);
-  box-shadow:var(--shadow-lg);
+.interactive-row-card:hover,
+:is(.ob-option, .ob-dur-btn):hover {
+  background: rgba(255, 255, 255, 0.60) !important;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  transform: translateY(-2px) scale(1.01) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03) !important;
 }
 
-.surface-row--interactive:focus-visible,
-.interactive-row-card:focus-visible {
-  outline:none;
-  border-color:var(--primaryBlue);
-}
-
+/* Идеальное состояние фокуса и выбора */
+.surface-card-interactive.is-selected,
+.surface-card-interactive[aria-pressed="true"],
 .surface-row--interactive.is-selected,
 .surface-row--interactive[aria-selected="true"],
-.surface-row--interactive[aria-current="true"],
-.surface-row--interactive[aria-pressed="true"],
 .interactive-row-card.is-selected,
-.interactive-row-card[aria-selected="true"],
-.interactive-row-card[aria-current="true"],
-.interactive-row-card[aria-pressed="true"] {
-  border-color:var(--primaryBlue);
-  background:var(--softBlue);
+:is(.ob-option.selected, .ob-dur-btn.selected) {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: var(--primaryBlue) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primaryBlue) 15%, transparent) !important;
 }
 
-.surface-row__icon,
-.interactive-row-card__icon {
-  flex:0 0 auto;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.surface-row__content,
-.interactive-row-card__content {
-  flex:1;
-  min-width:0;
-}
-
-.surface-row__trailing,
-.interactive-row-card__trailing {
-  margin-left:auto;
-  flex:0 0 auto;
-}
-
-.surface-compact-info {
-  background: var(--surface-muted);
-  border: 1px solid color-mix(in srgb, var(--border) 90%, white);
-  border-radius: var(--radius-sm);
-}
-
-.surface-text-button {
-  --small-tertiary-size: var(--control-touch-target-md);
-  background:none;
-  border:1px solid transparent;
-  border-radius:var(--radius-pill);
-  color:var(--primaryBlue);
-  font-size:var(--type-secondary-size);
-  font-weight:var(--type-secondary-weight);
-  line-height:var(--type-secondary-line);
-  letter-spacing:var(--type-secondary-track);
-  cursor:pointer;
-  min-height:var(--small-tertiary-size);
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:0 var(--space-2);
-  transition:color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.surface-text-button:hover {
-  color:var(--blue-darker);
-  background:color-mix(in srgb, var(--softBlue) 74%, transparent);
-  border-color:color-mix(in srgb, var(--mutedBlue) 18%, transparent);
-}
+/* ==========================================================================
+   4. СОВРЕМЕННЫЙ UI КНОПОК И ТАКТИЛЬНЫЙ REACTION (HAPTIC UX)
+   ========================================================================== */
 
 .shared-button,
-.button-base {
-  --button-size-min-height: var(--control-touch-target-md);
-  --button-size-padding-block: var(--space-1);
-  --button-size-padding-inline: var(--space-2);
-  --button-size-radius: var(--radius-md);
-  --button-size-font-size: var(--type-button-size);
-  --button-size-line-height: var(--type-button-line);
-  --button-size-font-weight: var(--type-button-weight);
-  --button-size-letter-spacing: var(--type-button-track);
-  --button-size-gap: var(--space-control-gap);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--button-size-gap);
-  min-height: var(--button-size-min-height);
-  padding-block: var(--button-size-padding-block);
-  padding-inline: var(--button-size-padding-inline);
-  border-radius: var(--button-size-radius);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  font-weight: var(--button-size-font-weight);
-  font-size: var(--button-size-font-size);
-  line-height: var(--button-size-line-height);
-  letter-spacing: var(--button-size-letter-spacing);
-  transition:
-    border-color var(--motion-base) var(--ease-standard),
-    background var(--motion-base) var(--ease-standard),
-    box-shadow var(--motion-base) var(--ease-standard),
-    color var(--motion-base) var(--ease-standard),
-    transform var(--motion-press) var(--ease-out),
-    opacity var(--motion-fast) var(--ease-standard);
-  transform: translateZ(0);
-}
-
-.shared-button:active:not(:disabled),
-.button-base:active:not(:disabled) {
-  transform: scale(0.96);
-}
-
+.button-base,
 .button-size-primary-cta,
 .button-size-secondary-pill,
 .button-size-compact-tertiary,
 .button--sm,
 .button--md,
-.button--lg {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--button-size-gap, var(--space-control-gap));
-  min-height: var(--button-size-min-height);
-  padding-block: var(--button-size-padding-block);
-  padding-inline: var(--button-size-padding-inline);
-  border-radius: var(--button-size-radius);
-  font-size: var(--button-size-font-size);
-  line-height: var(--button-size-line-height);
-  font-weight: var(--button-size-font-weight);
-  letter-spacing: var(--button-size-letter-spacing);
-  white-space: nowrap;
+.button--lg,
+:is(.walk-end-btn, .walk-cancel-btn, .settings-inline-btn, .session-cancel-btn, .copy-btn, .ob-back-btn, .settings-btn, .ds-join-btn) {
+  border-width: 1px !important;
+  font-weight: 600 !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              background-color 0.2s ease, 
+              box-shadow 0.2s ease !important;
 }
 
-:is(.button-size-primary-cta, .button-size-secondary-pill, .button-size-compact-tertiary, .button--sm, .button--md, .button--lg) > :is(svg, .settings-btn__icon, .shared-button__icon) {
-  flex-shrink: 0;
+/* Физическое сжатие кнопки при физическом нажатии */
+:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .shared-button, .button-base):active:not(:disabled) {
+  transform: scale(0.95) !important; /* Чуть сильнее сжатие для ощущения веса кнопки */
 }
 
-:is(.button-size-primary-cta, .button-size-secondary-pill, .button-size-compact-tertiary, .button--sm, .button--md, .button--lg) > :is(.settings-btn__label, .shared-button__label) {
-  min-width: 0;
-}
-
-.button--sm {
-  --button-size-min-height: var(--control-touch-target-sm);
-  --button-size-padding-block: 6px;
-  --button-size-padding-inline: 12px;
-  --button-size-radius: 999px;
-  --button-size-font-size: var(--type-button-compact-size);
-  --button-size-line-height: var(--type-button-compact-line);
-  --button-size-font-weight: var(--type-button-compact-weight);
-  --button-size-letter-spacing: var(--type-button-compact-track);
-  --button-size-gap: 6px;
-}
-
-.button--md {
-  --button-size-min-height: var(--control-touch-target-md);
-  --button-size-padding-block: var(--space-1);
-  --button-size-padding-inline: var(--space-2);
-  --button-size-radius: 999px;
-  --button-size-font-size: var(--type-button-size);
-  --button-size-line-height: var(--type-button-line);
-  --button-size-font-weight: var(--type-button-weight);
-  --button-size-letter-spacing: var(--type-button-track);
-  --button-size-gap: var(--space-control-gap);
-}
-
-.button--lg {
-  --button-size-min-height: var(--control-touch-target-lg);
-  --button-size-padding-block: 14px;
-  --button-size-padding-inline: 24px;
-  --button-size-radius: var(--radius-md);
-  --button-size-font-size: var(--type-button-lg-size);
-  --button-size-line-height: var(--type-button-lg-line);
-  --button-size-font-weight: var(--type-button-lg-weight);
-  --button-size-letter-spacing: var(--type-button-lg-track);
-  --button-size-gap: 10px;
-}
-
-.button-size-primary-cta {
-  --button-size-min-height: var(--control-touch-target-lg);
-  --button-size-padding-block: 14px;
-  --button-size-padding-inline: 24px;
-  --button-size-radius: var(--radius-md);
-  --button-size-font-size: var(--type-button-lg-size);
-  --button-size-line-height: var(--type-button-lg-line);
-  --button-size-font-weight: var(--type-button-lg-weight);
-  --button-size-letter-spacing: var(--type-button-lg-track);
-  --button-size-gap: 10px;
-}
-
-.button-size-secondary-pill {
-  --button-size-min-height: var(--control-touch-target-md);
-  --button-size-padding-block: var(--space-1);
-  --button-size-padding-inline: var(--space-2);
-  --button-size-radius: 999px;
-  --button-size-font-size: var(--type-button-size);
-  --button-size-line-height: var(--type-button-line);
-  --button-size-font-weight: var(--type-button-weight);
-  --button-size-letter-spacing: var(--type-button-track);
-  --button-size-gap: var(--space-control-gap);
-}
-
-.button-size-compact-tertiary {
-  --button-size-min-height: var(--control-touch-target-sm);
-  --button-size-padding-block: 6px;
-  --button-size-padding-inline: 12px;
-  --button-size-radius: 999px;
-  --button-size-font-size: var(--type-button-compact-size);
-  --button-size-line-height: var(--type-button-compact-line);
-  --button-size-font-weight: var(--type-button-compact-weight);
-  --button-size-letter-spacing: var(--type-button-compact-track);
-  --button-size-gap: 6px;
-}
-
+/* Главная зеленая кнопка (Primary CTA) */
 .button-primary,
 .button-base.button-primary {
-  background: var(--green-dark);
-  color: var(--surf);
-  box-shadow: var(--shadow);
-  border-color: transparent;
-  min-height: var(--control-touch-target-md);
-  font-size: var(--type-button-size);
-  line-height: var(--type-button-line);
-  font-weight: var(--type-button-weight);
-  letter-spacing: var(--type-button-track);
+  background: linear-gradient(135deg, #3aa686 0%, var(--green-dark) 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(23, 106, 83, 0.2) !important;
 }
 
-.button-primary:hover:not(:disabled),
-.button-base.button-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+.button-primary:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 12px 30px rgba(23, 106, 83, 0.3) !important;
 }
 
-.button-primary:active:not(:disabled),
-.button-base.button-primary:active:not(:disabled) {
-  background: color-mix(in srgb, var(--green-dark) 92%, black);
-}
-
-.button-secondary,
-.button-secondary-filled {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 92%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
-  color: var(--primaryBlue);
-  border-color: color-mix(in srgb, var(--mutedBlue) 34%, var(--border));
-  box-shadow: var(--shadow);
-}
-
-.button-secondary:hover:not(:disabled),
-.button-secondary-filled:hover:not(:disabled) {
-  transform: translateY(-2px);
-  background: var(--softBlueHover);
-  border-color: var(--mutedBlue);
-  box-shadow: var(--shadow-lg);
-}
-
-.button-secondary:active:not(:disabled),
-.button-secondary-filled:active:not(:disabled) {
-  background: var(--softBlueHover);
-  border-color: var(--blue-darker);
-  transform: translateY(0);
-}
-
-.button-secondary-outline {
-  background: var(--surf);
-  color: var(--primaryBlue);
-  border-color: color-mix(in srgb, var(--mutedBlue) 32%, var(--border));
-}
-
-.button-secondary-outline:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-surface-soft) 86%, var(--warm-accent-soft));
-  border-color: var(--mutedBlue);
-  color: var(--blue-darker);
-}
-
-.button-tertiary,
-.button-ghost {
-  background: transparent;
-  color: var(--brown);
-  border-color: transparent;
-  box-shadow: none;
-}
-
-.button-tertiary:hover:not(:disabled),
-.button-ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--warm-accent-soft) 56%, transparent);
-  border-color: color-mix(in srgb, var(--warm-accent-border) 30%, transparent);
-  color: var(--primaryBlue);
-}
-
-.button-danger {
-  background: var(--red);
-  color: var(--surf);
-  border-color: transparent;
-  box-shadow: var(--shadow);
-}
-
-.button-danger:hover:not(:disabled) {
-  transform: translateY(-2px);
-  background: color-mix(in srgb, var(--red) 92%, black);
-  box-shadow: var(--shadow-lg);
-}
-
-.button-danger:active:not(:disabled) {
-  background: color-mix(in srgb, var(--red) 85%, black);
-  transform: translateY(0);
-}
-
-.button-danger:disabled {
-  background: color-mix(in srgb, var(--red) 55%, var(--border));
-  border-color: transparent;
-  color: color-mix(in srgb, var(--surf) 78%, var(--text-muted));
-}
-
-/* Canonical button-role map (auditable source of truth):
-   - .button-primary: main/high-emphasis action in the current scope.
-   - .button-danger: destructive confirmation action.
-   - .button-secondary: neutral contained action with medium emphasis.
-   - .button-ghost: low-emphasis text-like action in button slots (e.g. modal cancel/keep). */
-
-.button-pill,
-.button-icon {
-  min-height: var(--control-touch-target-md);
-  border-radius: var(--radius-pill);
-}
-
-.button--block {
-  width: 100%;
-}
-
-.button--pill {
-  border-radius: var(--radius-pill);
-}
-
-.button--compact {
-  min-height: var(--control-touch-target-sm);
-  padding-block: 6px;
-  padding-inline: 12px;
-  font-size: var(--type-button-compact-size);
-  line-height: var(--type-button-compact-line);
-  font-weight: var(--type-button-compact-weight);
-  letter-spacing: var(--type-button-compact-track);
-}
-
-.button-icon {
-  min-width: 44px;
-  padding-inline: 0;
-}
-
-:is(.share-card, .stat-card) {
-  background: var(--surf);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow);
-}
-
-/* ── Secondary interactive controls: explicit auditable families ──
-   Families:
-   - secondary-inline-text: low-emphasis inline textual actions.
-   - secondary-compact-button: compact neutral utility/support buttons.
-   - secondary-icon-button: icon-only edit/close/dismiss controls.
-   - secondary-toggle-control: compact binary toggles/collapsible triggers. */
-.secondary-control {
-  --secondary-min-height: var(--control-touch-target-md);
-  --secondary-padding-block: var(--space-1);
-  --secondary-padding-inline: var(--space-2);
-  --secondary-radius: 999px;
-  --secondary-font-size: var(--type-button-size);
-  --secondary-line-height: var(--type-button-line);
-  --secondary-font-weight: var(--type-button-weight);
-  --secondary-letter-spacing: var(--type-button-track);
-  min-height: var(--secondary-min-height);
-  padding-block: var(--secondary-padding-block);
-  padding-inline: var(--secondary-padding-inline);
-  border-radius: var(--secondary-radius);
-  font-size: var(--secondary-font-size);
-  line-height: var(--secondary-line-height);
-  font-weight: var(--secondary-font-weight);
-  letter-spacing: var(--secondary-letter-spacing);
-}
-
-.secondary-control--compact-button {
-  --secondary-min-height: var(--control-touch-target-sm);
-  --secondary-padding-block: 6px;
-  --secondary-padding-inline: 12px;
-  --secondary-font-size: var(--type-button-compact-size);
-  --secondary-line-height: var(--type-button-compact-line);
-  --secondary-font-weight: var(--type-button-compact-weight);
-  --secondary-letter-spacing: var(--type-button-compact-track);
-}
-
-.secondary-control--inline-text {
-  --secondary-min-height: var(--control-touch-target-md);
-  --secondary-padding-block: 0;
-  --secondary-padding-inline: var(--space-2);
-  --secondary-font-size: var(--type-secondary-size);
-  --secondary-line-height: var(--type-secondary-line);
-  --secondary-font-weight: var(--type-secondary-weight);
-  --secondary-letter-spacing: var(--type-secondary-track);
-}
-
-.secondary-control--icon {
-  --secondary-min-height: 40px;
-  --secondary-padding-block: 0;
-  --secondary-padding-inline: 0;
-  inline-size: var(--secondary-min-height);
-  block-size: var(--secondary-min-height);
-  min-inline-size: var(--secondary-min-height);
-  min-block-size: var(--secondary-min-height);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-pill);
-  line-height: 1;
-}
-
-.secondary-control--toggle {
-  --secondary-min-height: var(--control-touch-target-md);
-  --secondary-padding-block: var(--space-1);
-  --secondary-padding-inline: var(--space-2);
-}
-
-:is(.ob-option, .ob-dur-btn) {
-  background: var(--surf);
-  border: var(--border-width-strong) solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition:
-    border-color var(--motion-base) var(--ease-standard),
-    background var(--motion-base) var(--ease-standard),
-    box-shadow var(--motion-base) var(--ease-standard),
-    transform var(--motion-fast) var(--ease-standard);
-}
-
-:is(.ob-option, .ob-dur-btn):hover {
-  border-color: color-mix(in srgb, var(--mutedBlue) 52%, var(--border));
-  transform: translateY(-1px);
-}
-
-:is(.ob-option.selected, .ob-dur-btn.selected) {
-  border-color: color-mix(in srgb, var(--primaryBlue) 68%, var(--warm-accent-border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 90%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
-}
-
-
-:is(.walk-end-btn, .walk-cancel-btn, .settings-inline-btn, .session-cancel-btn, .copy-btn, .ob-back-btn) {
-  min-height: var(--control-touch-target-md);
-  border-radius: var(--radius-pill);
-}
-
-:is(.settings-btn, .ds-join-btn) {
-  border-radius: var(--radius-sm);
-}
-
-:is(.copy-btn, .ds-join-btn, .notif-toggle.on, .empty-state .es-cta) {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--softBlue) 92%, var(--warm-accent-soft)) 0%, var(--softBlue) 100%);
-  color: var(--primaryBlue);
-  border: 1px solid color-mix(in srgb, var(--mutedBlue) 34%, var(--border));
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition:
-    border-color var(--motion-base) var(--ease-standard),
-    background var(--motion-base) var(--ease-standard),
-    box-shadow var(--motion-base) var(--ease-standard),
-    color var(--motion-base) var(--ease-standard),
-    transform var(--motion-fast) var(--ease-standard),
-    opacity var(--motion-fast) var(--ease-standard);
-}
-
-:is(.copy-btn, .ds-join-btn, .notif-toggle.on, .empty-state .es-cta):hover:not(:disabled) {
-  transform: translateY(-2px);
-  background: var(--softBlueHover);
-  border-color: var(--mutedBlue);
-  box-shadow: var(--shadow-lg);
-}
-
-:is(.settings-inline-btn, .settings-btn, .notif-toggle) {
-  background: var(--surf);
-  color: var(--primaryBlue);
-  border: var(--border-width-strong) solid color-mix(in srgb, var(--mutedBlue) 32%, var(--border));
-  cursor: pointer;
-  transition:
-    border-color var(--motion-base) var(--ease-standard),
-    background var(--motion-base) var(--ease-standard),
-    box-shadow var(--motion-base) var(--ease-standard),
-    color var(--motion-base) var(--ease-standard),
-    transform var(--motion-fast) var(--ease-standard),
-    opacity var(--motion-fast) var(--ease-standard);
-}
-
-:is(.settings-inline-btn, .settings-btn, .notif-toggle):hover:not(:disabled) {
-  background: color-mix(in srgb, var(--color-surface-soft) 88%, var(--warm-accent-soft));
-  border-color: var(--mutedBlue);
-  color: var(--blue-darker);
-}
-
-.ob-back-btn {
-  background: none;
-  color: var(--primaryBlue);
-  border: 1px solid transparent;
-  box-shadow: none;
-  cursor: pointer;
-  transition:
-    border-color var(--motion-base) var(--ease-standard),
-    background var(--motion-base) var(--ease-standard),
-    color var(--motion-base) var(--ease-standard),
-    transform var(--motion-fast) var(--ease-standard),
-    opacity var(--motion-fast) var(--ease-standard);
-}
-
-.ob-back-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--softBlue) 70%, transparent);
-  border-color: color-mix(in srgb, var(--mutedBlue) 18%, transparent);
-  color: var(--blue-darker);
-}
-
-.settings-btn {
-  min-height: var(--control-touch-target-md);
-  padding-block: 12px;
-  justify-content: center;
-  text-align: center;
-  box-shadow: var(--shadow);
-}
-
-.settings-btn__label {
-  text-align: center;
-}
-
-.settings-btn.button-danger {
-  box-shadow: var(--shadow);
-}
-
-
-:is(.walk-cancel-btn, .walk-end-btn, .button-base, .shared-button, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta, .ds-join-btn, .ob-back-btn, .ob-btn-next, .ws-secondary, .ws-cta, .clear-btn) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-:is(.walk-cancel-btn, .settings-inline-btn, .settings-btn, .copy-btn, .diag-run-btn, .pat-edit-btn, .settings-collapsible-toggle, .history-delete-confirm, .btn-save-outcome, .btn-result, .quick-action-btn, .walk-type-option, .btn-pat, .modal-close-btn, .ring-sub-btn, .tab-btn, .notif-toggle, .session-end-btn, .session-cancel-btn, .es-cta):active:not(:disabled) {
-  transform: scale(0.96);
-}
-
-@keyframes surfaceEnter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .shared-button,
-  .button-base,
-  :is(.share-card, .stat-card, .h-item, .tool-group-card, .modal-card, .stats-section, .stats-support-row, .stats-rings-card) {
-    animation: none;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-
-/* Premium refresh overrides: systemic components */
-.surface-card,
-.surface-card-default,
-.surface-card-elevated,
-.modal-card,
-.surface-card-modal,
-.surface-card-panel,
-.surface-card-inset,
-.stats-rings-card,
-.tool-group-card,
-.stat-card,
-.share-card {
-  border-color: color-mix(in srgb, var(--border) 88%, #ffffff);
-  box-shadow: var(--shadow);
-}
-
-.shared-button,
-.button-base {
-  border-width: 1.5px;
-  font-weight: 600;
-  letter-spacing: var(--type-button-track);
-}
-
-.button-primary,
-.button-base.button-primary {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--green-dark) 86%, #3aa686) 0%, var(--green-dark) 100%);
-  box-shadow: 0 10px 24px rgba(23, 106, 83, 0.28);
-}
-
-.button-primary:hover:not(:disabled),
-.button-base.button-primary:hover:not(:disabled) {
-  box-shadow: 0 14px 30px rgba(23, 106, 83, 0.34);
-}
-
+/* Вторичные стеклянные кнопки */
 .button-secondary,
 .button-secondary-filled,
 .button-secondary-outline,
-:is(.settings-inline-btn, .settings-btn, .notif-toggle) {
-  border-color: color-mix(in srgb, var(--primaryBlue) 16%, var(--border));
+:is(.settings-inline-btn, .settings-btn, .notif-toggle, .copy-btn, .ds-join-btn) {
+  background: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  color: var(--primaryBlue) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02) !important;
 }
 
-.shared-button:focus-visible,
-.button-base:focus-visible,
-.secondary-control:focus-visible,
-.surface-card-interactive:focus-visible,
-.surface-row--interactive:focus-visible,
-.interactive-row-card:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 4px var(--focus-ring), var(--shadow);
+.button-secondary:hover:not(:disabled),
+:is(.settings-inline-btn, .settings-btn, .copy-btn):hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-color: var(--primaryBlue) !important;
+  transform: translateY(-1px) !important;
 }
 
-:is(input, select, textarea, .text-input, .ob-input, .ds-join-input, .proto-field-input, .notif-time-input, .feeding-field input, .feeding-field select, .activity-time-field input) {
-  border-color: color-mix(in srgb, var(--border) 88%, #fff);
-  background: color-mix(in srgb, var(--surf) 92%, var(--surface-muted));
-  transition: border-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard), background var(--motion-base) var(--ease-standard);
+/* Текстовые кнопки */
+.surface-text-button, .button-tertiary, .button-ghost, .ob-back-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  transition: all 0.2s ease !important;
 }
 
-:is(input, select, textarea, .text-input, .ob-input, .ds-join-input, .proto-field-input, .notif-time-input, .feeding-field input, .feeding-field select, .activity-time-field input):focus-visible {
-  border-color: color-mix(in srgb, var(--primaryBlue) 65%, var(--border));
-  box-shadow: 0 0 0 4px var(--focus-ring);
-  background: var(--surf);
+.surface-text-button:hover, .button-tertiary:hover, .ob-back-btn:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  border-radius: var(--radius-pill) !important;
 }
+
+/* ==========================================================================
+   5. СОВРЕМЕННЫЕ ПОЛЯ ВВОДА (INPUTS)
+   ========================================================================== */
+
+:is(input, select, textarea, .text-input, .ob-input, .ds-join-input, .proto-field-input, .notif-time-input, [class*="field"] input) {
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
+  color: var(--brown) !important;
+  transition: all 0.25s ease-out !important;
