@@ -1255,22 +1255,29 @@
 }
 
 .quick-action-btn { 
-  /* Убираем жесткий градиент, делаем кнопку "нейроморфной" */
-  background: rgba(255, 255, 255, 0.6); 
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px;
+  background: #ffffff; /* Чистый белый фон без градиентов */
+  border: 1px solid rgba(0, 0, 0, 0.04); /* Ультра-тонкая рамка */
+  border-radius: 16px; 
   padding: var(--space-card-padding); 
   cursor: pointer; 
   display: grid; 
-  grid-template-rows: auto auto; 
-  gap: 8px;
-  box-shadow: inset 1px 1px 2px rgba(255,255,255,0.8), 0 4px 12px rgba(0,0,0,0.05);
-  transition: all 0.2s ease;
+  grid-template-rows: minmax(calc(var(--type-list-row-title-line) * 2em), 1fr) auto; 
+  gap: var(--space-control-gap); 
+  align-content: stretch; 
+  justify-items: center; 
+  
+  /* Тройная мягкая тень для объемного эффекта как на фото */
+  box-shadow: 
+    0 10px 20px -5px rgba(0, 0, 0, 0.06), 
+    0 4px 6px -2px rgba(0, 0, 0, 0.03),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.02); 
+    
+  transition: transform var(--motion-press) var(--ease-out), box-shadow 260ms cubic-bezier(0.22,1,0.36,1), border-color 180ms var(--ease-out); 
   min-height: 104px; 
   text-align: center; 
-  color: var(--brown);
+  font-family: var(--font-ui); 
+  color: var(--brown); 
 }
-
   /* ── Action button typography roles ── */
   :is(.ds-join-btn, .walk-type-option, .btn-pat) {
     font-size:var(--type-button-size);
@@ -2583,6 +2590,13 @@
 .quick-action-btn {
   min-height: 112px;
   border-radius: 18px;
+  background: #ffffff; /* Тоже делаем чисто белым */
+  border-color: rgba(0, 0, 0, 0.04);
+  /* Дублируем тень, чтобы она не сбрасывалась */
+  box-shadow: 
+    0 10px 20px -5px rgba(0, 0, 0, 0.06), 
+    0 4px 6px -2px rgba(0, 0, 0, 0.03),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .quick-action-label {
