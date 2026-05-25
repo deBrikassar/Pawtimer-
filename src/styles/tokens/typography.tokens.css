@@ -124,10 +124,10 @@
   --type-metric-lg-line: calc(var(--type-metric-lg-size) * var(--type-line-title));
   --type-metric-lg-weight: var(--font-bold);
   --type-metric-lg-track: -0.025em;
-  --type-metric-card-value-size: clamp(1.35rem, 4.4vw, var(--type-metric-lg-size));
+  --type-metric-card-value-size: var(--text-xl);
   --type-metric-card-value-line: var(--type-line-display-tight);
   --type-metric-card-value-weight: var(--font-semibold);
-  --type-metric-card-value-track: -0.02em;
+  --type-metric-card-value-track: -0.015em;
   --type-metric-value-size: var(--type-metric-card-value-size);
   --type-metric-value-line: var(--type-metric-card-value-line);
   --type-metric-value-weight: var(--type-metric-card-value-weight);

@@ -641,10 +641,10 @@
     color:var(--text-muted);
   }
   .session-panel__time {
-    font-size:clamp(1.5rem, 7vw, 2rem);
+    font-size:var(--type-metric-lg-size);
     font-weight:var(--type-metric-xl-weight);
     color:var(--green-dark);
-    line-height:1.05;
+    line-height:var(--type-metric-lg-line);
     font-variant-numeric:tabular-nums;
   }
   .session-panel__over {
@@ -1906,7 +1906,7 @@
   .stats-section-journey .stats-section-title,
   .stats-section-supporting .stats-section-title { margin-bottom:clamp(10px, 2.5vw, var(--space-control-gap)); }
   .stats-goal-progress { display:grid; gap:12px; padding:0 var(--stats-content-inset, var(--space-card-padding)); }
-  .stats-goal-progress-value { font-size:clamp(1.1rem, 2.5vw, 1.35rem); line-height:1.2; letter-spacing:-0.01em; font-weight:var(--type-card-heading-weight); color:var(--brown); font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .stats-goal-progress-value { font-size:var(--text-lg); line-height:var(--type-line-title); letter-spacing:-0.01em; font-weight:var(--type-card-heading-weight); color:var(--brown); font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .stats-goal-progress-empty { font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); font-weight:var(--type-helper-text-weight); color:var(--text-muted); }
   .stats-goal-progress-track { height:16px; width:100%; border-radius:999px; background:color-mix(in srgb, var(--green-light) 14%, var(--surf)); border:1px solid color-mix(in srgb, var(--green-dark) 12%, transparent); overflow:hidden; }
   .stats-goal-progress-fill { display:block; height:100%; min-width:0; border-radius:inherit; background:color-mix(in srgb, var(--green-dark) 82%, var(--brown)); transition:width var(--motion-base) var(--ease-out); }
@@ -1997,7 +1997,7 @@
   .stats-headline-main--hero { flex-direction:column; align-items:flex-start; gap:4px; }
   .stats-headline-label { font-size:var(--type-section-eyebrow-size); line-height:var(--type-section-eyebrow-line); letter-spacing:var(--type-section-eyebrow-track); font-weight:var(--type-section-eyebrow-weight); color:var(--text-muted); text-transform:uppercase; }
   .stats-headline-sub { font-size:var(--type-metric-label-size); line-height:var(--type-metric-label-line); letter-spacing:var(--type-metric-label-track); font-weight:var(--type-metric-label-weight); color:var(--text-muted); }
-  .stats-headline-value { font-family:var(--font-ui); font-size:var(--type-metric-lg-size); line-height:var(--type-metric-lg-line); letter-spacing:var(--type-metric-lg-track); font-weight:var(--type-metric-value-weight); font-variant-numeric:tabular-nums; margin:0; padding:0; white-space:nowrap; color:var(--brown); min-width:0; }
+  .stats-headline-value { font-family:var(--font-ui); font-size:var(--type-metric-value-size); line-height:var(--type-metric-value-line); letter-spacing:var(--type-metric-value-track); font-weight:var(--type-metric-value-weight); font-variant-numeric:tabular-nums; margin:0; padding:0; white-space:nowrap; color:var(--brown); min-width:0; }
   .stats-headline-status { font-family:var(--font-ui); font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); font-weight:var(--type-field-value-weight); font-variant-numeric:tabular-nums; margin:0; padding:0; text-align:right; flex:0 1 clamp(12ch, 36%, 20ch); min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--metric-surface-accent); transition:color var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out); }
   .stats-hero-insight { margin:0; position:relative; z-index:1; font-size:var(--type-body-size); line-height:var(--type-body-line); letter-spacing:var(--type-body-track); font-weight:var(--type-body-weight); color:color-mix(in srgb, var(--text) 90%, var(--text-muted)); max-width:56ch; }
   .stats-progress-hero { position:relative; overflow:hidden; padding:clamp(16px, 3.5vw, 22px); gap:clamp(12px, 2.4vw, 18px); isolation:isolate; }
