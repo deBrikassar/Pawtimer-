@@ -1,4 +1,4 @@
-import { SessionControl, SessionRatingPanel } from "../train/TrainComponents";
+import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
@@ -8,6 +8,8 @@ export default function HomeScreen(props) {
     name,
     sessions,
     recommendation,
+    goalPct,
+    goalSec,
     phase,
     elapsed,
     finalElapsed,
@@ -49,6 +51,13 @@ export default function HomeScreen(props) {
     cancelFeedingForm,
     saveFeeding,
     dismissTrainFirstRunHint,
+    showTrainFirstRunHint,
+    trainTimeChangeInsight,
+    returningTrainNudge,
+    dismissReturningTrainNudge,
+    openHistory,
+    openProgress,
+    dogPhoto,
   } = props;
   const target = recommendation?.duration ?? 0;
   const [todayOpen, setTodayOpen] = useState(false);
@@ -66,17 +75,53 @@ export default function HomeScreen(props) {
     <div className="tab-content train-screen">
       <div className="train-main">
         <header className="train-identity-header surface-card">
-          <div className="train-identity-header__badge" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M7 10.5 5.6 6.8a1.2 1.2 0 0 1 2-.9L10 8.8h4l2.4-2.9a1.2 1.2 0 0 1 2 .9L17 10.5a6.2 6.2 0 0 1 .7 2.8c0 3.2-2.6 5.7-5.7 5.7s-5.7-2.5-5.7-5.7c0-1 .2-2 .7-2.8Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M9.4 13.1c.2 0 .4-.2.4-.4s-.2-.4-.4-.4-.4.2-.4.4.2.4.4.4Zm5.2 0c.2 0 .4-.2.4-.4s-.2-.4-.4-.4-.4.2-.4.4.2.4.4.4Z" fill="currentColor"/>
-              <path d="M10.3 15.3c.5.5 1 .7 1.7.7s1.2-.2 1.7-.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
+          <div className="train-identity-header__avatar" aria-hidden="true">
+            {dogPhoto
+              ? <img src={dogPhoto} alt={name} className="train-identity-header__photo" />
+              : (
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 10.5 5.6 6.8a1.2 1.2 0 0 1 2-.9L10 8.8h4l2.4-2.9a1.2 1.2 0 0 1 2 .9L17 10.5a6.2 6.2 0 0 1 .7 2.8c0 3.2-2.6 5.7-5.7 5.7s-5.7-2.5-5.7-5.7c0-1 .2-2 .7-2.8Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9.4 13.1c.2 0 .4-.2.4-.4s-.2-.4-.4-.4-.4.2-.4.4.2.4.4.4Zm5.2 0c.2 0 .4-.2.4-.4s-.2-.4-.4-.4-.4.2-.4.4.2.4.4.4Z" fill="currentColor"/>
+                  <path d="M10.3 15.3c.5.5 1 .7 1.7.7s1.2-.2 1.7-.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              )
+            }
           </div>
           <div className="train-identity-header__copy">
             <h2 className="train-identity-header__name">Train with {name}</h2>
           </div>
+          <div className="train-identity-header__links" aria-label="Quick navigation">
+            <button type="button" className="train-header-link secondary-control secondary-control--inline-text" onClick={openProgress}>Progress</button>
+            <button type="button" className="train-header-link secondary-control secondary-control--inline-text" onClick={openHistory}>History</button>
+          </div>
         </header>
+
+        {showTrainFirstRunHint && (
+          <div className="train-first-run-hint surface-card" role="status">
+            <div className="train-first-run-hint__body">
+              <strong>Welcome!</strong> Tap the dog to start your first calm-alone session. The timer tracks how long {name} stays relaxed while you&apos;re away.
+            </div>
+            <button type="button" className="train-first-run-hint__dismiss secondary-control secondary-control--inline-text" onClick={dismissTrainFirstRunHint}>Got it</button>
+          </div>
+        )}
+
+        {returningTrainNudge && (
+          <div className="train-returning-nudge surface-card" role="status">
+            <div className="train-returning-nudge__body">
+              Target updated to <strong>{fmt(returningTrainNudge.currentTarget)}</strong>
+              {returningTrainNudge.changedBy > 0
+                ? ` (+${fmt(returningTrainNudge.changedBy)} since last visit)`
+                : ` (${fmt(Math.abs(returningTrainNudge.changedBy))} less — keep it gentle)`}
+            </div>
+            <button type="button" className="train-returning-nudge__dismiss secondary-control secondary-control--inline-text" onClick={dismissReturningTrainNudge}>OK</button>
+          </div>
+        )}
+
+        {trainTimeChangeInsight && (
+          <div className="train-time-change-insight surface-card" role="status">
+            {trainTimeChangeInsight.message}
+          </div>
+        )}
 
         <SessionControl
           phase={phase}
@@ -92,6 +137,8 @@ export default function HomeScreen(props) {
           allowIdlePress={false}
           onIdlePress={dismissTrainFirstRunHint}
         />
+
+        <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} />
 
         <SessionRatingPanel
           phase={phase}

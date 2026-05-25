@@ -1,5 +1,5 @@
 import { PATTERN_TYPES } from "../app/helpers";
-import { DeleteIcon, ModalCloseButton, ViewportModal } from "../app/ui";
+import { CameraIcon, DeleteIcon, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
 
 const SETTINGS_PANEL = {
@@ -72,6 +72,8 @@ export default function SettingsScreen(props) {
     ACTIVE_DOG_KEY,
     setActiveDogId,
     clearDogActivityState,
+    dogPhoto,
+    handlePhotoUpload,
   } = props;
 
   const reminderSummary = notifEnabled ? `On · ${notifTime}` : "Off";
@@ -128,6 +130,41 @@ export default function SettingsScreen(props) {
               <ModalCloseButton onClick={() => setActivePanel(null)} />
             </div>
             <div className="settings-modal-stack">
+
+              {/* ── Dog photo ── */}
+              <div className="settings-photo-row">
+                <div className="settings-photo-preview" aria-label="Dog photo">
+                  {dogPhoto
+                    ? <img src={dogPhoto} alt={name} className="settings-photo-preview__img" />
+                    : <span className="settings-photo-preview__placeholder" aria-hidden="true">{String(name || "D").trim().charAt(0).toUpperCase()}</span>
+                  }
+                </div>
+                <div className="settings-photo-actions">
+                  <label className="settings-photo-upload-btn button-size-secondary-pill secondary-control secondary-control--compact-button" role="button" tabIndex={0}>
+                    <CameraIcon />
+                    <span>{dogPhoto ? "Change photo" : "Add photo"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="settings-photo-input"
+                      onChange={handlePhotoUpload}
+                      aria-label="Upload dog photo"
+                    />
+                  </label>
+                  {dogPhoto && (
+                    <button
+                      type="button"
+                      className="settings-inline-reset-btn t-helper secondary-control secondary-control--inline-text"
+                      onClick={() => handlePhotoUpload({ target: { files: [] } })}
+                      aria-label="Remove dog photo"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Dog ID & sync ── */}
               <div className="settings-profile-id-row" aria-label="Dog ID">
                 <div>
                   <div className="settings-simple-title">Dog ID</div>

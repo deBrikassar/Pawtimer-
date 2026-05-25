@@ -1,4 +1,4 @@
-import { PROTOCOL, getCalmStreak, getDistressCounts, getRecentHighDistressSummary } from "../../lib/protocol";
+import { PROTOCOL, calculateTrainingStats, getCalmStreak, getDistressCounts, getRecentHighDistressSummary } from "../../lib/protocol";
 import { hasValidDate, sortValidDateAsc, toTimestampOrNull } from "../../lib/dateSort";
 import { dailyInfo, distressLabel, fmt, getInformationalTone, getLeaveProfile, getRiskTone, isToday, patternInfo, toDayKey } from "./helpers";
 
@@ -254,12 +254,13 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     return Math.round(score * 100);
   })();
 
-  const momentumTone = statusTone(calmRate7, { good: 75, warn: 55 });
-  const stabilityTone = statusTone(durationVariability, { good: 120, warn: 240, invert: true });
-  const adherenceTone = statusTone(adherenceByDay, { good: 85, warn: 65 });
-  const relapseTone = (() => {
-    return getRiskTone(decisionState?.riskLevel || "medium");
-  })();
+  // Use calculateTrainingStats as the single source of truth for all metric tones
+  // so the Stats UI and the recommendation engine always agree on scores.
+  const trainingStats = calculateTrainingStats(canonicalSessions, { plan: activeProto });
+  const momentumTone = statusTone(trainingStats.momentumScore, { good: 0.65, warn: 0.4 });
+  const stabilityTone = statusTone(trainingStats.stabilityScore, { good: 0.65, warn: 0.4 });
+  const adherenceTone = statusTone(trainingStats.adherenceScore, { good: 0.75, warn: 0.5 });
+  const relapseTone = statusTone(trainingStats.relapseRisk, { good: 0.3, warn: 0.65, invert: true });
 
   const chartData = canonicalSessions.slice(-25).map((s, i) => ({
     session: i + 1,
