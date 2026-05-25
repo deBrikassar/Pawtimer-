@@ -160,6 +160,7 @@ export function SessionControl({
           <SessionActionRow onCancel={onCancel} />
         </div>
       )}
+      </div>
     </>
   );
 }
