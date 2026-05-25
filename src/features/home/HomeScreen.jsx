@@ -1,4 +1,6 @@
 import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
+import { useHint } from "../app/useHint";
+import { ContextHint } from "../../components/primitives/Primitives";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
@@ -73,6 +75,10 @@ export default function HomeScreen(props) {
     : daily.blockReason === "max_sessions"
       ? `Daily session max reached (${daily.maxCount}). Try again tomorrow.`
       : "";
+
+  const walkHint = useHint(`walk_${name}`);
+  const patternHint = useHint(`pattern_${name}`);
+  const feedingHint = useHint(`feeding_${name}`);
 
   return (
     <div className="tab-content train-screen">
@@ -215,6 +221,24 @@ export default function HomeScreen(props) {
                 <ModalCloseButton onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }} />
               </div>
 
+              {walkPhase !== "idle" && walkHint.isVisible && (
+                <ContextHint
+                  title="Why track walks?"
+                  body="Physical and mental exercise impacts your dog's ability to settle. Logging walks helps you see this correlation."
+                  action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={walkHint.dismiss}>Got it</button>}
+                  className="mb-4"
+                />
+              )}
+
+              {patOpen && patternHint.isVisible && (
+                <ContextHint
+                  title="What is a pattern break?"
+                  body="Dogs learn your departure cues (keys, coat). Breaking the pattern means doing the cue but not leaving, which desensitizes them to the trigger."
+                  action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={patternHint.dismiss}>Got it</button>}
+                  className="mb-4"
+                />
+              )}
+
               {walkPhase === "timing" && (
                 <div className="walk-timer-banner">
                   <div className="walk-timer-left">
@@ -272,6 +296,16 @@ export default function HomeScreen(props) {
                 <div className="section-title section-title--flush" id="feeding-title">Log feeding</div>
                 <ModalCloseButton onClick={cancelFeedingForm} />
               </div>
+
+              {feedingHint.isVisible && (
+                <ContextHint
+                  title="Why track feeding?"
+                  body="A full stomach often promotes calmness and sleep. Tracking feeding times helps optimize when to train."
+                  action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={feedingHint.dismiss}>Got it</button>}
+                  className="mb-4"
+                />
+              )}
+
               <div className="t-helper activity-time-hint">Quick log for routine consistency. You can fine-tune details in History later.</div>
               <label className="feeding-field">
                 <span className="t-helper">Feeding time</span>

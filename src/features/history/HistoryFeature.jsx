@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import EmptyState from "../../components/EmptyState";
-import { InlineBanner } from "../../components/primitives";
+import { InlineBanner, ContextHint } from "../../components/primitives/Primitives";
+import { useHint } from "../app/useHint";
 import { buildEditedActivityIso, sortByDateAsc, toDateInputValue, toTimeInputValue } from "../../lib/activityDateTime";
 import { normalizeDistressLevel } from "../../lib/protocol";
 import { PATTERN_TYPES, fmt, fmtDate, parseDurationInput, walkTypeLabel } from "../app/helpers";
@@ -325,6 +326,7 @@ const renderSyncBadge = (entry) => {
 export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
   const [activityDetail, setActivityDetail] = useState(null);
   const [clearSessionsConfirmOpen, setClearSessionsConfirmOpen] = useState(false);
+  const historyHint = useHint(`history_${name}`);
   const parsedDuration = historyModal?.mode === "duration" ? parseDurationInput(historyModal.value) : null;
   const requiresPositiveDuration = historyModal?.kind === "session";
   const durationHasInput = historyModal?.mode === "duration" && String(historyModal.value ?? "").trim().length > 0;
@@ -416,6 +418,16 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
             </div>
             {sessions.length > 0 && <button className="clear-btn surface-text-button secondary-control secondary-control--inline-text" onClick={() => setClearSessionsConfirmOpen((prev) => !prev)}>{clearSessionsConfirmOpen ? "Cancel" : "Clear sessions"}</button>}
           </div>
+          
+          {timeline.length > 0 && historyHint.isVisible && (
+            <ContextHint
+              title="Managing history"
+              body="Tap on any log entry below to view details, edit the duration, or delete it."
+              action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={historyHint.dismiss}>Got it</button>}
+              className="mb-4"
+            />
+          )}
+
           {clearSessionsConfirmOpen && sessions.length > 0 ? (
             <InlineBanner
               className="history-clear-banner"

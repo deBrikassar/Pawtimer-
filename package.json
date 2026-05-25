@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "check:inline-styles": "node scripts/check-inline-style-hygiene.mjs",
-    "icons:generate": "python scripts/generate_icons.py"
+    "icons:generate": "python3 scripts/generate_icons.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.43.0",

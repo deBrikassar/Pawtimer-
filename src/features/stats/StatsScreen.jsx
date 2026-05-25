@@ -2,6 +2,8 @@ import EmptyState from "../../components/EmptyState";
 import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
 import { fmt } from "../app/helpers";
 import { SproutIcon } from "../app/ui";
+import { ContextHint } from "../../components/primitives/Primitives";
+import { useHint } from "../app/useHint";
 
 export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, overallGoalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
   const target = recommendation?.duration ?? 0;
@@ -15,6 +17,8 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
   const ringMetricVariant = METRIC_VARIANTS.RING;
   const headlineSurfaceState = headlineStatusTone?.surfaceState || "today";
   const riskSurfaceState = relapseTone?.surfaceState || "today";
+  
+  const statsHint = useHint(`stats_${name}`);
 
   return (
     <div className="tab-content stats-tab-content" data-ring-metric-variant={ringMetricVariant}>
@@ -22,6 +26,14 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
         {totalCount === 0 ? (
           <EmptyState media={<SproutIcon />} title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
         ) : <>
+          {statsHint.isVisible && (
+            <ContextHint
+              title="Understanding your progress"
+              body="The Journey curve shows the trend of your training. Small setbacks are normal! The 'Risk' signal warns you if you might be pushing too fast."
+              action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={statsHint.dismiss}>Got it</button>}
+              className="mb-4"
+            />
+          )}
           <StatsSection title="Overall training progress" className="stats-section-priority stats-section-goal-progress">
             <div className="stats-goal-progress" role="group" aria-label="Overall training progress">
               {hasValidBestCalm && hasOverallGoal ? (
