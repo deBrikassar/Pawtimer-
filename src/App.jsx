@@ -1165,8 +1165,8 @@ export default function PawTimer() {
       const el = document.createElement("textarea");
       el.value = activeDogId;
       el.setAttribute("readonly", "");
-      el.style.position = "absolute";
-      el.style.left = "-9999px";
+      el.style.position = "absolute"; // INLINE_STYLE_TECHNICAL_EXCEPTION
+      el.style.left = "-9999px"; // INLINE_STYLE_TECHNICAL_EXCEPTION
       document.body.appendChild(el);
       el.select();
       document.execCommand("copy");

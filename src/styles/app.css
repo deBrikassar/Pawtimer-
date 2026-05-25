@@ -355,10 +355,10 @@
   .session-control {
     position:relative; width:clamp(248px, 74vw, 312px); aspect-ratio:1/1;
     border:none; border-radius:50%; cursor:default;
-    background:radial-gradient(circle at 32% 24%, color-mix(in srgb, var(--green-light) 52%, white), color-mix(in srgb, var(--surface-muted) 72%, var(--surf)) 48%, color-mix(in srgb, var(--surf) 88%, var(--surface-muted)));
-    box-shadow:0 18px 46px color-mix(in srgb, var(--green-dark) 20%, transparent), inset 0 1px 0 rgba(255,255,255,0.72);
+    background: radial-gradient(circle at 38% 28%, #F5EDE6 0%, #EDE4DC 40%, #E5DDD5 70%, #DDD5CD 100%);
+    box-shadow: 10px 10px 24px #C4BCB6, -10px -10px 24px #FFF8F2;
     display:flex; align-items:center; justify-content:center;
-    transition:transform 160ms ease, box-shadow 360ms ease, filter 360ms ease, background-color 260ms ease;
+    transition:transform 160ms ease, box-shadow 360ms ease, filter 360ms ease, background 500ms ease;
     touch-action:manipulation;
   }
   .session-control.is-idle,
@@ -370,15 +370,19 @@
   @media (hover:hover) and (pointer:fine) {
     .session-control.is-idle:hover,
     .session-control.is-active:hover {
-      transform:translateY(-1px) scale(1.008);
-      box-shadow:0 20px 52px color-mix(in srgb, var(--green-dark) 24%, transparent), inset 0 1px 0 rgba(255,255,255,0.75);
-      filter:saturate(1.04);
+      transform:translateY(-2px) scale(1.01);
+      box-shadow: 12px 12px 28px #C4BCB6, -12px -12px 28px #FFF8F2;
+      filter:brightness(1.02);
     }
   }
   .session-control.is-idle:active,
   .session-control.is-active:active,
   .session-control.is-idle.is-pressing,
-  .session-control.is-active.is-pressing { transform:scale(0.982); transition-duration:var(--motion-press); }
+  .session-control.is-active.is-pressing {
+    transform:scale(0.982);
+    box-shadow: inset 6px 6px 16px #C4BCB6, inset -6px -6px 16px #FFF8F2;
+    transition-duration:var(--motion-press);
+  }
   .session-control.is-idle:disabled {
     cursor:not-allowed;
     opacity:0.72;
@@ -388,22 +392,21 @@
   }
   .session-control::before {
     content:""; position:absolute; inset:-10px; border-radius:50%; pointer-events:none;
-    border:10px solid var(--session-control-ring-border);
+    border:10px solid rgba(200,188,180,0.12);
   }
   .session-control.state-active {
-    background:radial-gradient(circle at 35% 26%, color-mix(in srgb, var(--green-light) 38%, white), color-mix(in srgb, var(--surf) 96%, var(--green-light)));
-    box-shadow:0 14px 38px color-mix(in srgb, var(--green-dark) 25%, transparent), inset 0 1px 0 rgba(255,255,255,0.68);
-    filter:saturate(1.02);
+    background: radial-gradient(circle at 38% 28%, #E8F0E6 0%, #DCE8D8 40%, #D2DED0 70%, #C8D6C4 100%);
+    box-shadow: 10px 10px 24px #A8B8A4, -10px -10px 24px #F0FFF0;
     animation:none;
   }
   .session-control.state-success {
-    background:radial-gradient(circle at 35% 26%, color-mix(in srgb, var(--green-light) 46%, white), color-mix(in srgb, var(--surface-muted) 64%, var(--surf)));
-    box-shadow:0 16px 40px color-mix(in srgb, var(--green) 24%, transparent), inset 0 1px 0 rgba(255,255,255,0.7);
+    background: radial-gradient(circle at 38% 28%, #E2F0E2 0%, #D4E8D4 40%, #CCE0CC 70%, #C2D6C2 100%);
+    box-shadow: 10px 10px 24px #A0B8A0, -10px -10px 24px #EEFFEE;
     animation:none;
   }
   .session-control.state-warning {
-    background:radial-gradient(circle at 35% 26%, color-mix(in srgb, var(--amber-light) 34%, white), color-mix(in srgb, var(--surface-muted) 74%, var(--surf)));
-    box-shadow:0 16px 40px color-mix(in srgb, var(--amber) 18%, transparent), inset 0 1px 0 rgba(255,255,255,0.66);
+    background: radial-gradient(circle at 38% 28%, #F5EAD8 0%, #EDE0CC 40%, #E5D8C2 70%, #DDD0BA 100%);
+    box-shadow: 10px 10px 24px #C4B8A0, -10px -10px 24px #FFF8EC;
     animation:none;
   }
   .session-control:focus-visible { outline:3px solid color-mix(in srgb, var(--primaryBlue) 28%, transparent); outline-offset:4px; }
@@ -420,7 +423,7 @@
     position:absolute;
     inset:18%;
     border-radius:50%;
-    background:radial-gradient(circle at 50% 40%, rgba(255,255,255,0.88), rgba(255,255,255,0.76) 44%, rgba(255,255,255,0.12) 74%);
+    background:radial-gradient(circle at 50% 40%, rgba(255,255,255,0.55), rgba(255,255,255,0.35) 44%, rgba(255,255,255,0) 74%);
     pointer-events:none;
     z-index:0;
   }
@@ -435,13 +438,22 @@
     pointer-events:none;
   }
   .sc-dog-hero img {
+    position: absolute;
     width:100%;
     height:100%;
     max-width:180px;
     max-height:180px;
     object-fit:contain;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 600ms ease, transform 600ms ease;
   }
-  .session-control.is-idle .sc-dog-hero img { animation:dogHeroPulse 3.2s ease-in-out infinite; }
+  .sc-dog-hero img.is-visible {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 500ms ease, transform 500ms ease;
+  }
+  .session-control.is-idle .sc-dog-hero { animation:dogHeroPulse 3.2s ease-in-out infinite; }
   .sc-time { position:relative; z-index:1; opacity:1; transform:scale(1); transition:opacity 320ms ease-in-out, transform 320ms ease-in-out; display:flex; flex-direction:column; align-items:center; gap:4px; max-width:188px; }
   .sc-time-value { font-size:clamp(2rem, 8.6vw, 2.8rem); line-height:1.03; font-weight:var(--type-metric-xl-weight); color:var(--green-dark); letter-spacing:var(--type-metric-xl-track); font-variant-numeric:tabular-nums; }
   .session-control.state-warning .sc-time-value { color:var(--brown); }
@@ -481,8 +493,8 @@
   }
   .sc-progress.is-dim { opacity:0.18; }
   @keyframes heroBreath {
-    0%, 100% { transform:scale(1) translateY(0); box-shadow:0 18px 46px color-mix(in srgb, var(--green-dark) 20%, transparent), inset 0 1px 0 rgba(255,255,255,0.72); }
-    50% { transform:scale(1.01) translateY(-2px); box-shadow:0 22px 52px color-mix(in srgb, var(--green-dark) 24%, transparent), inset 0 1px 0 rgba(255,255,255,0.75); }
+    0%, 100% { transform:scale(1) translateY(0); box-shadow: 10px 10px 24px #C4BCB6, -10px -10px 24px #FFF8F2; }
+    50% { transform:scale(1.01) translateY(-2px); box-shadow: 12px 12px 28px #C0B8B2, -12px -12px 28px #FFFAF4; }
   }
   @keyframes dogHeroPulse {
     0%, 100% { transform:scale(1); filter:drop-shadow(0 0 0 rgba(111, 191, 140, 0)); }
@@ -2567,31 +2579,44 @@
 
 .tabs {
   max-width: 520px;
-  border-top: 1px solid color-mix(in srgb, var(--border) 86%, #fff);
-  background: color-mix(in srgb, var(--surface-frost) 90%, #fff);
-  backdrop-filter: blur(22px);
+  border-top: none;
+  background: var(--neu-base);
+  backdrop-filter: none;
+  box-shadow: var(--neu-shadow-out-lg), 0 -2px 0 rgba(242,245,240,0.8);
+  border-radius: 24px 24px 0 0;
 }
 
 .tab-btn {
-  min-height: 62px;
+  min-height: 64px;
   gap: 6px;
   color: var(--text-subtle);
-  transition: color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard);
+  background: transparent;
+  border-radius: 16px;
+  margin: 6px 4px;
+  transition:
+    color var(--motion-fast) var(--ease-standard),
+    box-shadow var(--motion-fast) var(--ease-standard),
+    transform var(--motion-press) var(--ease-standard),
+    background var(--motion-fast) var(--ease-standard);
 }
 
 .tab-btn.active {
-  color: var(--primaryBlue);
+  color: var(--color-primary-700);
+  background: var(--neu-base);
+  box-shadow: var(--neu-shadow-in);
 }
 
 .tab-btn.active svg {
-  color: var(--primaryBlue);
+  color: var(--color-primary-700);
 }
 
-.tab-btn:hover {
+.tab-btn:hover:not(.active) {
   transform: translateY(-1px);
+  color: var(--text-muted);
 }
+
 .tab-btn:active {
-  transform: translateY(0) scale(0.986);
+  transform: translateY(0) scale(0.96);
 }
 
 .train-identity-header,
@@ -2601,12 +2626,23 @@
 .train-inline-explain,
 .train-inline-tip,
 .train-time-change-insight {
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--surface-overlay-soft) 9%, transparent);
+  box-shadow: var(--neu-shadow-out-sm);
+  background: var(--neu-base);
+  border: none;
+}
+
+.train-first-run-hint,
+.train-returning-nudge {
+  box-shadow: var(--neu-shadow-out-sm);
+  background: var(--neu-base);
 }
 
 .train-identity-header {
   border-radius: 20px;
   padding: 16px;
+  border: none;
+  background: var(--neu-base);
+  box-shadow: var(--neu-shadow-out);
 }
 
 .train-identity-header__mood {
@@ -2616,6 +2652,7 @@
 
 .session-control {
   width: clamp(238px, 70vw, 300px);
+  /* Neumorphism styles defined in base .session-control above */
 }
 
 .sc-state-chip {
@@ -2871,3 +2908,161 @@
   opacity: 0;
   pointer-events: none;
 }
+
+/* ==========================================================================
+   NEUMORPHISM — финальные переопределения
+   ========================================================================== */
+
+/* Фон приложения */
+.app {
+  background: var(--neu-base);
+}
+
+/* Секция прогресса в Train */
+.prog-section,
+.surface-card--progress {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-shadow-in-sm) !important;
+  border-radius: 16px;
+}
+
+/* Сегодняшний лог */
+.train-today,
+.settings-collapsible-card {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-shadow-out) !important;
+}
+
+/* Строки внутри "Сегодня" */
+.train-today-row {
+  background: transparent;
+}
+.train-today-row:hover {
+  background: color-mix(in srgb, var(--neu-light) 60%, var(--neu-base));
+}
+
+/* Avatar в шапке Train */
+.train-identity-header__avatar {
+  box-shadow: var(--neu-shadow-out-sm);
+  border: none;
+  background: var(--neu-base);
+}
+
+/* Кнопки основного действия (primary) */
+.button-primary,
+.btn-save-outcome,
+.walk-end-btn {
+  box-shadow: var(--neu-shadow-out-sm);
+}
+.button-primary:active,
+.btn-save-outcome:active,
+.walk-end-btn:active {
+  box-shadow: var(--neu-shadow-in-sm);
+}
+
+/* Кнопки ghost/second */
+.button-ghost,
+.walk-cancel-btn,
+.session-cancel-btn {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Модальные карточки */
+.modal-card {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-shadow-out-lg) !important;
+}
+
+/* Поля ввода */
+.text-input,
+.ob-input,
+.ds-join-input {
+  background: var(--neu-base);
+  border: none;
+  box-shadow: var(--neu-shadow-in-sm);
+  color: var(--text);
+}
+.text-input:focus,
+.ob-input:focus,
+.ds-join-input:focus {
+  box-shadow: var(--neu-shadow-in), 0 0 0 2px rgba(47,122,87,0.2);
+  outline: none;
+}
+
+/* История — минимальные правки, только тени */
+.history-summary-surface {
+  background: var(--neu-base);
+  border: none;
+  box-shadow: var(--neu-shadow-out-sm);
+}
+
+.log-block,
+[class*="log-block"] {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-shadow-out-sm) !important;
+}
+
+/* Тень у нижней панели — перекрываем встроенную */
+.tabs {
+  box-shadow: -4px -4px 12px #F2F5F0, 4px 0 12px #C8CCCA !important;
+}
+
+/* Убираем размытие с оверлеев — там фон теперь сплошной */
+.quick-modal-overlay,
+.rating-overlay,
+.feeding-overlay,
+.history-session-sheet-overlay {
+  backdrop-filter: none;
+  background: rgba(180, 184, 182, 0.5);
+}
+
+/* ==========================================================================
+   NEUMORPHISM — Stats: Confidence signals & Today's feeling
+   ========================================================================== */
+
+/* Карточки метрик (Best time, Next target, Risk) */
+.metric-surface {
+  --metric-surface-bg: var(--neu-base);
+  --metric-surface-border: transparent;
+  --metric-surface-shadow: var(--neu-shadow-out-sm);
+  border: none !important;
+  background: var(--neu-base) !important;
+  box-shadow: var(--neu-shadow-out-sm) !important;
+}
+
+/* Главная карточка "Today's feeling" */
+.stats-headline-card.metric-surface,
+.stats-headline-card.metric-surface.surface-state--today,
+.stats-headline-card.metric-surface.surface-state--upcoming,
+.stats-headline-card.metric-surface.surface-state--overdue {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-shadow-out) !important;
+}
+
+/* Убираем декоративный градиент hero-карточки */
+.stats-headline-card--hero {
+  background: var(--neu-base) !important;
+}
+.stats-headline-card--hero::after {
+  display: none;
+}
+
+/* StatsSection — секция-обёртка */
+.stats-section {
+  background: transparent;
+}
+
+/* Ring-вариант (если используется) */
+.metric-surface--ring {
+  background: var(--neu-base) !important;
+  border: none !important;
+  box-shadow: var(--neu-shadow-out-sm) !important;
+}
+
+

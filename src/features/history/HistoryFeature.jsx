@@ -453,7 +453,7 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
                         <div className="history-mini-trend-bar" title={`${day.dayKey}: ${day.count} completed training ${day.count === 1 ? "session" : "sessions"}`}>
                           <div
                             className={`history-mini-trend-bar-fill ${day.count > 0 ? "is-active" : ""}`}
-                            style={{ height: `${scaledHeight}%` }}
+                            style={{ height: `${scaledHeight}%` }} // INLINE_STYLE_TECHNICAL_EXCEPTION
                           />
                         </div>
                         <span>{`${day.label.slice(0, 1)} ${day.count}`}</span>

@@ -71,6 +71,18 @@ export default function HomeScreen(props) {
     : daily.blockReason === "max_sessions"
       ? `Daily session max reached (${daily.maxCount}). Try again tomorrow.`
       : "";
+
+  let dogState = "idle";
+  if (phase === "running") {
+    dogState = "running";
+  } else if (phase === "idle" && latestSession) {
+    if (latestSession.outcome === "none") {
+      dogState = "success";
+    } else {
+      dogState = "stress";
+    }
+  }
+
   return (
     <div className="tab-content train-screen">
       <div className="train-main">
@@ -89,10 +101,6 @@ export default function HomeScreen(props) {
           </div>
           <div className="train-identity-header__copy">
             <h2 className="train-identity-header__name">Train with {name}</h2>
-          </div>
-          <div className="train-identity-header__links" aria-label="Quick navigation">
-            <button type="button" className="train-header-link secondary-control secondary-control--inline-text" onClick={openProgress}>Progress</button>
-            <button type="button" className="train-header-link secondary-control secondary-control--inline-text" onClick={openHistory}>History</button>
           </div>
         </header>
 
@@ -136,6 +144,7 @@ export default function HomeScreen(props) {
           startBlockedMessage={sessionBlockedMessage}
           allowIdlePress={false}
           onIdlePress={dismissTrainFirstRunHint}
+          dogState={dogState}
         />
 
         <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} />

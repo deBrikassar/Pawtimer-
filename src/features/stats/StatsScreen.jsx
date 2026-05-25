@@ -67,7 +67,8 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
                 <>
                   <div className="stats-goal-progress-value">{fmt(bestCalm)} / {fmt(overallGoalSec, { hoursMinutesOnly: true })} goal</div>
                   <div className="stats-goal-progress-track" aria-hidden="true">
-                    <span className="stats-goal-progress-fill" style={{ width: `${progressRatio * 100}%` }} />
+                    <span className="stats-goal-progress-fill" style={{ width: `${progressRatio * 100}%` }} // INLINE_STYLE_TECHNICAL_EXCEPTION
+                    />
                   </div>
                 </>
               ) : (

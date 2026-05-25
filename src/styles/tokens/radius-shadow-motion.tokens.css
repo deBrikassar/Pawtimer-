@@ -21,6 +21,14 @@
   --surface-metric-radius: var(--radius-md);
   --surface-metric-shadow: 0 10px 24px rgba(15,23,42,0.05);
 
+  /* Neumorphism shadows — sage palette */
+  --neu-shadow-out: 6px 6px 14px #C8CCCA, -6px -6px 14px #F2F5F0;
+  --neu-shadow-out-sm: 3px 3px 8px #C8CCCA, -3px -3px 8px #F2F5F0;
+  --neu-shadow-out-lg: 10px 10px 24px #C0C4C2, -10px -10px 24px #F4F7F2;
+  --neu-shadow-in: inset 4px 4px 10px #C8CCCA, inset -4px -4px 10px #F2F5F0;
+  --neu-shadow-in-sm: inset 2px 2px 6px #C8CCCA, inset -2px -2px 6px #F2F5F0;
+
+
   /* calm premium motion */
   --motion-press: 120ms;
   --motion-enter: 180ms;

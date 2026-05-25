@@ -20,6 +20,7 @@ export function SessionControl({
   fmt,
   canStart = true,
   startBlockedMessage = "Session limit reached for today.",
+  dogState = "idle",
 }) {
   const [pressing, setPressing] = useState(false);
   const triggerLockRef = useRef(false);
@@ -69,7 +70,10 @@ export function SessionControl({
           </svg>
           <div className="sc-content">
             <div className="sc-dog-hero" aria-hidden="true">
-              <img src="/icons/dog-base.svg" alt="" />
+              <img src="/icons/dog-idle.svg" alt="" className={`dog-svg ${dogState === 'idle' ? 'is-visible' : ''}`} />
+              <img src="/icons/dog-running.svg" alt="" className={`dog-svg ${dogState === 'running' ? 'is-visible' : ''}`} />
+              <img src="/icons/dog-success.svg" alt="" className={`dog-svg ${dogState === 'success' ? 'is-visible' : ''}`} />
+              <img src="/icons/dog-stress.svg" alt="" className={`dog-svg ${dogState === 'stress' ? 'is-visible' : ''}`} />
             </div>
           </div>
         </button>
@@ -98,7 +102,8 @@ export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
           <rect className="prog-fill-track" x="0" y="0" width="100" height="8" rx="4" ry="4" />
           <rect className="prog-fill" x="0" y="0" width={clampedGoalPct} height="8" rx="4" ry="4" />
         </svg>
-        <span className="prog-thumb" style={{ left: `${thumbPct}%` }} aria-hidden="true" />
+        <span className="prog-thumb" style={{ left: `${thumbPct}%` }} // INLINE_STYLE_TECHNICAL_EXCEPTION
+         aria-hidden="true" />
       </div>
       <div className="prog-meta">
         <span>Threshold <strong className="num-stable">{fmt(target)}</strong></span>
