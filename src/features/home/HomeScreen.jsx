@@ -68,20 +68,11 @@ export default function HomeScreen(props) {
     .at(0);
   const sessionBlockedMessage = daily.blockReason === "cap"
     ? `Daily alone-time cap reached (${fmtClock(daily.capSec)}). Try again tomorrow.`
+    : daily.blockReason === "frequency"
+    ? "Take a break before your next session."
     : daily.blockReason === "max_sessions"
       ? `Daily session max reached (${daily.maxCount}). Try again tomorrow.`
       : "";
-
-  let dogState = "idle";
-  if (phase === "running") {
-    dogState = "running";
-  } else if (phase === "idle" && latestSession) {
-    if (latestSession.outcome === "none") {
-      dogState = "success";
-    } else {
-      dogState = "stress";
-    }
-  }
 
   return (
     <div className="tab-content train-screen">
@@ -144,7 +135,6 @@ export default function HomeScreen(props) {
           startBlockedMessage={sessionBlockedMessage}
           allowIdlePress={false}
           onIdlePress={dismissTrainFirstRunHint}
-          dogState={dogState}
         />
 
         <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} />

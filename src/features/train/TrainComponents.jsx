@@ -20,7 +20,6 @@ export function SessionControl({
   fmt,
   canStart = true,
   startBlockedMessage = "Session limit reached for today.",
-  dogState = "idle",
 }) {
   const [pressing, setPressing] = useState(false);
   const triggerLockRef = useRef(false);
@@ -69,12 +68,7 @@ export function SessionControl({
             />
           </svg>
           <div className="sc-content">
-            <div className="sc-dog-hero" aria-hidden="true">
-              <img src="/icons/dog-idle.svg" alt="" className={`dog-svg ${dogState === 'idle' ? 'is-visible' : ''}`} />
-              <img src="/icons/dog-running.svg" alt="" className={`dog-svg ${dogState === 'running' ? 'is-visible' : ''}`} />
-              <img src="/icons/dog-success.svg" alt="" className={`dog-svg ${dogState === 'success' ? 'is-visible' : ''}`} />
-              <img src="/icons/dog-stress.svg" alt="" className={`dog-svg ${dogState === 'stress' ? 'is-visible' : ''}`} />
-            </div>
+            {/* Центр кнопки таймера. Собака временно убрана. */}
           </div>
         </button>
 
