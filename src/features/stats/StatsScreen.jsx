@@ -22,20 +22,27 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
         {totalCount === 0 ? (
           <EmptyState media={<SproutIcon />} title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
         ) : <>
-          <StatsSection title="Today’s feeling" className="stats-section-priority">
-            <div className="stats-metric-anchor">
-              <div
-                className={`stats-headline-card metric-surface metric-surface--${headlineMetricVariant} surface-state--${headlineSurfaceState}`.trim()}
-                data-metric-variant={headlineMetricVariant}
-                aria-label="Current recommendation"
-              >
-                  <span className="stats-headline-label">Confidence recommendation</span>
-                <div className="stats-headline-main">
-                  <span className="stats-headline-value">{fmt(target)}</span>
-                  <span className="stats-headline-status">{headlineStatus}</span>
-                </div>
-              </div>
+          <StatsSection title="Overall training progress" className="stats-section-priority stats-section-goal-progress">
+            <div className="stats-goal-progress" role="group" aria-label="Overall training progress">
+              {hasValidBestCalm && hasOverallGoal ? (
+                <>
+                  <div className="stats-goal-progress-value">{fmt(bestCalm)} / {fmt(overallGoalSec, { hoursMinutesOnly: true })} goal</div>
+                  <div className="stats-goal-progress-track" aria-hidden="true">
+                    <span className="stats-goal-progress-fill" style={{ width: `${progressRatio * 100}%` }} // INLINE_STYLE_TECHNICAL_EXCEPTION
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="stats-goal-progress-empty">{hasValidBestCalm ? "Set a training goal to track overall progress" : "Start your first session to track progress"}</div>
+                  <div className="stats-goal-progress-track" aria-hidden="true" />
+                </>
+              )}
             </div>
+          </StatsSection>
+
+          <StatsSection title="Journey curve">
+            <StatsChartSection chartData={chartData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmt} insightLabel={chartTrendLabel} />
           </StatsSection>
 
           <StatsSection title="Confidence signals">
@@ -61,27 +68,20 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
             </div>
           </StatsSection>
 
-          <StatsSection title="Overall training progress" className="stats-section-goal-progress">
-            <div className="stats-goal-progress" role="group" aria-label="Overall training progress">
-              {hasValidBestCalm && hasOverallGoal ? (
-                <>
-                  <div className="stats-goal-progress-value">{fmt(bestCalm)} / {fmt(overallGoalSec, { hoursMinutesOnly: true })} goal</div>
-                  <div className="stats-goal-progress-track" aria-hidden="true">
-                    <span className="stats-goal-progress-fill" style={{ width: `${progressRatio * 100}%` }} // INLINE_STYLE_TECHNICAL_EXCEPTION
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="stats-goal-progress-empty">{hasValidBestCalm ? "Set a training goal to track overall progress" : "Start your first session to track progress"}</div>
-                  <div className="stats-goal-progress-track" aria-hidden="true" />
-                </>
-              )}
+          <StatsSection title="Today’s feeling">
+            <div className="stats-metric-anchor">
+              <div
+                className={`stats-headline-card metric-surface metric-surface--${headlineMetricVariant} surface-state--${headlineSurfaceState}`.trim()}
+                data-metric-variant={headlineMetricVariant}
+                aria-label="Current recommendation"
+              >
+                  <span className="stats-headline-label">Confidence recommendation</span>
+                <div className="stats-headline-main">
+                  <span className="stats-headline-value">{fmt(target)}</span>
+                  <span className="stats-headline-status">{headlineStatus}</span>
+                </div>
+              </div>
             </div>
-          </StatsSection>
-
-          <StatsSection title="Journey curve">
-            <StatsChartSection chartData={chartData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmt} insightLabel={chartTrendLabel} />
           </StatsSection>
 
           <StatsSection title="Daily rhythm" className="stats-section-supporting">
