@@ -1,10 +1,45 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ViewportModal } from "../app/ui";
 
 function SessionActionRow({ onCancel }) {
   return (
     <div className="session-actions is-running">
       <button className="session-cancel-btn button-base button-ghost button--md button--pill" onClick={onCancel}>Cancel (don't save)</button>
+    </div>
+  );
+}
+
+/* ── Odometer digit component ── */
+function OdometerDigit({ char, index }) {
+  const [prev, setPrev] = useState(char);
+  const [isChanging, setIsChanging] = useState(false);
+
+  useEffect(() => {
+    if (char !== prev) {
+      setIsChanging(true);
+      setPrev(char);
+      const t = setTimeout(() => setIsChanging(false), 300);
+      return () => clearTimeout(t);
+    }
+  }, [char, prev]);
+
+  return (
+    <span
+      className={`sc-odometer-digit ${isChanging ? "is-changing" : ""}`}
+      key={index}
+    >
+      {char}
+    </span>
+  );
+}
+
+function OdometerTime({ value }) {
+  const chars = value.split("");
+  return (
+    <div className="sc-time-value">
+      {chars.map((ch, i) => (
+        <OdometerDigit char={ch} index={i} key={i} />
+      ))}
     </div>
   );
 }
@@ -20,10 +55,10 @@ export function SessionControl({
   fmt,
   canStart = true,
   startBlockedMessage = "Session limit reached for today.",
-  dogState = "idle",
 }) {
   const [pressing, setPressing] = useState(false);
   const triggerLockRef = useRef(false);
+  const btnRef = useRef(null);
   const overTargetSeconds = Math.max(elapsed - target, 0);
   const radius = 103;
   const circumference = 2 * Math.PI * radius;
@@ -32,6 +67,24 @@ export function SessionControl({
   const isIdle = phase === "idle";
   const isPastTarget = elapsed > target;
   const isDogInteractive = isIdle ? canStart : isRunning;
+
+  /* ── Tilt effect ── */
+  const handlePointerMove = useCallback((e) => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;  // -0.5 → 0.5
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    const tiltX = -(y * 6);  // max 3deg
+    const tiltY = x * 6;
+    btn.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.01)`;
+  }, []);
+
+  const handlePointerLeave = useCallback(() => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    btn.style.transform = "";
+  }, []);
 
   const runDogAction = () => {
     if (triggerLockRef.current) return;
@@ -47,48 +100,62 @@ export function SessionControl({
     }, 120);
   };
 
+  /* ── Tick-based progress ring ── */
+  const tickCount = 80;
+  const tickGap = 2.5;
+  const tickLen = (circumference - tickCount * tickGap) / tickCount;
+  const tickDasharray = `${tickLen} ${tickGap}`;
+  const filledLength = frac * circumference;
+
   return (
     <>
       <div className="session-control-wrap" aria-hidden={phase === "rating"}>
         <button
+          ref={btnRef}
           type="button"
           className={`session-control ${isIdle ? "is-idle" : ""} ${isRunning ? "is-running is-active" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""} ${isPastTarget ? "is-over-target" : ""}`.trim()}
           onClick={isDogInteractive ? runDogAction : undefined}
           disabled={!isDogInteractive}
           aria-label={isRunning ? "End training session" : "Start training session"}
+          onPointerMove={isDogInteractive ? handlePointerMove : undefined}
+          onPointerLeave={handlePointerLeave}
         >
           <svg className="sc-ring-svg" viewBox="0 0 226 226" aria-hidden="true">
-            <circle className="sc-track" cx="113" cy="113" r={radius} />
+            <circle className="sc-track" cx="113" cy="113" r={radius}
+              strokeDasharray={tickDasharray} />
             <circle
               className={`sc-progress ${isRunning || completed ? "" : "is-dim"}`.trim()}
               cx="113"
               cy="113"
               r={radius}
-              strokeDasharray={circumference}
-              strokeDashoffset={circumference * (1 - frac)}
+              strokeDasharray={tickDasharray}
+              strokeDashoffset={circumference - filledLength}
             />
           </svg>
           <div className="sc-content">
-            <div className="sc-dog-hero" aria-hidden="true">
-              <div className={`dog-svg ${dogState === 'idle' ? 'is-visible' : ''}`} style={{ WebkitMaskImage: 'url(/icons/dog-idle.svg)', maskImage: 'url(/icons/dog-idle.svg)' }}></div>
-              <div className={`dog-svg ${dogState === 'running' ? 'is-visible' : ''}`} style={{ WebkitMaskImage: 'url(/icons/dog-running.svg)', maskImage: 'url(/icons/dog-running.svg)' }}></div>
-              <div className={`dog-svg ${dogState === 'success' ? 'is-visible' : ''}`} style={{ WebkitMaskImage: 'url(/icons/dog-success.svg)', maskImage: 'url(/icons/dog-success.svg)' }}></div>
-              <div className={`dog-svg ${dogState === 'stress' ? 'is-visible' : ''}`} style={{ WebkitMaskImage: 'url(/icons/dog-stress.svg)', maskImage: 'url(/icons/dog-stress.svg)' }}></div>
+            <div className="sc-time">
+              {isRunning && isPastTarget && <div className="session-panel__over">+{fmt(overTargetSeconds)}</div>}
+              <OdometerTime value={isRunning ? fmt(elapsed) : fmt(target)} />
+              <div className="session-panel__eyebrow">{isRunning ? "RUNNING" : "START SESSION"}</div>
             </div>
           </div>
         </button>
 
-        <div className="session-panel">
-          <div className="session-panel__eyebrow">SESSION TIME</div>
-          <div className="session-panel__time">{isRunning ? `${fmt(elapsed)} / ${fmt(target)}` : fmt(target)}</div>
-          {isRunning && isPastTarget && <div className="session-panel__over">+{fmt(overTargetSeconds)} over target</div>}
+        {/* Ripple waves — only visible during running */}
+        <div className="sc-ripple" aria-hidden="true"></div>
+        <div className="sc-ripple" aria-hidden="true"></div>
+        <div className="sc-ripple" aria-hidden="true"></div>
 
-          {!isIdle && <SessionActionRow onCancel={onCancel} />}
-        </div>
+        {!isIdle && (
+          <div className="session-panel">
+            <SessionActionRow onCancel={onCancel} />
+          </div>
+        )}
       </div>
     </>
   );
 }
+
 
 
 export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
