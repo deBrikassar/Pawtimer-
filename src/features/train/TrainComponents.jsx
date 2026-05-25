@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 function SessionActionRow({ onCancel }) {
   return (
     <div className="session-actions is-running">
-      <button className="session-cancel-btn button-base button-ghost button--md button--pill" onClick={onCancel}>Cancel (don't save)</button>
+      <button className="session-cancel-btn button-base button-ghost button--md button--pill" onClick={onCancel}>Interrupted (Dog barked)</button>
     </div>
   );
 }
@@ -91,6 +91,11 @@ export function SessionControl({
     if (isRunning && !onEnd) return;
     triggerLockRef.current = true;
     setPressing(true);
+
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(isIdle ? [30] : [20, 50, 20]);
+    }
+
     setTimeout(() => {
       setPressing(false);
       if (isIdle) onStart();
@@ -133,10 +138,13 @@ export function SessionControl({
             />
           </svg>
           <div className="sc-content">
-            <div className="sc-time">
+            <svg className="sc-watermark" viewBox="0 0 24 24" aria-hidden="true" style={{ position: 'absolute', width: '50%', height: '50%', opacity: 0.04, pointerEvents: 'none' }}>
+              <path fill="currentColor" d="M12 11.5c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5zm5.5-2.5c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5zM6.5 9c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5zm3.5-5.5c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5zm4 0c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5z" />
+            </svg>
+            <div className="sc-time" style={{ position: 'relative', zIndex: 1 }}>
               {isRunning && isPastTarget && <div className="session-panel__over">+{fmt(overTargetSeconds)}</div>}
               <OdometerTime value={isRunning ? fmt(elapsed) : fmt(target)} />
-              <div className="session-panel__eyebrow">{isRunning ? "RUNNING" : "START SESSION"}</div>
+              <div className="session-panel__eyebrow">{completed ? "GOOD DOG!" : (isRunning ? "ZEN MODE" : "STAY COMMAND")}</div>
             </div>
           </div>
 
