@@ -49,7 +49,7 @@ export function SessionControl({
 
   return (
     <>
-      {phase !== "rating" && (<div className="session-control-wrap">
+      <div className="session-control-wrap" aria-hidden={phase === "rating"}>
         <button
           type="button"
           className={`session-control ${isIdle ? "is-idle" : ""} ${isRunning ? "is-running is-active" : ""} ${pressing ? "is-pressing" : ""} ${completed ? "is-complete" : ""} ${isPastTarget ? "is-over-target" : ""}`.trim()}
@@ -85,7 +85,7 @@ export function SessionControl({
 
           {!isIdle && <SessionActionRow onCancel={onCancel} />}
         </div>
-      </div>)}
+      </div>
     </>
   );
 }
