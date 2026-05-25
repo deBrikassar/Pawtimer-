@@ -388,8 +388,8 @@
     position:absolute;
     inset:0;
     margin:auto;
-    width:clamp(248px, 74vw, 312px);
-    aspect-ratio:1/1;
+    width:100%;
+    height:100%;
     border-radius:50%;
     border:2px solid rgba(111, 150, 120, 0.15);
     pointer-events:none;
@@ -397,7 +397,7 @@
     transform:scale(1);
     z-index:0;
   }
-  .sc-button-container:has(.session-control.is-running) .sc-ripple {
+  .session-control.is-running .sc-ripple {
     animation: rippleExpand 3.2s ease-out infinite;
   }
   .sc-ripple:nth-of-type(1) { animation-delay: 0s; }

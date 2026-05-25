@@ -1,4 +1,4 @@
-import { SessionControl, SessionRatingPanel, TrainProgressBar, TamagotchiDog } from "../train/TrainComponents";
+import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
@@ -121,8 +121,6 @@ export default function HomeScreen(props) {
             {trainTimeChangeInsight.message}
           </div>
         )}
-
-        <TamagotchiDog phase={phase} latestSession={latestSession} />
 
         <SessionControl
           phase={phase}

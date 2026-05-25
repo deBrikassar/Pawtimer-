@@ -1,27 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ViewportModal } from "../app/ui";
-
-export function TamagotchiDog({ phase, latestSession }) {
-  let dogState = "idle";
-  if (phase === "running") {
-    dogState = "running";
-  } else if (phase === "idle" && latestSession) {
-    if (latestSession.outcome === "none") {
-      dogState = "success";
-    } else {
-      dogState = "stress";
-    }
-  }
-
-  return (
-    <div className="tamagotchi-wrap">
-      <div className={`tamagotchi-dog ${dogState === 'idle' ? 'is-visible' : ''}`} style={{ maskImage: 'url(/icons/dog-idle.svg)', WebkitMaskImage: 'url(/icons/dog-idle.svg)' }}></div>
-      <div className={`tamagotchi-dog ${dogState === 'running' ? 'is-visible' : ''}`} style={{ maskImage: 'url(/icons/dog-running.svg)', WebkitMaskImage: 'url(/icons/dog-running.svg)' }}></div>
-      <div className={`tamagotchi-dog ${dogState === 'success' ? 'is-visible' : ''}`} style={{ maskImage: 'url(/icons/dog-success.svg)', WebkitMaskImage: 'url(/icons/dog-success.svg)' }}></div>
-      <div className={`tamagotchi-dog ${dogState === 'stress' ? 'is-visible' : ''}`} style={{ maskImage: 'url(/icons/dog-stress.svg)', WebkitMaskImage: 'url(/icons/dog-stress.svg)' }}></div>
-    </div>
-  );
-}
 
 function SessionActionRow({ onCancel }) {
   return (
@@ -162,20 +139,19 @@ export function SessionControl({
               <div className="session-panel__eyebrow">{isRunning ? "RUNNING" : "START SESSION"}</div>
             </div>
           </div>
+
+          {/* Ripple waves — moved inside button to guarantee perfect centering */}
+          <div className="sc-ripple" aria-hidden="true"></div>
+          <div className="sc-ripple" aria-hidden="true"></div>
+          <div className="sc-ripple" aria-hidden="true"></div>
         </button>
-
-        {/* Ripple waves — only visible during running */}
-        <div className="sc-ripple" aria-hidden="true"></div>
-        <div className="sc-ripple" aria-hidden="true"></div>
-        <div className="sc-ripple" aria-hidden="true"></div>
-        </div>
-
-        {!isIdle && (
-          <div className="session-panel">
-            <SessionActionRow onCancel={onCancel} />
-          </div>
-        )}
       </div>
+
+      {!isIdle && (
+        <div className="session-panel">
+          <SessionActionRow onCancel={onCancel} />
+        </div>
+      )}
     </>
   );
 }
