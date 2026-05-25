@@ -70,10 +70,10 @@ export function SessionControl({
           </svg>
           <div className="sc-content">
             <div className="sc-dog-hero" aria-hidden="true">
-              <img src="/icons/dog-idle.svg" alt="" className={`dog-svg ${dogState === 'idle' ? 'is-visible' : ''}`} />
-              <img src="/icons/dog-running.svg" alt="" className={`dog-svg ${dogState === 'running' ? 'is-visible' : ''}`} />
-              <img src="/icons/dog-success.svg" alt="" className={`dog-svg ${dogState === 'success' ? 'is-visible' : ''}`} />
-              <img src="/icons/dog-stress.svg" alt="" className={`dog-svg ${dogState === 'stress' ? 'is-visible' : ''}`} />
+              <div className={`dog-svg ${dogState === 'idle' ? 'is-visible' : ''}`} style={{ WebkitMaskImage: 'url(/icons/dog-idle.svg)', maskImage: 'url(/icons/dog-idle.svg)' }}></div>
+              <div className={`dog-svg ${dogState === 'running' ? 'is-visible' : ''}`} style={{ WebkitMaskImage: 'url(/icons/dog-running.svg)', maskImage: 'url(/icons/dog-running.svg)' }}></div>
+              <div className={`dog-svg ${dogState === 'success' ? 'is-visible' : ''}`} style={{ WebkitMaskImage: 'url(/icons/dog-success.svg)', maskImage: 'url(/icons/dog-success.svg)' }}></div>
+              <div className={`dog-svg ${dogState === 'stress' ? 'is-visible' : ''}`} style={{ WebkitMaskImage: 'url(/icons/dog-stress.svg)', maskImage: 'url(/icons/dog-stress.svg)' }}></div>
             </div>
           </div>
         </button>
