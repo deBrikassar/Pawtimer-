@@ -13,17 +13,19 @@ function SessionActionRow({ onCancel }) {
 
 /* ── Odometer digit component ── */
 function OdometerDigit({ char, index }) {
-  const [prev, setPrev] = useState(char);
   const [isChanging, setIsChanging] = useState(false);
+  const isFirstMount = useRef(true);
 
   useEffect(() => {
-    if (char !== prev) {
-      setIsChanging(true);
-      setPrev(char);
-      const t = setTimeout(() => setIsChanging(false), 300);
-      return () => clearTimeout(t);
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
     }
-  }, [char, prev]);
+    
+    setIsChanging(true);
+    const t = setTimeout(() => setIsChanging(false), 300);
+    return () => clearTimeout(t);
+  }, [char]);
 
   return (
     <span

@@ -1,7 +1,7 @@
 :root {
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
+  --radius-sm: 16px;
+  --radius-md: 24px;
+  --radius-lg: 32px;
   --radius-pill: 999px;
   --radius: var(--radius-lg);
 
@@ -39,8 +39,10 @@
   --motion-sheet-enter: 420ms;
   --motion-expand: 420ms;
   --motion-dialog-enter: 320ms;
+  --ease-spring-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-gentle: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --ease-standard: cubic-bezier(0.22, 0.6, 0.28, 1);
-  --ease-emphasized: cubic-bezier(0.2, 0.95, 0.3, 1);
+  --ease-emphasized: var(--ease-spring-gentle);
   --ease-premium: cubic-bezier(0.16, 0.84, 0.24, 1);
   --ease-out: cubic-bezier(0,0,0.2,1);
 

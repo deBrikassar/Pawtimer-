@@ -341,7 +341,7 @@
     background var(--motion-base) var(--ease-standard),
     box-shadow var(--motion-base) var(--ease-standard),
     color var(--motion-base) var(--ease-standard),
-    transform var(--motion-press) var(--ease-out),
+    transform var(--motion-press) var(--ease-spring-bouncy),
     opacity var(--motion-fast) var(--ease-standard);
   transform: translateZ(0);
 }

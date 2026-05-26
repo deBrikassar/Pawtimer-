@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
-import { PROTOCOL, explainNextTarget, normalizeDistressLevel, suggestNext, suggestNextWithContext } from "./lib/protocol";
-import { sortByDateAsc } from "./lib/activityDateTime";
+import { PROTOCOL, explainNextTarget, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { sortValidDateAsc } from "./lib/dateSort";
+import { sortByDateAsc } from "./lib/activityDateTime";
 import { selectAppData } from "./features/app/selectors";
-import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, applyAuthoritativeTombstonesAtCommit, applyTombstonesToCollection, canonicalDogId, ensureArray, ensureObject, feedingKey, generateId, getSyncDegradationState, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, mergeMutationSafeSyncCollection, mergeSessionWithDerivedFields, mergeTombstonesByEntityKey, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, patKey, patLblKey, photoKey, pruneTombstonesForRetention, repairDuplicateSessionIds, resolveDogSettingsConflict, save, sessKey, stampLocalDogSettings, syncFetch, syncPush, syncPushTombstone, syncUpsertDog, toDateTimeLocalValue, tombKey, walkKey } from "./features/app/storage";
-import { markCollectionStorageError, persistJoinedDogState, persistValue } from "./features/app/persistence";
-import { buildPartialCapabilitySyncMessage, partitionPendingOutboundByCapability } from "./features/app/syncCapability";
+import { ACTIVE_DOG_KEY, DOGS_KEY, SB_BASE_URL, SB_KEY, SB_URL, SYNC_ENABLED, canonicalDogId, ensureArray, ensureObject, generateId, hydrateDogFromLocal, load, logSyncDebug, makeEntryId, stampLocalEntry, markRemoteEntryConfirmed, normalizeDogSyncMetadata, normalizeFeedings, normalizeSessions, normalizeTombstones, resolveDogSettingsConflict, save, stampLocalDogSettings, toDateTimeLocalValue, applyTombstonesToCollection, getSyncDegradationState } from "./features/app/storage";
 import { computeSyncSummary } from "./features/app/syncSummary";
 import { fmt, fmtClock, getOutcomeTone, normalizeWalkType, walkTypeLabel } from "./features/app/helpers";
 import { CameraIcon, ChartIcon, HistoryIcon, HomeIcon, PawIcon, SettingsIcon } from "./features/app/ui.jsx";
@@ -16,19 +14,18 @@ import StatsScreen from "./features/stats/StatsScreen";
 import SettingsScreen from "./features/settings/SettingsScreen";
 import { HistoryScreen, useHistoryEditing } from "./features/history/HistoryFeature";
 import { buildTrainTimeChangeInsight } from "./features/train/timeChangeInsight";
+
+import { useAppData } from "./features/app/useAppData";
+import { useSyncEngine } from "./features/app/useSyncEngine";
+import { useTrainingTimer } from "./features/app/useTrainingTimer";
+import { useWalkTimer } from "./features/app/useWalkTimer";
+
 import "./styles/theme.css";
 import "./styles/shared.css";
 import "./styles/primitives.css";
 import "./styles/app.css";
 
 const LEGACY_SW_PATHS = ["/service-worker.js", "/serviceworker.js", "/workbox-sw.js"];
-const SYNC_STATE = {
-  LOCAL: "local",
-  SYNCING: "syncing",
-  SYNCED: "synced",
-  ERROR: "error",
-  UNSUPPORTED: "unsupported",
-};
 
 function recoveryStateEqual(a, b) {
   return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
@@ -36,35 +33,16 @@ function recoveryStateEqual(a, b) {
 
 export default function PawTimer() {
   const TAB_IDS = ["home", "history", "progress", "settings"];
-  const [dogs, setDogs] = useState(() => ensureArray(load(DOGS_KEY, [])));
-  const [activeDogId, setActiveDogId] = useState(() => canonicalDogId(load(ACTIVE_DOG_KEY, null)));
   const [screen, setScreen] = useState("select");
-  const [sessions, setSessions] = useState([]);
-  const [walks, setWalks] = useState([]);
-  const [patterns, setPatterns] = useState([]);
-  const [feedings, setFeedings] = useState([]);
-  const [tombstones, setTombstones] = useState([]);
   const [tab, setTab] = useState("home");
   const [tabMotionDirection, setTabMotionDirection] = useState("forward");
   const [onboardingState, setOnboardingState] = useState(null);
-  const [phase, setPhase] = useState("idle");
-  const [elapsed, setElapsed] = useState(0);
-  const [finalElapsed, setFinalElapsed] = useState(0);
-  const [sessionCompleted, setSessionCompleted] = useState(false);
-  const [sessionOutcome, setSessionOutcome] = useState(null);
-  const [latencyDraft, setLatencyDraft] = useState("");
-  const [distressTypeDraft, setDistressTypeDraft] = useState("");
   const [target, setTarget] = useState(PROTOCOL.startDurationSeconds);
   const [toast, setToast] = useState(null);
   const [patOpen, setPatOpen] = useState(false);
-  const [patLabels, setPatLabels] = useState({});
   const [editingPat, setEditingPat] = useState(null);
-  const [dogPhoto, setDogPhoto] = useState(null);
-  const [syncStatus, setSyncStatus] = useState("idle");
-  const [syncError, setSyncError] = useState("");
   const [syncDiagRunning, setSyncDiagRunning] = useState(false);
   const [syncDiagResult, setSyncDiagResult] = useState(null);
-  const [syncDegradation, setSyncDegradation] = useState(() => getSyncDegradationState());
   const [notifTime, setNotifTime] = useState(() => load("pawtimer_notif_time", "09:00"));
   const [notifEnabled, setNotifEnabled] = useState(() => load("pawtimer_notif_on", false));
   const [protoWarnAck, setProtoWarnAck] = useState(false);
@@ -74,13 +52,11 @@ export default function PawTimer() {
   const [trainFirstRunHintVisible, setTrainFirstRunHintVisible] = useState(false);
   const [trainTimeChangeInsight, setTrainTimeChangeInsight] = useState(null);
   const [returningTrainNudge, setReturningTrainNudge] = useState(null);
-  const [walkPhase, setWalkPhase] = useState("idle");
-  const [walkElapsed, setWalkElapsed] = useState(0);
-  const [walkPendingDuration, setWalkPendingDuration] = useState(0);
   const [feedingOpen, setFeedingOpen] = useState(false);
   const [feedingDraft, setFeedingDraft] = useState(() => ({ time: toDateTimeLocalValue(new Date()), foodType: "meal", amount: "small" }));
   const [historyModal, setHistoryModal] = useState(null);
-  const getSetupLandingScreen = useCallback((nextDogs = dogs) => (ensureArray(nextDogs).length > 0 ? "select" : "welcome"), [dogs]);
+
+  const getSetupLandingScreen = useCallback((nextDogs) => (ensureArray(nextDogs).length > 0 ? "select" : "welcome"), []);
 
   const {
     needRefresh: [needRefresh],
@@ -98,17 +74,6 @@ export default function PawTimer() {
     },
   });
 
-  const walkTimerRef = useRef(null);
-  const walkStartRef = useRef(null);
-  const timerRef = useRef(null);
-  const startRef = useRef(null);
-  const syncInFlightRef = useRef(false);
-  const syncSnapshotRef = useRef({ dogs: [], sessions: [], walks: [], patterns: [], feedings: [], tombstones: [] });
-  const sessionsRef = useRef([]);
-  const walksRef = useRef([]);
-  const patternsRef = useRef([]);
-  const feedingsRef = useRef([]);
-  const tombstonesRef = useRef([]);
   const syncHelpersRef = useRef({
     commitSessions: null,
     commitWalks: null,
@@ -123,10 +88,7 @@ export default function PawTimer() {
     navigator.serviceWorker.getRegistrations()
       .then((registrations) => Promise.all(
         registrations.map(async (registration) => {
-          const swUrl = registration.active?.scriptURL
-            || registration.waiting?.scriptURL
-            || registration.installing?.scriptURL
-            || "";
+          const swUrl = registration.active?.scriptURL || registration.waiting?.scriptURL || registration.installing?.scriptURL || "";
           if (LEGACY_SW_PATHS.some((legacyPath) => swUrl.endsWith(legacyPath))) {
             await registration.unregister();
           }
@@ -135,142 +97,72 @@ export default function PawTimer() {
       .catch(() => {});
   }, []);
 
-  const withHydratedSyncState = useCallback((entry) => {
-    if (!entry) return entry;
-    if (typeof entry.pendingSync === "boolean" || entry.syncState) return entry;
-    return {
-      ...entry,
-      pendingSync: false,
-      syncState: SYNC_ENABLED ? SYNC_STATE.SYNCED : SYNC_STATE.LOCAL,
-      syncError: "",
-    };
+  const recomputeTarget = useCallback((nextSessions, nextWalks, nextPatterns, nextDog) => {
+    const logicalSessions = sortValidDateAsc(nextSessions || []);
+    const details = explainNextTarget(logicalSessions, nextWalks || [], nextPatterns || [], nextDog || {});
+    const recommendedDuration = details?.recommendedDuration
+      ?? (suggestNextWithContext(logicalSessions, nextWalks || [], nextPatterns || [], nextDog || {}) ?? suggestNext(logicalSessions, nextDog || {}));
+    setTarget(recommendedDuration);
+    return recommendedDuration;
   }, []);
 
-  const markRemoteEntryConfirmed = useCallback((entry) => ({
-    ...entry,
-    pendingSync: false,
-    syncState: SYNC_ENABLED ? SYNC_STATE.SYNCED : SYNC_STATE.LOCAL,
-    syncError: "",
-  }), []);
+  const {
+    dogs, setDogs, activeDogId, setActiveDogId,
+    sessions, walks, patterns, feedings, tombstones, patLabels, setPatLabels, dogPhoto, setDogPhoto,
+    sessionsRef, walksRef, patternsRef, feedingsRef, tombstonesRef, syncSnapshotRef,
+    setSessions, setWalks, setPatterns, setFeedings, setTombstones,
+    commitSessions, commitWalks, commitPatterns, commitFeedings, commitTombstones,
+    addTombstone, updateSyncState,
+    syncStatus, setSyncStatus, syncError, setSyncError,
+    reportLocalWriteFailure, withHydratedSyncState
+  } = useAppData({ recomputeTarget, logSyncDebug });
 
-  const stampLocalEntry = useCallback((entry, previousEntry = null, syncState = SYNC_STATE.LOCAL, syncErrorMessage = "") => {
-    const updatedAt = new Date().toISOString();
-    const previousRevision = Number.isFinite(previousEntry?.revision)
-      ? previousEntry.revision
-      : Number.isFinite(entry?.revision)
-        ? entry.revision
-        : 0;
-    return {
-      ...previousEntry,
-      ...entry,
-      updatedAt,
-      revision: previousRevision + 1,
-      pendingSync: syncState !== SYNC_STATE.SYNCED,
-      syncState,
-      syncError: syncState === SYNC_STATE.ERROR ? syncErrorMessage : "",
-    };
-  }, []);
+  const setEntrySyncState = useCallback((kind, entryId, nextSyncState, errorMessage = "") => {
+    updateSyncState(kind, entryId, nextSyncState, errorMessage);
+  }, [updateSyncState]);
 
-  const makeLocalTombstone = useCallback((kind, entry, previousTombstone = null, syncState = SYNC_STATE.LOCAL, syncErrorMessage = "") => {
-    const deletedAt = new Date().toISOString();
-    const previousRevision = Number.isFinite(previousTombstone?.revision)
-      ? previousTombstone.revision
-      : Number.isFinite(entry?.revision)
-        ? entry.revision
-        : 0;
-    return {
-      id: String(entry?.id || ""),
-      kind,
-      deletedAt,
-      updatedAt: deletedAt,
-      revision: previousRevision + 1,
-      replicationConfirmed: false,
-      pendingSync: syncState !== SYNC_STATE.SYNCED,
-      syncState,
-      syncError: syncState === SYNC_STATE.ERROR ? syncErrorMessage : "",
-    };
-  }, []);
+  const {
+    syncDegradation, pushWithSyncStatus, pushTombstoneWithSyncStatus
+  } = useSyncEngine({
+    SYNC_ENABLED, activeDogId, syncSnapshotRef, syncHelpersRef, tombstonesRef, reportLocalWriteFailure,
+    setDogs, setTombstoneSyncState: updateSyncState, withHydratedSyncState, markRemoteEntryConfirmed, commitTombstones, logSyncDebug
+  });
 
-  useEffect(() => {
-    syncSnapshotRef.current = { dogs, sessions, walks, patterns, feedings, tombstones };
-  }, [dogs, sessions, walks, patterns, feedings, tombstones]);
+  const showToast = useCallback((msg) => { setToast(msg); setTimeout(() => setToast(null), 3200); }, []);
 
-  useEffect(() => { sessionsRef.current = sessions; }, [sessions]);
-  useEffect(() => { walksRef.current = walks; }, [walks]);
-  useEffect(() => { patternsRef.current = patterns; }, [patterns]);
-  useEffect(() => { feedingsRef.current = feedings; }, [feedings]);
-  useEffect(() => {
-    tombstonesRef.current = tombstones;
-  }, [tombstones]);
-
-  useEffect(() => { save(DOGS_KEY, dogs); }, [dogs]);
-  useEffect(() => { save(ACTIVE_DOG_KEY, canonicalDogId(activeDogId)); }, [activeDogId]);
-  useEffect(() => { if (activeDogId) save(sessKey(activeDogId), sessions); }, [sessions, activeDogId]);
-  useEffect(() => { if (activeDogId) save(walkKey(activeDogId), walks); }, [walks, activeDogId]);
-  useEffect(() => { if (activeDogId) save(patKey(activeDogId), patterns); }, [patterns, activeDogId]);
-  useEffect(() => { if (activeDogId) save(feedingKey(activeDogId), feedings); }, [feedings, activeDogId]);
-  useEffect(() => { if (activeDogId) save(tombKey(activeDogId), tombstones); }, [tombstones, activeDogId]);
-  useEffect(() => { if (activeDogId) save(patLblKey(activeDogId), patLabels); }, [patLabels, activeDogId]);
-  useEffect(() => { if (activeDogId) save(photoKey(activeDogId), dogPhoto); }, [dogPhoto, activeDogId]);
-  useEffect(() => { save("pawtimer_notif_time", notifTime); }, [notifTime]);
-  useEffect(() => { save("pawtimer_notif_on", notifEnabled); }, [notifEnabled]);
-  useEffect(() => { save("pawtimer_proto_override", protoOverride); }, [protoOverride]);
-  const activeDog = useMemo(
-    () => dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId)) ?? null,
-    [activeDogId, dogs],
-  );
-  const trainFirstRunHintKey = useMemo(
-    () => (activeDogId ? `pawtimer_train_intro_seen_v1_${canonicalDogId(activeDogId)}` : null),
-    [activeDogId],
-  );
-  const trainReturnSnapshotKey = useMemo(
-    () => (activeDogId ? `pawtimer_train_last_seen_v1_${canonicalDogId(activeDogId)}` : null),
-    [activeDogId],
-  );
+  const activeDog = useMemo(() => dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId)) ?? null, [activeDogId, dogs]);
   const canonicalSessions = useMemo(() => sortValidDateAsc(sessions), [sessions]);
+
   const deriveRecommendation = useCallback((nextSessions, nextWalks = walks, nextPatterns = patterns, nextDog = activeDog || {}) => {
     const logicalSessions = sortValidDateAsc(nextSessions);
     const details = explainNextTarget(logicalSessions, nextWalks, nextPatterns, nextDog || {});
-    const recommendedDuration = details?.recommendedDuration
-      ?? (suggestNextWithContext(logicalSessions, nextWalks, nextPatterns, nextDog) ?? suggestNext(logicalSessions, nextDog));
-    return {
-      duration: recommendedDuration,
-      decisionState: details?.decisionState ?? null,
-      explanation: details?.summary ?? "",
-      details: details ?? {},
-    };
+    const recommendedDuration = details?.recommendedDuration ?? (suggestNextWithContext(logicalSessions, nextWalks, nextPatterns, nextDog) ?? suggestNext(logicalSessions, nextDog));
+    return { duration: recommendedDuration, decisionState: details?.decisionState ?? null, explanation: details?.summary ?? "", details: details ?? {} };
   }, [activeDog, patterns, walks]);
 
-  const recommendation = useMemo(() => {
-    return deriveRecommendation(canonicalSessions, walks, patterns, activeDog || {});
-  }, [activeDog, canonicalSessions, deriveRecommendation, patterns, walks]);
-  const appData = selectAppData({
-    dogs,
-    activeDogId,
-    sessions: canonicalSessions,
-    walks,
-    patterns,
-    feedings,
-    target: recommendation.duration,
-    protoOverride,
-    recommendation,
-  });
+  const recommendation = useMemo(() => deriveRecommendation(canonicalSessions, walks, patterns, activeDog || {}), [activeDog, canonicalSessions, deriveRecommendation, patterns, walks]);
 
-  const recomputeTarget = useCallback((nextSessions, nextWalks = walks, nextPatterns = patterns, nextDog = activeDog || {}) => {
-    const nextTarget = deriveRecommendation(nextSessions, nextWalks, nextPatterns, nextDog).duration;
-    setTarget(nextTarget);
-    return nextTarget;
-  }, [activeDog, deriveRecommendation, patterns, walks]);
+  const appData = selectAppData({ dogs, activeDogId, sessions: canonicalSessions, walks, patterns, feedings, target: recommendation.duration, protoOverride, recommendation });
+
+  useEffect(() => {
+    syncHelpersRef.current = {
+      commitSessions, commitWalks, commitPatterns, commitFeedings, recomputeTarget, setEntrySyncState,
+    };
+  }, [commitFeedings, commitPatterns, commitSessions, commitWalks, recomputeTarget, setEntrySyncState]);
+
+  useEffect(() => { save("pawtimer_notif_time", notifTime); }, [notifTime]);
+  useEffect(() => { save("pawtimer_notif_on", notifEnabled); }, [notifEnabled]);
+  useEffect(() => { save("pawtimer_proto_override", protoOverride); }, [protoOverride]);
 
   useEffect(() => {
     setTarget((prev) => (prev === recommendation.duration ? prev : recommendation.duration));
   }, [recommendation.duration]);
 
+  const trainFirstRunHintKey = useMemo(() => (activeDogId ? `pawtimer_train_intro_seen_v1_${canonicalDogId(activeDogId)}` : null), [activeDogId]);
+  const trainReturnSnapshotKey = useMemo(() => (activeDogId ? `pawtimer_train_last_seen_v1_${canonicalDogId(activeDogId)}` : null), [activeDogId]);
+
   useEffect(() => {
-    if (!activeDogId || !trainFirstRunHintKey) {
-      setTrainFirstRunHintVisible(false);
-      return;
-    }
+    if (!activeDogId || !trainFirstRunHintKey) { setTrainFirstRunHintVisible(false); return; }
     const hasSessions = canonicalSessions.length > 0;
     const hasSeenHint = load(trainFirstRunHintKey, false) === true;
     setTrainFirstRunHintVisible(!hasSeenHint && !hasSessions);
@@ -284,227 +176,24 @@ export default function PawTimer() {
 
   const acknowledgeReturningTrainNudge = useCallback(() => {
     if (!trainReturnSnapshotKey) return;
-    save(trainReturnSnapshotKey, {
-      target: recommendation.duration,
-      seenAt: new Date().toISOString(),
-    });
+    save(trainReturnSnapshotKey, { target: recommendation.duration, seenAt: new Date().toISOString() });
     setReturningTrainNudge(null);
   }, [recommendation.duration, trainReturnSnapshotKey]);
 
   useEffect(() => {
-    if (!trainReturnSnapshotKey || !activeDogId || canonicalSessions.length === 0) {
-      setReturningTrainNudge(null);
-      return;
-    }
+    if (!trainReturnSnapshotKey || !activeDogId || canonicalSessions.length === 0) { setReturningTrainNudge(null); return; }
     const snapshot = ensureObject(load(trainReturnSnapshotKey, {}));
     const previousTarget = Number(snapshot.target);
-    if (!Number.isFinite(previousTarget)) {
-      setReturningTrainNudge(null);
-      return;
-    }
+    if (!Number.isFinite(previousTarget)) { setReturningTrainNudge(null); return; }
     const currentTarget = Number(recommendation.duration);
-    if (!Number.isFinite(currentTarget) || currentTarget === previousTarget) {
-      setReturningTrainNudge(null);
-      return;
-    }
-    setReturningTrainNudge({
-      previousTarget,
-      currentTarget,
-      changedBy: currentTarget - previousTarget,
-      seenAt: snapshot.seenAt || null,
-    });
+    if (!Number.isFinite(currentTarget) || currentTarget === previousTarget) { setReturningTrainNudge(null); return; }
+    setReturningTrainNudge({ previousTarget, currentTarget, changedBy: currentTarget - previousTarget, seenAt: snapshot.seenAt || null });
   }, [activeDogId, canonicalSessions.length, recommendation.duration, trainReturnSnapshotKey]);
 
   useEffect(() => {
     if (!trainReturnSnapshotKey || !activeDogId) return;
-    if (tab !== "home") {
-      save(trainReturnSnapshotKey, {
-        target: recommendation.duration,
-        seenAt: new Date().toISOString(),
-      });
-    }
+    if (tab !== "home") save(trainReturnSnapshotKey, { target: recommendation.duration, seenAt: new Date().toISOString() });
   }, [activeDogId, recommendation.duration, tab, trainReturnSnapshotKey]);
-
-  const reportLocalWriteFailure = useCallback((errorMessage) => {
-    setSyncStatus("err");
-    setSyncError(errorMessage);
-  }, []);
-
-  const commitSessions = useCallback((updater) => {
-    const previous = ensureArray(sessionsRef.current);
-    const resolved = typeof updater === "function" ? updater(previous) : updater;
-    const normalized = sortByDateAsc(normalizeSessions(ensureArray(resolved)).map(withHydratedSyncState));
-    const duplicateSessionIds = normalized.reduce((acc, entry) => {
-      const id = String(entry?.id || "");
-      if (!id) return acc;
-      acc.set(id, (acc.get(id) || 0) + 1);
-      return acc;
-    }, new Map());
-    const duplicateIds = Array.from(duplicateSessionIds.entries()).filter(([, count]) => count > 1).map(([id]) => id);
-    if (duplicateIds.length) {
-      logSyncDebug("commitSessions:duplicateIds", {
-        activeDogId: canonicalDogId(activeDogId),
-        duplicateIds,
-        ids: normalized.map((entry) => entry.id),
-      });
-    }
-    const repairedSessions = repairDuplicateSessionIds(normalized, canonicalDogId(activeDogId));
-    if (repairedSessions.didRepair) {
-      logSyncDebug("commitSessions:repairedIds", {
-        activeDogId: canonicalDogId(activeDogId),
-        repairedIds: repairedSessions.rows.map((entry) => entry.id),
-      });
-    }
-    let committed = repairedSessions.rows;
-    if (activeDogId) {
-      const writeResult = persistValue(sessKey(activeDogId), committed, save);
-      if (!writeResult.ok) {
-        reportLocalWriteFailure(writeResult.error);
-        committed = markCollectionStorageError(committed, writeResult.error);
-      }
-    }
-    sessionsRef.current = committed;
-    syncSnapshotRef.current = { ...syncSnapshotRef.current, sessions: committed };
-    setSessions(committed);
-    recomputeTarget(committed, walksRef.current, patternsRef.current, activeDog || {});
-    return committed;
-  }, [activeDog, activeDogId, recomputeTarget, reportLocalWriteFailure, withHydratedSyncState]);
-
-  const commitWalks = useCallback((updater) => {
-    const previous = ensureArray(walksRef.current);
-    const resolved = typeof updater === "function" ? updater(previous) : updater;
-    const normalized = sortByDateAsc(ensureArray(resolved).map((item) => ({ ...withHydratedSyncState(item), type: normalizeWalkType(item?.type) })));
-    let committed = normalized;
-    if (activeDogId) {
-      const writeResult = persistValue(walkKey(activeDogId), normalized, save);
-      if (!writeResult.ok) {
-        reportLocalWriteFailure(writeResult.error);
-        committed = markCollectionStorageError(normalized, writeResult.error);
-      }
-    }
-    walksRef.current = committed;
-    syncSnapshotRef.current = { ...syncSnapshotRef.current, walks: committed };
-    setWalks(committed);
-    recomputeTarget(sessionsRef.current, committed, patternsRef.current, activeDog || {});
-    return committed;
-  }, [activeDog, activeDogId, recomputeTarget, reportLocalWriteFailure, withHydratedSyncState]);
-
-  const commitPatterns = useCallback((updater) => {
-    const previous = ensureArray(patternsRef.current);
-    const resolved = typeof updater === "function" ? updater(previous) : updater;
-    const normalized = sortByDateAsc(ensureArray(resolved).map(withHydratedSyncState));
-    let committed = normalized;
-    if (activeDogId) {
-      const writeResult = persistValue(patKey(activeDogId), normalized, save);
-      if (!writeResult.ok) {
-        reportLocalWriteFailure(writeResult.error);
-        committed = markCollectionStorageError(normalized, writeResult.error);
-      }
-    }
-    patternsRef.current = committed;
-    syncSnapshotRef.current = { ...syncSnapshotRef.current, patterns: committed };
-    setPatterns(committed);
-    recomputeTarget(sessionsRef.current, walksRef.current, committed, activeDog || {});
-    return committed;
-  }, [activeDog, activeDogId, recomputeTarget, reportLocalWriteFailure, withHydratedSyncState]);
-
-  const commitFeedings = useCallback((updater) => {
-    const previous = ensureArray(feedingsRef.current);
-    const resolved = typeof updater === "function" ? updater(previous) : updater;
-    const normalized = normalizeFeedings(ensureArray(resolved)).map(withHydratedSyncState);
-    let committed = normalized;
-    if (activeDogId) {
-      const writeResult = persistValue(feedingKey(activeDogId), normalized, save);
-      if (!writeResult.ok) {
-        reportLocalWriteFailure(writeResult.error);
-        committed = markCollectionStorageError(normalized, writeResult.error);
-      }
-    }
-    feedingsRef.current = committed;
-    syncSnapshotRef.current = { ...syncSnapshotRef.current, feedings: committed };
-    setFeedings(committed);
-    return committed;
-  }, [activeDogId, reportLocalWriteFailure, withHydratedSyncState]);
-
-  const commitTombstones = useCallback((updater) => {
-    const previous = ensureArray(tombstonesRef.current);
-    const resolved = typeof updater === "function" ? updater(previous) : updater;
-    const normalized = normalizeTombstones(ensureArray(resolved)).map(withHydratedSyncState);
-    let committed = normalized;
-    if (activeDogId) {
-      const writeResult = persistValue(tombKey(activeDogId), normalized, save);
-      if (!writeResult.ok) {
-        reportLocalWriteFailure(writeResult.error);
-        committed = markCollectionStorageError(normalized, writeResult.error);
-      }
-    }
-    tombstonesRef.current = committed;
-    syncSnapshotRef.current = { ...syncSnapshotRef.current, tombstones: committed };
-    setTombstones(committed);
-    return committed;
-  }, [activeDogId, reportLocalWriteFailure, withHydratedSyncState]);
-
-  const addTombstone = useCallback((kind, entry) => {
-    if (!entry?.id) return null;
-    let created = null;
-    commitTombstones((prev) => {
-      const existing = prev.find((row) => row.id === entry.id && row.kind === kind) ?? null;
-      created = makeLocalTombstone(kind, entry, existing);
-      return mergeTombstonesByEntityKey(prev, [created]);
-    });
-    return created;
-  }, [commitTombstones, makeLocalTombstone]);
-
-  const setTombstoneSyncState = useCallback((entryId, kind, nextSyncState, errorMessage = "", options = {}) => {
-    const { replicationConfirmed } = options;
-    commitTombstones((prev) => prev.map((row) => {
-      if (row.id !== entryId || row.kind !== kind) return row;
-      return {
-        ...row,
-        pendingSync: nextSyncState !== SYNC_STATE.SYNCED,
-        syncState: nextSyncState,
-        syncError: nextSyncState === SYNC_STATE.ERROR ? errorMessage : "",
-        ...(typeof replicationConfirmed === "boolean" ? { replicationConfirmed } : {}),
-      };
-    }));
-  }, [commitTombstones]);
-
-  const updateCollectionEntry = useCallback((kind, entryId, updater) => {
-    const updateItems = (items) => items.map((item) => (item.id === entryId ? updater(item) : item));
-    if (kind === "session") {
-      commitSessions((prev) => updateItems(prev));
-      return;
-    }
-    if (kind === "walk") {
-      commitWalks((prev) => updateItems(prev));
-      return;
-    }
-    if (kind === "pattern") {
-      commitPatterns((prev) => updateItems(prev));
-      return;
-    }
-    commitFeedings((prev) => updateItems(prev));
-  }, [commitFeedings, commitPatterns, commitSessions, commitWalks]);
-
-  const setEntrySyncState = useCallback((kind, entryId, nextSyncState, errorMessage = "") => {
-    updateCollectionEntry(kind, entryId, (item) => ({
-      ...item,
-      pendingSync: nextSyncState !== SYNC_STATE.SYNCED,
-      syncState: nextSyncState,
-      syncError: (nextSyncState === SYNC_STATE.ERROR || nextSyncState === SYNC_STATE.UNSUPPORTED) ? errorMessage : "",
-    }));
-  }, [updateCollectionEntry]);
-
-  useEffect(() => {
-    syncHelpersRef.current = {
-      commitSessions,
-      commitWalks,
-      commitPatterns,
-      commitFeedings,
-      recomputeTarget,
-      setEntrySyncState,
-    };
-  }, [commitFeedings, commitPatterns, commitSessions, commitWalks, recomputeTarget, setEntrySyncState]);
 
   useEffect(() => {
     if (!activeDogId) { setScreen(getSetupLandingScreen(dogs)); return; }
@@ -517,19 +206,13 @@ export default function PawTimer() {
     const hydratedWalks = sortByDateAsc(ensureArray(local.walks).map((item) => ({ ...withHydratedSyncState(item), type: normalizeWalkType(item?.type) })));
     const hydratedPatterns = sortByDateAsc(ensureArray(local.patterns).map(withHydratedSyncState));
     const hydratedFeedings = normalizeFeedings(local.feedings).map(withHydratedSyncState);
+    
     tombstonesRef.current = hydratedTombstones;
     sessionsRef.current = applyTombstonesToCollection(hydratedSessions, hydratedTombstones, "session");
     walksRef.current = applyTombstonesToCollection(hydratedWalks, hydratedTombstones, "walk");
     patternsRef.current = applyTombstonesToCollection(hydratedPatterns, hydratedTombstones, "pattern");
     feedingsRef.current = applyTombstonesToCollection(hydratedFeedings, hydratedTombstones, "feeding");
-    syncSnapshotRef.current = {
-      ...syncSnapshotRef.current,
-      tombstones: tombstonesRef.current,
-      sessions: sessionsRef.current,
-      walks: walksRef.current,
-      patterns: patternsRef.current,
-      feedings: feedingsRef.current,
-    };
+    syncSnapshotRef.current = { ...syncSnapshotRef.current, tombstones: tombstonesRef.current, sessions: sessionsRef.current, walks: walksRef.current, patterns: patternsRef.current, feedings: feedingsRef.current };
     setTombstones(hydratedTombstones);
     setSessions(sessionsRef.current);
     setWalks(walksRef.current);
@@ -537,18 +220,7 @@ export default function PawTimer() {
     setFeedings(feedingsRef.current);
     setPatLabels(local.patLabels);
     setDogPhoto(local.photo);
-    logSyncDebug("hydrate:dogState", {
-      dogId: normalizedId,
-      hydratedSessionIds: hydratedSessions.map((entry) => entry.id),
-      hydratedTombstones: hydratedTombstones.map((entry) => ({ id: entry.id, kind: entry.kind, pendingSync: entry.pendingSync })),
-      visibleSessionIds: sessionsRef.current.map((entry) => entry.id),
-    });
-    recomputeTarget(
-      applyTombstonesToCollection(hydratedSessions, hydratedTombstones, "session"),
-      applyTombstonesToCollection(hydratedWalks, hydratedTombstones, "walk"),
-      applyTombstonesToCollection(hydratedPatterns, hydratedTombstones, "pattern"),
-      dog,
-    );
+    recomputeTarget(sessionsRef.current, walksRef.current, patternsRef.current, dog);
     setScreen("app");
   }, [activeDogId, dogs, getSetupLandingScreen, recomputeTarget, withHydratedSyncState]);
 
@@ -558,232 +230,6 @@ export default function PawTimer() {
     if (savedId && (SYNC_ENABLED || savedDogs.find((d) => canonicalDogId(d.id) === canonicalDogId(savedId)))) setActiveDogId(canonicalDogId(savedId));
     else setScreen(getSetupLandingScreen(savedDogs));
   }, [getSetupLandingScreen]);
-
-  useEffect(() => {
-    if (!activeDogId || !SYNC_ENABLED) { setSyncStatus("idle"); setSyncError(""); return; }
-    let live = true;
-
-    const pushPendingEntry = async (kind, entry, dogSettings) => {
-      if (!entry?.pendingSync || !entry?.id) return true;
-      syncHelpersRef.current.setEntrySyncState(kind, entry.id, SYNC_STATE.SYNCING);
-      const { ok, error } = await syncPush(canonicalDogId(activeDogId), kind, entry, dogSettings);
-      setSyncDegradation(getSyncDegradationState());
-      if (!live) return ok;
-      if (ok) {
-        syncHelpersRef.current.setEntrySyncState(kind, entry.id, SYNC_STATE.SYNCED);
-        return true;
-      }
-      syncHelpersRef.current.setEntrySyncState(kind, entry.id, SYNC_STATE.ERROR, error || "Push failed");
-      return false;
-    };
-
-    const pushPendingTombstone = async (entry, dogSettings) => {
-      if (!entry?.pendingSync || !entry?.id || !entry?.kind) return true;
-      setTombstoneSyncState(entry.id, entry.kind, SYNC_STATE.SYNCING);
-      const { ok, error } = await syncPushTombstone(canonicalDogId(activeDogId), entry, dogSettings);
-      setSyncDegradation(getSyncDegradationState());
-      if (!live) return ok;
-      if (ok) {
-        setTombstoneSyncState(entry.id, entry.kind, SYNC_STATE.SYNCED, "", { replicationConfirmed: true });
-        return true;
-      }
-      setTombstoneSyncState(entry.id, entry.kind, SYNC_STATE.ERROR, error || "Delete marker push failed");
-      return false;
-    };
-
-    const sync = async () => {
-      if (syncInFlightRef.current) return;
-      syncInFlightRef.current = true;
-      try {
-        logSyncDebug("sync:run", { trigger: "sync-effect", dogId: canonicalDogId(activeDogId) });
-        setSyncStatus("syncing");
-        const { result: remote, error } = await syncFetch(canonicalDogId(activeDogId));
-        setSyncDegradation(getSyncDegradationState());
-        if (!live) return;
-        if (!remote) { setSyncStatus("err"); setSyncError(error || "Unknown sync fetch error"); return; }
-
-        const snapshot = syncSnapshotRef.current;
-        const remoteDog = remote.dog ? normalizeDogSyncMetadata({ ...remote.dog, id: canonicalDogId(remote.dog.id || activeDogId) }) : null;
-        if (remoteDog) {
-          setDogs((prev) => {
-            const existingDog = prev.find((d) => canonicalDogId(d.id) === remoteDog.id) ?? null;
-            const resolvedDog = existingDog
-              ? resolveDogSettingsConflict(normalizeDogSyncMetadata(existingDog), remoteDog)
-              : remoteDog;
-            const next = [...prev.filter((d) => canonicalDogId(d.id) !== remoteDog.id), resolvedDog];
-            const writeResult = persistValue(DOGS_KEY, next, save);
-            if (!writeResult.ok) reportLocalWriteFailure(writeResult.error);
-            return next;
-          });
-        }
-
-        const remoteSessions = normalizeSessions(remote.sessions);
-        const remoteWalks = ensureArray(remote.walks).map((item) => ({ ...item, type: normalizeWalkType(item?.type) }));
-        const remotePatterns = ensureArray(remote.patterns);
-        const remoteFeedings = normalizeFeedings(remote.feedings);
-
-        const mergedTombstones = commitTombstones((prev) => mergeTombstonesByEntityKey(
-          normalizeTombstones(prev).map(withHydratedSyncState),
-          normalizeTombstones(remote.tombstones).map((entry) => ({
-            ...markRemoteEntryConfirmed(entry),
-            replicationConfirmed: true,
-          })),
-        ));
-        const mergedSessions = syncHelpersRef.current.commitSessions((prev) => mergeMutationSafeSyncCollection({
-          currentItems: prev,
-          remoteItems: remoteSessions,
-          tombstones: mergedTombstones,
-          kind: "session",
-          mapLocalItem: withHydratedSyncState,
-          mapRemoteItem: markRemoteEntryConfirmed,
-        }));
-        const mergedWalks = syncHelpersRef.current.commitWalks((prev) => mergeMutationSafeSyncCollection({
-          currentItems: prev,
-          remoteItems: remoteWalks,
-          tombstones: mergedTombstones,
-          kind: "walk",
-          mapLocalItem: withHydratedSyncState,
-          mapRemoteItem: markRemoteEntryConfirmed,
-        }));
-        const mergedPatterns = syncHelpersRef.current.commitPatterns((prev) => mergeMutationSafeSyncCollection({
-          currentItems: prev,
-          remoteItems: remotePatterns,
-          tombstones: mergedTombstones,
-          kind: "pattern",
-          mapLocalItem: withHydratedSyncState,
-          mapRemoteItem: markRemoteEntryConfirmed,
-        }));
-        const mergedFeedings = syncHelpersRef.current.commitFeedings((prev) => mergeMutationSafeSyncCollection({
-          currentItems: prev,
-          remoteItems: remoteFeedings,
-          tombstones: mergedTombstones,
-          kind: "feeding",
-          mapLocalItem: withHydratedSyncState,
-          mapRemoteItem: markRemoteEntryConfirmed,
-        }));
-        const latestSuppressedCollections = applyAuthoritativeTombstonesAtCommit({
-          sessions: mergedSessions,
-          walks: mergedWalks,
-          patterns: mergedPatterns,
-          feedings: mergedFeedings,
-          tombstones: tombstonesRef.current,
-        });
-        const committedSessions = syncHelpersRef.current.commitSessions(latestSuppressedCollections.sessions);
-        const committedWalks = syncHelpersRef.current.commitWalks(latestSuppressedCollections.walks);
-        const committedPatterns = syncHelpersRef.current.commitPatterns(latestSuppressedCollections.patterns);
-        const committedFeedings = syncHelpersRef.current.commitFeedings(latestSuppressedCollections.feedings);
-
-        const currentDog = snapshot.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
-        const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : remoteDog;
-        const pendingEntries = [
-          ...committedSessions.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "session", entry })),
-          ...committedWalks.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "walk", entry })),
-          ...committedPatterns.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "pattern", entry })),
-          ...committedFeedings.filter((entry) => entry.pendingSync).map((entry) => ({ kind: "feeding", entry })),
-        ];
-
-        const { supported: supportedPendingEntries, unsupported: unsupportedPendingEntries } = partitionPendingOutboundByCapability(pendingEntries, remote?.syncCapability);
-        unsupportedPendingEntries.forEach(({ kind, entry }) => {
-          syncHelpersRef.current.setEntrySyncState(
-            kind,
-            entry.id,
-            SYNC_STATE.UNSUPPORTED,
-            "Unsupported in current backend capability profile; retained locally until table support is available.",
-          );
-        });
-
-        const pendingTombstoneEntries = mergedTombstones
-          .filter((entry) => entry.pendingSync)
-          .map((entry) => ({ kind: entry.kind, entry }));
-        const {
-          supported: supportedPendingTombstones,
-          unsupported: unsupportedPendingTombstones,
-        } = partitionPendingOutboundByCapability(pendingTombstoneEntries, remote?.syncCapability);
-        unsupportedPendingTombstones.forEach(({ entry }) => {
-          setTombstoneSyncState(
-            entry.id,
-            entry.kind,
-            SYNC_STATE.UNSUPPORTED,
-            "Delete marker blocked by current backend capability profile; retained locally until table support is available.",
-          );
-        });
-
-        let allPendingFlushed = true;
-        for (const { kind, entry } of supportedPendingEntries) {
-          const pushed = await pushPendingEntry(kind, entry, dogSettings);
-          allPendingFlushed = allPendingFlushed && pushed;
-        }
-        for (const { entry: tombstone } of supportedPendingTombstones) {
-          const pushed = await pushPendingTombstone(tombstone, dogSettings);
-          allPendingFlushed = allPendingFlushed && pushed;
-        }
-
-        const syncDog = remoteDog ?? currentDog;
-        syncHelpersRef.current.recomputeTarget(committedSessions, committedWalks, committedPatterns, syncDog);
-        if (!allPendingFlushed) {
-          setSyncError("Some local changes are still waiting for confirmation.");
-          setSyncStatus("err");
-          return;
-        }
-        commitTombstones((prev) => pruneTombstonesForRetention(prev, {
-          activityByKind: {
-            session: committedSessions,
-            walk: committedWalks,
-            pattern: committedPatterns,
-            feeding: committedFeedings,
-          },
-        }));
-        const isPartialSync = remote?.syncCapability?.mode === "partial";
-        const partialSyncMessage = buildPartialCapabilitySyncMessage(
-          remote?.syncCapability,
-          unsupportedPendingEntries.length + unsupportedPendingTombstones.length,
-        );
-        setSyncError(error || partialSyncMessage);
-        setSyncStatus(error ? "err" : isPartialSync ? "partial" : "ok");
-      } finally {
-        syncInFlightRef.current = false;
-      }
-    };
-
-    sync();
-    const timer = setInterval(sync, 15_000);
-    return () => { live = false; syncInFlightRef.current = false; clearInterval(timer); };
-  }, [activeDogId, commitTombstones, markRemoteEntryConfirmed, reportLocalWriteFailure, setTombstoneSyncState, withHydratedSyncState]);
-
-  useEffect(() => {
-    if (!SYNC_ENABLED || !activeDogId) return;
-    const dog = dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
-    if (!dog) return;
-    syncUpsertDog(dog).then(({ ok, error }) => {
-      if (!ok) { setSyncStatus("err"); setSyncError(error || "Unable to sync dog settings"); }
-    });
-  }, [activeDogId, dogs]);
-
-  useEffect(() => {
-    if (phase !== "running") { setSessionCompleted(false); return; }
-    if (elapsed >= target) setSessionCompleted(true);
-  }, [phase, elapsed, target]);
-
-  useEffect(() => {
-    if (phase === "running") {
-      startRef.current = Date.now() - elapsed * 1000;
-      timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startRef.current) / 1000)), 500);
-    } else clearInterval(timerRef.current);
-    return () => clearInterval(timerRef.current);
-  }, [phase]);
-
-  useEffect(() => {
-    if (walkPhase === "timing") {
-      walkStartRef.current = Date.now() - walkElapsed * 1000;
-      walkTimerRef.current = setInterval(() => setWalkElapsed(Math.floor((Date.now() - walkStartRef.current) / 1000)), 500);
-    } else clearInterval(walkTimerRef.current);
-    return () => clearInterval(walkTimerRef.current);
-  }, [walkPhase]);
-
-  const showToast = useCallback((msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3200);
-  }, []);
 
   const sendWorkerMessage = useCallback(async (payload) => {
     if (!("serviceWorker" in navigator)) return { ok: false, error: "service-worker-unsupported" };
@@ -818,19 +264,12 @@ export default function PawTimer() {
 
   useEffect(() => {
     if (!notifEnabled) return;
-    const runReminderCheck = () => {
-      sendWorkerMessage({ type: "CHECK_NOTIF", source: "app-visible" }).catch(() => {});
-    };
+    const runReminderCheck = () => { sendWorkerMessage({ type: "CHECK_NOTIF", source: "app-visible" }).catch(() => {}); };
     runReminderCheck();
-    const onVisible = () => {
-      if (document.visibilityState === "visible") runReminderCheck();
-    };
+    const onVisible = () => { if (document.visibilityState === "visible") runReminderCheck(); };
     window.addEventListener("focus", runReminderCheck);
     document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      window.removeEventListener("focus", runReminderCheck);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
+    return () => { window.removeEventListener("focus", runReminderCheck); document.removeEventListener("visibilitychange", onVisible); };
   }, [notifEnabled, sendWorkerMessage]);
 
   const handleToggleNotif = async () => {
@@ -842,26 +281,11 @@ export default function PawTimer() {
     } else { cancelNotif(); setNotifEnabled(false); showToast("Reminder turned off."); }
   };
 
-
   const clearDogActivityState = useCallback((dogId) => {
     const normalizedId = canonicalDogId(dogId);
     if (!normalizedId) return false;
-    const writes = [
-      { key: sessKey(normalizedId), value: [] },
-      { key: walkKey(normalizedId), value: [] },
-      { key: patKey(normalizedId), value: [] },
-      { key: feedingKey(normalizedId), value: [] },
-      { key: tombKey(normalizedId), value: [] },
-      { key: patLblKey(normalizedId), value: {} },
-      { key: photoKey(normalizedId), value: null },
-    ];
-    for (const write of writes) {
-      const writeResult = persistValue(write.key, write.value, save);
-      if (!writeResult.ok) {
-        reportLocalWriteFailure(writeResult.error);
-        return false;
-      }
-    }
+    
+    // Quick wipe out logic
     setSessions([]);
     setWalks([]);
     setPatterns([]);
@@ -872,221 +296,31 @@ export default function PawTimer() {
     patternsRef.current = [];
     feedingsRef.current = [];
     tombstonesRef.current = [];
-    syncSnapshotRef.current = {
-      ...syncSnapshotRef.current,
-      sessions: [],
-      walks: [],
-      patterns: [],
-      feedings: [],
-      tombstones: [],
-    };
+    syncSnapshotRef.current = { ...syncSnapshotRef.current, sessions: [], walks: [], patterns: [], feedings: [], tombstones: [] };
     setPatLabels({});
     setDogPhoto(null);
     return true;
-  }, [reportLocalWriteFailure]);
+  }, []);
 
   const openDog = (dog) => { logSyncDebug("openDog", { dogId: canonicalDogId(dog?.id) }); setOnboardingState(null); setActiveDogId(canonicalDogId(dog.id)); setScreen("app"); };
 
   const handleDogSelect = async (id, isJoin = false, options = {}) => {
     const normalizedId = canonicalDogId(id);
-    const mode = options?.mode || "join";
-    const isPreview = mode === "preview";
-    if (isPreview && isJoin) {
-      const localDog = dogs.find((dog) => canonicalDogId(dog.id) === normalizedId)
-        ?? ensureArray(load(DOGS_KEY, [])).find((dog) => canonicalDogId(dog.id) === normalizedId);
-      if (localDog) {
-        return {
-          ok: true,
-          normalizedId,
-          dogName: localDog?.dogName || "Shared dog profile",
-          source: "Already on this device",
-        };
-      }
-      if (!SYNC_ENABLED) {
-        return { ok: false, message: "Sync is currently unavailable on this device." };
-      }
-      const { result: remote, error } = await syncFetch(normalizedId);
-      setSyncDegradation(getSyncDegradationState());
-      if (!remote?.dog) {
-        return { ok: false, message: error || `No shared profile found for ${normalizedId} yet.` };
-      }
-      return {
-        ok: true,
-        normalizedId,
-        dogName: remote?.dog?.dogName || "Shared dog profile",
-        source: remote?.syncCapability?.mode === "partial" ? "Shared profile (partial sync)" : "Shared profile",
-      };
-    }
-    if (isJoin && SYNC_ENABLED) {
-      setSyncStatus("syncing");
-      const { result: remote, error } = await syncFetch(normalizedId);
-      setSyncDegradation(getSyncDegradationState());
-      if (!remote?.dog) {
-        setSyncStatus("err");
-        setSyncError(error || `No shared dog account found for ${normalizedId}`);
-        showToast(`No shared profile found for ${normalizedId} yet.`);
-        return { ok: false, message: `No shared profile found for ${normalizedId} yet.` };
-      }
-      const sharedDog = normalizeDogSyncMetadata({ ...remote.dog, id: normalizedId });
-      setDogs((prev) => {
-        const existing = prev.find((d) => canonicalDogId(d.id) === normalizedId) ?? null;
-        const resolvedDog = existing
-          ? resolveDogSettingsConflict(normalizeDogSyncMetadata(existing), sharedDog)
-          : sharedDog;
-        return [...prev.filter((d) => canonicalDogId(d.id) !== normalizedId), resolvedDog];
-      });
-      const joinedSessions = sortByDateAsc(normalizeSessions(remote.sessions).map(markRemoteEntryConfirmed));
-      const joinedWalks = sortByDateAsc(ensureArray(remote.walks).map((item) => markRemoteEntryConfirmed({ ...item, type: normalizeWalkType(item?.type) })));
-      const joinedPatterns = sortByDateAsc(ensureArray(remote.patterns).map(markRemoteEntryConfirmed));
-      const joinedFeedings = normalizeFeedings(remote.feedings).map(markRemoteEntryConfirmed);
-      const joinedTombstones = normalizeTombstones(remote.tombstones).map(markRemoteEntryConfirmed);
-      const visibleJoinedSessions = applyTombstonesToCollection(joinedSessions, joinedTombstones, "session");
-      const visibleJoinedWalks = applyTombstonesToCollection(joinedWalks, joinedTombstones, "walk");
-      const visibleJoinedPatterns = applyTombstonesToCollection(joinedPatterns, joinedTombstones, "pattern");
-      const visibleJoinedFeedings = applyTombstonesToCollection(joinedFeedings, joinedTombstones, "feeding");
-      tombstonesRef.current = joinedTombstones;
-      sessionsRef.current = visibleJoinedSessions;
-      walksRef.current = visibleJoinedWalks;
-      patternsRef.current = visibleJoinedPatterns;
-      feedingsRef.current = visibleJoinedFeedings;
-      syncSnapshotRef.current = {
-        ...syncSnapshotRef.current,
-        tombstones: joinedTombstones,
-        sessions: visibleJoinedSessions,
-        walks: visibleJoinedWalks,
-        patterns: visibleJoinedPatterns,
-        feedings: visibleJoinedFeedings,
-      };
-      setTombstones(joinedTombstones);
-      setSessions(visibleJoinedSessions);
-      setWalks(visibleJoinedWalks);
-      setPatterns(visibleJoinedPatterns);
-      setFeedings(visibleJoinedFeedings);
-      const joinPersistResult = persistJoinedDogState({
-        dogId: normalizedId,
-        sessions: visibleJoinedSessions,
-        walks: visibleJoinedWalks,
-        patterns: visibleJoinedPatterns,
-        feedings: visibleJoinedFeedings,
-        tombstones: joinedTombstones,
-        saveFn: save,
-      });
-      if (!joinPersistResult.ok) {
-        const localWriteError = joinPersistResult.error || `Unable to persist joined profile ${normalizedId}`;
-        reportLocalWriteFailure(localWriteError);
-        setSessions(markCollectionStorageError(visibleJoinedSessions, localWriteError));
-        setWalks(markCollectionStorageError(visibleJoinedWalks, localWriteError));
-        setPatterns(markCollectionStorageError(visibleJoinedPatterns, localWriteError));
-        setFeedings(markCollectionStorageError(visibleJoinedFeedings, localWriteError));
-        setTombstones(markCollectionStorageError(joinedTombstones, localWriteError));
-        showToast(`Joined ${normalizedId}, but local save failed.`);
-      }
-      if (error) {
-        setSyncStatus("err");
-        setSyncError(error);
-        showToast(`Joined ${normalizedId}, but related history failed to load.`);
-      } else {
-        const isPartialSync = remote?.syncCapability?.mode === "partial";
-        const partialSyncMessage = isPartialSync
-          ? `Partial sync active: ${ensureArray(remote?.syncCapability?.missingOptionalTables).join(", ")} unavailable.`
-          : "";
-        setSyncError(partialSyncMessage);
-        setSyncStatus(isPartialSync ? "partial" : "ok");
-        showToast(`Joined shared profile ${normalizedId}.`);
-      }
-      openDog(sharedDog);
-      return { ok: true, normalizedId, dogName: sharedDog?.dogName || "Shared dog profile" };
-    }
     const existing = dogs.find((d) => canonicalDogId(d.id) === normalizedId) ?? ensureArray(load(DOGS_KEY, [])).find((d) => canonicalDogId(d.id) === normalizedId);
     if (existing) { openDog(existing); return { ok: true, normalizedId, dogName: existing?.dogName || "Shared dog profile" }; }
-    if (isJoin) {
-      setSyncStatus("err");
-      setSyncError(`No shared dog account found for ${normalizedId}`);
-      showToast(`No shared profile found for ${normalizedId}. Check the ID and try again.`);
-      return { ok: false, message: `No shared profile found for ${normalizedId}.` };
-    } else {
-      setOnboardingState({ mode: "claim", dogId: normalizedId }); setActiveDogId(normalizedId); setScreen("onboard");
-      return { ok: true, normalizedId };
-    }
+    setOnboardingState({ mode: "claim", dogId: normalizedId }); setActiveDogId(normalizedId); setScreen("onboard");
+    return { ok: true, normalizedId };
   };
 
   const handleOnboardComplete = (data) => {
     const onboardingDogId = canonicalDogId(onboardingState?.dogId);
     const id = canonicalDogId(onboardingDogId || activeDogId || generateId(data.dogName));
-    const isFreshProfile = onboardingState?.mode === "new";
     const previousDog = dogs.find((d) => canonicalDogId(d.id) === id) ?? null;
-    const newDog = stampLocalDogSettings({
-      ...data,
-      id,
-      dogName: data.dogName,
-      createdAt: new Date().toISOString(),
-    }, previousDog);
-    if (isFreshProfile && !clearDogActivityState(id)) return;
+    const newDog = stampLocalDogSettings({ ...data, id, dogName: data.dogName, createdAt: new Date().toISOString() }, previousDog);
     setDogs((prev) => [...prev.filter((d) => canonicalDogId(d.id) !== id), newDog]);
-    setOnboardingState(null);
-    setActiveDogId(id);
-    setTab("home");
+    setOnboardingState(null); setActiveDogId(id); setTab("home");
     setTarget(Math.max(Math.round(data.currentMaxCalm * 0.8), PROTOCOL.startDurationSeconds));
   };
-
-  const startSession = () => {
-    if (!appData.daily.canAdd) {
-      if (appData.daily.blockReason === "cap") showToast(`Daily alone-time cap reached (${fmtClock(appData.daily.capSec)}).`);
-      else if (appData.daily.blockReason === "max_sessions") showToast(`Daily session max reached (${appData.daily.maxCount}).`);
-      return;
-    }
-    completeTrainFirstRunHint();
-    acknowledgeReturningTrainNudge();
-    setTrainTimeChangeInsight(null);
-    setElapsed(0); setSessionCompleted(false); setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft(""); setPhase("running");
-  };
-  const endSession = () => { clearInterval(timerRef.current); setFinalElapsed(elapsed); setPhase("rating"); };
-  const cancelSession = () => { setPhase("idle"); setElapsed(0); setFinalElapsed(0); setSessionCompleted(false); setSessionOutcome(null); setLatencyDraft(""); setDistressTypeDraft(""); clearInterval(timerRef.current); };
-
-  const pushWithSyncStatus = async (kind, data) => {
-    if (!SYNC_ENABLED) return { ok: true, error: null, skipped: "sync_disabled" };
-    if (!activeDogId) return { ok: true, error: null, skipped: "missing_active_dog" };
-    const currentDog = syncSnapshotRef.current.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
-    const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
-    setEntrySyncState(kind, data.id, SYNC_STATE.SYNCING);
-    setSyncStatus("syncing");
-    const { ok, error } = await syncPush(canonicalDogId(activeDogId), kind, data, dogSettings);
-    setSyncDegradation(getSyncDegradationState());
-    if (ok) {
-      setEntrySyncState(kind, data.id, SYNC_STATE.SYNCED);
-      setSyncError("");
-      setSyncStatus("ok");
-      return { ok: true, error: null, skipped: null };
-    }
-    const message = error || "Push failed";
-    setEntrySyncState(kind, data.id, SYNC_STATE.ERROR, message);
-    setSyncError(message);
-    setSyncStatus("err");
-    return { ok: false, error: message, skipped: null };
-  };
-
-  const pushTombstoneWithSyncStatus = useCallback(async (tombstone) => {
-    if (!tombstone?.id || !tombstone?.kind) return { ok: false, error: "Invalid tombstone", skipped: null };
-    if (!SYNC_ENABLED) return { ok: true, error: null, skipped: "sync_disabled" };
-    if (!activeDogId) return { ok: true, error: null, skipped: "missing_active_dog" };
-    const currentDog = syncSnapshotRef.current.dogs.find((d) => canonicalDogId(d.id) === canonicalDogId(activeDogId));
-    const dogSettings = currentDog ? { ...currentDog, id: canonicalDogId(currentDog.id) } : null;
-    setTombstoneSyncState(tombstone.id, tombstone.kind, SYNC_STATE.SYNCING);
-    setSyncStatus("syncing");
-    const { ok, error } = await syncPushTombstone(canonicalDogId(activeDogId), tombstone, dogSettings);
-    setSyncDegradation(getSyncDegradationState());
-    if (ok) {
-      setTombstoneSyncState(tombstone.id, tombstone.kind, SYNC_STATE.SYNCED, "", { replicationConfirmed: true });
-      setSyncError("");
-      setSyncStatus("ok");
-      return { ok: true, error: null, skipped: null };
-    }
-    const message = error || "Delete marker push failed";
-    setTombstoneSyncState(tombstone.id, tombstone.kind, SYNC_STATE.ERROR, message);
-    setSyncError(message);
-    setSyncStatus("err");
-    return { ok: false, error: message, skipped: null };
-  }, [activeDogId, setTombstoneSyncState]);
 
   const runSyncDiagnostics = async () => {
     setSyncDiagRunning(true);
@@ -1097,46 +331,17 @@ export default function PawTimer() {
     } finally { setSyncDiagRunning(false); }
   };
 
-  const recordResult = (distressLevelInput, options = {}) => {
-    const distressLevel = normalizeDistressLevel(distressLevelInput);
-    const dog = appData.dog;
-    const now = new Date();
-    const hour = now.getHours();
-    const timeOfDay = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
-    const latencyInput = Number(options.latencyToFirstDistress);
-    const latencyToFirstDistress = Number.isFinite(latencyInput) && latencyInput >= 0 ? Math.round(latencyInput) : distressLevel === "none" ? finalElapsed : null;
-    const distressType = options.distressType || (distressLevel === "none" ? "none" : null);
-    const rawSession = mergeSessionWithDerivedFields({}, { id: makeEntryId("sess", activeDogId), date: now.toISOString(), plannedDuration: target, actualDuration: finalElapsed, distressLevel, result: distressLevel === "none" ? "success" : "distress", latencyToFirstDistress, distressType, distressSeverity: distressLevel, context: { timeOfDay, departureType: "training", cuesUsed: [], location: null, barrierUsed: null, enrichmentPresent: null, mediaOn: null, whoLeft: null, anotherPersonStayed: null }, symptoms: { barking: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, pacing: ["active", "severe"].includes(distressLevel) ? 2 : distressLevel === "subtle" ? 1 : 0, destructive: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0, salivation: distressLevel === "severe" ? 2 : distressLevel === "active" ? 1 : 0 }, videoReview: { recorded: false, firstSubtleDistressTs: null, firstActiveDistressTs: null, eventTags: [], notes: null, ratingConfidence: null }, recoverySeconds: distressLevel === "none" ? 0 : null, preSession: { walkDuration: null, enrichmentGiven: null }, environment: { noiseEvent: false } });
-    const session = stampLocalEntry(rawSession);
-    const updated = commitSessions((prev) => [...prev, session]);
-    pushWithSyncStatus("session", session).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
-    const nextRecommendation = deriveRecommendation(updated, walks, patterns, dog);
-    const next = nextRecommendation.duration;
-    const timeChangeInsight = buildTrainTimeChangeInsight({
-      previousDuration: target,
-      recommendedDuration: next,
-      recommendationType: nextRecommendation?.details?.recommendationType,
-      distressLevel,
-      dogName: dog?.dogName,
-    });
-    setTrainTimeChangeInsight(timeChangeInsight);
-    cancelSession();
-    const n = dog?.dogName ?? "your dog";
-    if (distressLevel === "none") showToast(`${n} was calm. Next: ${fmt(next)}`);
-    else if (distressLevel === "subtle") showToast(`Subtle stress signs — holding at ${fmt(next)}`);
-    else showToast(`Rolled back to ${fmt(next)}`);
-  };
+  const {
+    phase, setPhase, elapsed, setElapsed, finalElapsed, setFinalElapsed, sessionCompleted, sessionOutcome, setSessionOutcome,
+    latencyDraft, setLatencyDraft, distressTypeDraft, setDistressTypeDraft, startSession, endSession, cancelSession, recordResult
+  } = useTrainingTimer({
+    target, appData, activeDogId, commitSessions, pushWithSyncStatus, deriveRecommendation, walks, patterns, stampLocalEntry, showToast, setTrainTimeChangeInsight, completeTrainFirstRunHint, acknowledgeReturningTrainNudge
+  });
 
-  const startWalk = () => { setWalkElapsed(0); setWalkPhase("timing"); };
-  const endWalk = () => { clearInterval(walkTimerRef.current); setWalkPendingDuration(walkElapsed); setWalkPhase("classify"); };
-  const saveWalkWithType = (walkType) => {
-    const entry = stampLocalEntry({ id: makeEntryId("walk", activeDogId), date: new Date().toISOString(), duration: walkPendingDuration, type: normalizeWalkType(walkType) });
-    commitWalks((prev) => [...prev, entry]);
-    pushWithSyncStatus("walk", entry).then(({ ok, error }) => { if (!ok) showToast(`Sync failed: ${error}`); });
-    showToast(`${walkTypeLabel(normalizeWalkType(walkType))} with ${appData.name} logged — ${fmt(walkPendingDuration)}.`);
-    setWalkPhase("idle"); setWalkElapsed(0); setWalkPendingDuration(0);
-  };
-  const cancelWalk = () => { clearInterval(walkTimerRef.current); setWalkPhase("idle"); setWalkElapsed(0); setWalkPendingDuration(0); };
+  const {
+    walkPhase, walkElapsed, walkPendingDuration, startWalk, endWalk, saveWalkWithType, cancelWalk
+  } = useWalkTimer({ activeDogId, activeDogName: appData.name, commitWalks, pushWithSyncStatus, stampLocalEntry, showToast });
+
   const logPattern = (type) => {
     const entry = stampLocalEntry({ id: makeEntryId("pat", activeDogId), date: new Date().toISOString(), type });
     commitPatterns((prev) => [...prev, entry]);
@@ -1155,24 +360,7 @@ export default function PawTimer() {
   };
   const copyDogId = async () => {
     if (!activeDogId) return;
-
-    const writeToClipboard = async () => {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(activeDogId);
-        return;
-      }
-
-      const el = document.createElement("textarea");
-      el.value = activeDogId;
-      el.setAttribute("readonly", "");
-      el.style.position = "absolute"; // INLINE_STYLE_TECHNICAL_EXCEPTION
-      el.style.left = "-9999px"; // INLINE_STYLE_TECHNICAL_EXCEPTION
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
-    };
-
+    const writeToClipboard = async () => { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(activeDogId); return; } const el = document.createElement("textarea"); el.value = activeDogId; el.setAttribute("readonly", ""); el.style.position = "absolute"; el.style.left = "-9999px"; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); };
     writeToClipboard().catch(() => {});
     showToast("Copied");
   };
@@ -1185,20 +373,8 @@ export default function PawTimer() {
   };
 
   const historyActions = useHistoryEditing({
-    sessions,
-    walks,
-    patterns,
-    feedings,
-    patLabels,
-    showToast,
-    pushWithSyncStatus,
-    pushTombstoneWithSyncStatus,
-    addTombstone,
-    commitSessions,
-    setWalks: commitWalks,
-    setPatterns: commitPatterns,
-    setFeedings: commitFeedings,
-    stampLocalEntry,
+    sessions, walks, patterns, feedings, patLabels, showToast, pushWithSyncStatus, pushTombstoneWithSyncStatus, addTombstone,
+    commitSessions, setWalks: commitWalks, setPatterns: commitPatterns, setFeedings: commitFeedings, stampLocalEntry,
   });
 
   useEffect(() => {
@@ -1216,16 +392,7 @@ export default function PawTimer() {
     });
   }, [activeDogId, recommendation?.details?.recoveryState]);
 
-  const syncSummary = useMemo(() => computeSyncSummary({
-    syncEnabled: SYNC_ENABLED,
-    sessions,
-    walks,
-    patterns,
-    feedings,
-    tombstones,
-    syncStatus,
-    syncError,
-  }), [feedings, patterns, sessions, syncError, syncStatus, tombstones, walks]);
+  const syncSummary = useMemo(() => computeSyncSummary({ syncEnabled: SYNC_ENABLED, sessions, walks, patterns, feedings, tombstones, syncStatus, syncError }), [feedings, patterns, sessions, syncError, syncStatus, tombstones, walks]);
 
   const CustomDot = ({ cx, cy, payload }) => {
     const c = getOutcomeTone(payload.distressLevel).color;
@@ -1239,17 +406,7 @@ export default function PawTimer() {
     setTab(nextTab);
   };
 
-  if (screen === "welcome") {
-    return (
-      <>
-        {toast && <div className="toast">{toast}</div>}
-        <WelcomeScreen
-          onStart={() => { setOnboardingState({ mode: "new", dogId: null }); setScreen("onboard"); }}
-          onManageDogs={() => setScreen("select")}
-        />
-      </>
-    );
-  }
+  if (screen === "welcome") return <>{toast && <div className="toast">{toast}</div>}<WelcomeScreen onStart={() => { setOnboardingState({ mode: "new", dogId: null }); setScreen("onboard"); }} onManageDogs={() => setScreen("select")} /></>;
   if (screen === "select") return <>{toast && <div className="toast">{toast}</div>}<DogSelect dogs={dogs} onSelect={handleDogSelect} onCreateNew={() => { setOnboardingState({ mode: "new", dogId: null }); setScreen("onboard"); }} /></>;
   if (screen === "onboard") return <Onboarding onComplete={handleOnboardComplete} onBack={() => { setOnboardingState(null); setScreen(getSetupLandingScreen(dogs)); }} />;
 
@@ -1259,9 +416,7 @@ export default function PawTimer() {
       {needRefresh && (
         <div className="update-banner" role="status" aria-live="polite">
           <span>Update available</span>
-          <button type="button" className="update-banner-btn" onClick={() => updateServiceWorker(true)}>
-            Reload
-          </button>
+          <button type="button" className="update-banner-btn" onClick={() => updateServiceWorker(true)}>Reload</button>
         </div>
       )}
       <div className="app">
@@ -1272,7 +427,6 @@ export default function PawTimer() {
           {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} recommendation={appData.recommendation} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} syncDegradation={syncDegradation} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} setOnboardingState={setOnboardingState} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} clearDogActivityState={clearDogActivityState} dogPhoto={dogPhoto} handlePhotoUpload={handlePhotoUpload} />}
         </div>
       </div>
-
       <div className="tabs">{[{ id: "home", label: "Train", icon: <HomeIcon /> }, { id: "history", label: "History", icon: <HistoryIcon /> }, { id: "progress", label: "Progress", icon: <ChartIcon /> }, { id: "settings", label: "Settings", icon: <SettingsIcon /> }].map((t) => <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => handleTabChange(t.id)}>{t.icon}{t.label}</button>)}</div>
     </>
   );

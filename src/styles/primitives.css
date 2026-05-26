@@ -67,7 +67,7 @@
   justify-content: center;
   gap: var(--space-control-gap);
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
+  transition: transform 0.2s var(--ease-spring-bouncy), 
               background-color 0.2s ease, 
               border-color 0.2s ease, 
               box-shadow 0.2s ease !important;
@@ -103,7 +103,7 @@
 
 /* ── СТЕКЛЯННЫЕ КАРТОЧКИ (BENTO-SURFACES) ── */
 .pt-surface-card {
-  border-radius: 24px !important; /* Наш стандарт скругления крупных блоков */
+  border-radius: var(--radius-lg) !important;
   border: 1px solid rgba(255, 255, 255, 0.45) !important;
   background: rgba(255, 255, 255, 0.35) !important;
   backdrop-filter: blur(16px);
@@ -133,7 +133,7 @@
 
 /* ── АККОРДЕОНЫ / РАСКРЫВАЮЩИЕСЯ СПИСКИ ── */
 .pt-collapsible {
-  border-radius: 24px !important;
+  border-radius: var(--radius-lg) !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
   background: rgba(255, 255, 255, 0.25) !important;
   backdrop-filter: blur(12px);
@@ -199,12 +199,12 @@
   place-items: center;
   gap: 2px;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), 
+  transition: transform 0.2s var(--ease-spring-bouncy), 
               background-color 0.2s ease, 
               color 0.2s ease !important;
 }
 
-.pt-bottom-nav__item:active { transform: scale(0.92); } /* Упругий тап по табу */
+.pt-bottom-nav__item:active { transform: scale(0.9); } /* Упругий тап по табу */
 
 .pt-bottom-nav__item.is-active {
   color: var(--brown) !important;
@@ -258,7 +258,7 @@
   border-radius: 50%;
   background: #ffffff !important;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1) !important;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease !important;
+  transition: transform 0.25s var(--ease-spring-bouncy), background-color 0.2s ease !important;
 }
 
 .pt-toggle__control:checked + .pt-toggle__track {
@@ -389,7 +389,7 @@
 /* ── ПУСТЫЕ СОСТОЯНИЯ (EMPTY STATES) ── */
 .pt-empty-state {
   border: 1.5px dashed rgba(255, 255, 255, 0.6) !important;
-  border-radius: 24px !important;
+  border-radius: var(--radius-lg) !important;
   background: rgba(255, 255, 255, 0.2) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -412,6 +412,18 @@
   max-width: 42ch;
   font-size: var(--type-body-size);
   line-height: var(--type-body-line);
+}
+
+/* ── АНИМАЦИИ (DOG VIBE) ── */
+@keyframes tailWag {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-15deg); }
+}
+
+.anim-wag {
+  animation: tailWag 0.6s var(--ease-spring-gentle) infinite;
+  transform-origin: bottom center;
 }
 
 /* Accessibility */

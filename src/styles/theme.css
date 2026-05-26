@@ -123,9 +123,10 @@ select:focus-visible {
 .surface-card,
 [class*="surface-card"],
 .glass-panel {
-  background: var(--neu-base) !important;
-  border: none !important;
-  box-shadow: var(--neu-shadow-out) !important;
+  background: var(--surface-card-bg, var(--surf)) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
+  border-radius: var(--radius-md);
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }

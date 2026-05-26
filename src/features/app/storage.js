@@ -1346,3 +1346,58 @@ export const generateId = (name) => {
   const n = Math.floor(1000 + Math.random() * 9000);
   return `${prefix}-${n}`;
 };
+
+export const SYNC_STATE = {
+  LOCAL: "local",
+  SYNCING: "syncing",
+  SYNCED: "synced",
+  ERROR: "error",
+  UNSUPPORTED: "unsupported",
+};
+
+export function markRemoteEntryConfirmed(entry) {
+  return {
+    ...entry,
+    pendingSync: false,
+    syncState: SYNC_STATE.SYNCED,
+    syncError: "",
+  };
+}
+
+export function stampLocalEntry(entry, previousEntry = null, syncState = SYNC_STATE.LOCAL, syncErrorMessage = "") {
+  const updatedAt = new Date().toISOString();
+  const previousRevision = Number.isFinite(previousEntry?.revision)
+    ? previousEntry.revision
+    : Number.isFinite(entry?.revision)
+      ? entry.revision
+      : 0;
+  return {
+    ...previousEntry,
+    ...entry,
+    updatedAt,
+    revision: previousRevision + 1,
+    pendingSync: syncState !== SYNC_STATE.SYNCED,
+    syncState,
+    syncError: syncState === SYNC_STATE.ERROR ? syncErrorMessage : "",
+  };
+}
+
+export function makeLocalTombstone(kind, entry, previousTombstone = null, syncState = SYNC_STATE.LOCAL, syncErrorMessage = "") {
+  const deletedAt = new Date().toISOString();
+  const previousRevision = Number.isFinite(previousTombstone?.revision)
+    ? previousTombstone.revision
+    : Number.isFinite(entry?.revision)
+      ? entry.revision
+      : 0;
+  return {
+    id: String(entry?.id || ""),
+    kind,
+    deletedAt,
+    updatedAt: deletedAt,
+    revision: previousRevision + 1,
+    replicationConfirmed: false,
+    pendingSync: syncState !== SYNC_STATE.SYNCED,
+    syncState,
+    syncError: syncState === SYNC_STATE.ERROR ? syncErrorMessage : "",
+  };
+}
