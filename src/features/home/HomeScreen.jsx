@@ -5,7 +5,12 @@ import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToda
 import { Img, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
 
-export default function HomeScreen(props) {
+import { useApp } from "../app/AppContext";
+import { FeedingModal } from "./FeedingModal";
+import { WalkModal } from "./WalkModal";
+import { PatternModal } from "./PatternModal";
+
+export default function HomeScreen() {
   const {
     name,
     sessions,
@@ -34,34 +39,17 @@ export default function HomeScreen(props) {
     pattern,
     walkPhase,
     startWalk,
-    cancelWalk,
-    walkElapsed,
-    endWalk,
-    walkPendingDuration,
-    saveWalkWithType,
-    patOpen,
     setPatOpen,
-    patReminderText,
-    logPattern,
-    patLabels,
-    patterns,
     feedings,
-    feedingOpen,
     openFeedingForm,
-    feedingDraft,
-    setFeedingDraft,
-    cancelFeedingForm,
-    saveFeeding,
     dismissTrainFirstRunHint,
     showTrainFirstRunHint,
     trainTimeChangeInsight,
     returningTrainNudge,
     dismissReturningTrainNudge,
-    openHistory,
-    openProgress,
     dogPhoto,
     handlePhotoUpload,
-  } = props;
+  } = useApp();
   const target = recommendation?.duration ?? 0;
   const [todayOpen, setTodayOpen] = useState(false);
   const todaySessions = sessions.filter((s) => isToday(s.date));
@@ -220,130 +208,9 @@ export default function HomeScreen(props) {
           </div>
         </section>
 
-        {(walkPhase !== "idle" || patOpen) && (
-          <ViewportModal open onClose={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }}>
-            <div className="quick-modal-card modal-card modal-card--dialog-md modal-card--sheet quick-modal-card--sheet">
-              <div className="history-session-sheet-grabber" aria-hidden="true" />
-              <div className="quick-modal-head">
-                <div className="quick-modal-title">{walkPhase !== "idle" ? "Log walk" : "Log pattern break"}</div>
-                <ModalCloseButton onClick={() => { if (walkPhase !== "idle") cancelWalk(); if (patOpen) setPatOpen(false); }} />
-              </div>
-
-              {walkPhase !== "idle" && walkHint.isVisible && (
-                <ContextHint
-                  title="Why track walks?"
-                  body="Physical and mental exercise impacts your dog's ability to settle. Logging walks helps you see this correlation."
-                  action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={walkHint.dismiss}>Got it</button>}
-                  className="mb-4"
-                />
-              )}
-
-              {patOpen && patternHint.isVisible && (
-                <ContextHint
-                  title="What is a pattern break?"
-                  body="Dogs learn your departure cues (keys, coat). Breaking the pattern means doing the cue but not leaving, which desensitizes them to the trigger."
-                  action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={patternHint.dismiss}>Got it</button>}
-                  className="mb-4"
-                />
-              )}
-
-              {walkPhase === "timing" && (
-                <div className="walk-timer-banner">
-                  <div className="walk-timer-left">
-                    <div className="walk-timer-elapsed">{fmt(walkElapsed)}</div>
-                    <div className="walk-timer-lbl">Walk in progress…</div>
-                  </div>
-                  <div className="walk-timer-btns">
-                    <button className="walk-cancel-btn button-base button-ghost button--md button--pill" onClick={cancelWalk}>Cancel</button>
-                    <button className="walk-end-btn button-base button-primary button--md button--pill" onClick={endWalk}>End Walk</button>
-                  </div>
-                </div>
-              )}
-
-              {walkPhase === "classify" && (
-                <div className="walk-type-panel">
-                  <div className="walk-type-title">Classify this walk</div>
-                  <div className="walk-type-sub">{fmt(walkPendingDuration)} · select a walk type to save.</div>
-                  <div className="walk-type-grid">
-                    {WALK_TYPE_OPTIONS.map((option) => (
-                      <button key={option.value} className="walk-type-option" onClick={() => saveWalkWithType(option.value)} type="button">{option.label}</button>
-                    ))}
-                  </div>
-                  <div className="walk-type-actions">
-                    <button className="walk-cancel-btn button-base button-ghost button--md button--pill" type="button" onClick={cancelWalk}>Cancel</button>
-                  </div>
-                </div>
-              )}
-
-              {patOpen && (
-                <div className="tool-expand tool-expand--modal">
-                  <div className={`pat-reminder ${pattern.behind ? "warn" : ""}`}>{patReminderText}</div>
-                  <div className="pat-btns">
-                    {PATTERN_TYPES.map((pt) => (
-                      <button key={pt.type} className="btn-pat surface-row--interactive interactive-row-card" onClick={(e) => { e.stopPropagation(); logPattern(pt.type); }}>
-                        <span className="interactive-row-card__icon"><Img src={pt.icon} size={28} alt={pt.label} /></span>
-                        <div className="p-text interactive-row-card__content">
-                          <div className="p-label">{patLabels[pt.type] || pt.label}</div>
-                          <div className="p-desc">{pt.desc}</div>
-                        </div>
-                        <span className="p-count interactive-row-card__trailing">Today: {patterns.filter((p) => isToday(p.date) && p.type === pt.type).length}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </ViewportModal>
-        )}
-
-        {feedingOpen && (
-          <ViewportModal open onClose={cancelFeedingForm} overlayClassName="feeding-overlay" labelledBy="feeding-title">
-            <div className="feeding-card modal-card modal-card--dialog-sm modal-card--sheet quick-modal-card--sheet quick-modal-card--sheet-compact">
-              <div className="history-session-sheet-grabber" aria-hidden="true" />
-              <div className="quick-modal-head">
-                <div className="section-title section-title--flush" id="feeding-title">Log feeding</div>
-                <ModalCloseButton onClick={cancelFeedingForm} />
-              </div>
-
-              {feedingHint.isVisible && (
-                <ContextHint
-                  title="Why track feeding?"
-                  body="A full stomach often promotes calmness and sleep. Tracking feeding times helps optimize when to train."
-                  action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={feedingHint.dismiss}>Got it</button>}
-                  className="mb-4"
-                />
-              )}
-
-              <div className="t-helper activity-time-hint">Quick log for routine consistency. You can fine-tune details in History later.</div>
-              <label className="feeding-field">
-                <span className="t-helper">Feeding time</span>
-                <input type="datetime-local" value={feedingDraft.time} onChange={(e) => setFeedingDraft((prev) => ({ ...prev, time: e.target.value }))} />
-              </label>
-              <label className="feeding-field">
-                <span className="t-helper">Food type</span>
-                <select value={feedingDraft.foodType} onChange={(e) => setFeedingDraft((prev) => ({ ...prev, foodType: e.target.value }))}>
-                  <option value="meal">meal</option>
-                  <option value="treat">treat</option>
-                  <option value="kong">kong</option>
-                  <option value="lick mat">lick mat</option>
-                  <option value="chew">chew</option>
-                </select>
-              </label>
-              <label className="feeding-field">
-                <span className="t-helper">Amount</span>
-                <select value={feedingDraft.amount} onChange={(e) => setFeedingDraft((prev) => ({ ...prev, amount: e.target.value }))}>
-                  <option value="small">small</option>
-                  <option value="medium">medium</option>
-                  <option value="large">large</option>
-                </select>
-              </label>
-              <div className="feeding-actions">
-                <button className="walk-cancel-btn button-base button-ghost button--md button--pill" type="button" onClick={cancelFeedingForm}>Cancel</button>
-                <button className="walk-end-btn button-base button-primary button--md button--pill" type="button" onClick={saveFeeding}>Save</button>
-              </div>
-            </div>
-          </ViewportModal>
-        )}
+        <WalkModal />
+        <PatternModal />
+        <FeedingModal />
       </div>
     </div>
   );

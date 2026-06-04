@@ -1,3 +1,4 @@
+import { useApp } from "../app/AppContext";
 import { PATTERN_TYPES } from "../app/helpers";
 import { CameraIcon, DeleteIcon, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
@@ -28,7 +29,8 @@ function SettingsNavRow({ label, value, onClick, danger = false }) {
   );
 }
 
-export default function SettingsScreen(props) {
+
+export default function SettingsScreen() {
   const [activePanel, setActivePanel] = useState(null);
   const [reminderEditorOpen, setReminderEditorOpen] = useState(false);
   const [diagDetailsOpen, setDiagDetailsOpen] = useState(false);
@@ -74,7 +76,7 @@ export default function SettingsScreen(props) {
     clearDogActivityState,
     dogPhoto,
     handlePhotoUpload,
-  } = props;
+  } = useApp();
 
   const reminderSummary = notifEnabled ? `On · ${notifTime}` : "Off";
   const recommendationType = recommendation?.details?.recommendationType || "baseline_start";

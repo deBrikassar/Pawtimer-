@@ -160,72 +160,61 @@ export function ProgressHero({
     headline && headline.match(/(\d+)%/) ? parseInt(headline.match(/(\d+)%/)[1], 10) : 0
   );
 
-  const heroRadius = 60;
+  const heroRadius = 42;
   const heroCircumference = 2 * Math.PI * heroRadius;
   const heroStrokeDashoffset = heroCircumference - (Math.min(overallGoalPct, 100) / 100) * heroCircumference;
 
   return (
-    <div
-      className={`stats-progress-hero metric-surface metric-surface--headline surface-state--${headlineSurfaceState}`.trim()}
-      aria-label={`${name}'s progress hero`}
-    >
-      <span className="stats-progress-hero-aura" aria-hidden="true" />
+    <div className="surface-card surface-card--chart" style={{
+      width: '100%',
+      padding: '24px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '24px',
+      boxSizing: 'border-box'
+    }}>
       
-      <div className="stats-progress-hero-inner">
-        <div className="stats-progress-hero-left">
-          <div className="stats-progress-values" role="group" aria-label="Current value and next step">
-            <div className="stats-progress-value-block">
-              <div className="stats-progress-value">{currentValue}</div>
-              <div className="stats-progress-label">{currentLabel}</div>
-            </div>
-            <div className="stats-progress-value-divider" aria-hidden="true" />
-            <div className="stats-progress-value-block">
-              <div className="stats-progress-value stats-progress-value--target">{targetValue}</div>
-              <div className="stats-progress-label">{targetLabel}</div>
-            </div>
-          </div>
+      {/* Левая часть: Статистика */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        {/* Best time */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: '20px', fontWeight: '600', color: '#44403c' }}>{currentValue}</span>
+          <span style={{ fontSize: '12px', fontWeight: '500', color: '#78716c', marginTop: '4px' }}>{currentLabel}</span>
         </div>
-
-        <div className="stats-progress-hero-right">
-          <div className="stats-progress-hero-ring-wrapper">
-            <svg width="140" height="140" viewBox="0 0 140 140" className="stats-progress-hero-ring-svg">
-              <circle
-                cx="70"
-                cy="70"
-                r={heroRadius}
-                className="stats-progress-hero-ring-track"
-                fill="none"
-                stroke="var(--color-border)"
-                strokeWidth="8"
-              />
-              <circle
-                cx="70"
-                cy="70"
-                r={heroRadius}
-                className="stats-progress-hero-ring-fill"
-                fill="none"
-                stroke="url(#heroRingGradient)"
-                strokeWidth="8"
-                strokeDasharray={heroCircumference}
-                strokeDashoffset={heroStrokeDashoffset}
-                strokeLinecap="round"
-                transform="rotate(-90 70 70)"
-              />
-              <defs>
-                <linearGradient id="heroRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="var(--color-primary-200)" />
-                  <stop offset="100%" stopColor="var(--color-primary-700)" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className="stats-progress-hero-ring-inner">
-              <span className="stats-progress-hero-ring-value">{overallGoalPct}%</span>
-              <span className="stats-progress-hero-ring-label">of goal</span>
-            </div>
-          </div>
+        
+        {/* Вертикальный разделитель */}
+        <div style={{ width: '1px', height: '40px', backgroundColor: '#e5e7eb' }}></div>
+        
+        {/* Next target */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: '20px', fontWeight: '600', color: '#44403c' }}>{targetValue}</span>
+          <span style={{ fontSize: '12px', fontWeight: '500', color: '#78716c', marginTop: '4px' }}>{targetLabel}</span>
         </div>
       </div>
 
+      {/* Правая часть: Круговой график */}
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '112px', height: '112px', flexShrink: 0 }}>
+        {/* SVG кольца */}
+        <svg style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)', filter: 'none' }} viewBox="0 0 100 100">
+          {/* Фоновое кольцо (серое) */}
+          <circle cx="50" cy="50" r="42" stroke="#F5F5F4" strokeWidth="8" fill="none" />
+          {/* Заполненное кольцо прогресса (зеленое) */}
+          <circle 
+            cx="50" cy="50" r="42" 
+            stroke="#4D7C0F" strokeWidth="8" fill="none" 
+            strokeDasharray={heroCircumference} strokeDashoffset={heroStrokeDashoffset} 
+            strokeLinecap="round" 
+          />
+        </svg>
+        
+        {/* Текст внутри кольца */}
+        <div style={{ position: 'absolute', inset: '0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: '24px', fontWeight: '600', color: '#44403c', lineHeight: '1' }}>{overallGoalPct}%</span>
+          <span style={{ fontSize: '10px', fontWeight: '500', color: '#78716c', marginTop: '4px' }}>of goal</span>
+        </div>
+      </div>
+      
     </div>
   );
 }
@@ -350,7 +339,7 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
   return (
     <div className="chart-wrap chart-wrap-full surface-card surface-card--chart">
       {insightLabel ? <div className="chart-insight">{insightLabel}</div> : null}
-      <div className="chart-title">Rep duration over time</div>
+      <div className="chart-title">Session duration over time</div>
       <div className="stats-progress-wave" role="img" aria-label={`${name}'s recent session durations`}>
         <svg viewBox={`0 0 ${WAVE_CHART_WIDTH} ${WAVE_CHART_HEIGHT}`} className="stats-progress-wave-svg" preserveAspectRatio="none">
           <defs>
@@ -426,7 +415,7 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
 
 export function BentoGrid({ children, className = "" }) {
   return (
-    <div className={`stats-bento-grid ${className}`.trim()}>
+    <div className={className} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '400px', margin: '0 auto', justifyItems: 'center' }}>
       {children}
     </div>
   );
@@ -436,17 +425,24 @@ export function StatsBentoWidget({
   value,
   label,
   icon = null,
-  shape = "rect",
+  shape = "circle",
   accentColor = "streak",
   className = "",
 }) {
   return (
-    <div className={`stats-bento-widget-container ${className}`.trim()}>
-      <div className={`stats-bento-widget stats-bento-widget--accent-${accentColor}`}>
-        {icon && <div className="stats-bento-widget__icon">{icon}</div>}
-        <span className="stats-bento-widget__value">{value}</span>
+    <div className={`flex flex-col items-center ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div 
+        className="glass-panel" 
+        style={{ width: '96px', height: '96px', flexShrink: 0, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.5)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+      >
+        {icon && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {typeof icon === "string" ? <span style={{ fontSize: '38px', lineHeight: 1 }}>{icon}</span> : icon}
+          </div>
+        )}
+        <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', lineHeight: 1, marginTop: '4px' }}>{value}</span>
       </div>
-      <span className="stats-bento-widget__label stats-bento-widget__label--external">{label}</span>
+      <span style={{ fontSize: '14px', color: '#6b7280', textAlign: 'center', marginTop: '8px' }}>{label}</span>
     </div>
   );
 }

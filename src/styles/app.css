@@ -138,7 +138,7 @@
     color: color-mix(in srgb, var(--text-muted) 88%, var(--text));
   }
   .ws-footer { display: flex; flex-direction: column; gap: 12px; animation: ws-fade-up .9s .08s var(--ease-out-soft, ease-out) both; }
-  .ws-cta { box-shadow: var(--neu-shadow-out); }
+  .ws-cta { box-shadow: var(--shadow); }
   .ws-secondary {
     align-self: center;
     border: 0;
@@ -455,7 +455,7 @@
     .session-control.is-idle:hover,
     .session-control.is-running:hover {
       transform:translateY(-2px) scale(1.01);
-      box-shadow: var(--neu-shadow-out);
+      box-shadow: var(--shadow);
       filter:brightness(1.02);
     }
   }
@@ -2829,7 +2829,7 @@
   border-radius: 999px;
   background: var(--surface-card-bg);
   border: 1px solid var(--border);
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 
 .update-banner-btn {
@@ -2935,7 +2935,7 @@
 .tabs {
   max-width: 520px;
   border-top: none;
-  background: var(--neu-base);
+  background: var(--surf);
   backdrop-filter: none;
   box-shadow: var(--shadow);
   border-radius: 24px 24px 0 0;
@@ -2957,7 +2957,7 @@
 
 .tab-btn.active {
   color: var(--color-primary-700);
-  background: var(--neu-base);
+  background: var(--surf);
   box-shadow: var(--shadow);
 }
 
@@ -2982,21 +2982,21 @@
 .train-inline-tip,
 .train-time-change-insight {
   box-shadow: var(--shadow);
-  background: var(--neu-base);
+  background: var(--surf);
   border: none;
 }
 
 .train-first-run-hint,
 .train-returning-nudge {
   box-shadow: var(--shadow);
-  background: var(--neu-base);
+  background: var(--surf);
 }
 
 .train-identity-header {
   border-radius: 20px;
   padding: 16px;
   border: none;
-  background: var(--neu-base);
+  background: var(--surf);
   box-shadow: var(--shadow);
 }
 
@@ -3270,13 +3270,13 @@
 
 /* Фон приложения */
 .app {
-  background: var(--neu-base);
+  background: var(--surf);
 }
 
 /* Секция прогресса в Train */
 .prog-section,
 .surface-card--progress {
-  background: var(--neu-base) !important;
+  background: var(--surf) !important;
   border: none !important;
   box-shadow: var(--shadow);
   border-radius: 16px;
@@ -3285,7 +3285,7 @@
 /* Сегодняшний лог */
 .train-today,
 .settings-collapsible-card {
-  background: var(--neu-base) !important;
+  background: var(--surf) !important;
   border: none !important;
   box-shadow: var(--shadow);
 }
@@ -3295,14 +3295,14 @@
   background: transparent;
 }
 .train-today-row:hover {
-  background: color-mix(in srgb, var(--neu-light) 60%, var(--neu-base));
+  background: color-mix(in srgb, var(--surf-soft) 60%, var(--surf));
 }
 
 /* Avatar в шапке Train */
 .train-identity-header__avatar {
   box-shadow: var(--shadow);
   border: none;
-  background: var(--neu-base);
+  background: var(--surf);
 }
 
 /* Кнопки основного действия (primary) */
@@ -3365,7 +3365,7 @@
 
 /* Тень у нижней панели — перекрываем встроенную */
 .tabs {
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
   border-top: 1px solid var(--color-border);
 }
 
@@ -3384,11 +3384,11 @@
 
 /* Карточки метрик (Best time, Next target, Risk) */
 .metric-surface {
-  --metric-surface-bg: var(--neu-base);
+  --metric-surface-bg: var(--surf);
   --metric-surface-border: transparent;
-  --metric-surface-shadow: var(--neu-shadow-out-sm);
+  --metric-surface-shadow: var(--shadow-sm);
   border: none !important;
-  background: var(--neu-base) !important;
+  background: var(--surf) !important;
   box-shadow: var(--shadow);
 }
 
@@ -3397,14 +3397,14 @@
 .stats-headline-card.metric-surface.surface-state--today,
 .stats-headline-card.metric-surface.surface-state--upcoming,
 .stats-headline-card.metric-surface.surface-state--overdue {
-  background: var(--neu-base) !important;
+  background: var(--surf) !important;
   border: none !important;
   box-shadow: var(--shadow);
 }
 
 /* Убираем декоративный градиент hero-карточки */
 .stats-headline-card--hero {
-  background: var(--neu-base) !important;
+  background: var(--surf) !important;
 }
 .stats-headline-card--hero::after {
   display: none;
@@ -3417,7 +3417,7 @@
 
 /* Ring-вариант (если используется) */
 .metric-surface--ring {
-  background: var(--neu-base) !important;
+  background: var(--surf) !important;
   border: none !important;
   box-shadow: var(--shadow);
 }

@@ -64,40 +64,40 @@
   background: rgba(16, 185, 129, 0.85) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 .stats-bento-card--triangle:hover {
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 
 .stats-bento-card--blob {
   background: rgba(251, 191, 36, 0.85) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 .stats-bento-card--blob:hover {
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 
 .stats-bento-card--squircle {
   background: rgba(51, 65, 85, 0.85) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 .stats-bento-card--squircle:hover {
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 
 .stats-bento-card--arch {
   background: rgba(217, 119, 87, 0.85) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 .stats-bento-card--arch:hover {
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 
 /* Interior element stylings */

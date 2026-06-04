@@ -80,12 +80,12 @@
 .pt-button--primary {
   background: linear-gradient(135deg, #3aa686 0%, var(--green-dark) 100%) !important;
   color: #ffffff !important;
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 
 .pt-button--primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 
 .pt-button--secondary {
@@ -108,7 +108,7 @@
   background: rgba(255, 255, 255, 0.35) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: var(--neu-shadow-in);
+  box-shadow: none;
   padding: var(--space-card-padding);
 }
 
@@ -123,7 +123,7 @@
   background: rgba(255, 255, 255, 0.55) !important;
   border-color: rgba(255, 255, 255, 0.75) !important;
   transform: translateY(-2px) !important;
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 
 .pt-surface-card--interactive:active {
@@ -183,7 +183,7 @@
   padding: var(--space-2) var(--space-card-padding-lg);
   background: rgba(255, 255, 255, 0.45) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.5) !important;
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
 }
@@ -208,7 +208,7 @@
 .pt-bottom-nav__item.is-active {
   color: var(--brown) !important;
   background: rgba(255, 255, 255, 0.7) !important;
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
 }
 
 .pt-bottom-nav__label {
@@ -256,7 +256,7 @@
   height: 22px;
   border-radius: 50%;
   background: #ffffff !important;
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
   transition: transform 0.25s var(--ease-spring-bouncy), background-color 0.2s ease !important;
 }
 
@@ -298,7 +298,7 @@
   background: rgba(255, 255, 255, 0.75) !important; /* Уплотненное стекло для читаемости контента */
   backdrop-filter: blur(30px) !important;
   -webkit-backdrop-filter: blur(30px) !important;
-  box-shadow: var(--neu-shadow-out);
+  box-shadow: var(--shadow);
   transform: translateY(102%);
   transition: transform var(--motion-dialog-enter) var(--ease-emphasized);
   max-height: min(82dvh, 720px);

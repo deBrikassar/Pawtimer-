@@ -323,7 +323,10 @@ const renderSyncBadge = (entry) => {
   );
 };
 
-export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions }) {
+import { useApp } from "../app/AppContext";
+
+export function HistoryScreen() {
+  const { timeline, sessions, name, setTab, patLabels, historyModal, setHistoryModal, actions } = useApp();
   const [activityDetail, setActivityDetail] = useState(null);
   const [clearSessionsConfirmOpen, setClearSessionsConfirmOpen] = useState(false);
   const historyHint = useHint(`history_${name}`);

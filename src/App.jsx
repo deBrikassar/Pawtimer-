@@ -19,6 +19,8 @@ import { useAppData } from "./features/app/useAppData";
 import { useSyncEngine } from "./features/app/useSyncEngine";
 import { useTrainingTimer } from "./features/app/useTrainingTimer";
 import { useWalkTimer } from "./features/app/useWalkTimer";
+import { AppContext } from "./features/app/AppContext";
+import { compressImage } from "./lib/imageUtils";
 
 import "./styles/theme.css";
 import "./styles/shared.css";
@@ -362,15 +364,12 @@ export default function PawTimer() {
   const copyDogId = async () => {
     if (!activeDogId) return;
     const writeToClipboard = async () => { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(activeDogId); return; } const el = document.createElement("textarea"); el.value = activeDogId; el.setAttribute("readonly", ""); el.style.position = "absolute"; el.style.left = "-9999px"; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); };
-    writeToClipboard().catch(() => {});
-    showToast("Copied");
+    writeToClipboard().then(() => showToast("Copied")).catch(() => showToast("Failed to copy"));
   };
   const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) { setDogPhoto(null); return; }
-    const reader = new FileReader();
-    reader.onload = (ev) => setDogPhoto(ev.target.result);
-    reader.readAsDataURL(file);
+    compressImage(file, 400).then((base64) => setDogPhoto(base64)).catch(() => showToast("Failed to process image"));
   };
 
   const historyActions = useHistoryEditing({
@@ -407,6 +406,63 @@ export default function PawTimer() {
     setTab(nextTab);
   };
 
+  const appContextValue = {
+    // Shared Data
+    name: appData.name,
+    sessions: canonicalSessions,
+    recommendation: appData.recommendation,
+    dogs,
+    activeDogId,
+    activeProto: appData.activeProto,
+    pattern: appData.pattern,
+    patLabels,
+    patterns,
+    feedings,
+    walks,
+    timeline: appData.timeline,
+    dogPhoto,
+    
+    // Timer & Training States
+    phase, elapsed, finalElapsed, sessionCompleted, sessionOutcome, latencyDraft, distressTypeDraft,
+    setSessionOutcome, setLatencyDraft, setDistressTypeDraft, setPhase, setElapsed, setFinalElapsed,
+    startSession, endSession, cancelSession, recordResult,
+    
+    // Walk States
+    walkPhase, walkElapsed, walkPendingDuration, startWalk, cancelWalk, endWalk, saveWalkWithType,
+    
+    // Pattern & Feeding Forms
+    patOpen, setPatOpen, logPattern, patReminderText: appData.patReminderText,
+    feedingOpen, openFeedingForm, feedingDraft, setFeedingDraft, cancelFeedingForm, saveFeeding,
+    
+    // Nudges & Insights
+    showTrainFirstRunHint: trainFirstRunHintVisible, dismissTrainFirstRunHint: completeTrainFirstRunHint,
+    trainTimeChangeInsight, returningTrainNudge, dismissReturningTrainNudge: acknowledgeReturningTrainNudge,
+    
+    // History & Progress
+    historyModal, setHistoryModal, actions: historyActions,
+    totalCount: appData.totalCount, bestCalm: appData.bestCalm, relapseTone: appData.relapseTone, chartData: appData.chartData,
+    goalSec: appData.goalSec, overallGoalSec: appData.dog?.goalSeconds, distressLabel: appData.distressLabel,
+    chartTrendLabel: appData.chartTrendLabel, aloneLastWeek: appData.aloneLastWeek, avgWalkDuration: appData.avgWalkDuration,
+    avgSessionsPerDay: appData.avgSessionsPerDay, avgWalksPerDay: appData.avgWalksPerDay, headlineStatus: appData.headlineStatus,
+    headlineStatusTone: appData.headlineStatusTone, contextualInsights: appData.contextualInsights, streak: appData.streak, calmRate7: appData.calmRate7,
+    
+    // Settings & Actions
+    copyDogId, notifEnabled, handleToggleNotif, notifTime, setNotifTime, scheduleNotif,
+    setTrainingSettingsOpen, editingPat, setEditingPat, setPatLabels, settingsDisclosure, setSettingsDisclosure,
+    syncDiagRunning, runSyncDiagnostics, SYNC_ENABLED, SB_URL, SB_KEY, SB_BASE_URL, syncDiagResult, syncSummary, syncDegradation,
+    trainingSettingsOpen, setProtoWarnAck, protoWarnAck, protoOverride, setProtoOverride, setScreen, setOnboardingState,
+    dogsState: dogs, setDogs, save, ACTIVE_DOG_KEY, setActiveDogId, clearDogActivityState, handlePhotoUpload,
+    
+    // UI actions
+    openHistory: () => handleTabChange("history"),
+    openProgress: () => handleTabChange("progress"),
+    setTab,
+    goalPct: appData.goalPct,
+    daily: appData.daily,
+    CustomDot,
+  };
+
+
   if (screen === "welcome") return <>{toast && <div className="toast">{toast}</div>}<WelcomeScreen onStart={() => { setOnboardingState({ mode: "new", dogId: null }); setScreen("onboard"); }} onManageDogs={() => setScreen("select")} /></>;
   if (screen === "select") return <>{toast && <div className="toast">{toast}</div>}<DogSelect dogs={dogs} onSelect={handleDogSelect} onCreateNew={() => { setOnboardingState({ mode: "new", dogId: null }); setScreen("onboard"); }} /></>;
   if (screen === "onboard") return <Onboarding onComplete={handleOnboardComplete} onBack={() => { setOnboardingState(null); setScreen(getSetupLandingScreen(dogs)); }} />;
@@ -420,15 +476,17 @@ export default function PawTimer() {
           <button type="button" className="update-banner-btn" onClick={() => updateServiceWorker(true)}>Reload</button>
         </div>
       )}
-      <div className="app">
-        <div className={`tab-panel tab-panel--${tabMotionDirection}`} key={tab}>
-          {tab === "home" && <HomeScreen name={appData.name} sessions={canonicalSessions} recommendation={appData.recommendation} goalPct={appData.goalPct} goalSec={appData.goalSec} phase={phase} elapsed={elapsed} finalElapsed={finalElapsed} sessionCompleted={sessionCompleted} sessionOutcome={sessionOutcome} setSessionOutcome={setSessionOutcome} recordResult={recordResult} latencyDraft={latencyDraft} setLatencyDraft={setLatencyDraft} distressTypeDraft={distressTypeDraft} setDistressTypeDraft={setDistressTypeDraft} setPhase={setPhase} setElapsed={setElapsed} setFinalElapsed={setFinalElapsed} startSession={startSession} endSession={endSession} cancelSession={cancelSession} activeProto={appData.activeProto} daily={appData.daily} pattern={appData.pattern} walkPhase={walkPhase} startWalk={startWalk} cancelWalk={cancelWalk} walkElapsed={walkElapsed} endWalk={endWalk} walkPendingDuration={walkPendingDuration} saveWalkWithType={saveWalkWithType} patOpen={patOpen} setPatOpen={setPatOpen} patReminderText={appData.patReminderText} logPattern={logPattern} patLabels={patLabels} patterns={patterns} feedings={feedings} feedingOpen={feedingOpen} openFeedingForm={openFeedingForm} feedingDraft={feedingDraft} setFeedingDraft={setFeedingDraft} cancelFeedingForm={cancelFeedingForm} saveFeeding={saveFeeding} showTrainFirstRunHint={trainFirstRunHintVisible} dismissTrainFirstRunHint={completeTrainFirstRunHint} trainTimeChangeInsight={trainTimeChangeInsight} returningTrainNudge={returningTrainNudge} dismissReturningTrainNudge={acknowledgeReturningTrainNudge} openHistory={() => handleTabChange("history")} openProgress={() => handleTabChange("progress")} dogPhoto={dogPhoto} handlePhotoUpload={handlePhotoUpload} />}
-          {tab === "history" && <HistoryScreen timeline={appData.timeline} sessions={canonicalSessions} name={appData.name} setTab={setTab} patLabels={patLabels} historyModal={historyModal} setHistoryModal={setHistoryModal} actions={historyActions} />}
-          {tab === "progress" && <StatsScreen name={appData.name} totalCount={appData.totalCount} setTab={setTab} bestCalm={appData.bestCalm} recommendation={appData.recommendation} relapseTone={appData.relapseTone} chartData={appData.chartData} goalSec={appData.goalSec} overallGoalSec={appData.dog?.goalSeconds} CustomDot={CustomDot} distressLabel={appData.distressLabel} chartTrendLabel={appData.chartTrendLabel} aloneLastWeek={appData.aloneLastWeek} avgWalkDuration={appData.avgWalkDuration} avgSessionsPerDay={appData.avgSessionsPerDay} avgWalksPerDay={appData.avgWalksPerDay} headlineStatus={appData.headlineStatus} headlineStatusTone={appData.headlineStatusTone} contextualInsights={appData.contextualInsights} streak={appData.streak} calmRate7={appData.calmRate7} />}
-          {tab === "settings" && <SettingsScreen name={appData.name} activeDogId={activeDogId} copyDogId={copyDogId} notifEnabled={notifEnabled} handleToggleNotif={handleToggleNotif} notifTime={notifTime} setNotifTime={setNotifTime} scheduleNotif={scheduleNotif} dogs={dogs} activeProto={appData.activeProto} pattern={appData.pattern} recommendation={appData.recommendation} setTrainingSettingsOpen={setTrainingSettingsOpen} patLabels={patLabels} editingPat={editingPat} setEditingPat={setEditingPat} setPatLabels={setPatLabels} settingsDisclosure={settingsDisclosure} setSettingsDisclosure={setSettingsDisclosure} syncDiagRunning={syncDiagRunning} runSyncDiagnostics={runSyncDiagnostics} SYNC_ENABLED={SYNC_ENABLED} SB_URL={SB_URL} SB_KEY={SB_KEY} SB_BASE_URL={SB_BASE_URL} syncDiagResult={syncDiagResult} syncSummary={syncSummary} syncDegradation={syncDegradation} trainingSettingsOpen={trainingSettingsOpen} setProtoWarnAck={setProtoWarnAck} protoWarnAck={protoWarnAck} protoOverride={protoOverride} setProtoOverride={setProtoOverride} setScreen={setScreen} setOnboardingState={setOnboardingState} dogsState={dogs} setDogs={setDogs} save={save} ACTIVE_DOG_KEY={ACTIVE_DOG_KEY} setActiveDogId={setActiveDogId} clearDogActivityState={clearDogActivityState} dogPhoto={dogPhoto} handlePhotoUpload={handlePhotoUpload} />}
+      <AppContext.Provider value={appContextValue}>
+        <div className="app">
+          <div className={`tab-panel tab-panel--${tabMotionDirection}`} key={tab}>
+            {tab === "home" && <HomeScreen />}
+            {tab === "history" && <HistoryScreen />}
+            {tab === "progress" && <StatsScreen />}
+            {tab === "settings" && <SettingsScreen />}
+          </div>
         </div>
-      </div>
-      <div className="tabs">{[{ id: "home", label: "Train", icon: <HomeIcon /> }, { id: "history", label: "History", icon: <HistoryIcon /> }, { id: "progress", label: "Progress", icon: <ChartIcon /> }, { id: "settings", label: "Settings", icon: <SettingsIcon /> }].map((t) => <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => handleTabChange(t.id)}>{t.icon}{t.label}</button>)}</div>
+        <div className="tabs">{[{ id: "home", label: "Train", icon: <HomeIcon /> }, { id: "history", label: "History", icon: <HistoryIcon /> }, { id: "progress", label: "Progress", icon: <ChartIcon /> }, { id: "settings", label: "Settings", icon: <SettingsIcon /> }].map((t) => <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => handleTabChange(t.id)}>{t.icon}{t.label}</button>)}</div>
+      </AppContext.Provider>
     </>
   );
 }
