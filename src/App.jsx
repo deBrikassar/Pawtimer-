@@ -460,6 +460,11 @@ export default function PawTimer() {
     goalPct: appData.goalPct,
     daily: appData.daily,
     CustomDot,
+    vibrate: (pattern = 10) => {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(pattern);
+      }
+    },
   };
 
 
@@ -477,7 +482,7 @@ export default function PawTimer() {
         </div>
       )}
       <AppContext.Provider value={appContextValue}>
-        <div className="app">
+        <div className={`app ${phase === "running" ? "is-timer-active" : ""}`}>
           <div className={`tab-panel tab-panel--${tabMotionDirection}`} key={tab}>
             {tab === "home" && <HomeScreen />}
             {tab === "history" && <HistoryScreen />}
@@ -485,7 +490,7 @@ export default function PawTimer() {
             {tab === "settings" && <SettingsScreen />}
           </div>
         </div>
-        <div className="tabs">{[{ id: "home", label: "Train", icon: <HomeIcon /> }, { id: "history", label: "History", icon: <HistoryIcon /> }, { id: "progress", label: "Progress", icon: <ChartIcon /> }, { id: "settings", label: "Settings", icon: <SettingsIcon /> }].map((t) => <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => handleTabChange(t.id)}>{t.icon}{t.label}</button>)}</div>
+        <div className="tabs">{[{ id: "home", label: "Train", icon: <HomeIcon /> }, { id: "history", label: "History", icon: <HistoryIcon /> }, { id: "progress", label: "Progress", icon: <ChartIcon /> }, { id: "settings", label: "Settings", icon: <SettingsIcon /> }].map((t) => <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""}`} onClick={() => { appContextValue.vibrate(10); handleTabChange(t.id); }}>{t.icon}{t.label}</button>)}</div>
       </AppContext.Provider>
     </>
   );

@@ -415,7 +415,7 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
 
 export function BentoGrid({ children, className = "" }) {
   return (
-    <div className={className} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '400px', margin: '0 auto', justifyItems: 'center' }}>
+    <div className={className} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '440px', margin: '0 auto', justifyItems: 'center' }}>
       {children}
     </div>
   );
@@ -433,7 +433,7 @@ export function StatsBentoWidget({
     <div className={`flex flex-col items-center ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div 
         className="glass-panel" 
-        style={{ width: '96px', height: '96px', flexShrink: 0, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.5)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+        style={{ width: '120px', height: '120px', flexShrink: 0, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.5)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
       >
         {icon && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -442,7 +442,7 @@ export function StatsBentoWidget({
         )}
         <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', lineHeight: 1, marginTop: '4px' }}>{value}</span>
       </div>
-      <span style={{ fontSize: '14px', color: '#6b7280', textAlign: 'center', marginTop: '8px' }}>{label}</span>
+      <span style={{ fontSize: '14px', color: '#6b7280', textAlign: 'center', marginTop: '12px', padding: '0 4px', lineHeight: 1.2 }}>{label}</span>
     </div>
   );
 }

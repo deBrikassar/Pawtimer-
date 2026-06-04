@@ -172,21 +172,28 @@ export function SessionControl({
 
 
 
-export function TrainProgressBar({ goalPct, target, goalSec, fmt }) {
-  const clampedGoalPct = Math.max(0, Math.min(goalPct, 100));
-  const thumbPct = Math.max(Math.min(clampedGoalPct, 98), 2);
+export function TrainProgressBar({ goalPct, target, goalSec, fmt, elapsed = 0, phase = "idle" }) {
+  const thresholdPct = Math.max(0, Math.min(goalPct, 100));
+  const isActive = phase === "running" || phase === "rating";
+  const progressPct = goalSec > 0 ? Math.max(0, Math.min((elapsed / goalSec) * 100, 100)) : 0;
+  const activePct = isActive ? progressPct : thresholdPct;
 
   return (
-    <div className="prog-section surface-card surface-card--progress">
-      <div className="prog-track-wrap">
-        <svg className="prog-track" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
-          <rect className="prog-fill-track" x="0" y="0" width="100" height="8" rx="4" ry="4" />
-          <rect className="prog-fill" x="0" y="0" width={clampedGoalPct} height="8" rx="4" ry="4" />
-        </svg>
-        <span className="prog-thumb" style={{ left: `${thumbPct}%` }} // INLINE_STYLE_TECHNICAL_EXCEPTION
-         aria-hidden="true" />
+    <div className="prog-section surface-card surface-card--progress" style={{ overflow: 'visible', padding: '16px' }}>
+      <div className="neumorphic-track-wrap" style={{ margin: '16px 0' }}>
+        <div className="neumorphic-track-fill" style={{ width: `${activePct}%` }}></div>
+        <div 
+          className="neumorphic-thumb neumorphic-thumb--paw" 
+          style={{ 
+            left: `${activePct}%`, 
+            transform: `translate(-50%, -50%)` 
+          }} 
+          aria-hidden="true"
+        >
+          <div className="neumorphic-thumb-icon" aria-label="Paw logo"></div>
+        </div>
       </div>
-      <div className="prog-meta">
+      <div className="prog-meta" style={{ marginTop: '24px' }}>
         <span>Threshold <strong className="num-stable">{fmt(target)}</strong></span>
         <span>Goal <strong className="num-stable">{fmt(goalSec)}</strong></span>
       </div>

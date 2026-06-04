@@ -139,7 +139,7 @@ export default function HomeScreen() {
           onIdlePress={dismissTrainFirstRunHint}
         />
 
-        <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} />
+        <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} elapsed={elapsed} phase={phase} />
 
         <SessionRatingPanel
           phase={phase}
@@ -170,7 +170,7 @@ export default function HomeScreen() {
           </p>
         )}
 
-        <section className="train-today surface-card settings-collapsible-card settings-collapsible-card--quiet">
+        <section className="train-today surface-card settings-collapsible-card settings-collapsible-card--quiet settings-neumorphic-card">
           <button
             type="button"
             className="settings-collapsible-toggle secondary-control--toggle train-today-toggle"

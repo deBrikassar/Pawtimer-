@@ -1762,6 +1762,32 @@
 
   /* ── Collapsible how-to ── */
   .howto-wrap { margin:0 var(--space-3) var(--space-card-row-gap); border-radius:var(--radius-sm); overflow:hidden; box-shadow:var(--shadow); border:1px solid var(--border); }
+  
+  /* Settings Menu Icons */
+  .settings-nav-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surf);
+    box-shadow: inset 3px 3px 6px color-mix(in srgb, var(--border) 60%, transparent), inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    flex-shrink: 0;
+  }
+
+  .settings-nav-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: var(--text-muted);
+  }
+
+  .settings-nav-row {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: space-between; align-items:center; padding:var(--space-card-padding); background:var(--surf); border:none; font-size:var(--type-secondary-size); font-weight:var(--type-button-weight); line-height:var(--type-secondary-line); color:var(--brown); cursor:pointer; border-left:3px solid var(--mutedBlue); }
   .howto-toggle { width:100%; display:flex; justify-content:space-between; align-items:center; padding:var(--space-card-padding); background:var(--surf); border:none; font-size:var(--type-secondary-size); font-weight:var(--type-button-weight); line-height:var(--type-secondary-line); color:var(--brown); cursor:pointer; border-left:3px solid var(--mutedBlue); }
   .howto-arrow { font-size:var(--type-micro-text-size); color:var(--text-muted); }
 
@@ -2694,7 +2720,7 @@
     background:transparent;
     color:var(--text);
     min-height:52px;
-    padding:0;
+    padding:0 var(--space-card-padding);
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -2702,6 +2728,10 @@
     text-align:left;
     cursor:pointer;
     transition:color var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out), transform var(--motion-press) var(--ease-out);
+  }
+  .settings-nav-row__start {
+    display:flex;
+    align-items:center;
   }
   .settings-nav-row:hover {
     color:var(--brown);
@@ -3299,8 +3329,8 @@
 }
 
 /* Avatar в шапке Train */
-.train-identity-header__avatar {
-  box-shadow: var(--shadow);
+.train-identity-hero__avatar {
+  box-shadow: 6px 6px 12px color-mix(in srgb, var(--border) 40%, transparent), -6px -6px 12px rgba(255, 255, 255, 0.9);
   border: none;
   background: var(--surf);
 }
@@ -3422,4 +3452,120 @@
   box-shadow: var(--shadow);
 }
 
+/* ==========================================================================
+   NEUMORPHISM - Train & Settings Updates
+   ========================================================================== */
 
+/* 1. Train Screen - Threshold / Goal Slider */
+.neumorphic-track-wrap {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  background: var(--surf);
+  border-radius: 99px;
+  box-shadow: inset 3px 3px 6px color-mix(in srgb, var(--border) 40%, transparent), inset -3px -3px 6px rgba(255, 255, 255, 0.7);
+  margin: 16px 0;
+  overflow: visible;
+}
+
+.neumorphic-track-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 99px 0 0 99px;
+  background: var(--green-dark);
+  opacity: 0.3;
+  transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.neumorphic-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: var(--surf);
+  border-radius: 50%;
+  box-shadow: 3px 3px 6px color-mix(in srgb, var(--border) 60%, transparent), -3px -3px 6px rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: left 0.8s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.neumorphic-thumb--paw {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  justify-content: center;
+}
+
+.neumorphic-thumb-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--amber, #f59e0b);
+  mask-image: url('/icons/app-logo.png');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-image: url('/icons/app-logo.png');
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  filter: drop-shadow(3px 3px 4px rgba(217, 119, 6, 0.3)) drop-shadow(-3px -3px 4px rgba(255, 255, 255, 0.8));
+  margin-top: -4px; /* Nudge up for vertical center */
+  margin-left: -4px; /* Nudge left to close gap */
+}
+
+.neumorphic-thumb-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+/* 2. Settings Screen - Grouping and Cards */
+.settings-container-neumorphic {
+  padding: 0 var(--space-card-padding);
+}
+
+.settings-neumorphic-card {
+  background: var(--surf);
+  border-radius: 20px;
+  box-shadow: 6px 6px 12px color-mix(in srgb, var(--border) 50%, transparent), -6px -6px 12px rgba(255, 255, 255, 0.8);
+  padding: 8px 0;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.settings-neumorphic-card .settings-nav-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+}
+.settings-neumorphic-card .settings-nav-row:last-child {
+  border-bottom: none;
+}
+
+/* 3. Settings Screen - Danger Zone */
+.settings-neumorphic-card--danger {
+  box-shadow: inset 4px 4px 8px color-mix(in srgb, var(--border) 40%, transparent), inset -4px -4px 8px rgba(255, 255, 255, 0.7), inset 0 0 15px rgba(239, 68, 68, 0.06);
+}
+.settings-neumorphic-card--danger .settings-nav-row__label {
+  color: var(--red);
+}
+
+@keyframes bgBreathe {
+  0%, 100% {
+    background-color: var(--bg);
+  }
+  50% {
+    background-color: color-mix(in srgb, var(--bg) 80%, var(--green-soft));
+  }
+}
+
+.is-timer-active {
+  animation: bgBreathe 8s ease-in-out infinite;
+}

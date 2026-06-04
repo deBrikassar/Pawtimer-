@@ -13,14 +13,21 @@ const SETTINGS_PANEL = {
   ACCOUNT: "account",
 };
 
-function SettingsNavRow({ label, value, onClick, danger = false }) {
+function SettingsNavRow({ label, value, icon, onClick, danger = false }) {
   return (
     <button
       type="button"
       className={`settings-nav-row ${danger ? "settings-nav-row--danger" : ""}`}
       onClick={onClick}
     >
-      <span className="settings-nav-row__label">{label}</span>
+      <div className="settings-nav-row__start">
+        {icon && (
+          <div className="settings-nav-icon">
+            {icon}
+          </div>
+        )}
+        <span className="settings-nav-row__label">{label}</span>
+      </div>
       <span className="settings-nav-row__meta">
         {value ? <span className="settings-nav-row__value">{value}</span> : null}
         <span className="settings-nav-row__chevron" aria-hidden="true">›</span>
@@ -89,37 +96,39 @@ export default function SettingsScreen() {
           <div className="section-title">Calm control</div>
           <div className="t-helper">Manage profile, routine defaults, and device behavior for {name}.</div>
 
-          <div className="settings-nav-list" role="list" aria-label="Settings destinations">
+          <div className="settings-container-neumorphic">
             <div className="settings-section-label">Dog + routine</div>
-            <SettingsNavRow label="Dog profile" value={name} onClick={() => setActivePanel(SETTINGS_PANEL.PROFILE)} />
-            <SettingsNavRow label="Reminders" value={reminderSummary} onClick={() => setActivePanel(SETTINGS_PANEL.REMINDERS)} />
-            <SettingsNavRow label="Training settings" value={`Up to ${activeProto.sessionsPerDayMax}/day`} onClick={() => setTrainingSettingsOpen(true)} />
-            <SettingsNavRow label="Custom labels" value={`${Object.keys(patLabels).length} custom`} onClick={() => setActivePanel(SETTINGS_PANEL.LABELS)} />
-          </div>
+            <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Settings destinations">
+              <SettingsNavRow label="Dog profile" value={name} icon={<svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 0 0-8 8v1h16v-1a8 8 0 0 0-8-8zm0 2a6 6 0 0 1 6 6H6a6 6 0 0 1 6-6zM5 14v4h14v-4H5zm2 1h10v2H7v-2z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.PROFILE)} />
+              <SettingsNavRow label="Reminders" value={reminderSummary} icon={<svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.REMINDERS)} />
+              <SettingsNavRow label="Training settings" value={`Up to ${activeProto.sessionsPerDayMax}/day`} icon={<svg viewBox="0 0 24 24"><path d="M22 6h-6V4h-2v2h-2c-1.1 0-2 .9-2 2v1h-2v4h2v2c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zM12 15h-2v-4h2v4zm10-2h-8v-2h8v2z" fill="currentColor"/></svg>} onClick={() => setTrainingSettingsOpen(true)} />
+              <SettingsNavRow label="Custom labels" value={`${Object.keys(patLabels).length} custom`} icon={<svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.LABELS)} />
+            </div>
 
-          <div className="settings-nav-list" role="list" aria-label="Support destinations">
             <div className="settings-section-label">Guidance + diagnostics</div>
-            <SettingsNavRow label="Help" value="Guidance" onClick={() => setActivePanel(SETTINGS_PANEL.HELP)} />
-            <SettingsNavRow label="Advanced" value="Diagnostics" onClick={() => setActivePanel(SETTINGS_PANEL.ADVANCED)} />
-          </div>
+            <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Support destinations">
+              <SettingsNavRow label="Help" value="Guidance" icon={<svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.HELP)} />
+              <SettingsNavRow label="Advanced" value="Diagnostics" icon={<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.1L7.6 4.8 5.4 7 2.5 4.1c-1.3 2.4-.9 5.4 1.1 7.4 1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l1.7-1.7c.4-.4.4-1 0-1.4z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.ADVANCED)} />
+            </div>
 
-          <div className="settings-nav-list" role="list" aria-label="Account destinations">
             <div className="settings-section-label">Account + device</div>
-            <SettingsNavRow label="Account" value="Profile & device" onClick={() => setActivePanel(SETTINGS_PANEL.ACCOUNT)} />
-          </div>
+            <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Account destinations">
+              <SettingsNavRow label="Account" value="Profile & device" icon={<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.ACCOUNT)} />
+            </div>
 
-          <div className="settings-danger-sep" />
-          <div className="settings-nav-list settings-nav-list--danger" role="list" aria-label="Danger zone">
+            <div className="settings-danger-sep" />
             <div className="settings-section-label settings-section-label--danger">Danger zone</div>
-            <SettingsNavRow label={`Remove ${name} from this device`} danger onClick={() => {
-              if (window.confirm(`Remove ${name} from this device? This deletes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.`)) {
-                clearDogActivityState(activeDogId);
-                const newDogs = dogsState.filter((d) => d.id !== activeDogId);
-                setDogs(newDogs);
-                save(ACTIVE_DOG_KEY, null);
-                setActiveDogId(null);
-              }
-            }} />
+            <div className="settings-nav-list settings-nav-list--danger settings-neumorphic-card settings-neumorphic-card--danger" role="list" aria-label="Danger zone">
+              <SettingsNavRow label={`Remove ${name} from this device`} danger icon={<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/></svg>} onClick={() => {
+                if (window.confirm(`Remove ${name} from this device? This deletes local sessions, walks, feeding history, labels, and photo for this dog on this device. Synced/shared data elsewhere is unaffected.`)) {
+                  clearDogActivityState(activeDogId);
+                  const newDogs = dogsState.filter((d) => d.id !== activeDogId);
+                  setDogs(newDogs);
+                  save(ACTIVE_DOG_KEY, null);
+                  setActiveDogId(null);
+                }
+              }} />
+            </div>
           </div>
         </div>
       </div>
