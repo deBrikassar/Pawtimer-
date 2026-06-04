@@ -80,12 +80,12 @@
 .pt-button--primary {
   background: linear-gradient(135deg, #3aa686 0%, var(--green-dark) 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 8px 24px rgba(23, 106, 83, 0.2) !important;
+  box-shadow: var(--neu-shadow-out);
 }
 
 .pt-button--primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(23, 106, 83, 0.28) !important;
+  box-shadow: var(--neu-shadow-out);
 }
 
 .pt-button--secondary {
@@ -108,8 +108,7 @@
   background: rgba(255, 255, 255, 0.35) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 8px 32px 0 rgba(142, 197, 252, 0.04), 
-              inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  box-shadow: var(--neu-shadow-in);
   padding: var(--space-card-padding);
 }
 
@@ -124,7 +123,7 @@
   background: rgba(255, 255, 255, 0.55) !important;
   border-color: rgba(255, 255, 255, 0.75) !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.03) !important;
+  box-shadow: var(--neu-shadow-out);
 }
 
 .pt-surface-card--interactive:active {
@@ -184,7 +183,7 @@
   padding: var(--space-2) var(--space-card-padding-lg);
   background: rgba(255, 255, 255, 0.45) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.5) !important;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.03) !important;
+  box-shadow: var(--neu-shadow-out);
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
 }
@@ -209,7 +208,7 @@
 .pt-bottom-nav__item.is-active {
   color: var(--brown) !important;
   background: rgba(255, 255, 255, 0.7) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+  box-shadow: var(--neu-shadow-out);
 }
 
 .pt-bottom-nav__label {
@@ -257,7 +256,7 @@
   height: 22px;
   border-radius: 50%;
   background: #ffffff !important;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: var(--neu-shadow-out);
   transition: transform 0.25s var(--ease-spring-bouncy), background-color 0.2s ease !important;
 }
 
@@ -299,7 +298,7 @@
   background: rgba(255, 255, 255, 0.75) !important; /* Уплотненное стекло для читаемости контента */
   backdrop-filter: blur(30px) !important;
   -webkit-backdrop-filter: blur(30px) !important;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: var(--neu-shadow-out);
   transform: translateY(102%);
   transition: transform var(--motion-dialog-enter) var(--ease-emphasized);
   max-height: min(82dvh, 720px);

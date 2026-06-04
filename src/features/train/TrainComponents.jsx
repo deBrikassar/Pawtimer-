@@ -149,7 +149,7 @@ export function SessionControl({
             <div className="sc-time" style={{ position: 'relative', zIndex: 1 }}>
               {isRunning && isPastTarget && <div className="session-panel__over">+{fmt(overTargetSeconds)}</div>}
               <OdometerTime value={isRunning ? fmt(Math.max(0, target - elapsed)) : fmt(target)} />
-              <div className="session-panel__eyebrow">{completed ? "GOOD DOG!" : (isRunning ? "ZEN MODE" : "STAY COMMAND")}</div>
+              <div className="session-panel__eyebrow">{completed ? "GOOD DOG!" : (isRunning ? "ZEN MODE" : "Home alone")}</div>
             </div>
           </div>
 

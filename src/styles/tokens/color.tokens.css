@@ -1,36 +1,52 @@
 :root {
-  /* 2026 Warm Minimalism — primitive palette */
-  --color-bg: #F4F5F3;
-  --color-bg-subtle: #F7F7F5;
-  --color-surface: #FAFAF8;
-  --color-surface-soft: #ECEDE9;
-  --color-surface-raised: #FDFDFB;
-  --color-border: #DFE1DA;
-  --color-border-strong: #C9CDC3;
+  /* 2026 Warm & Cozy Palette — Warm Taupe for backgrounds and dividers */
+  --color-bg: #FAF8F5; /* Warm, airy cream/taupe */
+  --color-bg-subtle: #F2EBE5; /* Soft warm taupe background */
+  --color-surface: #FFFFFF; /* Pure white for contrast */
+  --color-surface-soft: #FCFAF8; /* Ultra light warm tint */
+  --color-surface-raised: #FFFFFF;
+  --color-border: #E6DDD4; /* Warm taupe divider */
+  --color-border-strong: #D5C6B5; /* Stronger warm taupe divider */
 
-  /* Neumorphism — sage base */
-  --neu-base: #E4E8E2;
-  --neu-light: #F2F5F0;
-  --neu-dark: #C8CCCA;
+  /* Neumorphism legacy aliases (mapped to warm variables) */
+  --neu-base: #FFFFFF;
+  --neu-light: #FFFFFF;
+  --neu-dark: #E6DDD4;
 
-  --color-text: #2C2C29;
-  --color-text-muted: #666861;
-  --color-text-subtle: #8A8D85;
+  /* Warm High Contrast Text */
+  --color-text: #2A2421; /* Deep warm brown-black */
+  --color-text-muted: #544941; /* Muted warm taupe text */
+  --color-text-subtle: #82756A; /* Subtle warm taupe text */
 
-  --color-primary-700: #2F7A57;
-  --color-primary-600: #3D8C67;
-  --color-primary-200: #B8E0C7;
+  /* Vibrant Accents */
+  --color-primary-700: #4A5D23; /* Dark Sage / Olive */
+  --color-primary-600: #6B8E23; /* Sage Green */
+  --color-primary-200: #A8C382; /* Light Sage */
 
-  --color-info-500: #5B78B4;
-  --color-info-600: #4D6AA5;
-  --color-info-50: #F1F2EF;
-  --color-info-100: #E6E8E2;
-  --color-info-200: #D8DBD3;
+  /* Cozy Warm Accents (Caramel, Soft Terracotta, Mustard) */
+  --color-cozy-100: #FDF3E7;
+  --color-cozy-300: #F0CF9E; /* Muted mustard / caramel */
+  --color-cozy-500: #D89A5E; /* Caramel / Wood */
+  --color-cozy-700: #B36A3E; /* Soft Terracotta */
 
-  --color-success-600: #2F7A57;
-  --color-warning-600: #B87B3E;
-  --color-error-600: #C24138;
+  --color-info-500: #D89A5E; /* Replacing cold indigo with warm caramel */
+  --color-info-600: #B36A3E; /* Replacing cold indigo with soft terracotta */
+  --color-info-50: #FDF3E7;
+  --color-info-100: #F7E4CF;
+  --color-info-200: #EACCA9;
 
-  --color-warm-accent: #DED3C1;
-  --color-warm-accent-strong: #C8B299;
+  --color-success-600: #6B8E23; /* Sage Green */
+  --color-warning-600: #D89A5E; /* Caramel / Muted mustard */
+  --color-error-600: #C55A46; /* Softer, warmer red/terracotta */
+
+  --color-warm-accent: var(--color-cozy-300);
+  --color-warm-accent-strong: var(--color-cozy-500);
+
+  /* Bento widget accent palette - Cozy & Saturated */
+  --color-accent-streak: #8A9A5B; /* Sage Green */
+  --color-accent-streak-bg: #EAEFE4;
+  --color-accent-calm: var(--color-cozy-500); /* Warm Caramel */
+  --color-accent-calm-bg: var(--color-cozy-100);
+  --color-accent-warm: var(--color-cozy-700); /* Soft Terracotta */
+  --color-accent-warm-bg: #FAF0E6;
 }

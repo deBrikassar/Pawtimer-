@@ -7,11 +7,11 @@
   --space-5: 40px;
   --space-6: 48px;
 
-  --space-density-compact-surface: 12px;
-  --space-density-default-surface: 16px;
-  --space-density-roomy-surface: 24px;
-  --space-density-compact-section-gap: var(--space-2);
-  --space-density-default-section-gap: var(--space-3);
+  --space-density-compact-surface: 16px;
+  --space-density-default-surface: 24px;
+  --space-density-roomy-surface: 32px;
+  --space-density-compact-section-gap: var(--space-3);
+  --space-density-default-section-gap: var(--space-4);
   --space-density-roomy-section-gap: var(--space-4);
   --space-density-compact-row-gap: var(--space-1);
   --space-density-default-row-gap: var(--space-2);

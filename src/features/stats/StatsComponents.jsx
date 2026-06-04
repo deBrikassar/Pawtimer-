@@ -10,7 +10,7 @@ export const METRIC_VARIANTS = Object.freeze({
 
 const WAVE_CHART_WIDTH = 720;
 const WAVE_CHART_HEIGHT = 220;
-const WAVE_CHART_PADDING = { top: 18, right: 20, bottom: 32, left: 20 };
+const WAVE_CHART_PADDING = { top: 18, right: 20, bottom: 32, left: 48 };
 function buildSmoothPathThroughPoints(points = [], tension = 0.18) {
   if (!points.length) return "";
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
@@ -100,13 +100,24 @@ export function StatsMetricCard({
   );
 }
 
-export function StatsSupportRow({ label, value }) {
+export function StatsSupportRow({ label, value, progress = null }) {
+  const hasProgress = progress !== null && Number.isFinite(progress);
   return (
-    <div className="stats-support-row surface-row info-row">
-      <div className="stats-support-label-wrap surface-row__label-wrap info-row__label-wrap">
-        <span className="stats-support-label surface-row__label info-row__label">{label}</span>
+    <div className={`stats-support-row surface-row info-row ${hasProgress ? "stats-support-row--with-progress" : ""}`.trim()}>
+      <div className="stats-support-row-top">
+        <div className="stats-support-label-wrap surface-row__label-wrap info-row__label-wrap">
+          <span className="stats-support-label surface-row__label info-row__label">{label}</span>
+        </div>
+        <span className="stats-support-value surface-row__value info-row__value">{value}</span>
       </div>
-      <span className="stats-support-value surface-row__value info-row__value">{value}</span>
+      {hasProgress && (
+        <div className="stats-support-progress-track">
+          <div
+            className="stats-support-progress-fill"
+            style={{ width: `${Math.max(0, Math.min(progress, 1)) * 100}%` }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -136,6 +147,7 @@ export function ProgressHero({
   targetLabel = "Next target",
   targetSeconds = null,
   insight,
+  overallGoalProgress = null,
 }) {
   const dogInitial = (name || "D").trim().charAt(0).toUpperCase();
   const progressRatio = Number.isFinite(currentSeconds) && Number.isFinite(targetSeconds) && targetSeconds > 0
@@ -143,45 +155,77 @@ export function ProgressHero({
     : null;
   const progressPct = progressRatio != null ? Math.round(progressRatio * 100) : null;
 
+  // Resolve overall goal progress percentage from prop or parsed from headline text
+  const overallGoalPct = overallGoalProgress ?? (
+    headline && headline.match(/(\d+)%/) ? parseInt(headline.match(/(\d+)%/)[1], 10) : 0
+  );
+
+  const heroRadius = 60;
+  const heroCircumference = 2 * Math.PI * heroRadius;
+  const heroStrokeDashoffset = heroCircumference - (Math.min(overallGoalPct, 100) / 100) * heroCircumference;
+
   return (
     <div
       className={`stats-progress-hero metric-surface metric-surface--headline surface-state--${headlineSurfaceState}`.trim()}
       aria-label={`${name}'s progress hero`}
     >
       <span className="stats-progress-hero-aura" aria-hidden="true" />
-      <div className="stats-progress-hero-topline">
-        <div className="stats-progress-dog-chip">
-          <span className="stats-progress-dog-mark" aria-hidden="true">{dogInitial}</span>
-          <span className="stats-progress-dog-name">{name}</span>
+      
+      <div className="stats-progress-hero-inner">
+        <div className="stats-progress-hero-left">
+          <div className="stats-progress-values" role="group" aria-label="Current value and next step">
+            <div className="stats-progress-value-block">
+              <div className="stats-progress-value">{currentValue}</div>
+              <div className="stats-progress-label">{currentLabel}</div>
+            </div>
+            <div className="stats-progress-value-divider" aria-hidden="true" />
+            <div className="stats-progress-value-block">
+              <div className="stats-progress-value stats-progress-value--target">{targetValue}</div>
+              <div className="stats-progress-label">{targetLabel}</div>
+            </div>
+          </div>
         </div>
-        <span className="stats-progress-headline-status">{headlineStatus}</span>
+
+        <div className="stats-progress-hero-right">
+          <div className="stats-progress-hero-ring-wrapper">
+            <svg width="140" height="140" viewBox="0 0 140 140" className="stats-progress-hero-ring-svg">
+              <circle
+                cx="70"
+                cy="70"
+                r={heroRadius}
+                className="stats-progress-hero-ring-track"
+                fill="none"
+                stroke="var(--color-border)"
+                strokeWidth="8"
+              />
+              <circle
+                cx="70"
+                cy="70"
+                r={heroRadius}
+                className="stats-progress-hero-ring-fill"
+                fill="none"
+                stroke="url(#heroRingGradient)"
+                strokeWidth="8"
+                strokeDasharray={heroCircumference}
+                strokeDashoffset={heroStrokeDashoffset}
+                strokeLinecap="round"
+                transform="rotate(-90 70 70)"
+              />
+              <defs>
+                <linearGradient id="heroRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="var(--color-primary-200)" />
+                  <stop offset="100%" stopColor="var(--color-primary-700)" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="stats-progress-hero-ring-inner">
+              <span className="stats-progress-hero-ring-value">{overallGoalPct}%</span>
+              <span className="stats-progress-hero-ring-label">of goal</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <h3 className="stats-progress-headline">{headline || headlineStatus}</h3>
-
-      <div className="stats-progress-values" role="group" aria-label="Current value and next step">
-        <div className="stats-progress-value-block">
-          <div className="stats-progress-value">{currentValue}</div>
-          <div className="stats-progress-label">{currentLabel}</div>
-        </div>
-        <div className="stats-progress-value-divider" aria-hidden="true" />
-        <div className="stats-progress-value-block">
-          <div className="stats-progress-value stats-progress-value--target">{targetValue}</div>
-          <div className="stats-progress-label">{targetLabel}</div>
-        </div>
-      </div>
-
-      {progressPct != null ? (
-        <div className="stats-progress-rail-wrap" aria-label={`${progressPct}% toward next target`}>
-          <svg className="stats-progress-rail" viewBox="0 0 100 7" preserveAspectRatio="none" aria-hidden="true">
-            <rect className="stats-progress-rail-track" x="0" y="0" width="100" height="7" rx="3.5" ry="3.5" />
-            <rect className="stats-progress-rail-fill" x="0" y="0" width={Math.max(progressPct, 6)} height="7" rx="3.5" ry="3.5" />
-          </svg>
-          <span className="stats-progress-rail-text">{progressPct}% to next step</span>
-        </div>
-      ) : null}
-
-      {insight ? <p className="stats-progress-insight">{insight}</p> : null}
     </div>
   );
 }
@@ -306,7 +350,7 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
   return (
     <div className="chart-wrap chart-wrap-full surface-card surface-card--chart">
       {insightLabel ? <div className="chart-insight">{insightLabel}</div> : null}
-      <div className="chart-title">Rep duration over time (min)</div>
+      <div className="chart-title">Rep duration over time</div>
       <div className="stats-progress-wave" role="img" aria-label={`${name}'s recent session durations`}>
         <svg viewBox={`0 0 ${WAVE_CHART_WIDTH} ${WAVE_CHART_HEIGHT}`} className="stats-progress-wave-svg" preserveAspectRatio="none">
           <defs>
@@ -316,6 +360,9 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
             </linearGradient>
           </defs>
 
+          <text x="0" y={chartTop + 8} fill="var(--text-muted)" fontSize="10" className="chart-y-axis-label">{fmt(maxY * 60)}</text>
+          <text x="0" y={chartBottom - 4} fill="var(--text-muted)" fontSize="10" className="chart-y-axis-label">{fmt(minY * 60)}</text>
+
           <line
             x1={WAVE_CHART_PADDING.left}
             x2={WAVE_CHART_WIDTH - WAVE_CHART_PADDING.right}
@@ -324,13 +371,16 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
             className="stats-progress-wave-baseline"
           />
           {goalY != null ? (
-            <line
-              x1={WAVE_CHART_PADDING.left}
-              x2={WAVE_CHART_WIDTH - WAVE_CHART_PADDING.right}
-              y1={goalY}
-              y2={goalY}
-              className="stats-progress-wave-goal"
-            />
+            <g>
+              <text x={WAVE_CHART_WIDTH - 24} y={goalY - 4} fill="var(--text-muted)" fontSize="10" className="chart-y-axis-label">Goal</text>
+              <line
+                x1={WAVE_CHART_PADDING.left}
+                x2={WAVE_CHART_WIDTH - WAVE_CHART_PADDING.right}
+                y1={goalY}
+                y2={goalY}
+                className="stats-progress-wave-goal"
+              />
+            </g>
           ) : null}
 
           <path d={areaPath} fill={`url(#${areaGradientId})`} opacity="0.45" />
@@ -364,11 +414,39 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
           {tickPoints.map((point) => (
             <div key={`tick-${point.index}`} className="stats-progress-wave-meta-col">
               <span className="stats-progress-wave-meta-session">Session {point.entry.session}</span>
-              <span className="stats-progress-wave-meta-value">{fmt(point.entry.durationSeconds)}</span>
             </div>
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── Bento Grid Components ─────────────────────────────────────────────── */
+
+export function BentoGrid({ children, className = "" }) {
+  return (
+    <div className={`stats-bento-grid ${className}`.trim()}>
+      {children}
+    </div>
+  );
+}
+
+export function StatsBentoWidget({
+  value,
+  label,
+  icon = null,
+  shape = "rect",
+  accentColor = "streak",
+  className = "",
+}) {
+  return (
+    <div className={`stats-bento-widget-container ${className}`.trim()}>
+      <div className={`stats-bento-widget stats-bento-widget--accent-${accentColor}`}>
+        {icon && <div className="stats-bento-widget__icon">{icon}</div>}
+        <span className="stats-bento-widget__value">{value}</span>
+      </div>
+      <span className="stats-bento-widget__label stats-bento-widget__label--external">{label}</span>
     </div>
   );
 }

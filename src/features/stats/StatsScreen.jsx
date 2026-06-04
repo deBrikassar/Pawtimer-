@@ -1,22 +1,19 @@
 import EmptyState from "../../components/EmptyState";
-import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow } from "./StatsComponents";
+import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow, ProgressHero, StatsInsightCard, BentoGrid, StatsBentoWidget } from "./StatsComponents";
 import { fmt } from "../app/helpers";
 import { SproutIcon } from "../app/ui";
 import { ContextHint } from "../../components/primitives/Primitives";
 import { useHint } from "../app/useHint";
 
-export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, overallGoalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone }) {
+export default function StatsScreen({ name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, overallGoalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone, contextualInsights, streak, calmRate7 }) {
   const target = recommendation?.duration ?? 0;
   const hasValidBestCalm = Number.isFinite(bestCalm) && bestCalm >= 0;
   const hasOverallGoal = Number.isFinite(overallGoalSec) && overallGoalSec > 0;
   const progressRatio = hasValidBestCalm && hasOverallGoal
     ? Math.max(0, Math.min(bestCalm / overallGoalSec, 1))
     : null;
-  const headlineMetricVariant = METRIC_VARIANTS.HEADLINE;
-  const standardMetricVariant = METRIC_VARIANTS.STANDARD;
   const ringMetricVariant = METRIC_VARIANTS.RING;
   const headlineSurfaceState = headlineStatusTone?.surfaceState || "today";
-  const riskSurfaceState = relapseTone?.surfaceState || "today";
   
   const statsHint = useHint(`stats_${name}`);
 
@@ -34,75 +31,67 @@ export default function StatsScreen({ name, totalCount, setTab, bestCalm, recomm
               className="mb-4"
             />
           )}
-          <StatsSection title="Overall training progress" className="stats-section-priority stats-section-goal-progress">
-            <div className="stats-goal-progress" role="group" aria-label="Overall training progress">
-              {hasValidBestCalm && hasOverallGoal ? (
-                <>
-                  <div className="stats-goal-progress-value">{fmt(bestCalm)} / {fmt(overallGoalSec, { hoursMinutesOnly: true })} goal</div>
-                  <div className="stats-goal-progress-track" aria-hidden="true">
-                    <span className="stats-goal-progress-fill" style={{ width: `${progressRatio * 100}%` }} // INLINE_STYLE_TECHNICAL_EXCEPTION
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="stats-goal-progress-empty">{hasValidBestCalm ? "Set a training goal to track overall progress" : "Start your first session to track progress"}</div>
-                  <div className="stats-goal-progress-track" aria-hidden="true" />
-                </>
-              )}
-            </div>
-          </StatsSection>
+          
+          <div className="stats-hero-wrap u-mb-section">
+            <ProgressHero
+              name={name}
+              headlineStatus={headlineStatus}
+              headline={hasValidBestCalm && hasOverallGoal ? `${Math.round(progressRatio * 100)}% to Overall Goal` : "Training Progress"}
+              headlineSurfaceState={headlineSurfaceState}
+              currentValue={fmt(bestCalm)}
+              currentLabel="Best time"
+              currentSeconds={bestCalm}
+              targetValue={fmt(target)}
+              targetLabel="Next target"
+              targetSeconds={target}
+              insight={relapseTone && relapseTone.label !== "Stable" ? `⚠️ Risk: ${relapseTone.label} - Consider slowing down` : null}
+              overallGoalProgress={hasValidBestCalm && hasOverallGoal ? Math.round(progressRatio * 100) : 0}
+            />
+          </div>
 
-          <StatsSection title="Journey curve">
+          <div className="stats-hero-wrap u-mb-section">
             <StatsChartSection chartData={chartData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmt} insightLabel={chartTrendLabel} />
-          </StatsSection>
-
-          <StatsSection title="Confidence signals">
-            <div className="stats-row stats-row-core stats-row-core-trimmed">
-              <StatsMetricCard
-                value={fmt(bestCalm)}
-                label="Best time"
-                className="stat-card--key-metric"
-                variant={standardMetricVariant}
-              />
-              <StatsMetricCard
-                value={fmt(target)}
-                label="Next target"
-                className="stat-card--key-metric"
-                variant={standardMetricVariant}
-              />
-              <StatsMetricCard
-                value={relapseTone.label}
-                label="Risk"
-                className={`stat-card--key-metric stat-card-risk surface-state--${riskSurfaceState}`}
-                variant={standardMetricVariant}
-              />
-            </div>
-          </StatsSection>
-
-          <StatsSection title="Today’s feeling">
-            <div className="stats-metric-anchor">
-              <div
-                className={`stats-headline-card metric-surface metric-surface--${headlineMetricVariant} surface-state--${headlineSurfaceState}`.trim()}
-                data-metric-variant={headlineMetricVariant}
-                aria-label="Current recommendation"
-              >
-                  <span className="stats-headline-label">Confidence recommendation</span>
-                <div className="stats-headline-main">
-                  <span className="stats-headline-value">{fmt(target)}</span>
-                  <span className="stats-headline-status">{headlineStatus}</span>
-                </div>
-              </div>
-            </div>
-          </StatsSection>
+          </div>
 
           <StatsSection title="Daily rhythm" className="stats-section-supporting">
-            <div className="stats-support-list">
-              <StatsSupportRow label="Alone time per week" value={fmt(aloneLastWeek)} />
-              <StatsSupportRow label="Average walk duration" value={avgWalkDuration != null ? fmt(avgWalkDuration, { hoursMinutesOnly: true }) : "—"} />
-              <StatsSupportRow label="Average sessions/day" value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"} />
-              <StatsSupportRow label="Average walks/day" value={avgWalksPerDay != null ? avgWalksPerDay.toFixed(1) : "—"} />
-            </div>
+            <BentoGrid>
+              <StatsBentoWidget
+                value={streak ?? 0}
+                label="Calm streak"
+                icon="🐾"
+                accentColor="streak"
+              />
+              <StatsBentoWidget
+                value={totalCount}
+                label="Total sessions"
+                icon="🦴"
+                accentColor="streak"
+              />
+              <StatsBentoWidget
+                value={avgWalkDuration != null ? fmt(avgWalkDuration, { hoursMinutesOnly: true }) : "—"}
+                label="Avg walk"
+                icon="🦮"
+                accentColor="warm"
+              />
+              <StatsBentoWidget
+                value={calmRate7 != null ? `${calmRate7}%` : "—"}
+                label="Calm rate (7d)"
+                icon="🎾"
+                accentColor="calm"
+              />
+              <StatsBentoWidget
+                value={fmt(aloneLastWeek)}
+                label="Alone time/wk"
+                icon="🏡"
+                accentColor="warm"
+              />
+              <StatsBentoWidget
+                value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"}
+                label="Sessions/day"
+                icon="🔁"
+                accentColor="calm"
+              />
+            </BentoGrid>
           </StatsSection>
         </>}
       </div>

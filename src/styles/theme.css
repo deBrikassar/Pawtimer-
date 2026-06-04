@@ -17,11 +17,11 @@
   --color-secondary-600: var(--color-info-600);
   --color-secondary-700: #405B90;
   --color-secondary-800: #334977;
-  --surface-diagnostics-bg: #1f1f1f;
-  --text-diagnostics: #e7e7e7;
+  --surface-diagnostics-bg: #2A2421;
+  --text-diagnostics: #E6DDD4;
 
   --chart-grid-stroke: rgba(86,95,84,0.12);
-  --chart-tooltip-bg: #111827;
+  --chart-tooltip-bg: #2A2421;
   --chart-tooltip-border: rgba(255,255,255,0.08);
   --chart-tooltip-shadow: 0 16px 30px rgba(15,23,42,0.20);
 
@@ -53,29 +53,29 @@
   --surface-ring-inner-bg: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.96) 0%, rgba(247,248,245,0.98) 46%, var(--blue-wash) 100%);
   --surface-ring-inner-highlight: inset 0 1px 0 rgba(255,255,255,0.9);
 
-  /* NEUMORPHISM — Sage */
-  --bg: var(--neu-base);
-  --surf: var(--neu-base);
-  --surf-soft: color-mix(in srgb, var(--neu-base) 94%, var(--neu-dark));
-  --border: rgba(200, 204, 202, 0.5);
-  --border-strong: rgba(190, 194, 192, 0.8);
-  --surface-frost: var(--neu-base);
-  --surface-muted: color-mix(in srgb, var(--neu-base) 96%, var(--neu-dark));
-  --surface-tint: var(--neu-base);
-  --surface-gradient-soft: var(--neu-base);
-  --surface-gradient-raised: var(--neu-base);
+  /* UI Foundation — High Contrast mapping */
+  --bg: var(--color-bg);
+  --surf: var(--color-surface);
+  --surf-soft: var(--color-surface-soft);
+  --border: var(--color-border);
+  --border-strong: var(--color-border-strong);
+  --surface-frost: var(--color-surface-raised);
+  --surface-muted: var(--color-bg-subtle);
+  --surface-tint: var(--color-surface);
+  --surface-gradient-soft: var(--color-surface);
+  --surface-gradient-raised: var(--color-surface-raised);
 
-  --surface-state-bg-default: var(--neu-base);
-  --surface-state-border-default: rgba(200, 204, 202, 0.4);
+  --surface-state-bg-default: var(--color-surface);
+  --surface-state-border-default: var(--color-border);
   --surface-state-accent-default: var(--text);
-  --surface-state-bg-today: var(--neu-base);
-  --surface-state-border-today: rgba(200, 204, 202, 0.5);
+  --surface-state-bg-today: var(--color-surface);
+  --surface-state-border-today: var(--color-border-strong);
   --surface-state-accent-today: var(--green-dark);
-  --surface-state-bg-upcoming: var(--neu-base);
-  --surface-state-border-upcoming: rgba(200, 204, 202, 0.4);
+  --surface-state-bg-upcoming: var(--color-surface-soft);
+  --surface-state-border-upcoming: var(--color-border);
   --surface-state-accent-upcoming: var(--blue-dark);
-  --surface-state-bg-overdue: var(--neu-base);
-  --surface-state-border-overdue: rgba(200, 204, 202, 0.4);
+  --surface-state-bg-overdue: var(--color-surface-soft);
+  --surface-state-border-overdue: var(--color-border-strong);
   --surface-state-accent-overdue: var(--red);
 }
 
@@ -123,12 +123,13 @@ select:focus-visible {
 .surface-card,
 [class*="surface-card"],
 .glass-panel {
-  background: var(--surface-card-bg, var(--surf)) !important;
+  background: color-mix(in srgb, var(--surface-card-bg, var(--surf)) 85%, transparent) !important;
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow) !important;
   border-radius: var(--radius-md);
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  color: var(--text) !important;
 }
 
 /* Кнопки — мягкое нажатие */

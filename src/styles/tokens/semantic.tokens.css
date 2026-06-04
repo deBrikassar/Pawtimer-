@@ -51,8 +51,8 @@
   --surface-overlay-strong: rgba(30,34,30,0.36);
   --surface-frost: rgba(250,251,248,0.94);
 
-  --surface-gradient-soft: linear-gradient(180deg, var(--surf) 0%, var(--surface-tint) 100%);
-  --surface-gradient-raised: linear-gradient(180deg, var(--surf) 0%, var(--color-surface-raised) 100%);
+  --surface-gradient-soft: var(--surf);
+  --surface-gradient-raised: var(--color-surface-raised);
 
   --warm-accent-soft: color-mix(in srgb, var(--color-warm-accent) 14%, var(--surf));
   --warm-accent-border: color-mix(in srgb, var(--color-warm-accent-strong) 20%, var(--border));

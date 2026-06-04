@@ -336,7 +336,8 @@ export function HistoryScreen({ timeline, sessions, name, setTab, patLabels, his
   const timelineByDay = timeline.reduce((acc, item) => {
     const isoDate = item?.date;
     if (!isoDate) return acc;
-    const dayKey = isoDate.slice(0, 10);
+    const dayKey = toDateInputValue(isoDate);
+    if (!dayKey) return acc;
     if (!acc[dayKey]) acc[dayKey] = [];
     acc[dayKey].push(item);
     return acc;
