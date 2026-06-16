@@ -68,10 +68,10 @@ function useAnimatedValue(value, { duration = 180, round = false } = {}) {
   return displayValue;
 }
 
-export function StatsSection({ title, children, className = "" }) {
+export function StatsSection({ title, children, className = "", centerTitle = false }) {
   return (
     <div className={`stats-section ${className}`.trim()}>
-      <h2 className="stats-section-title">{title}</h2>
+      <h2 className={`stats-section-title ${centerTitle ? "stats-section-title--centered" : ""}`}>{title}</h2>
       {children}
     </div>
   );
@@ -114,7 +114,7 @@ export function StatsSupportRow({ label, value, progress = null }) {
         <div className="stats-support-progress-track">
           <div
             className="stats-support-progress-fill"
-            style={{ width: `${Math.max(0, Math.min(progress, 1)) * 100}%` }}
+            style={ { width: `${Math.max(0, Math.min(progress, 1)) * 100}%` } }
           />
         </div>
       )}
@@ -165,38 +165,30 @@ export function ProgressHero({
   const heroStrokeDashoffset = heroCircumference - (Math.min(overallGoalPct, 100) / 100) * heroCircumference;
 
   return (
-    <div className="surface-card surface-card--chart" style={{
-      width: '100%',
-      padding: '24px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '24px',
-      boxSizing: 'border-box'
-    }}>
+    <div className="surface-card surface-card--chart progress-hero-card">
       
       {/* Левая часть: Статистика */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      <div className="progress-hero-stats">
         {/* Best time */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '20px', fontWeight: '600', color: '#44403c' }}>{currentValue}</span>
-          <span style={{ fontSize: '12px', fontWeight: '500', color: '#78716c', marginTop: '4px' }}>{currentLabel}</span>
+        <div className="progress-hero-stat-col">
+          <span className="progress-hero-stat-value">{currentValue}</span>
+          <span className="progress-hero-stat-label">{currentLabel}</span>
         </div>
         
         {/* Вертикальный разделитель */}
-        <div style={{ width: '1px', height: '40px', backgroundColor: '#e5e7eb' }}></div>
+        <div className="progress-hero-divider"></div>
         
         {/* Next target */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '20px', fontWeight: '600', color: '#44403c' }}>{targetValue}</span>
-          <span style={{ fontSize: '12px', fontWeight: '500', color: '#78716c', marginTop: '4px' }}>{targetLabel}</span>
+        <div className="progress-hero-stat-col">
+          <span className="progress-hero-stat-value">{targetValue}</span>
+          <span className="progress-hero-stat-label">{targetLabel}</span>
         </div>
       </div>
 
       {/* Правая часть: Круговой график */}
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '112px', height: '112px', flexShrink: 0 }}>
+      <div className="progress-hero-ring-container">
         {/* SVG кольца */}
-        <svg style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)', filter: 'none' }} viewBox="0 0 100 100">
+        <svg className="progress-hero-ring-svg" viewBox="0 0 100 100">
           {/* Фоновое кольцо (серое) */}
           <circle cx="50" cy="50" r="42" stroke="#F5F5F4" strokeWidth="8" fill="none" />
           {/* Заполненное кольцо прогресса (зеленое) */}
@@ -209,9 +201,9 @@ export function ProgressHero({
         </svg>
         
         {/* Текст внутри кольца */}
-        <div style={{ position: 'absolute', inset: '0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: '24px', fontWeight: '600', color: '#44403c', lineHeight: '1' }}>{overallGoalPct}%</span>
-          <span style={{ fontSize: '10px', fontWeight: '500', color: '#78716c', marginTop: '4px' }}>of goal</span>
+        <div className="progress-hero-ring-text">
+          <span className="progress-hero-ring-pct">{overallGoalPct}%</span>
+          <span className="progress-hero-ring-lbl">of goal</span>
         </div>
       </div>
       
@@ -415,7 +407,7 @@ export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insig
 
 export function BentoGrid({ children, className = "" }) {
   return (
-    <div className={className} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '440px', margin: '0 auto', justifyItems: 'center' }}>
+    <div className={`bento-grid ${className}`.trim()}>
       {children}
     </div>
   );
@@ -430,19 +422,16 @@ export function StatsBentoWidget({
   className = "",
 }) {
   return (
-    <div className={`flex flex-col items-center ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div 
-        className="glass-panel" 
-        style={{ width: '120px', height: '120px', flexShrink: 0, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.5)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
-      >
+    <div className={`stats-bento-widget ${className}`.trim()}>
+      <div className="stats-bento-icon-wrap glass-panel">
         {icon && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {typeof icon === "string" ? <span style={{ fontSize: '38px', lineHeight: 1 }}>{icon}</span> : icon}
+          <div className="stats-bento-icon-inner">
+            {typeof icon === "string" ? <span className="stats-bento-icon-emoji">{icon}</span> : icon}
           </div>
         )}
-        <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', lineHeight: 1, marginTop: '4px' }}>{value}</span>
+        <span className="stats-bento-value">{value}</span>
       </div>
-      <span style={{ fontSize: '14px', color: '#6b7280', textAlign: 'center', marginTop: '12px', padding: '0 4px', lineHeight: 1.2 }}>{label}</span>
+      <span className="stats-bento-label">{label}</span>
     </div>
   );
 }

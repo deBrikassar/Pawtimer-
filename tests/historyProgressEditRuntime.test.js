@@ -77,9 +77,11 @@ const createMemoryStorage = () => {
 describe("runtime regression guard: edit duration -> history/progress/hydration", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it("edits duration by writing the changed value into the stored session", () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-04-12T00:00:00Z"));
     const { actions, getState, setHistoryModal } = buildHistoryHarness();
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "2:10" }, setHistoryModal);
 
@@ -89,6 +91,7 @@ describe("runtime regression guard: edit duration -> history/progress/hydration"
   });
 
   it("materializes History from edited data immediately after the edit commit", () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-04-12T00:00:00Z"));
     const { actions, getState } = buildHistoryHarness();
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "1:37" }, vi.fn());
 
@@ -98,6 +101,7 @@ describe("runtime regression guard: edit duration -> history/progress/hydration"
   });
 
   it("recomputes progress metrics from edited duration instead of pre-edit values", () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-04-12T00:00:00Z"));
     const { actions, getState } = buildHistoryHarness();
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "1:37" }, vi.fn());
 
@@ -107,6 +111,7 @@ describe("runtime regression guard: edit duration -> history/progress/hydration"
   });
 
   it("keeps repeated edits stable without reverting to an earlier duration", () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-04-12T00:00:00Z"));
     const { actions, getState } = buildHistoryHarness();
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "1:37" }, vi.fn());
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "2:30" }, vi.fn());
@@ -115,6 +120,7 @@ describe("runtime regression guard: edit duration -> history/progress/hydration"
   });
 
   it("keeps edited values through hydration and stale remote merge attempts", () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-04-12T00:00:00Z"));
     const storage = createMemoryStorage();
     vi.stubGlobal("localStorage", storage);
 

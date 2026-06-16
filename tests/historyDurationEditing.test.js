@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { parseDurationInput } from "../src/features/app/helpers";
 import { useHistoryEditing } from "../src/features/history/HistoryFeature";
+import { buildEditedActivityIso } from "../src/lib/activityDateTime";
 
 const baseSession = {
   id: "sess-1",
@@ -135,7 +136,8 @@ describe("session duration edits in history", () => {
     }];
     const afterTimeEdit = timeUpdater(stateWithSyncMetadata);
 
-    expect(afterTimeEdit[0].date).toBe("2026-04-11T11:30:00.000Z");
+    const expectedDate = buildEditedActivityIso("2026-04-11", "11:30");
+    expect(afterTimeEdit[0].date).toBe(expectedDate);
     expect(afterTimeEdit[0].revision).toBe(4);
     expect(afterTimeEdit[0].syncState).toBe("error");
     expect(afterTimeEdit[0].pendingSync).toBe(true);

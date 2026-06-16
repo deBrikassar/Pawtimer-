@@ -3569,3 +3569,157 @@
 .is-timer-active {
   animation: bgBreathe 8s ease-in-out infinite;
 }
+
+/* 4. Stats Components - Refactored inline styles */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(8px, 3vw, 16px);
+  max-width: 440px;
+  width: 100%;
+  margin: 0 auto;
+  justify-items: center;
+}
+
+.stats-bento-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.stats-bento-icon-wrap {
+  width: 100%;
+  max-width: 120px;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.5);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-bento-icon-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-bento-icon-emoji {
+  font-size: 38px;
+  line-height: 1;
+}
+
+.stats-bento-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1f2937;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+.stats-bento-label {
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+  margin-top: 12px;
+  padding: 0 4px;
+  line-height: 1.2;
+}
+
+.stats-bento-icon-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  flex-shrink: 0;
+}
+
+.progress-hero-card {
+  width: 100%;
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  box-sizing: border-box;
+}
+
+.progress-hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.progress-hero-stat-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.progress-hero-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #44403c;
+}
+
+.progress-hero-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #78716c;
+  margin-top: 4px;
+}
+
+.progress-hero-divider {
+  width: 1px;
+  height: 40px;
+  background-color: #e5e7eb;
+}
+
+.progress-hero-ring-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  height: 112px;
+  flex-shrink: 0;
+}
+
+.progress-hero-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  filter: none;
+}
+
+.progress-hero-ring-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-hero-ring-pct {
+  font-size: 24px;
+  font-weight: 600;
+  color: #44403c;
+  line-height: 1;
+}
+
+.progress-hero-ring-lbl {
+  font-size: 10px;
+  font-weight: 500;
+  color: #78716c;
+  margin-top: 4px;
+}
+
+.stats-section-title--centered {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}

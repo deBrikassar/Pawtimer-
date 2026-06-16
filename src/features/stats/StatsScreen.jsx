@@ -20,6 +20,12 @@ export default function StatsScreen() {
   
   const statsHint = useHint(`stats_${name}`);
 
+  const fmtMinutes = (seconds, options) => {
+    if (seconds == null || Number.isNaN(Number(seconds))) return "—";
+    const mins = Math.round(seconds / 60);
+    return fmt(mins * 60, { ...options, hoursMinutesOnly: true });
+  };
+
   return (
     <div className="tab-content stats-tab-content" data-ring-metric-variant={ringMetricVariant}>
       <div className="section">
@@ -41,10 +47,10 @@ export default function StatsScreen() {
               headlineStatus={headlineStatus}
               headline={hasValidBestCalm && hasOverallGoal ? `${Math.round(progressRatio * 100)}% to Overall Goal` : "Training Progress"}
               headlineSurfaceState={headlineSurfaceState}
-              currentValue={fmt(bestCalm)}
+              currentValue={fmtMinutes(bestCalm)}
               currentLabel="Best time"
               currentSeconds={bestCalm}
-              targetValue={fmt(target)}
+              targetValue={fmtMinutes(target)}
               targetLabel="Next target"
               targetSeconds={target}
               insight={relapseTone && relapseTone.label !== "Stable" ? `⚠️ Risk: ${relapseTone.label} - Consider slowing down` : null}
@@ -53,45 +59,45 @@ export default function StatsScreen() {
           </div>
 
           <div className="stats-hero-wrap u-mb-section">
-            <StatsChartSection chartData={chartData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmt} insightLabel={chartTrendLabel} />
+            <StatsChartSection chartData={chartData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmtMinutes} insightLabel={chartTrendLabel} />
           </div>
 
-          <StatsSection title="Daily rhythm" className="stats-section-supporting">
+          <StatsSection title="Daily rhythm" className="stats-section-supporting" centerTitle={true}>
             <BentoGrid>
               <StatsBentoWidget
                 value={streak ?? 0}
                 label="Calm streak"
-                icon={<img src="/icons/icon-calm-streak.webp" alt="Calm streak" width="48" height="48" style={{ width: '48px', height: '48px', objectFit: 'contain', mixBlendMode: 'multiply', flexShrink: 0 }} />}
+                icon={<img src="/icons/icon-calm-streak.webp" alt="Calm streak" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="streak"
               />
               <StatsBentoWidget
                 value={totalCount}
                 label="Total sessions"
-                icon={<img src="/icons/icon-total-sessions.webp" alt="Total sessions" width="48" height="48" style={{ width: '48px', height: '48px', objectFit: 'contain', mixBlendMode: 'multiply', flexShrink: 0 }} />}
+                icon={<img src="/icons/icon-total-sessions.webp" alt="Total sessions" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="streak"
               />
               <StatsBentoWidget
-                value={avgWalkDuration != null ? fmt(avgWalkDuration, { hoursMinutesOnly: true }) : "—"}
+                value={avgWalkDuration != null ? fmtMinutes(avgWalkDuration, { hoursMinutesOnly: true }) : "—"}
                 label="Avg walk"
-                icon={<img src="/icons/icon-avg-walk.webp" alt="Avg walk" width="48" height="48" style={{ width: '48px', height: '48px', objectFit: 'contain', mixBlendMode: 'multiply', flexShrink: 0 }} />}
+                icon={<img src="/icons/icon-avg-walk.webp" alt="Avg walk" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="warm"
               />
               <StatsBentoWidget
                 value={calmRate7 != null ? `${calmRate7}%` : "—"}
                 label="Calm rate (7d)"
-                icon={<img src="/icons/icon-calm-rate.webp" alt="Calm rate" width="48" height="48" style={{ width: '48px', height: '48px', objectFit: 'contain', mixBlendMode: 'multiply', flexShrink: 0 }} />}
+                icon={<img src="/icons/icon-calm-rate.webp" alt="Calm rate" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="calm"
               />
               <StatsBentoWidget
-                value={fmt(aloneLastWeek)}
+                value={fmtMinutes(aloneLastWeek)}
                 label="Alone time/wk"
-                icon={<img src="/icons/icon-alone-time.webp" alt="Alone time" width="48" height="48" style={{ width: '48px', height: '48px', objectFit: 'contain', mixBlendMode: 'multiply', flexShrink: 0 }} />}
+                icon={<img src="/icons/icon-alone-time.webp" alt="Alone time" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="warm"
               />
               <StatsBentoWidget
                 value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"}
                 label="Sessions/day"
-                icon={<img src="/icons/icon-sessions-day.webp" alt="Sessions/day" width="48" height="48" style={{ width: '48px', height: '48px', objectFit: 'contain', mixBlendMode: 'multiply', flexShrink: 0 }} />}
+                icon={<img src="/icons/icon-sessions-day.webp" alt="Sessions/day" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="calm"
               />
             </BentoGrid>

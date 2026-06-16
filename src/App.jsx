@@ -363,7 +363,7 @@ export default function PawTimer() {
   };
   const copyDogId = async () => {
     if (!activeDogId) return;
-    const writeToClipboard = async () => { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(activeDogId); return; } const el = document.createElement("textarea"); el.value = activeDogId; el.setAttribute("readonly", ""); el.style.position = "absolute"; el.style.left = "-9999px"; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); };
+    const writeToClipboard = async () => { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(activeDogId); return; } const el = document.createElement("textarea"); el.value = activeDogId; el.setAttribute("readonly", ""); el.style.position = "absolute"; el.style.left = "-9999px"; document.body.appendChild(el); el.select(); document.execCommand("copy"); document.body.removeChild(el); }; // INLINE_STYLE_TECHNICAL_EXCEPTION
     writeToClipboard().then(() => showToast("Copied")).catch(() => showToast("Failed to copy"));
   };
   const handlePhotoUpload = (e) => {

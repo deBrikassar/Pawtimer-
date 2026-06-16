@@ -110,9 +110,9 @@ const statusTone = (value, { good, warn, invert = false }) => {
     if (value >= warn) return { ...getRiskTone("medium"), label: "Mixed", surfaceState: "upcoming" };
     return { ...getRiskTone("high"), label: "Watch closely", surfaceState: "overdue" };
   }
-  if (value <= good) return getInformationalTone("stable");
-  if (value <= warn) return { ...getRiskTone("medium"), label: "Variable", surfaceState: "upcoming" };
-  return { ...getRiskTone("high"), label: "Unsteady", surfaceState: "overdue" };
+  if (value <= good) return { ...getRiskTone("low"), label: "Low", surfaceState: "today" };
+  if (value <= warn) return { ...getRiskTone("medium"), label: "Medium", surfaceState: "upcoming" };
+  return { ...getRiskTone("high"), label: "High", surfaceState: "overdue" };
 };
 
 export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, feedings, target, protoOverride, recommendation }) {
@@ -260,7 +260,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   const momentumTone = statusTone(trainingStats.momentumScore, { good: 0.65, warn: 0.4 });
   const stabilityTone = statusTone(trainingStats.stabilityScore, { good: 0.65, warn: 0.4 });
   const adherenceTone = statusTone(trainingStats.adherenceScore, { good: 0.75, warn: 0.5 });
-  const relapseTone = statusTone(trainingStats.relapseRisk, { good: 0.3, warn: 0.65, invert: true });
+  const relapseTone = statusTone(trainingStats.relapseRisk, { good: 0.49, warn: 0.719, invert: true });
 
   const chartData = canonicalSessions.slice(-25).map((s, i) => ({
     session: i + 1,

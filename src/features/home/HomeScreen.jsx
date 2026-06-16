@@ -91,7 +91,7 @@ export default function HomeScreen() {
               onChange={handlePhotoUpload}
               aria-hidden="true"
               tabIndex={-1}
-              style={{ display: 'none' }}
+              hidden
             />
           </label>
           <h2 className="train-identity-hero__name">Train with {name}</h2>

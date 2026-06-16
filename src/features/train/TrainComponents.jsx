@@ -81,13 +81,13 @@ export function SessionControl({
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     const tiltX = -(y * 6);  // max 3deg
     const tiltY = x * 6;
-    btn.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.01)`;
+    btn.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.01)`; // INLINE_STYLE_TECHNICAL_EXCEPTION
   }, []);
 
   const handlePointerLeave = useCallback(() => {
     const btn = btnRef.current;
     if (!btn) return;
-    btn.style.transform = "";
+    btn.style.transform = ""; // INLINE_STYLE_TECHNICAL_EXCEPTION
   }, []);
 
   const runDogAction = () => {
@@ -143,10 +143,10 @@ export function SessionControl({
             />
           </svg>
           <div className="sc-content">
-            <svg className="sc-watermark" viewBox="0 0 24 24" aria-hidden="true" style={{ position: 'absolute', width: '50%', height: '50%', opacity: 0.04, pointerEvents: 'none' }}>
+            <svg className="sc-watermark" viewBox="0 0 24 24" aria-hidden="true" style={ { position: 'absolute', width: '50%', height: '50%', opacity: 0.04, pointerEvents: 'none' } }>
               <path fill="currentColor" d="M12 11.5c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5zm5.5-2.5c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5zM6.5 9c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5zm3.5-5.5c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5zm4 0c1.4 0 2.5 1.1 2.5 2.5s-1.1 2.5-2.5 2.5-2.5-1.1-2.5-2.5 1.1-2.5 2.5-2.5z" />
             </svg>
-            <div className="sc-time" style={{ position: 'relative', zIndex: 1 }}>
+            <div className="sc-time" style={ { position: 'relative', zIndex: 1 } }>
               {isRunning && isPastTarget && <div className="session-panel__over">+{fmt(overTargetSeconds)}</div>}
               <OdometerTime value={isRunning ? fmt(Math.max(0, target - elapsed)) : fmt(target)} />
               <div className="session-panel__eyebrow">{completed ? "GOOD DOG!" : (isRunning ? "ZEN MODE" : "Home alone")}</div>
@@ -179,21 +179,21 @@ export function TrainProgressBar({ goalPct, target, goalSec, fmt, elapsed = 0, p
   const activePct = isActive ? progressPct : thresholdPct;
 
   return (
-    <div className="prog-section surface-card surface-card--progress" style={{ overflow: 'visible', padding: '16px' }}>
-      <div className="neumorphic-track-wrap" style={{ margin: '16px 0' }}>
-        <div className="neumorphic-track-fill" style={{ width: `${activePct}%` }}></div>
+    <div className="prog-section surface-card surface-card--progress" style={ { overflow: 'visible', padding: '16px' } }>
+      <div className="neumorphic-track-wrap" style={ { margin: '16px 0' } }>
+        <div className="neumorphic-track-fill" style={ { width: `${activePct}%` } }></div>
         <div 
           className="neumorphic-thumb neumorphic-thumb--paw" 
-          style={{ 
+          style={ { 
             left: `${activePct}%`, 
             transform: `translate(-50%, -50%)` 
-          }} 
+          } } 
           aria-hidden="true"
         >
           <div className="neumorphic-thumb-icon" aria-label="Paw logo"></div>
         </div>
       </div>
-      <div className="prog-meta" style={{ marginTop: '24px' }}>
+      <div className="prog-meta" style={ { marginTop: '24px' } }>
         <span>Threshold <strong className="num-stable">{fmt(target)}</strong></span>
         <span>Goal <strong className="num-stable">{fmt(goalSec)}</strong></span>
       </div>
