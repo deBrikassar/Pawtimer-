@@ -3531,7 +3531,7 @@
 
 /* 2. Settings Screen - Grouping and Cards */
 .settings-container-neumorphic {
-  padding: 0 var(--space-card-padding);
+  /* padding: 0 var(--space-card-padding); removed to match Progress tab */
 }
 
 .settings-neumorphic-card {
