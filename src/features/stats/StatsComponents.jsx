@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState, useRef } from "react";
 import EmptyState from "../../components/EmptyState";
 import { TrendIcon } from "../app/ui";
 
@@ -11,28 +11,6 @@ export const METRIC_VARIANTS = Object.freeze({
 const WAVE_CHART_WIDTH = 720;
 const WAVE_CHART_HEIGHT = 220;
 const WAVE_CHART_PADDING = { top: 18, right: 20, bottom: 32, left: 48 };
-function buildSmoothPathThroughPoints(points = [], tension = 0.18) {
-  if (!points.length) return "";
-  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
-
-  let path = `M ${points[0].x} ${points[0].y}`;
-
-  for (let index = 0; index < points.length - 1; index += 1) {
-    const previous = points[index - 1] ?? points[index];
-    const current = points[index];
-    const next = points[index + 1];
-    const afterNext = points[index + 2] ?? next;
-
-    const c1x = current.x + ((next.x - previous.x) * tension);
-    const c1y = current.y + ((next.y - previous.y) * tension);
-    const c2x = next.x - ((afterNext.x - current.x) * tension);
-    const c2y = next.y - ((afterNext.y - current.y) * tension);
-
-    path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${next.x} ${next.y}`;
-  }
-
-  return path;
-}
 
 function useAnimatedValue(value, { duration = 180, round = false } = {}) {
   const [displayValue, setDisplayValue] = useState(value);
@@ -280,129 +258,132 @@ export function StatsProgressRing({
   );
 }
 
-export function StatsChartSection({ chartData, goalSec, setTab, name, fmt, insightLabel }) {
-  if (chartData.length <= 1) {
+export function StatsChartSection({ distributionData, setTab, name }) {
+  if (!distributionData || distributionData.length === 0 || distributionData.every(d => d.total === 0)) {
     return (
       <EmptyState
         media={<TrendIcon />}
         title="Almost there"
-        body={`Complete 2 more reps to see ${name}'s progress chart.`}
+        body={`Complete your first session to see ${name}'s progress chart.`}
         ctaLabel="Start training →"
         onCta={() => setTab("home")}
       />
     );
   }
 
-  const areaGradientId = useId();
-  const hasGoal = Number.isFinite(goalSec) && goalSec > 0;
-  const goalMinutes = hasGoal ? goalSec / 60 : null;
-  const renderableChartData = chartData.filter((entry) => Number.isFinite(Number(entry.durationMinutes)));
-  if (renderableChartData.length <= 1) {
-    return (
-      <EmptyState
-        media={<TrendIcon />}
-        title="Almost there"
-        body={`Complete 2 more reps to see ${name}'s progress chart.`}
-        ctaLabel="Start training →"
-        onCta={() => setTab("home")}
-      />
-    );
-  }
-  const values = renderableChartData.map((entry) => Number(entry.durationMinutes));
-  const minY = Math.min(...values);
-  const maxY = Math.max(...values);
-  const range = Math.max(1, maxY - minY);
-  const chartBottom = WAVE_CHART_HEIGHT - WAVE_CHART_PADDING.bottom;
-  const chartTop = WAVE_CHART_PADDING.top;
-  const chartWidth = WAVE_CHART_WIDTH - WAVE_CHART_PADDING.left - WAVE_CHART_PADDING.right;
-
-  const points = renderableChartData.map((entry, index) => {
-    const ratioX = renderableChartData.length === 1 ? 0 : index / (renderableChartData.length - 1);
-    const x = WAVE_CHART_PADDING.left + (ratioX * chartWidth);
-    const y = chartBottom - ((values[index] - minY) / range) * (chartBottom - chartTop);
-    return { x, y, entry, index };
-  });
-
-  const wavePath = buildSmoothPathThroughPoints(points);
-
-  const areaPath = `${wavePath} L ${points.at(-1).x} ${chartBottom} L ${points[0].x} ${chartBottom} Z`;
-  const latestPoint = points.at(-1);
-  const goalY = hasGoal
-    ? chartBottom - ((Math.min(Math.max(goalMinutes, minY), maxY) - minY) / range) * (chartBottom - chartTop)
-    : null;
-  const midPoint = points[Math.floor(points.length / 2)];
-  const tickPoints = [points[0], midPoint, points.at(-1)];
+  const maxTotal = Math.max(...distributionData.map(d => d.total));
+  const maxAxisValue = Math.max(4, maxTotal + (maxTotal % 2 === 0 ? 2 : 1));
 
   return (
-    <div className="chart-wrap chart-wrap-full surface-card surface-card--chart">
-      {insightLabel ? <div className="chart-insight">{insightLabel}</div> : null}
-      <div className="chart-title">Session duration over time</div>
-      <div className="stats-progress-wave" role="img" aria-label={`${name}'s recent session durations`}>
-        <svg viewBox={`0 0 ${WAVE_CHART_WIDTH} ${WAVE_CHART_HEIGHT}`} className="stats-progress-wave-svg" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id={areaGradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="color-mix(in srgb, var(--green-light) 30%, transparent)" />
-              <stop offset="100%" stopColor="transparent" />
-            </linearGradient>
-          </defs>
-
-          <text x="0" y={chartTop + 8} fill="var(--text-muted)" fontSize="10" className="chart-y-axis-label">{fmt(maxY * 60)}</text>
-          <text x="0" y={chartBottom - 4} fill="var(--text-muted)" fontSize="10" className="chart-y-axis-label">{fmt(minY * 60)}</text>
-
-          <line
-            x1={WAVE_CHART_PADDING.left}
-            x2={WAVE_CHART_WIDTH - WAVE_CHART_PADDING.right}
-            y1={chartBottom}
-            y2={chartBottom}
-            className="stats-progress-wave-baseline"
-          />
-          {goalY != null ? (
-            <g>
-              <text x={WAVE_CHART_WIDTH - 24} y={goalY - 4} fill="var(--text-muted)" fontSize="10" className="chart-y-axis-label">Goal</text>
-              <line
-                x1={WAVE_CHART_PADDING.left}
-                x2={WAVE_CHART_WIDTH - WAVE_CHART_PADDING.right}
-                y1={goalY}
-                y2={goalY}
-                className="stats-progress-wave-goal"
-              />
-            </g>
-          ) : null}
-
-          <path d={areaPath} fill={`url(#${areaGradientId})`} opacity="0.45" />
-          <path
-            d={wavePath}
-            fill="none"
-            stroke="var(--green-dark)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {points.map((point) => (
-            <circle
-              key={`point-${point.index}`}
-              cx={point.x}
-              cy={point.y}
-              r="2.4"
-              fill="var(--green-dark)"
-            />
-          ))}
-
-          {latestPoint ? (
-            <g transform={`translate(${latestPoint.x} ${latestPoint.y})`} className="stats-progress-wave-latest">
-              <circle r="8" className="stats-progress-wave-latest-halo" />
-              <circle r="4.25" className="stats-progress-wave-latest-core" />
-            </g>
-          ) : null}
-        </svg>
-
-        <div className="stats-progress-wave-meta">
-          {tickPoints.map((point) => (
-            <div key={`tick-${point.index}`} className="stats-progress-wave-meta-col">
-              <span className="stats-progress-wave-meta-session">Session {point.entry.session}</span>
-            </div>
-          ))}
+    <div className="chart-wrap chart-wrap-full surface-card surface-card--chart" style={{ overflow: "hidden", position: "relative", padding: "20px 20px 16px 20px", display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", zIndex: 2, position: "relative" }}>
+        <div className="chart-title" style={{ fontWeight: "var(--font-semibold)", color: "#4A4A4A", margin: 0, paddingTop: "4px" }}>Session duration distribution</div>
+        
+        {/* Legend */}
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--surf)", padding: "4px 12px", borderRadius: "99px", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
+            <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "var(--green-light)", boxShadow: "inset 1px 1px 2px rgba(255,255,255,0.6)" }}></div>
+            <span style={{ fontSize: "var(--text-sm)", color: "#4A4A4A", fontWeight: "var(--font-medium)" }}>Successful</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--surf)", padding: "4px 12px", borderRadius: "99px", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
+            <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "color-mix(in srgb, var(--surface-muted) 80%, #D8D3CC)", boxShadow: "inset 1px 1px 2px rgba(255,255,255,0.6)" }}></div>
+            <span style={{ fontSize: "var(--text-sm)", color: "#4A4A4A", fontWeight: "var(--font-medium)" }}>Unsuccessful</span>
+          </div>
         </div>
+      </div>
+
+      {/* Chart Canvas */}
+      <div style={{ flex: 1, display: "flex", alignItems: "stretch", gap: "12px", position: "relative", paddingLeft: "28px", paddingBottom: "24px", minHeight: "220px", marginTop: "8px" }}>
+        
+        {/* Y-axis Labels */}
+        <div style={{ position: "absolute", left: 0, top: 0, bottom: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between", color: "#888", fontSize: "12px", fontWeight: "600", paddingBottom: "4px" }}>
+          <span>{maxAxisValue}</span>
+          <span>{Math.round(maxAxisValue / 2)}</span>
+          <span>0</span>
+        </div>
+
+        {/* Y-axis Lines */}
+        <div style={{ position: "absolute", left: "24px", right: 0, top: "8px", borderTop: "1px dashed color-mix(in srgb, var(--border) 60%, transparent)", zIndex: 0 }}></div>
+        <div style={{ position: "absolute", left: "24px", right: 0, top: "calc(50% - 8px)", borderTop: "1px dashed color-mix(in srgb, var(--border) 60%, transparent)", zIndex: 0 }}></div>
+        <div style={{ position: "absolute", left: "24px", right: 0, bottom: "24px", borderTop: "1px solid color-mix(in srgb, var(--border) 80%, transparent)", zIndex: 0 }}></div>
+
+        {distributionData.map((bin, i) => {
+          const heightPercent = maxAxisValue > 0 ? (bin.total / maxAxisValue) * 100 : 0;
+          const successfulPercent = bin.total > 0 ? (bin.successful / bin.total) * 100 : 0;
+          const unsuccessfulPercent = bin.total > 0 ? (bin.unsuccessful / bin.total) * 100 : 0;
+
+          return (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1, position: "relative" }}>
+              
+              {/* Bar track (Concave Neumorphic Inset) */}
+              <div style={{ 
+                flex: 1, 
+                width: "100%", 
+                maxWidth: "44px", 
+                background: "var(--surf)", 
+                boxShadow: "var(--neu-shadow-in, inset 3px 3px 6px color-mix(in srgb, var(--border) 40%, transparent), inset -3px -3px 6px rgba(255, 255, 255, 0.7))",
+                borderRadius: "16px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
+                position: "relative",
+                padding: "4px"
+              }}>
+                {/* Bar fills wrapper */}
+                <div style={{ height: `${heightPercent}%`, width: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: bin.total > 0 ? "8px" : "0" }}>
+                  
+                  {/* Unsuccessful (top of stack) */}
+                  {bin.unsuccessful > 0 && (
+                    <div style={{ 
+                      height: `${unsuccessfulPercent}%`, 
+                      width: "100%", 
+                      background: "color-mix(in srgb, var(--surface-muted) 80%, #D8D3CC)", 
+                      boxShadow: "var(--shadow-sm)", 
+                      borderTopLeftRadius: "12px", 
+                      borderTopRightRadius: "12px",
+                      borderBottomLeftRadius: bin.successful === 0 ? "12px" : "3px",
+                      borderBottomRightRadius: bin.successful === 0 ? "12px" : "3px",
+                      marginBottom: bin.successful > 0 ? "2px" : "0",
+                      transition: "height 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+                      position: "relative"
+                    }}></div>
+                  )}
+                  
+                  {/* Successful (bottom of stack) */}
+                  {bin.successful > 0 && (
+                    <div style={{ 
+                      height: `${successfulPercent}%`, 
+                      width: "100%", 
+                      background: "var(--green-light)", 
+                      boxShadow: "var(--shadow-sm)", 
+                      borderTopLeftRadius: bin.unsuccessful === 0 ? "12px" : "3px",
+                      borderTopRightRadius: bin.unsuccessful === 0 ? "12px" : "3px",
+                      borderBottomLeftRadius: "12px",
+                      borderBottomRightRadius: "12px",
+                      transition: "height 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+                      position: "relative"
+                    }}></div>
+                  )}
+                  
+                </div>
+              </div>
+
+              {/* X-axis Label */}
+              <div style={{ 
+                position: "absolute",
+                bottom: "-20px",
+                fontSize: "11px", 
+                fontWeight: "600", 
+                color: "#7A7A7A",
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                transform: "scale(0.95)"
+              }}>
+                {bin.label}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

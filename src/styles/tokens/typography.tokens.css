@@ -1,20 +1,23 @@
 :root {
-  --font-main: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-main: "Poppins", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-ui: var(--font-main);
   --font-prose: var(--font-main);
 
-  --font-regular: 300;
-  --font-medium: 400;
-  --font-semibold: 400;
-  --font-bold: 500;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
 
-  --text-xs: 11px;
-  --text-sm: 13px;
-  --text-md: 15px;
-  --text-lg: 17px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
   --text-xl: 20px;
   --text-2xl: 24px;
   --text-3xl: 30px;
+  --text-4xl: 36px;
+  --text-5xl: 42px;
 
   --type-line-display-tight: 1.12;
   --type-line-title: 1.28;
@@ -35,7 +38,7 @@
   --type-card-title-weight: var(--font-medium);
   --type-card-title-track: -0.015em;
 
-  --type-body-size: var(--text-md);
+  --type-body-size: var(--text-base);
   --type-body-line: calc(var(--type-body-size) * var(--type-line-body));
   --type-body-weight: var(--font-regular);
   --type-body-track: -0.005em;
@@ -48,7 +51,7 @@
   --type-overline-weight: var(--font-regular);
   --type-overline-track: 0.04em;
 
-  --type-button-size: var(--text-md);
+  --type-button-size: var(--text-base);
   --type-button-line: calc(var(--type-button-size) * var(--type-line-body));
   --type-button-weight: var(--font-medium);
   --type-button-track: -0.01em;
@@ -138,7 +141,7 @@
   --type-display-line: calc(var(--type-display-size) * var(--type-line-title));
   --type-display-weight: var(--font-bold);
   --type-display-track: -0.03em;
-  --type-body-lg-size: var(--text-md);
+  --type-body-lg-size: var(--text-base);
   --type-body-lg-line: calc(var(--type-body-lg-size) * var(--type-line-body));
   --type-body-lg-weight: var(--font-regular);
   --type-body-lg-track: -0.01em;

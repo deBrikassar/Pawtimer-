@@ -59,7 +59,7 @@
   border: 1px solid transparent;
   font-size: var(--type-button-size);
   line-height: var(--type-button-line);
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   letter-spacing: var(--type-button-track);
   padding: 0 var(--space-4);
   display: inline-flex;
@@ -159,7 +159,7 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-.pt-collapsible__title { color: var(--brown); font-weight: 600; }
+.pt-collapsible__title { color: var(--brown); font-weight: var(--font-semibold); }
 .pt-collapsible__meta { color: var(--text-muted); font-size: var(--type-secondary-size); }
 .pt-collapsible__chevron { color: var(--text-muted); transition: transform var(--motion-base) var(--ease-standard); }
 .pt-collapsible.is-open .pt-collapsible__chevron { transform: rotate(180deg); }
@@ -214,7 +214,7 @@
 .pt-bottom-nav__label {
   font-size: var(--type-micro-text-size);
   line-height: var(--type-micro-text-line);
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 /* ── ПЕРЕКЛЮЧАТЕЛИ (PREMIUM TOGGLES) ── */
@@ -226,7 +226,7 @@
 }
 
 .pt-toggle__text { display: grid; gap: 2px; }
-.pt-toggle__label { color: var(--brown); font-weight: 500; }
+.pt-toggle__label { color: var(--brown); font-weight: var(--font-medium); }
 .pt-toggle__description {
   color: var(--text-muted);
   font-size: var(--type-secondary-size);
@@ -330,7 +330,7 @@
   color: var(--brown);
   font-size: var(--type-section-heading-size);
   line-height: var(--type-section-heading-line);
-  font-weight: 700;
+  font-weight: var(--font-bold);
 }
 
 .pt-bottom-sheet__content {
@@ -358,7 +358,7 @@
 .pt-context-hint__title,
 .pt-inline-banner__title {
   color: var(--brown);
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   margin-bottom: 2px;
 }
 
@@ -403,7 +403,7 @@
   color: var(--brown);
   font-size: var(--type-card-heading-size);
   line-height: var(--type-card-heading-line);
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .pt-empty-state__body {

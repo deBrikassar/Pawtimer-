@@ -821,7 +821,7 @@
 .shared-button,
 .button-base {
   border-width: 1.5px;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   letter-spacing: var(--type-button-track);
 }
 

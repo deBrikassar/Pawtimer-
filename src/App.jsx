@@ -440,7 +440,7 @@ export default function PawTimer() {
     
     // History & Progress
     historyModal, setHistoryModal, actions: historyActions,
-    totalCount: appData.totalCount, bestCalm: appData.bestCalm, relapseTone: appData.relapseTone, chartData: appData.chartData,
+    totalCount: appData.totalCount, bestCalm: appData.bestCalm, relapseTone: appData.relapseTone, chartData: appData.chartData, distributionData: appData.distributionData,
     goalSec: appData.goalSec, overallGoalSec: appData.dog?.goalSeconds, distressLabel: appData.distressLabel,
     chartTrendLabel: appData.chartTrendLabel, aloneLastWeek: appData.aloneLastWeek, avgWalkDuration: appData.avgWalkDuration,
     avgSessionsPerDay: appData.avgSessionsPerDay, avgWalksPerDay: appData.avgWalksPerDay, headlineStatus: appData.headlineStatus,

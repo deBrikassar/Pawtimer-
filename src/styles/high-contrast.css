@@ -51,8 +51,8 @@
 }
 
 .stats-bento-card-label {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   color: var(--text-muted, #64748b) !important;
   text-align: center;
   margin-top: 10px;
@@ -108,8 +108,8 @@
 
 .stats-bento-card-value {
   font-family: var(--font-ui);
-  font-size: 42px;
-  font-weight: 500;
+  font-size: var(--text-5xl);
+  font-weight: var(--font-medium);
   color: #ffffff;
   line-height: 1;
   text-align: center;
@@ -139,8 +139,8 @@
 }
 
 .stats-bento-mini-ring-text {
-  font-size: 14px; /* scaled down */
-  font-weight: 800;
+  font-size: var(--text-sm); /* scaled down */
+  font-weight: var(--font-extrabold);
   color: #1C2D27 !important;
   z-index: 2;
 }
@@ -164,7 +164,7 @@
 
 .stats-bento-mini-trend-value {
   font-family: var(--font-ui);
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: #334155;
   letter-spacing: 0.05em;
   position: absolute;
@@ -234,15 +234,15 @@
 
 .stats-progress-hero-ring-value {
   font-family: var(--font-ui);
-  font-size: 32px;
-  font-weight: 700;
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
   color: var(--text);
   line-height: 1;
 }
 
 .stats-progress-hero-ring-label {
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   letter-spacing: 0.05em;
   margin-top: 4px;
@@ -291,19 +291,19 @@
 /* --- Darker Typography for Contrast --- */
 .chart-title {
   color: var(--text) !important;
-  font-weight: 500 !important;
-  font-size: 1.1rem !important;
+  font-weight: var(--font-medium) !important;
+  font-size: var(--text-lg) !important;
 }
 .stats-progress-headline {
   color: var(--text) !important;
-  font-weight: 800 !important;
-  font-size: 1.8rem !important;
+  font-weight: var(--font-extrabold) !important;
+  font-size: var(--text-3xl) !important;
   margin-bottom: 8px;
 }
 .stats-progress-value {
   color: var(--text) !important;
-  font-weight: 500 !important;
-  font-size: 1.1rem !important;
+  font-weight: var(--font-medium) !important;
+  font-size: var(--text-lg) !important;
 }
 .stats-progress-value--target {
   color: var(--text-muted) !important;

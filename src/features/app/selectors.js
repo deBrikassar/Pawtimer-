@@ -268,6 +268,29 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     durationMinutes: Math.round(s.actualDuration / 60 * 10) / 10,
     distressLevel: s.distressLevel,
   }));
+
+  const distributionData = (() => {
+    const bins = [
+      { label: "0-5 min", maxSec: 5 * 60 },
+      { label: "5-10 min", maxSec: 10 * 60 },
+      { label: "10-15 min", maxSec: 15 * 60 },
+      { label: "15-20 min", maxSec: 20 * 60 },
+      { label: "20-30 min", maxSec: 30 * 60 },
+      { label: "30+ min", maxSec: Infinity },
+    ];
+    const data = bins.map(b => ({ label: b.label, maxSec: b.maxSec, successful: 0, unsuccessful: 0 }));
+    
+    canonicalSessions.forEach(s => {
+      const duration = Number(s.actualDuration);
+      if (!Number.isFinite(duration)) return;
+      const isSuccessful = s.distressLevel === "none" || s.distressLevel === "calm";
+      const bin = data.find(b => duration < b.maxSec) || data[data.length - 1];
+      if (isSuccessful) bin.successful++;
+      else bin.unsuccessful++;
+    });
+    
+    return data.map(({ label, successful, unsuccessful }) => ({ label, successful, unsuccessful, total: successful + unsuccessful }));
+  })();
   const currentThreshold = target;
   const lastPlannedDuration = Number.isFinite(lastSess?.plannedDuration) ? lastSess.plannedDuration : null;
   const headlineStatus = (() => {
@@ -361,5 +384,6 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     timeline,
     distressCounts,
     distressLabel,
+    distributionData,
   };
 }

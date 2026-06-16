@@ -539,7 +539,7 @@
   .sc-time-value {
     font-size:clamp(2.2rem, 9vw, 3rem);
     line-height:1;
-    font-weight:500;
+    font-weight:var(--font-medium);
     color:var(--green-dark);
     letter-spacing:0.02em;
     font-variant-numeric:tabular-nums;
@@ -563,7 +563,7 @@
     font-size:var(--type-overline-size);
     line-height:var(--type-overline-line);
     letter-spacing:0.12em;
-    font-weight:400;
+    font-weight:var(--font-regular);
     color:var(--brown);
     text-transform:uppercase;
     margin-top:4px;
@@ -571,7 +571,7 @@
   .session-panel__over {
     font-size:var(--type-helper-text-size);
     color:var(--amber);
-    font-weight:400;
+    font-weight:var(--font-regular);
     margin-bottom:2px;
   }
 
@@ -659,7 +659,7 @@
     font-size:var(--type-helper-text-size);
     line-height:var(--type-helper-text-line);
     letter-spacing:0.06em;
-    font-weight:400;
+    font-weight:var(--font-regular);
     color:var(--text-muted);
   }
   .session-panel__time {
@@ -673,7 +673,7 @@
     margin:0;
     font-size:var(--type-helper-text-size);
     line-height:var(--type-helper-text-line);
-    color:var(--green-dark); font-weight:400;
+    color:var(--green-dark); font-weight:var(--font-regular);
   }
   .session-start-btn {
     width:min(100%, 296px);
@@ -902,8 +902,8 @@
     color: var(--text-muted);
   }
   .train-identity-hero__initial {
-    font-size: 32px;
-    font-weight: 600;
+    font-size: var(--text-3xl);
+    font-weight: var(--font-semibold);
     line-height: 1;
     color: color-mix(in srgb, var(--brown) 50%, var(--surface-muted));
   }
@@ -926,8 +926,8 @@
   .train-identity-hero__name {
     margin: 0;
     color: var(--brown);
-    font-size: 24px;
-    font-weight: 600;
+    font-size: var(--text-2xl);
+    font-weight: var(--font-semibold);
   }
 
   .train-primary-cta {
@@ -2083,7 +2083,7 @@
   .stats-progress-hero-topline { position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:var(--space-control-gap); }
   .stats-progress-dog-chip { display:inline-flex; align-items:center; gap:8px; min-width:0; }
   .stats-progress-dog-mark { position:relative; display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; background:color-mix(in srgb, var(--green-light) 40%, white); border:1px solid color-mix(in srgb, var(--green-dark) 16%, transparent); font-size:var(--type-helper-text-size); font-weight:500; color:var(--brown); }
-  .stats-progress-dog-mark::after { content:"🐾"; position:absolute; right:-10px; bottom:-8px; font-size:10px; opacity:0.42; transform:translate3d(0, 0, 0); animation:statsDogPawDrift 4.8s ease-in-out infinite; }
+  .stats-progress-dog-mark::after { content:"🐾"; position:absolute; right:-10px; bottom:-8px; font-size:var(--text-xs); opacity:0.42; transform:translate3d(0, 0, 0); animation:statsDogPawDrift 4.8s ease-in-out infinite; }
   .stats-progress-dog-name { font-size:var(--type-section-eyebrow-size); line-height:var(--type-section-eyebrow-line); letter-spacing:var(--type-section-eyebrow-track); font-weight:var(--type-section-eyebrow-weight); color:var(--text-muted); text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:24ch; }
   .stats-progress-headline-status { font-size:var(--type-field-value-size); line-height:var(--type-field-value-line); letter-spacing:var(--type-field-value-track); font-weight:var(--type-field-value-weight); color:var(--metric-surface-accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:48%; }
   .stats-progress-headline { position:relative; z-index:1; margin:0; font-size:clamp(1.1rem, 2.5vw, 1.35rem); line-height:1.2; font-weight:var(--type-card-heading-weight); letter-spacing:var(--type-card-heading-track); color:var(--brown); }
@@ -2288,7 +2288,7 @@
 
   /* ── Shared value & label styling ── */
   .stats-bento-widget__icon {
-    font-size: 38px;
+    font-size: var(--text-4xl);
     line-height: 1;
     margin-bottom: 14px;
     display: flex;
@@ -2296,8 +2296,8 @@
     justify-content: center;
   }
   .stats-bento-widget__value {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
     line-height: 1;
     letter-spacing: -0.02em;
     color: var(--text);
@@ -2319,10 +2319,10 @@
 
   /* ── Text sizing tweaks for shapes ── */
   .stats-bento-widget-shape-wrapper.stats-bento-widget--circle .stats-bento-widget__value {
-    font-size: 24px;
+    font-size: var(--text-2xl);
   }
   .stats-bento-widget-shape-wrapper.stats-bento-widget--badge .stats-bento-widget__value {
-    font-size: 20px;
+    font-size: var(--text-xl);
   }
 
   /* ── Accent color variants ── */
@@ -2685,7 +2685,7 @@
   .settings-dog-profile-card__divider { color:color-mix(in srgb, var(--text-muted) 70%, transparent); }
   .settings-dog-profile-card__chevron {
     color:color-mix(in srgb, var(--text-muted) 82%, transparent);
-    font-size:20px;
+    font-size:var(--text-xl);
     line-height:1;
     padding-top:3px;
   }
@@ -2785,7 +2785,7 @@
   }
   .settings-nav-row__meta { display:flex; align-items:center; gap:var(--space-1); color:var(--text-muted); }
   .settings-nav-row__value { color:var(--text-muted); }
-  .settings-nav-row__chevron { font-size:18px; line-height:1; color:color-mix(in srgb, var(--text-muted) 80%, transparent); }
+  .settings-nav-row__chevron { font-size:var(--text-lg); line-height:1; color:color-mix(in srgb, var(--text-muted) 80%, transparent); }
   .settings-nav-row--danger .settings-nav-row__label,
   .settings-nav-row--danger .settings-nav-row__chevron { color:var(--red); }
   .settings-nav-list .settings-nav-row:last-of-type { border-bottom:1px solid color-mix(in srgb, var(--border) 74%, transparent); }
@@ -2867,7 +2867,7 @@
   border-radius: 999px;
   background: var(--brand, #d4813a);
   color: #fff;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   padding: 6px 12px;
 }
 
@@ -3267,8 +3267,8 @@
   display: block;
 }
 .settings-photo-preview__placeholder {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
   color: var(--text-muted);
 }
 .settings-photo-actions {
@@ -3522,8 +3522,8 @@
 }
 
 .neumorphic-thumb-text {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
   color: #ffffff;
   letter-spacing: 0.02em;
 }
@@ -3609,12 +3609,12 @@
 }
 
 .stats-bento-icon-emoji {
-  font-size: 38px;
+  font-size: var(--text-4xl);
   line-height: 1;
 }
 
 .stats-bento-value {
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: bold;
   color: #1f2937;
   line-height: 1;
@@ -3622,7 +3622,7 @@
 }
 
 .stats-bento-label {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: #6b7280;
   text-align: center;
   margin-top: 12px;
@@ -3679,16 +3679,14 @@
 }
 
 .progress-hero-stat-value {
-  font-family: 'Nunito', 'Poppins', 'SF Pro Rounded', ui-rounded, sans-serif;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
   color: var(--green-dark, #4D7C0F);
   line-height: 1.2;
 }
 
 .progress-hero-stat-label {
-  font-family: 'Nunito', 'Poppins', 'SF Pro Rounded', ui-rounded, sans-serif;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 400;
   color: #78716c;
   margin-top: 4px;
@@ -3723,16 +3721,14 @@
 }
 
 .progress-hero-ring-pct {
-  font-family: 'Nunito', 'Poppins', 'SF Pro Rounded', ui-rounded, sans-serif;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
   color: var(--green-dark, #4D7C0F);
   line-height: 1;
 }
 
 .progress-hero-ring-lbl {
-  font-family: 'Nunito', 'Poppins', 'SF Pro Rounded', ui-rounded, sans-serif;
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 400;
   color: #78716c;
   margin-top: 4px;

@@ -8,7 +8,7 @@ import { useHint } from "../app/useHint";
 import { useApp } from "../app/AppContext";
 
 export default function StatsScreen() {
-  const { name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, goalSec, overallGoalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone, contextualInsights, streak, calmRate7 } = useApp();
+  const { name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, distributionData, goalSec, overallGoalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone, contextualInsights, streak, calmRate7 } = useApp();
   const target = recommendation?.duration ?? 0;
   const hasValidBestCalm = Number.isFinite(bestCalm) && bestCalm >= 0;
   const hasOverallGoal = Number.isFinite(overallGoalSec) && overallGoalSec > 0;
@@ -59,7 +59,7 @@ export default function StatsScreen() {
           </div>
 
           <div className="stats-hero-wrap u-mb-section">
-            <StatsChartSection chartData={chartData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmtMinutes} insightLabel={chartTrendLabel} />
+            <StatsChartSection chartData={chartData} distributionData={distributionData} goalSec={goalSec} CustomDot={CustomDot} setTab={setTab} name={name} distressLabel={distressLabel} fmt={fmt} insightLabel={chartTrendLabel} />
           </div>
 
           <StatsSection title="Daily rhythm" className="stats-section-supporting" centerTitle={true}>
