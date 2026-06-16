@@ -26,7 +26,7 @@ export const PROTOCOL = {
   nearThresholdRatioMaxExclusive: 0.98,
   nearThresholdPlateauStreak: 2,
   thresholdConfirmationWindow: 3,
-  thresholdConfirmationStreak: 2,
+  thresholdConfirmationStreak: 1,
   maxDailyAloneMinutes: 30,
   desensitizationBlocksPerDayRecommendedMin: 3,
   desensitizationBlocksPerDayRecommendedMax: 5,
@@ -148,7 +148,7 @@ export function inferBelowThreshold(session = {}) {
   const actual = Number(session?.actualDuration);
   const planned = Number(session?.plannedDuration);
   if (!Number.isFinite(actual) || !Number.isFinite(planned)) return false;
-  return actual >= planned;
+  return actual >= (planned * 0.9); // Допускаем 10% погрешность (ранняя остановка)
 }
 
 function getLatestSessions(sessions, count) {
@@ -732,7 +732,7 @@ function getProgressionReferenceDuration(session = null) {
 function clampRateChange(nextDuration, referenceDuration) {
   if (!Number.isFinite(referenceDuration) || referenceDuration <= 0) return Math.round(nextDuration);
   const minAllowed = referenceDuration * 0.75; // Smoothing guard: never decrease by more than 25% in one step.
-  const maxAllowed = referenceDuration * 1.2; // Smoothing guard: never increase by more than 20% in one step.
+  const maxAllowed = referenceDuration * 1.25; // Smoothing guard: never increase by more than 25% in one step.
   return Math.round(clamp(nextDuration, minAllowed, maxAllowed));
 }
 
@@ -796,15 +796,8 @@ function buildRecoveryModeDetails({
 function computeProgressiveIncrease(anchorDuration, calmStreak = 1) {
   if (!Number.isFinite(anchorDuration) || anchorDuration <= 0) return PROTOCOL.startDurationSeconds;
 
-  // Before 40 minutes, scale up by 10-15% based on how steady the current calm streak is.
-  if (anchorDuration < 40 * 60) {
-    const percentIncrease = clamp(0.14 + (Math.max(0, calmStreak - 1) * 0.01), 0.1, 0.15);
-    return Math.round(anchorDuration * (1 + percentIncrease));
-  }
-
-  // At/after 40 minutes, switch to fixed +3 to +5 minute steps.
-  const fixedStepSeconds = anchorDuration >= 60 * 60 ? 5 * 60 : 3 * 60;
-  return Math.round(anchorDuration + fixedStepSeconds);
+  // Всегда увеличиваем на 20% при успешной сессии
+  return Math.round(anchorDuration * 1.2);
 }
 
 function normalizeRecoveryState(state = null) {
@@ -1143,7 +1136,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
   }
 
   const stepped = computeProgressiveIncrease(anchorDuration, calmStreak);
-  const riskAdjustedStep = Math.round(stepped * getStepMultiplier(relapseRisk));
+  const riskAdjustedStep = stepped; // Игнорируем влияние риска для строгого +20%
   let smoothed = clampRateChange(riskAdjustedStep, lastReferenceDuration);
 
   if (hasConsecutivePostSubtleIncrease(recentWindow) && smoothed > lastReferenceDuration) {
