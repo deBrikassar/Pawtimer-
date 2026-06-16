@@ -8,12 +8,16 @@ import { useHint } from "../app/useHint";
 import { useApp } from "../app/AppContext";
 
 export default function StatsScreen() {
-  const { name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, distributionData, goalSec, overallGoalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone, contextualInsights, streak, calmRate7 } = useApp();
+  const { name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, distributionData, goalSec, overallGoalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone, contextualInsights, streak, calmRate7, sessions } = useApp();
   const target = recommendation?.duration ?? 0;
   const hasValidBestCalm = Number.isFinite(bestCalm) && bestCalm >= 0;
+  const lastCalmSession = sessions && Array.isArray(sessions) 
+    ? sessions.slice().reverse().find(s => s.distressLevel === "none" || s.distressLevel === "calm") 
+    : null;
+  const lastCalmDuration = lastCalmSession ? lastCalmSession.actualDuration : 0;
   const hasOverallGoal = Number.isFinite(overallGoalSec) && overallGoalSec > 0;
-  const progressRatio = hasValidBestCalm && hasOverallGoal
-    ? Math.max(0, Math.min(bestCalm / overallGoalSec, 1))
+  const progressRatio = lastCalmSession && hasOverallGoal
+    ? Math.max(0, Math.min(lastCalmDuration / overallGoalSec, 1))
     : null;
   const ringMetricVariant = METRIC_VARIANTS.RING;
   const headlineSurfaceState = headlineStatusTone?.surfaceState || "today";
@@ -45,7 +49,7 @@ export default function StatsScreen() {
             <ProgressHero
               name={name}
               headlineStatus={headlineStatus}
-              headline={hasValidBestCalm && hasOverallGoal ? `${Math.round(progressRatio * 100)}% to Overall Goal` : "Training Progress"}
+              headline={progressRatio !== null ? `${Math.round(progressRatio * 100)}% to Overall Goal` : "Training Progress"}
               headlineSurfaceState={headlineSurfaceState}
               currentValue={fmtMinutes(bestCalm)}
               currentLabel="Best time"
@@ -54,7 +58,7 @@ export default function StatsScreen() {
               targetLabel="Next target"
               targetSeconds={target}
               insight={relapseTone && relapseTone.label !== "Stable" ? `⚠️ Risk: ${relapseTone.label} - Consider slowing down` : null}
-              overallGoalProgress={hasValidBestCalm && hasOverallGoal ? Math.round(progressRatio * 100) : 0}
+              overallGoalProgress={progressRatio !== null ? Math.round(progressRatio * 100) : 0}
             />
           </div>
 

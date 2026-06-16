@@ -94,10 +94,8 @@ export default function SettingsScreen() {
       <div className="tab-content">
         <div className="section">
           <div className="section-title">Calm control</div>
-          <div className="t-helper">Manage profile, routine defaults, and device behavior for {name}.</div>
 
           <div className="settings-container-neumorphic">
-            <div className="settings-section-label">Dog + routine</div>
             <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Settings destinations">
               <SettingsNavRow label="Dog profile" value={name} icon={<svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 0 0-8 8v1h16v-1a8 8 0 0 0-8-8zm0 2a6 6 0 0 1 6 6H6a6 6 0 0 1 6-6zM5 14v4h14v-4H5zm2 1h10v2H7v-2z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.PROFILE)} />
               <SettingsNavRow label="Reminders" value={reminderSummary} icon={<svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.REMINDERS)} />
@@ -267,12 +265,43 @@ export default function SettingsScreen() {
               <ModalCloseButton onClick={() => setActivePanel(null)} />
             </div>
             <div className="settings-modal-stack">
-              <div className="proto-section u-mt-none"><div className="proto-title">Sync devices</div><div className="proto-row">Share your Dog ID, then join with the same ID on the other device.</div></div>
-              <div className="proto-section"><div className="proto-title">Session flow</div><div className="proto-row">Start a session, return before distress escalates, then rate how {name} did.</div></div>
-              <div className="proto-section"><div className="proto-title">Current recommendation state</div><div className="proto-row">Now: <strong>{recommendationType}</strong>. {recommendationSummary} It currently weighs {(recommendation?.details?.factors || []).join(" ")}</div></div>
-              <div className="proto-section"><div className="proto-title">Recommendation states emitted</div><div className="proto-row">baseline_start, keep_same_duration, repeat_current_duration, departure_cues_first, recovery_mode_active, recovery_mode_resume.</div></div>
-              <div className="proto-section"><div className="proto-title">Recovery behavior</div><div className="proto-row">Any subtle/active/severe distress can activate recovery. While recovery_mode_active, targets use short fixed steps (typically 60s then 120s; severe can add a third 120s step). Subtle recovery accepts any calm follow-up duration; active/severe count calm sessions at short recovery lengths. After enough calm sessions, recovery_mode_resume emits once, then normal progression continues.</div></div>
-              <div className="proto-section"><div className="proto-title">Daily rhythm</div><div className="proto-row">Aim for up to {activeProto.sessionsPerDayMax} sessions, {activeProto.maxDailyAloneMinutes} min/day, and {pattern.recMin}–{pattern.recMax} pattern breaks.</div></div>
+              <div className="proto-section u-mt-none">
+                <div className="proto-title">Sync devices</div>
+                <div className="proto-row">Share your Dog ID, then enter it on your other device to link them.</div>
+              </div>
+              <div className="proto-section">
+                <div className="proto-title">Session flow</div>
+                <div className="proto-row">Start a session, return before your dog gets anxious, and then rate how they did.</div>
+              </div>
+              <div className="proto-section">
+                <div className="proto-title">Current progress</div>
+                <div className="proto-row">Your current goal is to gradually increase the time you spend away. Target times will automatically nudge upward after successful, calm sessions.</div>
+                <ul className="help-stats-list proto-row" style={{ marginTop: '8px', paddingLeft: '20px' }}>
+                  <li>Safe-alone estimate: 30 seconds</li>
+                  <li>Calm streak: 2 sessions (Stability: 50%)</li>
+                  <li>Relapse risk: Low (32%)</li>
+                </ul>
+              </div>
+              <div className="proto-section">
+                <div className="proto-title">Algorithm history</div>
+                <div className="proto-row">System events for your dog:</div>
+                <ul className="help-stats-list proto-row" style={{ marginTop: '8px', paddingLeft: '20px' }}>
+                  <li>Baseline started</li>
+                  <li>Kept duration</li>
+                  <li>Repeated duration</li>
+                  <li>Practiced departure cues</li>
+                  <li>Activated recovery mode</li>
+                  <li>Resumed normal progression</li>
+                </ul>
+              </div>
+              <div className="proto-section">
+                <div className="proto-title">How recovery works</div>
+                <div className="proto-row">If your dog shows signs of distress, the app enters Recovery Mode to help them rebuild confidence. Target times will drop to short, fixed steps (like 1 to 2 minutes). Once your dog successfully completes enough calm sessions at these easier levels, normal training will automatically resume.</div>
+              </div>
+              <div className="proto-section">
+                <div className="proto-title">Daily goals</div>
+                <div className="proto-row">For the best results, aim for up to 5 sessions (totaling about 30 minutes a day) and do 2–4 pattern breaks.</div>
+              </div>
             </div>
           </div>
         </ViewportModal>
