@@ -3640,42 +3640,59 @@
 
 .progress-hero-card {
   width: 100%;
-  padding: 24px;
+  padding: 16px;
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
+  gap: 16px;
   margin-bottom: 24px;
   box-sizing: border-box;
 }
 
-.progress-hero-stats {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.progress-hero-stat-col {
+.progress-hero-inset-panel {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--surf);
+  border-radius: 20px;
+  padding: 16px 8px;
+  box-shadow: inset 4px 4px 10px rgba(180, 175, 160, 0.3), inset -4px -4px 10px rgba(255, 255, 255, 0.9);
+}
+
+.progress-hero-raised-panel {
+  flex: 1.5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 100%), var(--surf);
+  border-radius: 20px;
+  padding: 16px 8px;
+  box-shadow: -10px -10px 25px rgba(255, 255, 255, 1), 10px 10px 25px rgba(170, 165, 150, 0.25);
+}
+
+.progress-hero-icon {
+  margin-bottom: 8px;
 }
 
 .progress-hero-stat-value {
-  font-size: 20px;
-  font-weight: 600;
-  color: #44403c;
+  font-family: 'Nunito', 'Poppins', 'SF Pro Rounded', ui-rounded, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green-dark, #4D7C0F);
+  line-height: 1.2;
 }
 
 .progress-hero-stat-label {
-  font-size: 12px;
-  font-weight: 500;
+  font-family: 'Nunito', 'Poppins', 'SF Pro Rounded', ui-rounded, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
   color: #78716c;
   margin-top: 4px;
-}
-
-.progress-hero-divider {
-  width: 1px;
-  height: 40px;
-  background-color: #e5e7eb;
+  text-align: center;
 }
 
 .progress-hero-ring-container {
@@ -3683,8 +3700,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 112px;
-  height: 112px;
+  width: 100%;
+  max-width: 110px;
+  aspect-ratio: 1 / 1;
   flex-shrink: 0;
 }
 
@@ -3705,15 +3723,17 @@
 }
 
 .progress-hero-ring-pct {
+  font-family: 'Nunito', 'Poppins', 'SF Pro Rounded', ui-rounded, sans-serif;
   font-size: 24px;
-  font-weight: 600;
-  color: #44403c;
+  font-weight: 700;
+  color: var(--green-dark, #4D7C0F);
   line-height: 1;
 }
 
 .progress-hero-ring-lbl {
-  font-size: 10px;
-  font-weight: 500;
+  font-family: 'Nunito', 'Poppins', 'SF Pro Rounded', ui-rounded, sans-serif;
+  font-size: 11px;
+  font-weight: 400;
   color: #78716c;
   margin-top: 4px;
 }

@@ -167,43 +167,48 @@ export function ProgressHero({
   return (
     <div className="surface-card surface-card--chart progress-hero-card">
       
-      {/* Левая часть: Статистика */}
-      <div className="progress-hero-stats">
-        {/* Best time */}
-        <div className="progress-hero-stat-col">
-          <span className="progress-hero-stat-value">{currentValue}</span>
-          <span className="progress-hero-stat-label">{currentLabel}</span>
-        </div>
-        
-        {/* Вертикальный разделитель */}
-        <div className="progress-hero-divider"></div>
-        
-        {/* Next target */}
-        <div className="progress-hero-stat-col">
-          <span className="progress-hero-stat-value">{targetValue}</span>
-          <span className="progress-hero-stat-label">{targetLabel}</span>
-        </div>
+      {/* Panel 1 (Left Inset Well) */}
+      <div className="progress-hero-inset-panel">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green-dark, #4D7C0F)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="progress-hero-icon">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span className="progress-hero-stat-value">{currentValue}</span>
+        <span className="progress-hero-stat-label">{currentLabel}</span>
+      </div>
+      
+      {/* Panel 2 (Center Inset Well) */}
+      <div className="progress-hero-inset-panel">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--green-dark, #4D7C0F)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="progress-hero-icon">
+          <circle cx="12" cy="12" r="10"></circle>
+          <circle cx="12" cy="12" r="6"></circle>
+          <circle cx="12" cy="12" r="2"></circle>
+        </svg>
+        <span className="progress-hero-stat-value">{targetValue}</span>
+        <span className="progress-hero-stat-label">{targetLabel}</span>
       </div>
 
-      {/* Правая часть: Круговой график */}
-      <div className="progress-hero-ring-container">
-        {/* SVG кольца */}
-        <svg className="progress-hero-ring-svg" viewBox="0 0 100 100">
-          {/* Фоновое кольцо (серое) */}
-          <circle cx="50" cy="50" r="42" stroke="#F5F5F4" strokeWidth="8" fill="none" />
-          {/* Заполненное кольцо прогресса (зеленое) */}
-          <circle 
-            cx="50" cy="50" r="42" 
-            stroke="#4D7C0F" strokeWidth="8" fill="none" 
-            strokeDasharray={heroCircumference} strokeDashoffset={heroStrokeDashoffset} 
-            strokeLinecap="round" 
-          />
-        </svg>
-        
-        {/* Текст внутри кольца */}
-        <div className="progress-hero-ring-text">
-          <span className="progress-hero-ring-pct">{overallGoalPct}%</span>
-          <span className="progress-hero-ring-lbl">of goal</span>
+      {/* Panel 3 (Right Raised Panel) */}
+      <div className="progress-hero-raised-panel">
+        <div className="progress-hero-ring-container">
+          {/* SVG кольца */}
+          <svg className="progress-hero-ring-svg" viewBox="0 0 100 100">
+            {/* Фоновое кольцо (серое) */}
+            <circle cx="50" cy="50" r="42" stroke="#F5F5F4" strokeWidth="8" fill="none" />
+            {/* Заполненное кольцо прогресса (зеленое) */}
+            <circle 
+              cx="50" cy="50" r="42" 
+              stroke="#4D7C0F" strokeWidth="8" fill="none" 
+              strokeDasharray={heroCircumference} strokeDashoffset={heroStrokeDashoffset} 
+              strokeLinecap="round" 
+            />
+          </svg>
+          
+          {/* Текст внутри кольца */}
+          <div className="progress-hero-ring-text">
+            <span className="progress-hero-ring-pct">{overallGoalPct}%</span>
+            <span className="progress-hero-ring-lbl">of goal</span>
+          </div>
         </div>
       </div>
       
