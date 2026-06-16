@@ -76,7 +76,7 @@ export default function StatsScreen() {
               />
               <StatsBentoWidget
                 value={totalCount}
-                label="Total sessions"
+                label="Sessions"
                 icon={<img src="/icons/icon-total-sessions.webp" alt="Total sessions" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="streak"
               />
@@ -88,19 +88,19 @@ export default function StatsScreen() {
               />
               <StatsBentoWidget
                 value={calmRate7 != null ? `${calmRate7}%` : "—"}
-                label="Calm rate (7d)"
+                label="Calm rate"
                 icon={<img src="/icons/icon-calm-rate.webp" alt="Calm rate" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="calm"
               />
               <StatsBentoWidget
                 value={fmtMinutes(aloneLastWeek)}
-                label="Alone time/wk"
+                label="Alone time"
                 icon={<img src="/icons/icon-alone-time.webp" alt="Alone time" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="warm"
               />
               <StatsBentoWidget
                 value={avgSessionsPerDay != null ? avgSessionsPerDay.toFixed(1) : "—"}
-                label="Sessions/day"
+                label="Daily avg"
                 icon={<img src="/icons/icon-sessions-day.webp" alt="Sessions/day" width="48" height="48" className="stats-bento-icon-img" />}
                 accentColor="calm"
               />
