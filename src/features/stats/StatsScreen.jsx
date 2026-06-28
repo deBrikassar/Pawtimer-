@@ -11,13 +11,9 @@ export default function StatsScreen() {
   const { name, totalCount, setTab, bestCalm, recommendation, relapseTone, chartData, distributionData, goalSec, overallGoalSec, CustomDot, distressLabel, chartTrendLabel, aloneLastWeek, avgWalkDuration, avgSessionsPerDay, avgWalksPerDay, headlineStatus, headlineStatusTone, contextualInsights, streak, calmRate7, sessions } = useApp();
   const target = recommendation?.duration ?? 0;
   const hasValidBestCalm = Number.isFinite(bestCalm) && bestCalm >= 0;
-  const lastCalmSession = sessions && Array.isArray(sessions) 
-    ? sessions.slice().reverse().find(s => s.distressLevel === "none" || s.distressLevel === "calm") 
-    : null;
-  const lastCalmDuration = lastCalmSession ? lastCalmSession.actualDuration : 0;
   const hasOverallGoal = Number.isFinite(overallGoalSec) && overallGoalSec > 0;
-  const progressRatio = lastCalmSession && hasOverallGoal
-    ? Math.max(0, Math.min(lastCalmDuration / overallGoalSec, 1))
+  const progressRatio = hasOverallGoal
+    ? Math.max(0, Math.min(target / overallGoalSec, 1))
     : null;
   const ringMetricVariant = METRIC_VARIANTS.RING;
   const headlineSurfaceState = headlineStatusTone?.surfaceState || "today";
