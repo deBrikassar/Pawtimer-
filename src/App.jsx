@@ -372,6 +372,19 @@ export default function PawTimer() {
     compressImage(file, 400).then((base64) => setDogPhoto(base64)).catch(() => showToast("Failed to process image"));
   };
 
+  const handleNameChange = (newName) => {
+    const trimmed = newName.trim();
+    if (!trimmed || !activeDogId) return;
+    setDogs((prev) => {
+      const updated = prev.map((dog) => {
+        if (canonicalDogId(dog?.id) !== canonicalDogId(activeDogId)) return dog;
+        if (dog.dogName === trimmed) return dog;
+        return stampLocalDogSettings({ ...dog, dogName: trimmed }, dog);
+      });
+      return updated;
+    });
+  };
+
   const historyActions = useHistoryEditing({
     sessions, walks, patterns, feedings, patLabels, showToast, pushWithSyncStatus, pushTombstoneWithSyncStatus, addTombstone,
     commitSessions, setWalks: commitWalks, setPatterns: commitPatterns, setFeedings: commitFeedings, stampLocalEntry,
@@ -451,7 +464,7 @@ export default function PawTimer() {
     setTrainingSettingsOpen, editingPat, setEditingPat, setPatLabels, settingsDisclosure, setSettingsDisclosure,
     syncDiagRunning, runSyncDiagnostics, SYNC_ENABLED, SB_URL, SB_KEY, SB_BASE_URL, syncDiagResult, syncSummary, syncDegradation,
     trainingSettingsOpen, setProtoWarnAck, protoWarnAck, protoOverride, setProtoOverride, setScreen, setOnboardingState,
-    dogsState: dogs, setDogs, save, ACTIVE_DOG_KEY, setActiveDogId, clearDogActivityState, handlePhotoUpload,
+    dogsState: dogs, setDogs, save, ACTIVE_DOG_KEY, setActiveDogId, clearDogActivityState, handlePhotoUpload, handleNameChange,
     
     // UI actions
     openHistory: () => handleTabChange("history"),

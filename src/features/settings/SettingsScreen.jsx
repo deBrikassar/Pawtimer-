@@ -41,6 +41,7 @@ export default function SettingsScreen() {
   const [activePanel, setActivePanel] = useState(null);
   const [reminderEditorOpen, setReminderEditorOpen] = useState(false);
   const [diagDetailsOpen, setDiagDetailsOpen] = useState(false);
+  const [editingName, setEditingName] = useState(false);
   const {
     name,
     activeDogId,
@@ -83,6 +84,7 @@ export default function SettingsScreen() {
     clearDogActivityState,
     dogPhoto,
     handlePhotoUpload,
+    handleNameChange,
   } = useApp();
 
   const reminderSummary = notifEnabled ? `On · ${notifTime}` : "Off";
@@ -139,6 +141,25 @@ export default function SettingsScreen() {
               <ModalCloseButton onClick={() => setActivePanel(null)} />
             </div>
             <div className="settings-modal-stack">
+
+              {/* ── Dog profile editing ── */}
+              <div className="pat-edit-row">
+                {editingName ? (
+                  <input
+                    className="pat-edit-input"
+                    autoFocus
+                    aria-label="Dog name"
+                    defaultValue={name}
+                    onBlur={(e) => { const val = e.target.value.trim(); if (val) handleNameChange(val); setEditingName(false); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") setEditingName(false); }}
+                  />
+                ) : (
+                  <span className="pat-edit-label" style={{ fontSize: '1.2rem', fontWeight: 600 }}>{name}</span>
+                )}
+                <div className="pat-edit-actions">
+                  <button className="pat-edit-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setEditingName(true)} aria-label="Edit name">Edit name</button>
+                </div>
+              </div>
 
               {/* ── Dog photo ── */}
               <div className="settings-photo-row">
