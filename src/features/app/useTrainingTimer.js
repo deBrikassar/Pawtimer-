@@ -4,6 +4,7 @@ import { normalizeDistressLevel } from "../../lib/protocol";
 import { mergeSessionWithDerivedFields } from "./storage";
 import { buildTrainTimeChangeInsight } from "../train/timeChangeInsight";
 import { fmt } from "./helpers";
+import { requestNotificationPermission, sendNotification } from "../../lib/notifications";
 
 export function useTrainingTimer({ 
   target, 
@@ -33,8 +34,13 @@ export function useTrainingTimer({
 
   useEffect(() => {
     if (phase !== "running") { setSessionCompleted(false); return; }
-    if (elapsed >= target) setSessionCompleted(true);
-  }, [phase, elapsed, target]);
+    if (elapsed >= target) {
+      if (!sessionCompleted) {
+        sendNotification("Time's up! You can return to your dog now.", { playSound: true });
+      }
+      setSessionCompleted(true);
+    }
+  }, [phase, elapsed, target, sessionCompleted]);
 
   useEffect(() => {
     if (phase === "running") {
@@ -50,6 +56,10 @@ export function useTrainingTimer({
       else if (appData.daily.blockReason === "max_sessions") showToast(`Daily session max reached (${appData.daily.maxCount}).`);
       return;
     }
+    
+    // Request permission gracefully when user interacts
+    requestNotificationPermission();
+
     completeTrainFirstRunHint?.();
     acknowledgeReturningTrainNudge?.();
     setTrainTimeChangeInsight?.(null);

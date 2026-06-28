@@ -4,6 +4,7 @@ import { persistValue } from "./persistence";
 import { normalizeWalkType } from "./helpers";
 import { partitionPendingOutboundByCapability, buildPartialCapabilitySyncMessage } from "./syncCapability";
 import { ensureArray } from "./storage";
+import { sendNotification } from "../../lib/notifications";
 
 export function useSyncEngine({
   SYNC_ENABLED,
@@ -259,6 +260,11 @@ export function useSyncEngine({
       syncHelpersRef.current.setEntrySyncState(kind, data.id, SYNC_STATE.SYNCED);
       setSyncError("");
       setSyncStatus("ok");
+      
+      if (kind === "session") {
+        sendNotification("Training session saved successfully.");
+      }
+      
       return { ok: true, error: null, skipped: null };
     }
     const message = error || "Push failed";
