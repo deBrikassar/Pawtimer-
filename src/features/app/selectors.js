@@ -271,11 +271,11 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
 
   const distributionData = (() => {
     const bins = [
-      { label: "0-5 min", maxSec: 5 * 60 },
-      { label: "5-10 min", maxSec: 10 * 60 },
-      { label: "10-15 min", maxSec: 15 * 60 },
-      { label: "15-20 min", maxSec: 20 * 60 },
-      { label: "20-30 min", maxSec: 30 * 60 },
+      { label: "5 min", maxSec: 5 * 60 },
+      { label: "10 min", maxSec: 10 * 60 },
+      { label: "15 min", maxSec: 15 * 60 },
+      { label: "20 min", maxSec: 20 * 60 },
+      { label: "30 min", maxSec: 30 * 60 },
       { label: "30+ min", maxSec: Infinity },
     ];
     const data = bins.map(b => ({ label: b.label, maxSec: b.maxSec, successful: 0, unsuccessful: 0 }));
