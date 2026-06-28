@@ -7,6 +7,14 @@ import { normalizeWalkType } from "./helpers";
 export function useAppData({ recomputeTarget, logSyncDebug }) {
   const [dogs, setDogs] = useState(() => ensureArray(load(DOGS_KEY, [])));
   const [activeDogId, setActiveDogId] = useState(() => canonicalDogId(load(ACTIVE_DOG_KEY, null)));
+
+  useEffect(() => {
+    save(DOGS_KEY, dogs);
+  }, [dogs]);
+
+  useEffect(() => {
+    save(ACTIVE_DOG_KEY, activeDogId);
+  }, [activeDogId]);
   
   const [sessions, setSessions] = useState([]);
   const [walks, setWalks] = useState([]);
