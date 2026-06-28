@@ -114,10 +114,11 @@ content = content.replace('  const [historyModal, setHistoryModal] = useState(nu
 
 # 4. Wipe out lines from walkTimerRef up to the end of syncSnapshotRef effects
 import re
+
 content = re.sub(r'  const walkTimerRef = useRef\(null\);.*?  useEffect\(\(\) => \{ save\("pawtimer_proto_override", protoOverride\); \}, \[protoOverride\]\);\n', '', content, flags=re.DOTALL)
 
 # 5. Wipe out old `deriveRecommendation` down to `setEntrySyncState` (including the massive commit methods)
-content = re.sub(r'  const activeDog = useMemo\(.*?  useEffect\(\(\) => \{\n    syncHelpersRef\.current = \{\n      commitSessions,\n      commitWalks,\n      commitPatterns,\n      commitFeedings,\n      recomputeTarget,\n      setEntrySyncState,\n    \};\n  \}, \[commitFeedings, commitPatterns, commitSessions, commitWalks, recomputeTarget, setEntrySyncState\]\);\n', 
+content = re.sub(r'  const activeDog = useMemo\(.*?  useEffect\(\(\) => \{\n    syncHelpersRef\.current = \{\n      commitSessions,\n      commitWalks,\n      commitPatterns,\n      commitFeedings,\n      recomputeTarget,\n      setEntrySyncState,\n    \};\n  \}, \[commitFeedings, commitPatterns, commitSessions, commitWalks, recomputeTarget, setEntrySyncState\]\);\n',
 """  const trainFirstRunHintKey = useMemo(() => (activeDogId ? `pawtimer_train_intro_seen_v1_${canonicalDogId(activeDogId)}` : null), [activeDogId]);
   const trainReturnSnapshotKey = useMemo(() => (activeDogId ? `pawtimer_train_last_seen_v1_${canonicalDogId(activeDogId)}` : null), [activeDogId]);
 
@@ -129,7 +130,7 @@ content = re.sub(r'  const activeDog = useMemo\(.*?  useEffect\(\(\) => \{\n    
 """, content, flags=re.DOTALL)
 
 # 6. Wipe out old hydrateDogFromLocal (lines 509-553) which is effectively lines starting with `useEffect(() => {\n    if (!activeDogId) { setScreen(getSetupLandingScreen(dogs)); return; }`
-content = re.sub(r'  useEffect\(\(\) => \{\n    if \(\!activeDogId\) \{ setScreen\(getSetupLandingScreen\(dogs\)\); return; \}\n.*?  \}, \[activeDogId, dogs, getSetupLandingScreen, recomputeTarget, withHydratedSyncState\]\);\n', 
+content = re.sub(r'  useEffect\(\(\) => \{\n    if \(\!activeDogId\) \{ setScreen\(getSetupLandingScreen\(dogs\)\); return; \}\n.*?  \}, \[activeDogId, dogs, getSetupLandingScreen, recomputeTarget, withHydratedSyncState\]\);\n',
 """  useEffect(() => {
     if (!activeDogId) { setScreen(getSetupLandingScreen(dogs)); return; }
     const normalizedId = canonicalDogId(activeDogId);

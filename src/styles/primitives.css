@@ -27,6 +27,7 @@
 }
 
 .pt-screen-header--center .pt-screen-header__copy { text-align: center; }
+
 .pt-screen-header__title {
   font-size: var(--type-page-heading-size);
   line-height: var(--type-page-heading-line);
@@ -89,25 +90,23 @@
 }
 
 .pt-button--secondary {
-  background: rgba(255, 255, 255, 0.45) !important;
+  background: rgb(255 255 255 / 45%) !important;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgb(255 255 255 / 60%) !important;
   color: var(--brown) !important;
 }
 
 .pt-button--secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.65) !important;
+  background: rgb(255 255 255 / 65%) !important;
   border-color: var(--primaryBlue) !important;
 }
 
 /* ── СТЕКЛЯННЫЕ КАРТОЧКИ (BENTO-SURFACES) ── */
 .pt-surface-card {
   border-radius: var(--radius-lg) !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  background: rgba(255, 255, 255, 0.35) !important;
+  border: 1px solid rgb(255 255 255 / 45%) !important;
+  background: rgb(255 255 255 / 35%) !important;
   backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   box-shadow: none;
   padding: var(--space-card-padding);
 }
@@ -120,23 +119,22 @@
 }
 
 .pt-surface-card--interactive:hover {
-  background: rgba(255, 255, 255, 0.55) !important;
-  border-color: rgba(255, 255, 255, 0.75) !important;
+  background: rgb(255 255 255 / 55%) !important;
+  border-color: rgb(255 255 255 / 75%) !important;
   transform: translateY(-2px) !important;
   box-shadow: var(--shadow);
 }
 
 .pt-surface-card--interactive:active {
-  transform: scale(0.96) translateY(0px) !important;
+  transform: scale(0.96) translateY(0) !important;
 }
 
 /* ── АККОРДЕОНЫ / РАСКРЫВАЮЩИЕСЯ СПИСКИ ── */
 .pt-collapsible {
   border-radius: var(--radius-lg) !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  background: rgba(255, 255, 255, 0.25) !important;
+  border: 1px solid rgb(255 255 255 / 40%) !important;
+  background: rgb(255 255 255 / 25%) !important;
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   overflow: clip;
 }
 
@@ -156,7 +154,7 @@
 }
 
 .pt-collapsible__trigger:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgb(255 255 255 / 20%);
 }
 
 .pt-collapsible__title { color: var(--brown); font-weight: var(--font-semibold); }
@@ -181,11 +179,10 @@
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: var(--space-card-row-gap);
   padding: var(--space-2) var(--space-card-padding-lg);
-  background: rgba(255, 255, 255, 0.45) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.5) !important;
+  background: rgb(255 255 255 / 45%) !important;
+  border-top: 1px solid rgb(255 255 255 / 50%) !important;
   box-shadow: var(--shadow);
   backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
 }
 
 .pt-bottom-nav__item {
@@ -207,7 +204,7 @@
 
 .pt-bottom-nav__item.is-active {
   color: var(--brown) !important;
-  background: rgba(255, 255, 255, 0.7) !important;
+  background: rgb(255 255 255 / 70%) !important;
   box-shadow: var(--shadow);
 }
 
@@ -227,6 +224,7 @@
 
 .pt-toggle__text { display: grid; gap: 2px; }
 .pt-toggle__label { color: var(--brown); font-weight: var(--font-medium); }
+
 .pt-toggle__description {
   color: var(--text-muted);
   font-size: var(--type-secondary-size);
@@ -243,8 +241,8 @@
   width: 50px;
   height: 30px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
-  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgb(255 255 255 / 60%) !important;
+  background: rgb(0 0 0 / 5%) !important;
   display: flex;
   align-items: center;
   padding: 3px;
@@ -280,9 +278,8 @@
 .pt-bottom-sheet__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(43, 34, 30, 0.15) !important; /* Вместо черного — легкое кофейное тонирование */
+  background: rgb(43 34 30 / 15%) !important; /* Вместо черного — легкое кофейное тонирование */
   backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   opacity: 0;
   transition: opacity var(--motion-dialog-enter) var(--ease-standard);
 }
@@ -293,11 +290,10 @@
   left: 0;
   right: 0;
   border-radius: 32px 32px 0 0 !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgb(255 255 255 / 60%) !important;
   border-bottom: none !important;
-  background: rgba(255, 255, 255, 0.75) !important; /* Уплотненное стекло для читаемости контента */
+  background: rgb(255 255 255 / 75%) !important; /* Уплотненное стекло для читаемости контента */
   backdrop-filter: blur(30px) !important;
-  -webkit-backdrop-filter: blur(30px) !important;
   box-shadow: var(--shadow);
   transform: translateY(102%);
   transition: transform var(--motion-dialog-enter) var(--ease-emphasized);
@@ -314,7 +310,7 @@
   width: 40px;
   height: 5px;
   border-radius: var(--radius-pill);
-  background: rgba(0, 0, 0, 0.1) !important;
+  background: rgb(0 0 0 / 10%) !important;
   margin: 12px auto 8px;
 }
 
@@ -342,10 +338,9 @@
 .pt-context-hint,
 .pt-inline-banner {
   border-radius: 16px !important;
-  border: 1px solid rgba(255, 255, 255, 0.5) !important;
-  background: rgba(255, 255, 255, 0.4) !important;
+  border: 1px solid rgb(255 255 255 / 50%) !important;
+  background: rgb(255 255 255 / 40%) !important;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: var(--space-control-gap);
@@ -371,27 +366,26 @@
 
 /* Мягкая пастельная тонировка плашек вместо жестких градиентов */
 .pt-context-hint--info, .pt-inline-banner--info {
-  background: rgba(235, 245, 255, 0.45) !important;
-  border-color: rgba(142, 197, 252, 0.3) !important;
+  background: rgb(235 245 255 / 45%) !important;
+  border-color: rgb(142 197 252 / 30%) !important;
 }
 
 .pt-context-hint--success, .pt-inline-banner--success {
-  background: rgba(230, 247, 242, 0.45) !important;
-  border-color: rgba(58, 166, 134, 0.3) !important;
+  background: rgb(230 247 242 / 45%) !important;
+  border-color: rgb(58 166 134 / 30%) !important;
 }
 
 .pt-context-hint--warning, .pt-inline-banner--warning {
-  background: rgba(255, 247, 230, 0.45) !important;
-  border-color: rgba(240, 173, 78, 0.3) !important;
+  background: rgb(255 247 230 / 45%) !important;
+  border-color: rgb(240 173 78 / 30%) !important;
 }
 
 /* ── ПУСТЫЕ СОСТОЯНИЯ (EMPTY STATES) ── */
 .pt-empty-state {
-  border: 1.5px dashed rgba(255, 255, 255, 0.6) !important;
+  border: 1.5px dashed rgb(255 255 255 / 60%) !important;
   border-radius: var(--radius-lg) !important;
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgb(255 255 255 / 20%) !important;
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   text-align: center;
   padding: var(--space-card-padding-lg);
   display: grid;

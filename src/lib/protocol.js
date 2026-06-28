@@ -26,7 +26,7 @@ export const PROTOCOL = {
   nearThresholdRatioMaxExclusive: 0.98,
   nearThresholdPlateauStreak: 2,
   thresholdConfirmationWindow: 3,
-  thresholdConfirmationStreak: 1,
+  thresholdConfirmationStreak: 2,
   maxDailyAloneMinutes: 30,
   desensitizationBlocksPerDayRecommendedMin: 3,
   desensitizationBlocksPerDayRecommendedMax: 5,
@@ -148,7 +148,7 @@ export function inferBelowThreshold(session = {}) {
   const actual = Number(session?.actualDuration);
   const planned = Number(session?.plannedDuration);
   if (!Number.isFinite(actual) || !Number.isFinite(planned)) return false;
-  return actual >= (planned * 0.9); // Допускаем 10% погрешность (ранняя остановка)
+  return actual >= planned;
 }
 
 function getLatestSessions(sessions, count) {
@@ -796,8 +796,15 @@ function buildRecoveryModeDetails({
 function computeProgressiveIncrease(anchorDuration, calmStreak = 1) {
   if (!Number.isFinite(anchorDuration) || anchorDuration <= 0) return PROTOCOL.startDurationSeconds;
 
-  // Всегда увеличиваем на 20% при успешной сессии
-  return Math.round(anchorDuration * 1.2);
+  // Before 40 minutes, scale up by 10-15% based on how steady the current calm streak is.
+  if (anchorDuration < 40 * 60) {
+    const percentIncrease = clamp(0.14 + (Math.max(0, calmStreak - 1) * 0.01), 0.1, 0.15);
+    return Math.round(anchorDuration * (1 + percentIncrease));
+  }
+
+  // At/after 40 minutes, switch to fixed +3 to +5 minute steps.
+  const fixedStepSeconds = anchorDuration >= 60 * 60 ? 5 * 60 : 3 * 60;
+  return Math.round(anchorDuration + fixedStepSeconds);
 }
 
 function normalizeRecoveryState(state = null) {
@@ -1136,7 +1143,7 @@ export function computeNextTarget(trainingSessions = [], options = {}) {
   }
 
   const stepped = computeProgressiveIncrease(anchorDuration, calmStreak);
-  const riskAdjustedStep = stepped; // Игнорируем влияние риска для строгого +20%
+  const riskAdjustedStep = Math.round(stepped * getStepMultiplier(relapseRisk));
   let smoothed = clampRateChange(riskAdjustedStep, lastReferenceDuration);
 
   if (hasConsecutivePostSubtleIncrease(recentWindow) && smoothed > lastReferenceDuration) {

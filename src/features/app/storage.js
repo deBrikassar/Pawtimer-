@@ -125,7 +125,7 @@ const trackFetchRate = (method, path, trigger = "unknown") => {
   logSyncDebug("sbReq:rate", { key, trigger, requestsPerSecond: entry.count });
 };
 
-const sbReq = async (path, opts = {}) => {
+export const sbReq = async (path, opts = {}) => {
   if (!SB_BASE_URL || !SB_KEY) {
     return { ok: false, data: null, error: "Supabase env vars are missing", status: 0 };
   }
@@ -138,35 +138,56 @@ const sbReq = async (path, opts = {}) => {
     return inFlightGetRequests.get(requestKey);
   }
   const requestPromise = (async () => {
-  try {
-    const headers = {
-      apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
-      "Content-Type": "application/json",
-      ...(opts.headers || {}),
-    };
-    if (opts.prefer) headers["Prefer"] = opts.prefer;
-    const res = await fetch(`${SB_BASE_URL}/rest/v1/${path}`, {
-      method: opts.method ?? "GET",
-      headers,
-      body: opts.body,
-    });
-    const text = await res.text().catch(() => "");
-    if (!res.ok) {
-      const detail = text || `${res.status} ${res.statusText}`;
-      console.warn("Supabase error:", res.status, detail);
-      return { ok: false, data: null, error: detail, status: res.status };
+    let attempt = 0;
+    const maxRetries = method === "GET" ? 3 : 1;
+    while (attempt < maxRetries) {
+      try {
+        const headers = {
+          apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
+          "Content-Type": "application/json",
+          ...(opts.headers || {}),
+        };
+        if (opts.prefer) headers["Prefer"] = opts.prefer;
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        
+        const res = await fetch(`${SB_BASE_URL}/rest/v1/${path}`, {
+          method,
+          headers,
+          body: opts.body,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        const text = await res.text().catch(() => "");
+        if (!res.ok) {
+          if (res.status >= 500 && attempt < maxRetries - 1) {
+            attempt++;
+            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+            continue;
+          }
+          const detail = text || `${res.status} ${res.statusText}`;
+          console.warn("Supabase error:", res.status, detail);
+          return { ok: false, data: null, error: detail, status: res.status };
+        }
+        if (!text) return { ok: true, data: null, error: null, status: res.status };
+        try {
+          return { ok: true, data: JSON.parse(text), error: null, status: res.status };
+        } catch {
+          return { ok: false, data: null, error: "Invalid JSON response from Supabase", status: res.status };
+        }
+      } catch (e) {
+        if (attempt < maxRetries - 1) {
+          attempt++;
+          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          continue;
+        }
+        const message = e instanceof Error ? (e.name === 'AbortError' ? 'Request Timeout' : e.message) : String(e);
+        console.warn("Supabase fetch error:", message);
+        return { ok: false, data: null, error: message, status: 0 };
+      }
     }
-    if (!text) return { ok: true, data: null, error: null, status: res.status };
-    try {
-      return { ok: true, data: JSON.parse(text), error: null, status: res.status };
-    } catch {
-      return { ok: false, data: null, error: "Invalid JSON response from Supabase", status: res.status };
-    }
-  } catch (e) {
-    const message = e instanceof Error ? e.message : String(e);
-    console.warn("Supabase fetch error:", message);
-    return { ok: false, data: null, error: message, status: 0 };
-  }
   })();
   if (method === "GET") inFlightGetRequests.set(requestKey, requestPromise);
   try {

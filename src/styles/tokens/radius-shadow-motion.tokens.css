@@ -4,21 +4,19 @@
   --radius-lg: 40px;
   --radius-pill: 999px;
   --radius: var(--radius-lg);
-
   --border-width-default: 1px;
   --border-width-strong: 2px;
-
   --control-touch-target-sm: 36px;
   --control-touch-target-md: 44px;
   --control-touch-target-lg: 52px;
 
   /* deeper softer depth */
-  --shadow-sm: 0 4px 16px rgba(42,36,33,0.06), 0 1px 4px rgba(42,36,33,0.08);
-  --shadow: 0 12px 32px rgba(42,36,33,0.08), 0 4px 12px rgba(42,36,33,0.04);
-  --shadow-lg: 0 20px 48px rgba(42,36,33,0.12), 0 8px 24px rgba(42,36,33,0.06);
-  --surface-focus-shadow-soft: 0 10px 24px rgba(42,36,33,0.1);
-  --surface-dock-shadow: 0 -12px 40px rgba(42,36,33,0.1);
-  --surface-toast-shadow: 0 12px 40px rgba(36,27,19,0.3);
+  --shadow-sm: 0 4px 16px rgb(42 36 33 / 6%), 0 1px 4px rgb(42 36 33 / 8%);
+  --shadow: 0 12px 32px rgb(42 36 33 / 8%), 0 4px 12px rgb(42 36 33 / 4%);
+  --shadow-lg: 0 20px 48px rgb(42 36 33 / 12%), 0 8px 24px rgb(42 36 33 / 6%);
+  --surface-focus-shadow-soft: 0 10px 24px rgb(42 36 33 / 10%);
+  --surface-dock-shadow: 0 -12px 40px rgb(42 36 33 / 10%);
+  --surface-toast-shadow: 0 12px 40px rgb(36 27 19 / 30%);
   --surface-metric-radius: var(--radius-md);
   --surface-metric-shadow: var(--shadow-sm);
 
@@ -46,7 +44,6 @@
   --ease-emphasized: var(--ease-spring-gentle);
   --ease-premium: cubic-bezier(0.16, 0.84, 0.24, 1);
   --ease-out: cubic-bezier(0,0,0.2,1);
-
   --icon-size-xs: 14px;
   --icon-size-sm: 18px;
   --icon-size-md: 24px;

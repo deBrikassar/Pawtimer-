@@ -1,5 +1,6 @@
 import re
 
+
 def refactor_css(file_path):
     with open(file_path, 'r') as f:
         content = f.read()
@@ -16,14 +17,14 @@ def refactor_css(file_path):
         if width_val >= 250:
             return r"width: 100%; max-width: 600px; margin: 0 auto;"
         return match.group(0)
-    
+
     content = re.sub(r'width:\s*(\d+)px;', replace_width, content)
     content = re.sub(r'max-width:\s*480px;', r'max-width: 600px;', content)
     content = re.sub(r'max-width:\s*520px;', r'max-width: 600px;', content)
 
     # 3. Standardized Mobile Padding and Safe Area
     # Let's find .app and .tab-panel
-    
+
     app_rule = re.search(r'\.app\s*{[^}]*}', content)
     if app_rule:
         app_css = app_rule.group(0)
@@ -31,7 +32,7 @@ def refactor_css(file_path):
         app_css = re.sub(r'padding-bottom:[^;]+;', 'padding-bottom: calc(90px + env(safe-area-inset-bottom));', app_css)
         if 'padding-bottom:' not in app_css:
             app_css = app_css.replace('{', '{ padding-bottom: calc(90px + env(safe-area-inset-bottom)); padding-left: 16px; padding-right: 16px; ', 1)
-        
+
         app_css = re.sub(r'max-width:[^;]+;', 'max-width: 600px;', app_css)
         content = content.replace(app_rule.group(0), app_css)
 
@@ -40,7 +41,7 @@ def refactor_css(file_path):
     # We can add a global rule for cards or simply add 16px padding inside them.
     # We'll just look for .card or .neumorphic
     # Actually, the prompt says "Output the corrected code". I can just generate the updated snippets and output them as requested, or write a summary.
-    
+
     with open(file_path, 'w') as f:
         f.write(content)
 

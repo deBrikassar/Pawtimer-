@@ -37,7 +37,7 @@ def fix_shadow(match):
     val = match.group(1).strip()
     if 'var(' in val or 'none' in val:
         return match.group(0)
-    
+
     # If it's inset, maybe use --neu-shadow-in
     if 'inset' in val:
         return 'box-shadow: var(--neu-shadow-in);'
@@ -66,19 +66,19 @@ for root, _, files in os.walk(css_dir):
             path = os.path.join(root, f)
             with open(path, 'r', encoding='utf-8') as file:
                 original = file.read()
-            
+
             content = original
-            
+
             # 1. Replace shadows
             if f.endswith('.css'):
                 content = shadow_re.sub(fix_shadow, content)
-            
+
             # 2. Replace hex colors
             content = hex_re.sub(fix_hex, content)
-            
+
             # 3. Add backdrop-filter: blur(12px) if missing on things that have neu-shadow
             # Maybe too risky with regex, we can just replace specific strings.
-            
+
             if content != original:
                 with open(path, 'w', encoding='utf-8') as file:
                     file.write(content)

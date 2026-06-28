@@ -28,17 +28,14 @@
   --color-cozy-300: #F0CF9E; /* Muted mustard / caramel */
   --color-cozy-500: #D89A5E; /* Caramel / Wood */
   --color-cozy-700: #B36A3E; /* Soft Terracotta */
-
   --color-info-500: #D89A5E; /* Replacing cold indigo with warm caramel */
   --color-info-600: #B36A3E; /* Replacing cold indigo with soft terracotta */
   --color-info-50: #FDF3E7;
   --color-info-100: #F7E4CF;
   --color-info-200: #EACCA9;
-
   --color-success-600: #6B8E23; /* Sage Green */
   --color-warning-600: #D89A5E; /* Caramel / Muted mustard */
   --color-error-600: #C55A46; /* Softer, warmer red/terracotta */
-
   --color-warm-accent: var(--color-cozy-300);
   --color-warm-accent-strong: var(--color-cozy-500);
 

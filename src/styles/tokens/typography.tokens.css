@@ -1,14 +1,12 @@
 :root {
-  --font-main: "Poppins", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-main: "Poppins", -apple-system, blinkmacsystemfont, sans-serif;
   --font-ui: var(--font-main);
   --font-prose: var(--font-main);
-
   --font-regular: 400;
   --font-medium: 500;
   --font-semibold: 600;
   --font-bold: 700;
   --font-extrabold: 800;
-
   --text-xs: 12px;
   --text-sm: 14px;
   --text-base: 16px;
@@ -18,13 +16,11 @@
   --text-3xl: 30px;
   --text-4xl: 36px;
   --text-5xl: 42px;
-
   --type-line-display-tight: 1.12;
   --type-line-title: 1.28;
   --type-line-body: 1.55;
   --type-line-supporting: 1.4;
   --type-line-micro: 1.2;
-
   --type-page-title-size: var(--text-3xl);
   --type-page-title-line: calc(var(--type-page-title-size) * var(--type-line-title));
   --type-page-title-weight: var(--font-medium);
@@ -37,7 +33,6 @@
   --type-card-title-line: calc(var(--type-card-title-size) * var(--type-line-title));
   --type-card-title-weight: var(--font-medium);
   --type-card-title-track: -0.015em;
-
   --type-body-size: var(--text-base);
   --type-body-line: calc(var(--type-body-size) * var(--type-line-body));
   --type-body-weight: var(--font-regular);
@@ -50,7 +45,6 @@
   --type-overline-line: calc(var(--type-overline-size) * var(--type-line-micro));
   --type-overline-weight: var(--font-regular);
   --type-overline-track: 0.04em;
-
   --type-button-size: var(--text-base);
   --type-button-line: calc(var(--type-button-size) * var(--type-line-body));
   --type-button-weight: var(--font-medium);
@@ -89,7 +83,6 @@
   --type-card-heading-line: var(--type-card-title-line);
   --type-card-heading-weight: var(--type-card-title-weight);
   --type-card-heading-track: var(--type-card-title-track);
-
   --type-list-title-size: var(--type-body-size);
   --type-list-title-line: var(--type-body-line);
   --type-list-title-weight: var(--font-medium);
@@ -100,7 +93,6 @@
   --type-list-row-title-track: var(--type-list-title-track);
   --type-list-row-secondary-size: var(--type-secondary-size);
   --type-list-row-secondary-line: var(--type-secondary-line);
-
   --type-field-label-size: var(--type-secondary-size);
   --type-field-label-line: var(--type-secondary-line);
   --type-field-label-weight: var(--type-secondary-weight);
@@ -109,7 +101,6 @@
   --type-field-value-line: var(--type-body-line);
   --type-field-value-weight: var(--font-medium);
   --type-field-value-track: var(--type-body-track);
-
   --type-helper-text-size: var(--type-secondary-size);
   --type-helper-text-line: var(--type-secondary-line);
   --type-helper-text-weight: var(--type-secondary-weight);
@@ -118,7 +109,6 @@
   --type-placeholder-line: var(--type-body-line);
   --type-placeholder-weight: var(--type-body-weight);
   --type-placeholder-track: var(--type-body-track);
-
   --type-metric-xl-size: var(--text-3xl);
   --type-metric-xl-line: calc(var(--type-metric-xl-size) * var(--type-line-title));
   --type-metric-xl-weight: var(--font-medium);
@@ -135,8 +125,6 @@
   --type-metric-value-line: var(--type-metric-card-value-line);
   --type-metric-value-weight: var(--type-metric-card-value-weight);
   --type-metric-value-track: var(--type-metric-card-value-track);
-
-
   --type-display-size: var(--text-3xl);
   --type-display-line: calc(var(--type-display-size) * var(--type-line-title));
   --type-display-weight: var(--font-bold);

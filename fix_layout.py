@@ -1,4 +1,3 @@
-import os
 import re
 
 app_css_path = "/home/aleksandr/Projects/Pawtimer-/src/styles/app.css"

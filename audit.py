@@ -12,12 +12,12 @@ for root, _, files in os.walk(css_dir):
             path = os.path.join(root, f)
             with open(path, 'r', encoding='utf-8') as file:
                 content = file.read()
-                
+
             shadow_matches = bad_shadows_re.findall(content)
             for m in shadow_matches:
                 if 'var(' not in m and 'none' not in m and 'inset' not in m:
                     print(f"[{f}] shadow: {m.strip()}")
-            
+
             hex_matches = hex_re.findall(content)
             for h in hex_matches:
                 # check if not in allowed tokens

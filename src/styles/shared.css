@@ -107,6 +107,7 @@
 .modal-card {
   --modal-card-max-width: min(100%, 420px);
   --modal-card-max-height: none;
+
   width: min(100%, var(--modal-card-max-width));
   max-height: var(--modal-card-max-height);
   overflow: auto;
@@ -187,8 +188,7 @@
 
 .surface-row__value,
 .info-row__value {
-  justify-self:end;
-  align-self:baseline;
+  place-self:baseline end;
   font-size:var(--type-field-value-size);
   line-height:var(--type-field-value-line);
   letter-spacing:var(--type-field-value-track);
@@ -200,7 +200,7 @@
   white-space:nowrap;
 }
 
-@media (max-width: 560px) {
+@media (width <= 560px) {
   .info-row {
     grid-template-columns:minmax(0, 1fr);
     row-gap:4px;
@@ -288,6 +288,7 @@
 
 .surface-text-button {
   --small-tertiary-size: var(--control-touch-target-md);
+
   background:none;
   border:1px solid transparent;
   border-radius:var(--radius-pill);
@@ -322,6 +323,7 @@
   --button-size-font-weight: var(--type-button-weight);
   --button-size-letter-spacing: var(--type-button-track);
   --button-size-gap: var(--space-control-gap);
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -607,6 +609,7 @@
   --secondary-line-height: var(--type-button-line);
   --secondary-font-weight: var(--type-button-weight);
   --secondary-letter-spacing: var(--type-button-track);
+
   min-height: var(--secondary-min-height);
   padding-block: var(--secondary-padding-block);
   padding-inline: var(--secondary-padding-inline);
@@ -641,6 +644,7 @@
   --secondary-min-height: 40px;
   --secondary-padding-block: 0;
   --secondary-padding-inline: 0;
+
   inline-size: var(--secondary-min-height);
   block-size: var(--secondary-min-height);
   min-inline-size: var(--secondary-min-height);
@@ -786,6 +790,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -854,7 +859,7 @@
 }
 
 :is(input, select, textarea, .text-input, .ob-input, .ds-join-input, .proto-field-input, .notif-time-input, .feeding-field input, .feeding-field select, .activity-time-field input) {
-  border-color: color-mix(in srgb, var(--border) 88%, #fff);
+  border-color: color-mix(in srgb, var(--border) 88%, #ffffff);
   background: color-mix(in srgb, var(--surf) 92%, var(--surface-muted));
   transition: border-color var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard), background var(--motion-base) var(--ease-standard);
 }

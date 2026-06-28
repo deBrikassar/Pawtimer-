@@ -16,6 +16,7 @@
   box-shadow: var(--shadow-lg) !important;
   border-radius: var(--radius-lg) !important;
 }
+
 .stats-progress-hero-aura {
   opacity: 0.5;
 }
@@ -61,41 +62,41 @@
 /* --- Card Styles & approved Colors --- */
 
 .stats-bento-card--triangle {
-  background: rgba(16, 185, 129, 0.85) !important;
+  background: rgb(16 185 129 / 85%) !important;
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow);
 }
+
 .stats-bento-card--triangle:hover {
   box-shadow: var(--shadow);
 }
 
 .stats-bento-card--blob {
-  background: rgba(251, 191, 36, 0.85) !important;
+  background: rgb(251 191 36 / 85%) !important;
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow);
 }
+
 .stats-bento-card--blob:hover {
   box-shadow: var(--shadow);
 }
 
 .stats-bento-card--squircle {
-  background: rgba(51, 65, 85, 0.85) !important;
+  background: rgb(51 65 85 / 85%) !important;
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow);
 }
+
 .stats-bento-card--squircle:hover {
   box-shadow: var(--shadow);
 }
 
 .stats-bento-card--arch {
-  background: rgba(217, 119, 87, 0.85) !important;
+  background: rgb(217 119 87 / 85%) !important;
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   box-shadow: var(--shadow);
 }
+
 .stats-bento-card--arch:hover {
   box-shadow: var(--shadow);
 }
@@ -220,7 +221,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.2));
+  filter: drop-shadow(0 4px 12px rgb(16 185 129 / 20%));
 }
 
 .stats-progress-hero-ring-inner {
@@ -271,14 +272,14 @@
 .stats-support-progress-track {
   width: 100%;
   height: 6px;
-  background: rgba(0, 0, 0, 0.06);
+  background: rgb(0 0 0 / 6%);
   border-radius: 4px;
   overflow: hidden;
   position: relative;
 }
 
 [data-theme="dark"] .stats-support-progress-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgb(255 255 255 / 10%);
 }
 
 .stats-support-progress-fill {
@@ -294,17 +295,20 @@
   font-weight: var(--font-medium) !important;
   font-size: var(--text-lg) !important;
 }
+
 .stats-progress-headline {
   color: var(--text) !important;
   font-weight: var(--font-extrabold) !important;
   font-size: var(--text-3xl) !important;
   margin-bottom: 8px;
 }
+
 .stats-progress-value {
   color: var(--text) !important;
   font-weight: var(--font-medium) !important;
   font-size: var(--text-lg) !important;
 }
+
 .stats-progress-value--target {
   color: var(--text-muted) !important;
 }
@@ -313,6 +317,7 @@
   justify-content: flex-start !important;
   gap: 28px !important;
 }
+
 .stats-progress-value-block {
   flex: 0 0 auto !important;
 }
@@ -326,6 +331,7 @@
   justify-content: center;
   align-items: center;
 }
+
 .stats-progress-hero-ring-wrapper {
   position: relative;
   width: 140px;
@@ -334,6 +340,7 @@
   align-items: center;
   justify-content: center;
 }
+
 .stats-progress-hero-ring-svg {
   position: absolute;
   top: 0;
