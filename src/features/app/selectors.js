@@ -147,7 +147,9 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
   })();
 
   const totalCount = canonicalSessions.length;
-  const bestCalm = canonicalSessions.filter((s) => s.distressLevel === "none").reduce((m, s) => Math.max(m, s.actualDuration), 0);
+  const calmSessionsForStats = canonicalSessions.filter((s) => s.distressLevel === "none");
+  const bestCalm = calmSessionsForStats.reduce((m, s) => Math.max(m, s.actualDuration), 0);
+  const latestCalm = calmSessionsForStats.length > 0 ? (Number.isFinite(calmSessionsForStats[calmSessionsForStats.length - 1].actualDuration) ? calmSessionsForStats[calmSessionsForStats.length - 1].actualDuration : 0) : 0;
   const avgWalkDuration = walks.length ? walks.reduce((sum, w) => sum + (Number.isFinite(w.duration) ? w.duration : 0), 0) / walks.length : null;
   const uniqueSessionDays = new Set(canonicalSessions.map((s) => toDayKey(s.date)).filter(Boolean));
   const uniqueWalkDays = new Set(walks.map((w) => toDayKey(w.date)).filter(Boolean));
@@ -353,6 +355,7 @@ export function selectAppData({ dogs, activeDogId, sessions, walks, patterns, fe
     patReminderText,
     totalCount,
     bestCalm,
+    latestCalm,
     avgWalkDuration,
     avgSessionsPerDay,
     avgWalksPerDay,
