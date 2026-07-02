@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ViewportModal } from "../app/ui";
-import { ContextHint } from "../../components/primitives/Primitives";
-import { useHint } from "../app/useHint";
+
 
 function SessionActionRow({ onCancel }) {
   return (
@@ -216,7 +215,6 @@ export function SessionRatingPanel({
   fmt,
   distressTypes,
 }) {
-  const distressHint = useHint(`rating_${name}`);
 
   if (phase !== "rating") return null;
 
@@ -229,14 +227,6 @@ export function SessionRatingPanel({
             {fmt(finalElapsed)} session — how did {name} handle it?
           </div>
           
-          {distressHint.isVisible && (
-            <ContextHint
-              title="How to rate distress"
-              body="Be honest! It's better to end a session early and rate it 'Subtle stress' than to push too far. We use this to adjust your next target."
-              action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={distressHint.dismiss}>Got it</button>}
-              className="mb-4 mt-2"
-            />
-          )}
 
           <div className="result-list" role="radiogroup" aria-label="Stress rating">
             <button

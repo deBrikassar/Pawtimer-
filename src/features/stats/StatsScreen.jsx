@@ -2,8 +2,6 @@ import EmptyState from "../../components/EmptyState";
 import { METRIC_VARIANTS, StatsChartSection, StatsMetricCard, StatsSection, StatsSupportRow, ProgressHero, StatsInsightCard, BentoGrid, StatsBentoWidget } from "./StatsComponents";
 import { fmt } from "../app/helpers";
 import { SproutIcon } from "../app/ui";
-import { ContextHint } from "../../components/primitives/Primitives";
-import { useHint } from "../app/useHint";
 
 import { useApp } from "../app/AppContext";
 
@@ -18,7 +16,6 @@ export default function StatsScreen() {
   const ringMetricVariant = METRIC_VARIANTS.RING;
   const headlineSurfaceState = headlineStatusTone?.surfaceState || "today";
   
-  const statsHint = useHint(`stats_${name}`);
 
   const fmtMinutes = (seconds, options) => {
     if (seconds == null || Number.isNaN(Number(seconds))) return "—";
@@ -32,14 +29,6 @@ export default function StatsScreen() {
         {totalCount === 0 ? (
           <EmptyState media={<SproutIcon />} title="Progress starts here" body={`Complete your first session and ${name}'s progress, streak, and chart will appear here.`} ctaLabel="Go to Train →" onCta={() => setTab("home")} />
         ) : <>
-          {statsHint.isVisible && (
-            <ContextHint
-              title="Understanding your progress"
-              body="The Journey curve shows the trend of your training. Small setbacks are normal! The 'Risk' signal warns you if you might be pushing too fast."
-              action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={statsHint.dismiss}>Got it</button>}
-              className="mb-4"
-            />
-          )}
           
           <div className="stats-hero-wrap u-mb-section">
             <ProgressHero

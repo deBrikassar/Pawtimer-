@@ -1,5 +1,4 @@
-import { useHint } from "../app/useHint";
-import { ContextHint } from "../../components/primitives/Primitives";
+
 import { Img, ModalCloseButton, ViewportModal } from "../app/ui";
 import { PATTERN_TYPES, isToday } from "../app/helpers";
 import { useApp } from "../app/AppContext";
@@ -16,7 +15,6 @@ export function PatternModal() {
     name
   } = useApp();
 
-  const patternHint = useHint(`pattern_${name}`);
 
   if (!patOpen) return null;
 
@@ -29,14 +27,6 @@ export function PatternModal() {
           <ModalCloseButton onClick={() => setPatOpen(false)} />
         </div>
 
-        {patternHint.isVisible && (
-          <ContextHint
-            title="What is a pattern break?"
-            body="Dogs learn your departure cues (keys, coat). Breaking the pattern means doing the cue but not leaving, which desensitizes them to the trigger."
-            action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={patternHint.dismiss}>Got it</button>}
-            className="mb-4"
-          />
-        )}
 
         <div className="tool-expand tool-expand--modal">
           <div className={`pat-reminder ${pattern.behind ? "warn" : ""}`}>{patReminderText}</div>

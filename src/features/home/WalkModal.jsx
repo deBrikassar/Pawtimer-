@@ -1,5 +1,4 @@
-import { useHint } from "../app/useHint";
-import { ContextHint } from "../../components/primitives/Primitives";
+
 import { ModalCloseButton, ViewportModal } from "../app/ui";
 import { WALK_TYPE_OPTIONS, fmt } from "../app/helpers";
 import { useApp } from "../app/AppContext";
@@ -15,7 +14,7 @@ export function WalkModal() {
     name
   } = useApp();
 
-  const walkHint = useHint(`walk_${name}`);
+
 
   if (walkPhase === "idle") return null;
 
@@ -28,14 +27,7 @@ export function WalkModal() {
           <ModalCloseButton onClick={cancelWalk} />
         </div>
 
-        {walkHint.isVisible && (
-          <ContextHint
-            title="Why track walks?"
-            body="Physical and mental exercise impacts your dog's ability to settle. Logging walks helps you see this correlation."
-            action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={walkHint.dismiss}>Got it</button>}
-            className="mb-4"
-          />
-        )}
+
 
         {walkPhase === "timing" && (
           <div className="walk-timer-banner">

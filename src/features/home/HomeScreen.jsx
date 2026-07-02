@@ -1,6 +1,4 @@
 import { SessionControl, SessionRatingPanel, TrainProgressBar } from "../train/TrainComponents";
-import { useHint } from "../app/useHint";
-import { ContextHint } from "../../components/primitives/Primitives";
 import { DISTRESS_TYPES, PATTERN_TYPES, WALK_TYPE_OPTIONS, fmt, fmtClock, isToday, walkTypeLabel } from "../app/helpers";
 import { Img, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
@@ -42,11 +40,6 @@ export default function HomeScreen() {
     setPatOpen,
     feedings,
     openFeedingForm,
-    dismissTrainFirstRunHint,
-    showTrainFirstRunHint,
-    trainTimeChangeInsight,
-    returningTrainNudge,
-    dismissReturningTrainNudge,
     dogPhoto,
     handlePhotoUpload,
   } = useApp();
@@ -65,9 +58,6 @@ export default function HomeScreen() {
       ? `Daily session max reached (${daily.maxCount}). Try again tomorrow.`
       : "";
 
-  const walkHint = useHint(`walk_${name}`);
-  const patternHint = useHint(`pattern_${name}`);
-  const feedingHint = useHint(`feeding_${name}`);
 
   return (
     <div className="tab-content train-screen">
@@ -97,32 +87,6 @@ export default function HomeScreen() {
           <h2 className="train-identity-hero__name">Train with {name}</h2>
         </header>
 
-        {showTrainFirstRunHint && (
-          <div className="train-first-run-hint surface-card" role="status">
-            <div className="train-first-run-hint__body">
-              <strong>Welcome!</strong> Tap the dog to start your first calm-alone session. The timer tracks how long {name} stays relaxed while you&apos;re away.
-            </div>
-            <button type="button" className="train-first-run-hint__dismiss secondary-control secondary-control--inline-text" onClick={dismissTrainFirstRunHint}>Got it</button>
-          </div>
-        )}
-
-        {returningTrainNudge && (
-          <div className="train-returning-nudge surface-card" role="status">
-            <div className="train-returning-nudge__body">
-              Target updated to <strong>{fmt(returningTrainNudge.currentTarget)}</strong>
-              {returningTrainNudge.changedBy > 0
-                ? ` (+${fmt(returningTrainNudge.changedBy)} since last visit)`
-                : ` (${fmt(Math.abs(returningTrainNudge.changedBy))} less — keep it gentle)`}
-            </div>
-            <button type="button" className="train-returning-nudge__dismiss secondary-control secondary-control--inline-text" onClick={dismissReturningTrainNudge}>OK</button>
-          </div>
-        )}
-
-        {trainTimeChangeInsight && (
-          <div className="train-time-change-insight surface-card" role="status">
-            {trainTimeChangeInsight.message}
-          </div>
-        )}
 
         <SessionControl
           phase={phase}
@@ -136,7 +100,6 @@ export default function HomeScreen() {
           canStart={daily.canAdd}
           startBlockedMessage={sessionBlockedMessage}
           allowIdlePress={false}
-          onIdlePress={dismissTrainFirstRunHint}
         />
 
         <TrainProgressBar goalPct={goalPct} target={target} goalSec={goalSec} fmt={fmt} elapsed={elapsed} phase={phase} />

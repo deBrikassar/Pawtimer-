@@ -1,5 +1,4 @@
-import { useHint } from "../app/useHint";
-import { ContextHint } from "../../components/primitives/Primitives";
+
 import { ModalCloseButton, ViewportModal } from "../app/ui";
 import { useApp } from "../app/AppContext";
 
@@ -13,7 +12,6 @@ export function FeedingModal() {
     name
   } = useApp();
   
-  const feedingHint = useHint(`feeding_${name}`);
 
   if (!feedingOpen) return null;
 
@@ -26,14 +24,6 @@ export function FeedingModal() {
           <ModalCloseButton onClick={cancelFeedingForm} />
         </div>
 
-        {feedingHint.isVisible && (
-          <ContextHint
-            title="Why track feeding?"
-            body="A full stomach often promotes calmness and sleep. Tracking feeding times helps optimize when to train."
-            action={<button type="button" className="secondary-control secondary-control--inline-text" onClick={feedingHint.dismiss}>Got it</button>}
-            className="mb-4"
-          />
-        )}
 
         <div className="t-helper activity-time-hint">Quick log for routine consistency. You can fine-tune details in History later.</div>
         <label className="feeding-field">
