@@ -1,5 +1,5 @@
 import { useApp } from "../app/AppContext";
-import { PATTERN_TYPES } from "../app/helpers";
+import { PATTERN_TYPES, GOAL_DURATIONS, fmt } from "../app/helpers";
 import { CameraIcon, DeleteIcon, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
 
@@ -42,6 +42,7 @@ export default function SettingsScreen() {
   const [reminderEditorOpen, setReminderEditorOpen] = useState(false);
   const [diagDetailsOpen, setDiagDetailsOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
+  const [editingGoal, setEditingGoal] = useState(false);
   const {
     name,
     activeDogId,
@@ -85,6 +86,8 @@ export default function SettingsScreen() {
     dogPhoto,
     handlePhotoUpload,
     handleNameChange,
+    handleGoalChange,
+    goalSec,
   } = useApp();
 
   const reminderSummary = notifEnabled ? `On · ${notifTime}` : "Off";
@@ -158,6 +161,34 @@ export default function SettingsScreen() {
                 )}
                 <div className="pat-edit-actions">
                   <button className="pat-edit-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setEditingName(true)} aria-label="Edit name">Edit name</button>
+                </div>
+              </div>
+
+              {/* ── Dog goal editing ── */}
+              <div className="pat-edit-row" style={{ marginTop: '16px' }}>
+                {editingGoal ? (
+                  <select
+                    className="pat-edit-input"
+                    autoFocus
+                    defaultValue={goalSec}
+                    onBlur={(e) => { const val = Number(e.target.value); if (val) handleGoalChange(val); setEditingGoal(false); }}
+                    onChange={(e) => { const val = Number(e.target.value); if (val) handleGoalChange(val); setEditingGoal(false); }}
+                    style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surf)', width: '100%', fontSize: '1rem' }}
+                  >
+                    {GOAL_DURATIONS.map(g => (
+                      <option key={g.value} value={g.value}>{g.label} - {g.sub}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span className="settings-simple-title" style={{ fontSize: '0.85rem' }}>Goal</span>
+                    <span className="pat-edit-label" style={{ fontSize: '1rem', fontWeight: 500 }}>
+                      {GOAL_DURATIONS.find(g => g.value === goalSec)?.label || fmt(goalSec)}
+                    </span>
+                  </div>
+                )}
+                <div className="pat-edit-actions">
+                  {!editingGoal && <button className="pat-edit-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setEditingGoal(true)} aria-label="Edit goal">Edit goal</button>}
                 </div>
               </div>
 

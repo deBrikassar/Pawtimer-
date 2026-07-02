@@ -385,6 +385,17 @@ export default function PawTimer() {
     });
   };
 
+  const handleGoalChange = (newGoalSeconds) => {
+    if (!activeDogId) return;
+    setDogs((prev) => {
+      return prev.map((dog) => {
+        if (canonicalDogId(dog?.id) !== canonicalDogId(activeDogId)) return dog;
+        if (dog.goalSeconds === newGoalSeconds) return dog;
+        return stampLocalDogSettings({ ...dog, goalSeconds: newGoalSeconds }, dog);
+      });
+    });
+  };
+
   const historyActions = useHistoryEditing({
     sessions, walks, patterns, feedings, patLabels, showToast, pushWithSyncStatus, pushTombstoneWithSyncStatus, addTombstone,
     commitSessions, setWalks: commitWalks, setPatterns: commitPatterns, setFeedings: commitFeedings, stampLocalEntry,
@@ -464,7 +475,7 @@ export default function PawTimer() {
     setTrainingSettingsOpen, editingPat, setEditingPat, setPatLabels, settingsDisclosure, setSettingsDisclosure,
     syncDiagRunning, runSyncDiagnostics, SYNC_ENABLED, SB_URL, SB_KEY, SB_BASE_URL, syncDiagResult, syncSummary, syncDegradation,
     trainingSettingsOpen, setProtoWarnAck, protoWarnAck, protoOverride, setProtoOverride, setScreen, setOnboardingState,
-    dogsState: dogs, setDogs, save, ACTIVE_DOG_KEY, setActiveDogId, clearDogActivityState, handlePhotoUpload, handleNameChange,
+    dogsState: dogs, setDogs, save, ACTIVE_DOG_KEY, setActiveDogId, clearDogActivityState, handlePhotoUpload, handleNameChange, handleGoalChange,
     
     // UI actions
     openHistory: () => handleTabChange("history"),

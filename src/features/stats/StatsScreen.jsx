@@ -11,7 +11,7 @@ export default function StatsScreen() {
   const hasValidBestCalm = Number.isFinite(bestCalm) && bestCalm >= 0;
   const hasOverallGoal = Number.isFinite(goalSec) && goalSec > 0;
   const progressRatio = hasOverallGoal
-    ? Math.max(0, Math.min(latestCalm / goalSec, 1))
+    ? Math.max(0, Math.min(bestCalm / goalSec, 1))
     : null;
   const ringMetricVariant = METRIC_VARIANTS.RING;
   const headlineSurfaceState = headlineStatusTone?.surfaceState || "today";
@@ -39,9 +39,9 @@ export default function StatsScreen() {
               currentValue={fmtMinutes(bestCalm)}
               currentLabel="Best time"
               currentSeconds={bestCalm}
-              targetValue={fmtMinutes(target)}
-              targetLabel="Next target"
-              targetSeconds={target}
+              targetValue={fmtMinutes(goalSec)}
+              targetLabel="Goal"
+              targetSeconds={goalSec}
               insight={relapseTone && relapseTone.label !== "Stable" ? `⚠️ Risk: ${relapseTone.label} - Consider slowing down` : null}
               overallGoalProgress={progressRatio !== null ? Math.round(progressRatio * 100) : 0}
             />
