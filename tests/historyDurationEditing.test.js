@@ -64,14 +64,17 @@ describe("session duration edits in history", () => {
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "1:37" }, vi.fn());
     const editedFromClock = commitSessions.mock.calls[0][0]([baseSession]).find((session) => session.id === "sess-1");
     expect(editedFromClock.actualDuration).toBe(97);
+    expect(editedFromClock.plannedDuration).toBe(97);
 
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "22:57" }, vi.fn());
     const editedFromMinutes = commitSessions.mock.calls[1][0]([baseSession]).find((session) => session.id === "sess-1");
     expect(editedFromMinutes.actualDuration).toBe(1377);
+    expect(editedFromMinutes.plannedDuration).toBe(1377);
 
     actions.saveEditedActivityDuration({ mode: "duration", kind: "session", id: "sess-1", value: "90" }, vi.fn());
     const editedFromSeconds = commitSessions.mock.calls[2][0]([baseSession]).find((session) => session.id === "sess-1");
     expect(editedFromSeconds.actualDuration).toBe(90);
+    expect(editedFromSeconds.plannedDuration).toBe(90);
 
     expect(showToast).toHaveBeenCalledWith("Session updated to 1m 37s");
   });
@@ -109,7 +112,7 @@ describe("session duration edits in history", () => {
     const afterSecondEdit = secondUpdater(stateWithInterveningUpdate);
 
     expect(afterSecondEdit[0].actualDuration).toBe(150);
-    expect(afterSecondEdit[0].plannedDuration).toBe(240);
+    expect(afterSecondEdit[0].plannedDuration).toBe(150);
     expect(afterSecondEdit[0].syncState).toBe("syncing");
     expect(afterSecondEdit[0].pendingSync).toBe(true);
     expect(afterSecondEdit[0].syncError).toBe("transient");

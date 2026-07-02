@@ -4,7 +4,7 @@ import { normalizeDistressLevel } from "../../lib/protocol";
 import { mergeSessionWithDerivedFields } from "./storage";
 import { buildTrainTimeChangeInsight } from "../train/timeChangeInsight";
 import { fmt } from "./helpers";
-import { requestNotificationPermission, sendNotification } from "../../lib/notifications";
+import { sendNotification } from "../../lib/notifications";
 
 export function useTrainingTimer({ 
   target, 
@@ -57,9 +57,6 @@ export function useTrainingTimer({
       return;
     }
     
-    // Request permission gracefully when user interacts
-    requestNotificationPermission();
-
     completeTrainFirstRunHint?.();
     acknowledgeReturningTrainNudge?.();
     setTrainTimeChangeInsight?.(null);

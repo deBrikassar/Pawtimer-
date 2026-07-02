@@ -171,7 +171,7 @@ export function useHistoryEditing({
         const currentSession = prev.find((s) => s.id === historyModal.id);
         if (!currentSession) return prev;
         updatedSession = stampLocalEntry(
-          mergeSessionWithDerivedFields(currentSession, { actualDuration: parsedDuration }),
+          mergeSessionWithDerivedFields(currentSession, { actualDuration: parsedDuration, plannedDuration: parsedDuration }),
           currentSession,
         );
         return prev.map((s) => (s.id === historyModal.id ? updatedSession : s));
