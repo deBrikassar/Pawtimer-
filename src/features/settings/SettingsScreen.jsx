@@ -98,25 +98,25 @@ export default function SettingsScreen() {
     <>
       <div className="tab-content">
         <div className="section">
-          <div className="section-title">Calm control</div>
+          <div className="section-title">My Dog & Routine</div>
 
           <div className="settings-container-neumorphic">
-            <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Settings destinations">
+            <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Routine destinations">
               <SettingsNavRow label="Dog profile" value={name} icon={<svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 0 0-8 8v1h16v-1a8 8 0 0 0-8-8zm0 2a6 6 0 0 1 6 6H6a6 6 0 0 1 6-6zM5 14v4h14v-4H5zm2 1h10v2H7v-2z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.PROFILE)} />
               <SettingsNavRow label="Reminders" value={reminderSummary} icon={<svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.REMINDERS)} />
-              <SettingsNavRow label="Training settings" value={`Up to ${activeProto.sessionsPerDayMax}/day`} icon={<svg viewBox="0 0 24 24"><path d="M22 6h-6V4h-2v2h-2c-1.1 0-2 .9-2 2v1h-2v4h2v2c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zM12 15h-2v-4h2v4zm10-2h-8v-2h8v2z" fill="currentColor"/></svg>} onClick={() => setTrainingSettingsOpen(true)} />
               <SettingsNavRow label="Custom labels" value={`${Object.keys(patLabels).length} custom`} icon={<svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.LABELS)} />
             </div>
 
-            <div className="settings-section-label">Guidance + diagnostics</div>
-            <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Support destinations">
-              <SettingsNavRow label="Help" value="Guidance" icon={<svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.HELP)} />
-              <SettingsNavRow label="Advanced" value="Diagnostics" icon={<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.1L7.6 4.8 5.4 7 2.5 4.1c-1.3 2.4-.9 5.4 1.1 7.4 1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l1.7-1.7c.4-.4.4-1 0-1.4z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.ADVANCED)} />
+            <div className="settings-section-label">Training Protocol</div>
+            <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Training Protocol">
+              <SettingsNavRow label="Training settings" value={`Up to ${activeProto.sessionsPerDayMax}/day`} icon={<svg viewBox="0 0 24 24"><path d="M22 6h-6V4h-2v2h-2c-1.1 0-2 .9-2 2v1h-2v4h2v2c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zM12 15h-2v-4h2v4zm10-2h-8v-2h8v2z" fill="currentColor"/></svg>} onClick={() => setTrainingSettingsOpen(true)} />
             </div>
 
-            <div className="settings-section-label">Account + device</div>
-            <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Account destinations">
+            <div className="settings-section-label">System & Support</div>
+            <div className="settings-nav-list settings-neumorphic-card" role="list" aria-label="Support destinations">
               <SettingsNavRow label="Account" value="Profile & device" icon={<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.ACCOUNT)} />
+              <SettingsNavRow label="Help" value="Guidance" icon={<svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.HELP)} />
+              <SettingsNavRow label="Advanced" value="Diagnostics" icon={<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.1L7.6 4.8 5.4 7 2.5 4.1c-1.3 2.4-.9 5.4 1.1 7.4 1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l1.7-1.7c.4-.4.4-1 0-1.4z" fill="currentColor"/></svg>} onClick={() => setActivePanel(SETTINGS_PANEL.ADVANCED)} />
             </div>
 
             <div className="settings-danger-sep" />
@@ -146,50 +146,32 @@ export default function SettingsScreen() {
             <div className="settings-modal-stack">
 
               {/* ── Dog profile editing ── */}
-              <div className="pat-edit-row">
-                {editingName ? (
-                  <input
-                    className="pat-edit-input"
-                    autoFocus
-                    aria-label="Dog name"
-                    defaultValue={name}
-                    onBlur={(e) => { const val = e.target.value.trim(); if (val) handleNameChange(val); setEditingName(false); }}
-                    onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") setEditingName(false); }}
-                  />
-                ) : (
-                  <span className="pat-edit-label" style={{ fontSize: '1.2rem', fontWeight: 600 }}>{name}</span>
-                )}
-                <div className="pat-edit-actions">
-                  <button className="pat-edit-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setEditingName(true)} aria-label="Edit name">Edit name</button>
-                </div>
+              <div className="pat-edit-row" style={{ alignItems: 'center' }}>
+                <span className="settings-simple-title" style={{ fontSize: '0.85rem', minWidth: '60px' }}>Name</span>
+                <input
+                  className="pat-edit-input"
+                  aria-label="Dog name"
+                  defaultValue={name}
+                  onBlur={(e) => { const val = e.target.value.trim(); if (val && val !== name) handleNameChange(val); else e.target.value = name; }}
+                  onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
+                  style={{ flex: 1, marginLeft: '12px', fontSize: '1rem', padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surf)', color: 'var(--text)' }}
+                />
               </div>
 
               {/* ── Dog goal editing ── */}
-              <div className="pat-edit-row" style={{ marginTop: '16px' }}>
-                {editingGoal ? (
-                  <select
-                    className="pat-edit-input"
-                    autoFocus
-                    defaultValue={goalSec}
-                    onBlur={(e) => { const val = Number(e.target.value); if (val) handleGoalChange(val); setEditingGoal(false); }}
-                    onChange={(e) => { const val = Number(e.target.value); if (val) handleGoalChange(val); setEditingGoal(false); }}
-                    style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surf)', width: '100%', fontSize: '1rem' }}
-                  >
-                    {GOAL_DURATIONS.map(g => (
-                      <option key={g.value} value={g.value}>{g.label} - {g.sub}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span className="settings-simple-title" style={{ fontSize: '0.85rem' }}>Goal</span>
-                    <span className="pat-edit-label" style={{ fontSize: '1rem', fontWeight: 500 }}>
-                      {GOAL_DURATIONS.find(g => g.value === goalSec)?.label || fmt(goalSec)}
-                    </span>
-                  </div>
-                )}
-                <div className="pat-edit-actions">
-                  {!editingGoal && <button className="pat-edit-btn t-helper secondary-control secondary-control--inline-text" onClick={() => setEditingGoal(true)} aria-label="Edit goal">Edit goal</button>}
-                </div>
+              <div className="pat-edit-row" style={{ marginTop: '16px', alignItems: 'center' }}>
+                <span className="settings-simple-title" style={{ fontSize: '0.85rem', minWidth: '60px' }}>Goal</span>
+                <select
+                  className="pat-edit-input"
+                  defaultValue={goalSec}
+                  onBlur={(e) => { const val = Number(e.target.value); if (val) handleGoalChange(val); }}
+                  onChange={(e) => { const val = Number(e.target.value); if (val) handleGoalChange(val); }}
+                  style={{ flex: 1, marginLeft: '12px', padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surf)', fontSize: '1rem', color: 'var(--text)' }}
+                >
+                  {GOAL_DURATIONS.map(g => (
+                    <option key={g.value} value={g.value}>{g.label} - {g.sub}</option>
+                  ))}
+                </select>
               </div>
 
               {/* ── Dog photo ── */}

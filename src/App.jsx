@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
-import { PROTOCOL, explainNextTarget, suggestNext, suggestNextWithContext } from "./lib/protocol";
+import { PROTOCOL, applyProtocolOverrides, explainNextTarget, suggestNext, suggestNextWithContext } from "./lib/protocol";
 import { sortValidDateAsc } from "./lib/dateSort";
 import { sortByDateAsc } from "./lib/activityDateTime";
 import { selectAppData } from "./features/app/selectors";
@@ -141,9 +141,9 @@ export default function PawTimer() {
     const details = explainNextTarget(logicalSessions, nextWalks, nextPatterns, nextDog || {});
     const recommendedDuration = details?.recommendedDuration ?? (suggestNextWithContext(logicalSessions, nextWalks, nextPatterns, nextDog) ?? suggestNext(logicalSessions, nextDog));
     return { duration: recommendedDuration, decisionState: details?.decisionState ?? null, explanation: details?.summary ?? "", details: details ?? {} };
-  }, [activeDog, patterns, walks]);
+  }, [activeDog, patterns, walks, protoOverride]);
 
-  const recommendation = useMemo(() => deriveRecommendation(canonicalSessions, walks, patterns, activeDog || {}), [activeDog, canonicalSessions, deriveRecommendation, patterns, walks]);
+  const recommendation = useMemo(() => deriveRecommendation(canonicalSessions, walks, patterns, activeDog || {}), [activeDog, canonicalSessions, deriveRecommendation, patterns, walks, protoOverride]);
 
   const appData = selectAppData({ dogs, activeDogId, sessions: canonicalSessions, walks, patterns, feedings, target: recommendation.duration, protoOverride, recommendation });
 
@@ -155,7 +155,10 @@ export default function PawTimer() {
 
   useEffect(() => { save("pawtimer_notif_time", notifTime); }, [notifTime]);
   useEffect(() => { save("pawtimer_notif_on", notifEnabled); }, [notifEnabled]);
-  useEffect(() => { save("pawtimer_proto_override", protoOverride); }, [protoOverride]);
+  useEffect(() => { 
+    save("pawtimer_proto_override", protoOverride); 
+    applyProtocolOverrides(protoOverride);
+  }, [protoOverride]);
 
   useEffect(() => {
     setTarget((prev) => (prev === recommendation.duration ? prev : recommendation.duration));

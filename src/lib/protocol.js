@@ -1,6 +1,6 @@
 import { sortValidDateAsc } from "./dateSort";
 
-export const PROTOCOL = {
+export const DEFAULT_PROTOCOL = {
   sessionsPerDayDefault: 1,
   sessionsPerDayMax: 5,
   trainingDaysPerWeekDefault: 5,
@@ -34,6 +34,13 @@ export const PROTOCOL = {
   cuesPerBlockMin: 2,
   cuesPerBlockMax: 5,
 };
+
+export let PROTOCOL = { ...DEFAULT_PROTOCOL };
+
+export function applyProtocolOverrides(overrides = {}) {
+  PROTOCOL = { ...DEFAULT_PROTOCOL, ...overrides };
+}
+
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
