@@ -1,0 +1,28 @@
+.settings-form-row {
+  align-items: center;
+}
+
+.settings-form-row--spaced {
+  margin-top: var(--space-2);
+}
+
+.settings-form-label {
+  font-size: var(--type-secondary-size);
+  min-width: 60px;
+}
+
+.settings-form-input {
+  flex: 1;
+  margin-left: 12px;
+  font-size: var(--type-body-size);
+  padding: var(--space-1);
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--border);
+  background: var(--surf);
+  color: var(--text);
+}
+
+.help-stats-list-nested {
+  margin-top: var(--space-1);
+  padding-left: 20px;
+}

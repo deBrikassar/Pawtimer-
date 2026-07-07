@@ -2,6 +2,7 @@
   --font-main: "Poppins", -apple-system, blinkmacsystemfont, sans-serif;
   --font-ui: var(--font-main);
   --font-prose: var(--font-main);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --font-regular: 400;
   --font-medium: 500;
   --font-semibold: 600;

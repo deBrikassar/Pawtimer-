@@ -26,7 +26,7 @@
 .surface-card--progress {
   background: var(--surface-gradient-raised);
   border-color: color-mix(in srgb, var(--border) 92%, white);
-  border-radius: 16px;
+  border-radius: var(--radius-xs);
 }
 
 /* Explicit spacing-density modifiers.

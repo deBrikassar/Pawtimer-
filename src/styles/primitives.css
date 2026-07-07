@@ -79,8 +79,8 @@
 .pt-button:disabled { opacity: 0.4; cursor: not-allowed; transform: scale(1) !important; }
 
 .pt-button--primary {
-  background: linear-gradient(135deg, #3aa686 0%, var(--green-dark) 100%) !important;
-  color: #ffffff !important;
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%) !important;
+  color: var(--color-surface) !important;
   box-shadow: var(--shadow);
 }
 
@@ -187,7 +187,7 @@
 
 .pt-bottom-nav__item {
   border: none;
-  border-radius: 16px !important;
+  border-radius: var(--radius-xs) !important;
   min-height: var(--control-touch-target-md);
   background: transparent;
   color: var(--text-muted);
@@ -253,13 +253,13 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #ffffff !important;
+  background: var(--color-surface) !important;
   box-shadow: var(--shadow);
   transition: transform 0.25s var(--ease-spring-bouncy), background-color 0.2s ease !important;
 }
 
 .pt-toggle__control:checked + .pt-toggle__track {
-  background: #3aa686 !important; /* Приятный мятно-зеленый при включении */
+  background: var(--green) !important; /* Приятный мятно-зеленый при включении */
   border-color: transparent !important;
 }
 
@@ -289,7 +289,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  border-radius: 32px 32px 0 0 !important;
+  border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
   border: 1px solid rgb(255 255 255 / 60%) !important;
   border-bottom: none !important;
   background: rgb(255 255 255 / 75%) !important; /* Уплотненное стекло для читаемости контента */
@@ -311,7 +311,7 @@
   height: 5px;
   border-radius: var(--radius-pill);
   background: rgb(0 0 0 / 10%) !important;
-  margin: 12px auto 8px;
+  margin: 12px auto var(--space-1);
 }
 
 .pt-bottom-sheet__header {
@@ -337,7 +337,7 @@
 /* ── ИНФОРМАЦИОННЫЕ ПЛАШКИ / ХИНТЫ ── */
 .pt-context-hint,
 .pt-inline-banner {
-  border-radius: 16px !important;
+  border-radius: var(--radius-xs) !important;
   border: 1px solid rgb(255 255 255 / 50%) !important;
   background: rgb(255 255 255 / 40%) !important;
   backdrop-filter: blur(8px);

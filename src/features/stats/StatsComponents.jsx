@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useState, useRef } from "react";
 import EmptyState from "../../components/EmptyState";
 import { TrendIcon } from "../app/ui";
+import "./StatsComponents.css";
 
 export const METRIC_VARIANTS = Object.freeze({
   HEADLINE: "headline",
@@ -143,7 +144,7 @@ export function ProgressHero({
   const heroStrokeDashoffset = heroCircumference - (Math.min(overallGoalPct, 100) / 100) * heroCircumference;
 
   return (
-    <div className="surface-card surface-card--chart progress-hero-card">
+    <div className="progress-hero-card">
       
       {/* Panel 1 (Left Inset Well) */}
       <div className="progress-hero-inset-panel">
@@ -273,37 +274,37 @@ export function StatsChartSection({ distributionData, setTab, name }) {
   const maxAxisValue = Math.max(4, maxTotal + (maxTotal % 2 === 0 ? 2 : 1));
 
   return (
-    <div className="chart-wrap chart-wrap-full surface-card surface-card--chart" style={{ overflow: "hidden", position: "relative", padding: "20px 20px 16px 20px", display: "flex", flexDirection: "column", gap: "8px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", zIndex: 2, position: "relative" }}>
-        <div className="chart-title" style={{ fontWeight: "var(--font-semibold)", color: "#4A4A4A", margin: 0, paddingTop: "4px" }}>Session duration distribution</div>
+    <div className="chart-wrap chart-wrap-full surface-card surface-card--chart stat-chart-container">
+      <div className="stat-chart-header">
+        <div className="chart-title stat-chart-title">Session duration distribution</div>
         
         {/* Legend */}
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--surf)", padding: "4px 12px", borderRadius: "99px", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
-            <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "var(--green-light)", boxShadow: "inset 1px 1px 2px rgba(255,255,255,0.6)" }}></div>
-            <span style={{ fontSize: "var(--text-sm)", color: "#4A4A4A", fontWeight: "var(--font-medium)" }}>Successful</span>
+        <div className="stat-chart-legend">
+          <div className="stat-chart-legend-item">
+            <div className="stat-chart-legend-dot stat-chart-legend-dot--success"></div>
+            <span className="stat-chart-legend-label">Successful</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--surf)", padding: "4px 12px", borderRadius: "99px", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
-            <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "color-mix(in srgb, var(--surface-muted) 80%, #D8D3CC)", boxShadow: "inset 1px 1px 2px rgba(255,255,255,0.6)" }}></div>
-            <span style={{ fontSize: "var(--text-sm)", color: "#4A4A4A", fontWeight: "var(--font-medium)" }}>Unsuccessful</span>
+          <div className="stat-chart-legend-item">
+            <div className="stat-chart-legend-dot stat-chart-legend-dot--unsuccess"></div>
+            <span className="stat-chart-legend-label">Unsuccessful</span>
           </div>
         </div>
       </div>
 
       {/* Chart Canvas */}
-      <div style={{ flex: 1, display: "flex", alignItems: "stretch", gap: "12px", position: "relative", paddingLeft: "28px", paddingBottom: "24px", minHeight: "220px", marginTop: "8px" }}>
+      <div className="stat-chart-canvas-wrap">
         
         {/* Y-axis Labels */}
-        <div style={{ position: "absolute", left: 0, top: 0, bottom: "24px", display: "flex", flexDirection: "column", justifyContent: "space-between", color: "#888", fontSize: "12px", fontWeight: "600", paddingBottom: "4px" }}>
+        <div className="stat-chart-y-axis-labels">
           <span>{maxAxisValue}</span>
           <span>{Math.round(maxAxisValue / 2)}</span>
           <span>0</span>
         </div>
 
         {/* Y-axis Lines */}
-        <div style={{ position: "absolute", left: "24px", right: 0, top: "8px", borderTop: "1px dashed color-mix(in srgb, var(--border) 60%, transparent)", zIndex: 0 }}></div>
-        <div style={{ position: "absolute", left: "24px", right: 0, top: "calc(50% - 8px)", borderTop: "1px dashed color-mix(in srgb, var(--border) 60%, transparent)", zIndex: 0 }}></div>
-        <div style={{ position: "absolute", left: "24px", right: 0, bottom: "24px", borderTop: "1px solid color-mix(in srgb, var(--border) 80%, transparent)", zIndex: 0 }}></div>
+        <div className="stat-chart-y-axis-line stat-chart-y-axis-line--top"></div>
+        <div className="stat-chart-y-axis-line stat-chart-y-axis-line--mid"></div>
+        <div className="stat-chart-y-axis-line stat-chart-y-axis-line--bottom"></div>
 
         {distributionData.map((bin, i) => {
           const heightPercent = maxAxisValue > 0 ? (bin.total / maxAxisValue) * 100 : 0;
@@ -311,72 +312,43 @@ export function StatsChartSection({ distributionData, setTab, name }) {
           const unsuccessfulPercent = bin.total > 0 ? (bin.unsuccessful / bin.total) * 100 : 0;
 
           return (
-            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1, position: "relative" }}>
+            <div key={i} className="stat-chart-bar-wrap">
               
-              {/* Bar track (Concave Neumorphic Inset) */}
-              <div style={{ 
-                flex: 1, 
-                width: "100%", 
-                maxWidth: "44px", 
-                background: "var(--surf)", 
-                boxShadow: "var(--neu-shadow-in, inset 3px 3px 6px color-mix(in srgb, var(--border) 40%, transparent), inset -3px -3px 6px rgba(255, 255, 255, 0.7))",
-                borderRadius: "16px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-end",
-                position: "relative",
-                padding: "4px"
-              }}>
+              {/* Bar track */}
+              <div className="stat-chart-bar-track">
                 {/* Bar fills wrapper */}
-                <div style={{ height: `${heightPercent}%`, width: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: bin.total > 0 ? "8px" : "0" }}>
+                <div className="stat-chart-bar-stack" style={{ height: `${heightPercent}%`, minHeight: bin.total > 0 ? "8px" : "0" }}>
                   
                   {/* Unsuccessful (top of stack) */}
                   {bin.unsuccessful > 0 && (
-                    <div style={{ 
-                      height: `${unsuccessfulPercent}%`, 
-                      width: "100%", 
-                      background: "color-mix(in srgb, var(--surface-muted) 80%, #D8D3CC)", 
-                      boxShadow: "var(--shadow-sm)", 
-                      borderTopLeftRadius: "12px", 
-                      borderTopRightRadius: "12px",
-                      borderBottomLeftRadius: bin.successful === 0 ? "12px" : "3px",
-                      borderBottomRightRadius: bin.successful === 0 ? "12px" : "3px",
-                      marginBottom: bin.successful > 0 ? "2px" : "0",
-                      transition: "height 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
-                      position: "relative"
-                    }}></div>
+                    <div 
+                      className="stat-chart-bar-segment stat-chart-bar-segment--unsuccessful"
+                      style={{ 
+                        height: `${unsuccessfulPercent}%`, 
+                        borderBottomLeftRadius: bin.successful === 0 ? "12px" : "3px",
+                        borderBottomRightRadius: bin.successful === 0 ? "12px" : "3px",
+                        marginBottom: bin.successful > 0 ? "2px" : "0"
+                      }}
+                    ></div>
                   )}
                   
                   {/* Successful (bottom of stack) */}
                   {bin.successful > 0 && (
-                    <div style={{ 
-                      height: `${successfulPercent}%`, 
-                      width: "100%", 
-                      background: "var(--green-light)", 
-                      boxShadow: "var(--shadow-sm)", 
-                      borderTopLeftRadius: bin.unsuccessful === 0 ? "12px" : "3px",
-                      borderTopRightRadius: bin.unsuccessful === 0 ? "12px" : "3px",
-                      borderBottomLeftRadius: "12px",
-                      borderBottomRightRadius: "12px",
-                      transition: "height 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
-                      position: "relative"
-                    }}></div>
+                    <div 
+                      className="stat-chart-bar-segment stat-chart-bar-segment--successful"
+                      style={{ 
+                        height: `${successfulPercent}%`, 
+                        borderTopLeftRadius: bin.unsuccessful === 0 ? "12px" : "3px",
+                        borderTopRightRadius: bin.unsuccessful === 0 ? "12px" : "3px"
+                      }}
+                    ></div>
                   )}
                   
                 </div>
               </div>
 
               {/* X-axis Label */}
-              <div style={{ 
-                position: "absolute",
-                bottom: "-20px",
-                fontSize: "11px", 
-                fontWeight: "600", 
-                color: "#7A7A7A",
-                textAlign: "center",
-                whiteSpace: "nowrap",
-                transform: "scale(0.95)"
-              }}>
+              <div className="stat-chart-x-axis-label">
                 {bin.label}
               </div>
             </div>

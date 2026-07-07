@@ -2,6 +2,7 @@ import { useApp } from "../app/AppContext";
 import { PATTERN_TYPES, GOAL_DURATIONS, fmt } from "../app/helpers";
 import { CameraIcon, DeleteIcon, ModalCloseButton, ViewportModal } from "../app/ui";
 import { useState } from "react";
+import "./SettingsScreen.css";
 
 const SETTINGS_PANEL = {
   PROFILE: "profile",
@@ -146,27 +147,25 @@ export default function SettingsScreen() {
             <div className="settings-modal-stack">
 
               {/* ── Dog profile editing ── */}
-              <div className="pat-edit-row" style={{ alignItems: 'center' }}>
-                <span className="settings-simple-title" style={{ fontSize: '0.85rem', minWidth: '60px' }}>Name</span>
+              <div className="pat-edit-row settings-form-row">
+                <span className="settings-simple-title settings-form-label">Name</span>
                 <input
-                  className="pat-edit-input"
+                  className="pat-edit-input settings-form-input"
                   aria-label="Dog name"
                   defaultValue={name}
                   onBlur={(e) => { const val = e.target.value.trim(); if (val && val !== name) handleNameChange(val); else e.target.value = name; }}
                   onKeyDown={(e) => { if (e.key === "Enter") e.target.blur(); }}
-                  style={{ flex: 1, marginLeft: '12px', fontSize: '1rem', padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surf)', color: 'var(--text)' }}
                 />
               </div>
 
               {/* ── Dog goal editing ── */}
-              <div className="pat-edit-row" style={{ marginTop: '16px', alignItems: 'center' }}>
-                <span className="settings-simple-title" style={{ fontSize: '0.85rem', minWidth: '60px' }}>Goal</span>
+              <div className="pat-edit-row settings-form-row settings-form-row--spaced">
+                <span className="settings-simple-title settings-form-label">Goal</span>
                 <select
-                  className="pat-edit-input"
+                  className="pat-edit-input settings-form-input"
                   defaultValue={goalSec}
                   onBlur={(e) => { const val = Number(e.target.value); if (val) handleGoalChange(val); }}
                   onChange={(e) => { const val = Number(e.target.value); if (val) handleGoalChange(val); }}
-                  style={{ flex: 1, marginLeft: '12px', padding: '8px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surf)', fontSize: '1rem', color: 'var(--text)' }}
                 >
                   {GOAL_DURATIONS.map(g => (
                     <option key={g.value} value={g.value}>{g.label} - {g.sub}</option>
@@ -310,7 +309,7 @@ export default function SettingsScreen() {
               <div className="proto-section">
                 <div className="proto-title">Current progress</div>
                 <div className="proto-row">Your current goal is to gradually increase the time you spend away. Target times will automatically nudge upward after successful, calm sessions.</div>
-                <ul className="help-stats-list proto-row" style={{ marginTop: '8px', paddingLeft: '20px' }}>
+                <ul className="help-stats-list proto-row help-stats-list-nested">
                   <li>Safe-alone estimate: 30 seconds</li>
                   <li>Calm streak: 2 sessions (Stability: 50%)</li>
                   <li>Relapse risk: Low (32%)</li>
@@ -319,7 +318,7 @@ export default function SettingsScreen() {
               <div className="proto-section">
                 <div className="proto-title">Algorithm history</div>
                 <div className="proto-row">System events for your dog:</div>
-                <ul className="help-stats-list proto-row" style={{ marginTop: '8px', paddingLeft: '20px' }}>
+                <ul className="help-stats-list proto-row help-stats-list-nested">
                   <li>Baseline started</li>
                   <li>Kept duration</li>
                   <li>Repeated duration</li>

@@ -1,4 +1,6 @@
 :root {
+  --radius-base: 12px;
+  --radius-xs: 16px;
   --radius-sm: 20px;
   --radius-md: 32px;
   --radius-lg: 40px;
