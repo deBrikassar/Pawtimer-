@@ -155,7 +155,8 @@ export function inferBelowThreshold(session = {}) {
   const actual = Number(session?.actualDuration);
   const planned = Number(session?.plannedDuration);
   if (!Number.isFinite(actual) || !Number.isFinite(planned)) return false;
-  return actual >= planned;
+  const toleranceRatio = PROTOCOL?.nearThresholdRatioMaxExclusive ?? 0.98;
+  return actual >= (planned * toleranceRatio);
 }
 
 function getLatestSessions(sessions, count) {
@@ -730,7 +731,7 @@ function getProgressionReferenceDuration(session = null) {
   if (!session) return null;
   const planned = Number(session.plannedDuration);
   const anchor = getSessionDurationAnchor(session);
-  if (isCalmShortSession(session) && Number.isFinite(planned) && planned > 0) {
+  if ((isCalmShortSession(session) || isCalmNearThresholdSession(session)) && Number.isFinite(planned) && planned > 0) {
     return planned;
   }
   return anchor;
