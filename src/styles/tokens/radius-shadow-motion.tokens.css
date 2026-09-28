@@ -1,51 +1,105 @@
-:root {
-  --radius-base: 12px;
-  --radius-xs: 16px;
-  --radius-sm: 20px;
-  --radius-md: 32px;
-  --radius-lg: 40px;
-  --radius-pill: 999px;
-  --radius: var(--radius-lg);
-  --border-width-default: 1px;
-  --border-width-strong: 2px;
-  --control-touch-target-sm: 36px;
-  --control-touch-target-md: 44px;
-  --control-touch-target-lg: 52px;
+/* =============================================================================
+   radius-shadow-motion.tokens.css — PawTimer Design System · 2026
+   Neumorphic shadows synced to warm taupe bg (#FAF8F5)
+     highlight → pure white (#FFFFFF) — top-left
+     shadow    → warm dark (#D5C4B0)  — bottom-right
+   Touch targets: minimum 44px (WCAG 2.5.5 / Apple HIG)
+   ============================================================================= */
 
-  /* deeper softer depth */
+:root {
+  /* ---------------------------------------------------------------------------
+     Border radius — logical scale (xs → pill, strictly increasing)
+     --------------------------------------------------------------------------- */
+  --radius-base: 8px;   /* Micro chip, badge, tag                            */
+  --radius-xs:   10px;  /* Tiny interactive element, tooltip                 */
+  --radius-sm:   14px;  /* Small card, input, button                         */
+  --radius-md:   20px;  /* Standard card / panel                             */
+  --radius-lg:   28px;  /* Large card / sheet surface                        */
+  --radius-xl:   40px;  /* Hero card / bottom sheet                          */
+  --radius-pill: 999px; /* Fully rounded pill / tag chip                     */
+
+  /* Semantic alias — default radius used across UI components */
+  --radius: var(--radius-md);
+
+  /* ---------------------------------------------------------------------------
+     Border widths
+     --------------------------------------------------------------------------- */
+  --border-width-default: 1px;
+  --border-width-strong:  2px;
+
+  /* ---------------------------------------------------------------------------
+     Touch targets — WCAG 2.5.5 / Apple HIG minimum 44 × 44 px
+     --------------------------------------------------------------------------- */
+  --control-touch-target-sm: 44px; /* Minimum accessible touch target        */
+  --control-touch-target-md: 48px; /* Comfortable tap target                 */
+  --control-touch-target-lg: 56px; /* Large / primary action target          */
+
+  /* ---------------------------------------------------------------------------
+     Elevation shadows (warm taupe tint, no cool/grey cast)
+     --------------------------------------------------------------------------- */
   --shadow-sm: 0 4px 16px rgb(42 36 33 / 6%), 0 1px 4px rgb(42 36 33 / 8%);
-  --shadow: 0 12px 32px rgb(42 36 33 / 8%), 0 4px 12px rgb(42 36 33 / 4%);
+  --shadow:    0 12px 32px rgb(42 36 33 / 8%), 0 4px 12px rgb(42 36 33 / 4%);
   --shadow-lg: 0 20px 48px rgb(42 36 33 / 12%), 0 8px 24px rgb(42 36 33 / 6%);
+
   --surface-focus-shadow-soft: 0 10px 24px rgb(42 36 33 / 10%);
-  --surface-dock-shadow: 0 -12px 40px rgb(42 36 33 / 10%);
-  --surface-toast-shadow: 0 12px 40px rgb(36 27 19 / 30%);
+  --surface-dock-shadow:       0 -12px 40px rgb(42 36 33 / 10%);
+  --surface-toast-shadow:      0 12px 40px rgb(36 27 19 / 30%);
+
   --surface-metric-radius: var(--radius-md);
   --surface-metric-shadow: var(--shadow-sm);
 
-  /* Neumorphism shadows — sage palette */
-  --neu-shadow-out: 6px 6px 14px #C8CCCA, -6px -6px 14px #F2F5F0;
-  --neu-shadow-out-sm: 3px 3px 8px #C8CCCA, -3px -3px 8px #F2F5F0;
-  --neu-shadow-out-lg: 10px 10px 24px #C0C4C2, -10px -10px 24px #F4F7F2;
-  --neu-shadow-in: inset 4px 4px 10px #C8CCCA, inset -4px -4px 10px #F2F5F0;
-  --neu-shadow-in-sm: inset 2px 2px 6px #C8CCCA, inset -2px -2px 6px #F2F5F0;
+  /* ---------------------------------------------------------------------------
+     Neumorphic shadows — synced to warm taupe bg (#FAF8F5)
+       highlight: #FFFFFF (pure white) — top-left
+       shadow:    #D5C4B0 (warm medium-dark) — bottom-right
+     --------------------------------------------------------------------------- */
 
+  /* Extruded / raised state */
+  --neu-shadow-out:
+    6px 6px 14px #D5C4B0,      /* bottom-right: warm dark                    */
+    -6px -6px 14px #FFFFFF;    /* top-left:    pure white highlight           */
 
-  /* calm premium motion */
-  --motion-press: 120ms;
-  --motion-enter: 180ms;
-  --motion-fast: 160ms;
-  --motion-base: 220ms;
-  --motion-slow: 340ms;
-  --motion-screen-enter: 460ms;
-  --motion-sheet-enter: 420ms;
-  --motion-expand: 420ms;
-  --motion-dialog-enter: 320ms;
+  --neu-shadow-out-sm:
+    3px 3px 8px #D5C4B0,
+    -3px -3px 8px #FFFFFF;
+
+  --neu-shadow-out-lg:
+    10px 10px 24px #C9B9A6,    /* slightly deeper warm dark for large         */
+    -10px -10px 24px #FFFFFF;
+
+  /* Pressed / inset state */
+  --neu-shadow-in:
+    inset 4px 4px 10px #D5C4B0,
+    inset -4px -4px 10px #FFFFFF;
+
+  --neu-shadow-in-sm:
+    inset 2px 2px 6px #D5C4B0,
+    inset -2px -2px 6px #FFFFFF;
+
+  /* ---------------------------------------------------------------------------
+     Motion — calm, premium timing
+     --------------------------------------------------------------------------- */
+  --motion-press:          120ms;
+  --motion-enter:          180ms;
+  --motion-fast:           160ms;
+  --motion-base:           220ms;
+  --motion-slow:           340ms;
+  --motion-screen-enter:   460ms;
+  --motion-sheet-enter:    420ms;
+  --motion-expand:         420ms;
+  --motion-dialog-enter:   320ms;
+
+  /* Easing curves */
   --ease-spring-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-spring-gentle: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ease-standard: cubic-bezier(0.22, 0.6, 0.28, 1);
-  --ease-emphasized: var(--ease-spring-gentle);
-  --ease-premium: cubic-bezier(0.16, 0.84, 0.24, 1);
-  --ease-out: cubic-bezier(0,0,0.2,1);
+  --ease-standard:      cubic-bezier(0.22, 0.6, 0.28, 1);
+  --ease-emphasized:    var(--ease-spring-gentle);
+  --ease-premium:       cubic-bezier(0.16, 0.84, 0.24, 1);
+  --ease-out:           cubic-bezier(0, 0, 0.2, 1);
+
+  /* ---------------------------------------------------------------------------
+     Icon sizing
+     --------------------------------------------------------------------------- */
   --icon-size-xs: 14px;
   --icon-size-sm: 18px;
   --icon-size-md: 24px;
