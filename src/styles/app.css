@@ -563,6 +563,22 @@
   .session-control.state-active .sc-progress { stroke:var(--green-dark); }
   .session-control.state-success .sc-progress { stroke:var(--green); }
   .session-control.state-warning .sc-progress { stroke:var(--amber); }
+  /* ── Breathing animation on the dashed ring — Zen Mode ──            */
+  /* Applies only when the session is actively running (.is-running on         */
+  /* the parent button). Scale is composed WITH the existing rotate(-90deg)    */
+  /* transform so neither property is lost.                                    */
+  @keyframes ringBreathe {
+    0%, 100% { transform: rotate(-90deg) scale(1);    opacity: 1;    }
+    45%      { transform: rotate(-90deg) scale(1.025); opacity: 0.82; }
+    50%      { transform: rotate(-90deg) scale(1.028); opacity: 0.80; }
+  }
+
+  .session-control.is-running .sc-ring-svg {
+    /* 4.5 s loop — matches a calm resting dog: ~13 breaths/min */
+    animation: ringBreathe 4.5s var(--ease-premium) infinite;
+    transform-origin: center;
+  }
+
   .session-control.is-over-target .sc-progress { stroke:var(--green); }
 
   .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:var(--space-card-padding); }
@@ -571,19 +587,29 @@
   .sc-content::before {
     content:"";
     position:absolute;
-    inset:14%;                /* slightly larger to give more breathing room  */
+    inset:14%;
     border-radius:50%;
-    /* The gradient IS the shadow. Dark at the rim fades to body-bg at centre.
-       No box-shadow needed — that creates the hard boundary the user sees.    */
-    background: radial-gradient(
-      circle at 50% 50%,
-      var(--color-bg)                           0%,   /* centre: exact body bg  */
-      var(--color-bg)                           30%,  /* flat region to read text on */
-      color-mix(in srgb, var(--color-bg) 96%, rgb(183 163 143)) 60%,  /* soft mid */
-      color-mix(in srgb, var(--color-bg) 88%, rgb(163 143 123)) 85%,  /* rim dark */
-      color-mix(in srgb, var(--color-bg) 80%, rgb(143 123 103)) 100%  /* outer rim */
-    );
-    /* No box-shadow — all depth is in the gradient above                     */
+    /* Two-layer background:
+       Layer 1 (top): linear-gradient for top-down depth — the upper rim of a
+         debossed well catches the most shadow, so it should be darkest there.
+       Layer 2 (below): radial-gradient for circular rim darkening.
+       CSS background lists are rendered first-to-last (first is on top).    */
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-bg) 82%, rgb(143 123 103)) 0%,   /* top: darkest — shadow falls here */
+        color-mix(in srgb, var(--color-bg) 92%, rgb(163 143 123)) 28%,  /* upper quarter: fading */
+        var(--color-bg) 60%,                                             /* centre: exact body bg */
+        var(--color-bg) 100%                                             /* bottom: pure bg */
+      ),
+      radial-gradient(
+        circle at 50% 50%,
+        var(--color-bg)                                              0%,
+        var(--color-bg)                                             30%,
+        color-mix(in srgb, var(--color-bg) 96%, rgb(183 163 143)) 60%,
+        color-mix(in srgb, var(--color-bg) 88%, rgb(163 143 123)) 85%,
+        color-mix(in srgb, var(--color-bg) 80%, rgb(143 123 103)) 100%
+      );
     pointer-events:none;
     z-index:0;
   }
@@ -3806,14 +3832,21 @@
    NEUMORPHISM - Train & Settings Updates
    ========================================================================== */
 
-/* Debossed slot — airy inset groove */
+/* Debossed slot — airy inset groove with top-down depth gradient            */
 .neumorphic-track-wrap {
   position: relative;
   width: 100%;
   height: 18px;
-  /* Must match app body bg exactly so neumorphic shadows read correctly      */
-  background: var(--color-bg);
   border-radius: 99px;
+  /* Linear-gradient: top is darkest (shadow falls on upper lip of groove),
+     bottom fades to exact bg colour. Layered over the inset box-shadow.      */
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg) 84%, rgb(143 123 103)) 0%,   /* upper lip: darkest */
+      color-mix(in srgb, var(--color-bg) 93%, rgb(163 143 123)) 40%,  /* fade */
+      var(--color-bg) 100%                                             /* bottom: exact bg   */
+    );
   box-shadow:
     inset 4px 4px 12px var(--neu-dark-sm),
     inset -4px -4px 12px rgb(255 255 255 / 85%);
