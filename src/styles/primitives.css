@@ -279,15 +279,18 @@
 .pt-bottom-nav__item:active { transform: scale(0.9); }
 
 .pt-bottom-nav__item.is-active {
-  /* Physically pressed-in: tab sinks into the glass bar surface */
+  /* Smooth pill pressed into the glass bar — not a rectangular CSS box      */
   color: var(--green-dark);
-  background: color-mix(in srgb, var(--color-bg) 90%, #D5C4B0);
+  background: color-mix(in srgb, var(--color-bg) 96%, rgb(183 163 143));
+  /* Pill shape: wide radius + side padding so content sits in a rounded well */
+  border-radius: var(--radius-pill);
+  padding: 0 var(--space-2);
+  /* Airy inset using the softened token — depth without heaviness            */
   box-shadow:
-    inset 3px 3px 8px #D5C4B0,
-    inset -3px -3px 7px #FFFFFF;
-  /* Slightly tighter radius feels more "seated" */
-  border-radius: var(--radius-xs);
-  transform: scale(0.97);
+    inset 4px 4px 10px var(--neu-dark-sm),
+    inset -4px -4px 10px rgb(255 255 255 / 85%);
+  /* No scale transform — the inset shadow handles the pressed illusion       */
+  transform: none;
 }
 
 .pt-bottom-nav__label {

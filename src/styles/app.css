@@ -572,11 +572,11 @@
     position:absolute;
     inset:16%;
     border-radius:50%;
-    /* Deboss: inset shadow from bottom-right warm-dark + top-left white lift */
-    background: color-mix(in srgb, var(--surf) 92%, #D5C4B0);
+    /* Deboss: airy inset — soft dark + white lift */
+    background: color-mix(in srgb, var(--surf) 96%, rgb(183 163 143));
     box-shadow:
-      inset 6px 6px 16px #D5C4B0,
-      inset -6px -6px 14px #FFFFFF;
+      inset 6px 6px 18px var(--neu-dark),
+      inset -6px -6px 16px rgb(255 255 255 / 88%);
     pointer-events:none;
     z-index:0;
   }
@@ -1943,7 +1943,7 @@
   .history-mini-trend-dots { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:8px; }
   .history-mini-trend-dot-wrap { display:grid; justify-items:center; gap:var(--space-density-compact-control-gap); }
   /* Debossed slot: tiny neumorphic well for each day's activity bar */
-  .history-mini-trend-bar { width:12px; height:30px; border-radius:999px; background:color-mix(in srgb, var(--surf) 85%, #D5C4B0); position:relative; overflow:hidden; box-shadow: inset 2px 2px 5px #D5C4B0, inset -2px -2px 5px #FFFFFF; }
+  .history-mini-trend-bar { width:12px; height:30px; border-radius:999px; background:color-mix(in srgb, var(--surf) 96%, rgb(183 163 143)); position:relative; overflow:hidden; box-shadow: inset 2px 2px 6px var(--neu-dark-sm), inset -2px -2px 6px rgb(255 255 255 / 85%); }
   /* Fill: flat by default (empty day), glowing LED when active */
   .history-mini-trend-bar-fill { position:absolute; left:0; right:0; bottom:0; min-height:0; border-radius:999px; background:color-mix(in srgb, var(--border) 86%, transparent); transition:height var(--motion-enter) var(--ease-out), background-color var(--motion-enter) var(--ease-out); }
   .history-mini-trend-bar-fill.is-active { background:color-mix(in srgb, var(--mutedBlue) 72%, var(--primaryBlue)); box-shadow: inset 0 0 5px rgb(96 130 182 / 30%), inset 0 0 2px rgb(96 130 182 / 20%); }
@@ -3026,11 +3026,11 @@
 
   /* Tactile press — row sinks inward on tap */
   .settings-nav-row:active {
-    transform: none; /* cancel the global scale; inset shadow gives enough feedback */
-    background: color-mix(in srgb, var(--surf) 92%, #D5C4B0);
+    transform: none;
+    background: color-mix(in srgb, var(--surf) 96%, rgb(183 163 143));
     box-shadow:
-      inset 2px 2px 6px #D5C4B0,
-      inset -2px -2px 5px #FFFFFF;
+      inset 2px 2px 8px var(--neu-dark-sm),
+      inset -2px -2px 7px rgb(255 255 255 / 85%);
     transition-duration: var(--motion-press);
   }
 
@@ -3795,17 +3795,16 @@
    ========================================================================== */
 
 /* 1. Train Screen - Threshold / Goal Slider */
-/* 1. Train Screen - Threshold / Goal Slider Track (debossed groove) */
+/* Debossed slot — airy inset groove */
 .neumorphic-track-wrap {
   position: relative;
   width: 100%;
   height: 18px;
-  background: color-mix(in srgb, var(--surf) 90%, #D5C4B0);
+  background: color-mix(in srgb, var(--surf) 96%, rgb(183 163 143));
   border-radius: 99px;
-  /* Deeper inset = debossed groove using design system shadow tokens */
   box-shadow:
-    inset 4px 4px 10px #D5C4B0,
-    inset -4px -4px 10px #FFFFFF;
+    inset 4px 4px 12px var(--neu-dark-sm),
+    inset -4px -4px 12px rgb(255 255 255 / 85%);
   margin: var(--space-2) 0;
   overflow: visible;
 }
@@ -3887,7 +3886,7 @@
 .settings-neumorphic-card {
   background: var(--surf);
   border-radius: var(--radius-sm);
-  box-shadow: 6px 6px 12px color-mix(in srgb, var(--border) 50%, transparent), -6px -6px 12px rgb(255 255 255 / 80%);
+  box-shadow: var(--neu-shadow-out);
   padding: var(--space-1) 0;
   margin-bottom: var(--space-3);
   /* overflow:hidden is set selectively below — danger card needs visible shadow */
@@ -3909,10 +3908,10 @@
   left: var(--space-card-padding);
   right: var(--space-card-padding);
   height: 1px;
-  /* Groove: warm shadow on top of the line, white highlight just below */
+  /* Groove: warm shadow above, white highlight below — very soft */
   box-shadow:
-    0 -1px 0 color-mix(in srgb, #D5C4B0 55%, transparent),
-    0  1px 0 rgb(255 255 255 / 80%);
+    0 -1px 0 color-mix(in srgb, rgb(183 163 143) 40%, transparent),
+    0  1px 0 rgb(255 255 255 / 75%);
   pointer-events: none;
 }
 
@@ -3923,10 +3922,10 @@
 /* Tactile press feedback for rows inside a neumorphic card                  */
 /* Overrides the global :active rule — here we want a full-width inset.      */
 .settings-neumorphic-card .settings-nav-row:active {
-  background: color-mix(in srgb, var(--surf) 90%, #D5C4B0);
+  background: color-mix(in srgb, var(--surf) 96%, rgb(183 163 143));
   box-shadow:
-    inset 3px 3px 8px #D5C4B0,
-    inset -3px -3px 7px #FFFFFF;
+    inset 3px 3px 10px var(--neu-dark-sm),
+    inset -3px -3px 9px rgb(255 255 255 / 85%);
   transform: none;
 }
 
@@ -3936,13 +3935,10 @@
 /* the shadow communicates danger at the surface level.                      */
 .settings-neumorphic-card--danger {
   background: color-mix(in srgb, var(--surf) 97%, rgb(239 68 68 / 8%));
-  /* Must override clip from base card so the drop shadow is visible          */
   overflow: visible;
-  /* Embossed: raises the danger button off the surface */
   box-shadow:
-    6px 6px 14px color-mix(in srgb, #D5C4B0 70%, rgb(180 40 40 / 30%)),
-    -6px -6px 14px #FFFFFF,
-    /* Subtle red ambient glow around the perimeter */
+    8px 8px 22px color-mix(in srgb, var(--neu-dark-lg) 100%, rgb(180 40 40 / 20%)),
+    -8px -8px 22px rgb(255 255 255 / 90%),
     0 0 0 1px color-mix(in srgb, rgb(239 68 68) 8%, transparent);
   padding: var(--space-1) 0;
 }
@@ -3954,10 +3950,10 @@
 
 /* Deep inset when the danger row is pressed — communicates gravity */
 .settings-neumorphic-card--danger .settings-nav-row:active {
-  background: color-mix(in srgb, var(--surf) 88%, rgb(239 68 68 / 10%));
+  background: color-mix(in srgb, var(--surf) 94%, rgb(239 68 68 / 10%));
   box-shadow:
-    inset 4px 4px 10px color-mix(in srgb, #D5C4B0 80%, rgb(180 40 40 / 25%)),
-    inset -4px -4px 9px #FFFFFF;
+    inset 5px 5px 14px color-mix(in srgb, var(--neu-dark-deep) 100%, rgb(180 40 40 / 20%)),
+    inset -5px -5px 12px rgb(255 255 255 / 85%);
   transform: none;
 }
 

@@ -50,31 +50,41 @@
 
   /* ---------------------------------------------------------------------------
      Neumorphic shadows — synced to warm taupe bg (#FAF8F5)
-       highlight: #FFFFFF (pure white) — top-left
-       shadow:    #D5C4B0 (warm medium-dark) — bottom-right
+       highlight: rgb(255 255 255 / 90%) — top-left, soft white
+       shadow:    rgb(183 163 143 / 28%) — bottom-right, airy warm taupe
+     Design principle: opacity does the work, not value density.
+     A semi-transparent shadow over the bg colour reads as genuine depth;
+     a fully-opaque one reads as a dirty smudge.
      --------------------------------------------------------------------------- */
 
-  /* Extruded / raised state */
+  /* Single source of truth for the dark shadow colour.                        */
+  /* Low-opacity warm taupe — matches #FAF8F5 background tonally.              */
+  --neu-dark:      rgb(183 163 143 / 28%);
+  --neu-dark-sm:   rgb(183 163 143 / 22%); /* even airier for small elements  */
+  --neu-dark-lg:   rgb(163 143 123 / 32%); /* slightly richer for large cards  */
+  --neu-dark-deep: rgb(163 143 123 / 40%); /* accent/danger pressed states    */
+
+  /* Extruded / raised — wide soft blur, low-opacity dark + bright white      */
   --neu-shadow-out:
-    6px 6px 14px #D5C4B0,      /* bottom-right: warm dark                    */
-    -6px -6px 14px #FFFFFF;    /* top-left:    pure white highlight           */
+    8px 8px 22px var(--neu-dark),
+    -8px -8px 22px rgb(255 255 255 / 90%);
 
   --neu-shadow-out-sm:
-    3px 3px 8px #D5C4B0,
-    -3px -3px 8px #FFFFFF;
+    4px 4px 12px var(--neu-dark-sm),
+    -4px -4px 12px rgb(255 255 255 / 85%);
 
   --neu-shadow-out-lg:
-    10px 10px 24px #C9B9A6,    /* slightly deeper warm dark for large         */
-    -10px -10px 24px #FFFFFF;
+    12px 12px 32px var(--neu-dark-lg),
+    -12px -12px 32px rgb(255 255 255 / 95%);
 
-  /* Pressed / inset state */
+  /* Pressed / inset — same airy treatment, just inverted                     */
   --neu-shadow-in:
-    inset 4px 4px 10px #D5C4B0,
-    inset -4px -4px 10px #FFFFFF;
+    inset 5px 5px 14px var(--neu-dark),
+    inset -5px -5px 14px rgb(255 255 255 / 88%);
 
   --neu-shadow-in-sm:
-    inset 2px 2px 6px #D5C4B0,
-    inset -2px -2px 6px #FFFFFF;
+    inset 3px 3px 8px var(--neu-dark-sm),
+    inset -3px -3px 8px rgb(255 255 255 / 85%);
 
   /* ---------------------------------------------------------------------------
      Motion — calm, premium timing
