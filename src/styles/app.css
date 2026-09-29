@@ -3408,12 +3408,13 @@
   .train-inline-guidance,
   .tab-btn
 ):not(:disabled) {
+  /* Release spring: shadow and transform bounce back slowly with gentle overshoot */
   transition:
-    transform var(--motion-press) var(--ease-standard),
-    box-shadow var(--motion-base) var(--ease-standard),
-    opacity var(--motion-fast) var(--ease-standard),
-    border-color var(--motion-base) var(--ease-standard),
-    background-color var(--motion-base) var(--ease-standard);
+    transform        var(--motion-spring) var(--ease-spring-gentle),
+    box-shadow       var(--motion-spring) var(--ease-spring-gentle),
+    opacity          var(--motion-fast)   var(--ease-standard),
+    border-color     var(--motion-base)   var(--ease-standard),
+    background-color var(--motion-base)   var(--ease-standard);
 }
 
 :where(
@@ -3425,7 +3426,11 @@
   .train-inline-guidance,
   .tab-btn
 ):not(:disabled):active {
+  /* Press spring: fast, decisive — no overshoot when sinking */
   transform: scale(0.986);
+  transition:
+    transform  var(--motion-press) var(--ease-spring-press),
+    box-shadow var(--motion-press) var(--ease-spring-press);
 }
 
 .toast {

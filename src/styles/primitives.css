@@ -89,13 +89,14 @@
   justify-content: center;
   gap: var(--space-control-gap);
   cursor: pointer;
+  /* Asymmetric spring: fast in (press), slow bounce-out (release)            */
   transition:
-    transform       var(--motion-press) var(--ease-spring-bouncy),
-    box-shadow      var(--motion-press) var(--ease-standard),
-    background-color var(--motion-base) var(--ease-standard);
+    transform        var(--motion-press)  var(--ease-spring-press),
+    box-shadow       var(--motion-spring) var(--ease-spring-gentle),
+    background-color var(--motion-base)   var(--ease-standard);
 }
 
-/* Physical weight feedback on tap */
+/* Press-down: decisive, fast deceleration — no overshoot on the way in     */
 .pt-button:active     { transform: scale(0.96); }
 
 /* Accessibility: keep disabled visually inert — no shrink */
@@ -109,29 +110,45 @@
 }
 
 .pt-button--primary:hover:not(:disabled) {
-  transform: translateY(-1px);
+  /* Lift: spring eases up then gently overshoots before settling             */
+  transform: translateY(-2px) scale(1.01);
   box-shadow: var(--neu-shadow-out-lg);
+  transition:
+    transform        var(--motion-spring) var(--ease-spring-gentle),
+    box-shadow       var(--motion-spring) var(--ease-spring-gentle),
+    background-color var(--motion-base)   var(--ease-standard);
 }
 
 .pt-button--primary:active:not(:disabled) {
+  /* Sink: fast press, shadow collapses quickly                               */
   transform: scale(0.96);
   box-shadow: var(--neu-shadow-in);
+  transition:
+    transform  var(--motion-press) var(--ease-spring-press),
+    box-shadow var(--motion-press) var(--ease-spring-press);
 }
 
 /* --- Secondary — warm taupe neumorphic -------------------------------- */
 .pt-button--secondary {
-  background: var(--color-bg); /* solid warm taupe — matches neu base */
+  background: var(--color-bg);
   color: var(--brown);
   box-shadow: var(--neu-shadow-out);
 }
 
 .pt-button--secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
   box-shadow: var(--neu-shadow-out-lg);
+  transition:
+    transform  var(--motion-spring) var(--ease-spring-gentle),
+    box-shadow var(--motion-spring) var(--ease-spring-gentle);
 }
 
 .pt-button--secondary:active:not(:disabled) {
   transform: scale(0.96);
   box-shadow: var(--neu-shadow-in);
+  transition:
+    transform  var(--motion-press) var(--ease-spring-press),
+    box-shadow var(--motion-press) var(--ease-spring-press);
 }
 
 /* --- Ghost — borderless, flat ----------------------------------------- */
@@ -161,19 +178,25 @@
 
 .pt-surface-card--interactive {
   cursor: pointer;
+  /* Slower spring on release so the card floats back into position           */
   transition:
-    transform   var(--motion-fast)  cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow  var(--motion-base)  var(--ease-standard);
+    transform  var(--motion-spring) var(--ease-spring-gentle),
+    box-shadow var(--motion-spring) var(--ease-spring-gentle);
 }
 
 .pt-surface-card--interactive:hover {
-  transform: translateY(-2px);
+  /* Gentle lift — spring gentle so it doesn't fling off the surface         */
+  transform: translateY(-3px) scale(1.005);
   box-shadow: var(--neu-shadow-out-lg);
 }
 
 .pt-surface-card--interactive:active {
+  /* Fast sink on press, slow bounce-back spring handled by transition above  */
   transform: scale(0.98) translateY(0);
   box-shadow: var(--neu-shadow-in);
+  transition:
+    transform  var(--motion-press) var(--ease-spring-press),
+    box-shadow var(--motion-press) var(--ease-spring-press);
 }
 
 

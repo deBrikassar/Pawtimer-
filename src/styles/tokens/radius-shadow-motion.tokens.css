@@ -64,20 +64,29 @@
   --neu-dark-lg:   rgb(163 143 123 / 32%); /* slightly richer for large cards  */
   --neu-dark-deep: rgb(163 143 123 / 40%); /* accent/danger pressed states    */
 
+  /* Edge highlight — crisp inset bevel that catches top-left light           */
+  /* Sits on top of the surface to simulate a physical chamfered edge.        */
+  /* Deliberately 1px offset, very low blur — it must be crisp, not soft.     */
+  --neu-edge-highlight: inset 1px 1px 1.5px rgb(255 255 255 / 80%);
+
   /* Extruded / raised — wide soft blur, low-opacity dark + bright white      */
+  /* Layer order (first = on top): edge-highlight, white lift, dark shadow    */
   --neu-shadow-out:
-    8px 8px 22px var(--neu-dark),
-    -8px -8px 22px rgb(255 255 255 / 90%);
+    inset 1px 1px 1.5px rgb(255 255 255 / 80%),  /* crisp top-left bevel     */
+    8px 8px 22px var(--neu-dark),                 /* bottom-right dark        */
+    -8px -8px 22px rgb(255 255 255 / 90%);        /* top-left broad lift      */
 
   --neu-shadow-out-sm:
+    inset 1px 1px 1.5px rgb(255 255 255 / 75%),  /* edge bevel, same pattern */
     4px 4px 12px var(--neu-dark-sm),
     -4px -4px 12px rgb(255 255 255 / 85%);
 
   --neu-shadow-out-lg:
+    inset 1px 1px 2px rgb(255 255 255 / 85%),    /* slightly heavier bevel   */
     12px 12px 32px var(--neu-dark-lg),
     -12px -12px 32px rgb(255 255 255 / 95%);
 
-  /* Pressed / inset — same airy treatment, just inverted                     */
+  /* Pressed / inset — no edge highlight (surface is below, not above light)  */
   --neu-shadow-in:
     inset 5px 5px 14px var(--neu-dark),
     inset -5px -5px 14px rgb(255 255 255 / 88%);
@@ -93,6 +102,8 @@
   --motion-enter:          180ms;
   --motion-fast:           160ms;
   --motion-base:           220ms;
+  --motion-spring:         340ms; /* Spring interactions — long enough for    */
+                                  /* overshoot + settle to read as physical   */
   --motion-slow:           340ms;
   --motion-screen-enter:   460ms;
   --motion-sheet-enter:    420ms;
@@ -100,7 +111,11 @@
   --motion-dialog-enter:   320ms;
 
   /* Easing curves */
+  /* Press-down: fast, decisive deceleration — no bounce on the way in        */
+  --ease-spring-press:  cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  /* Release / bounce-back: gentle overshoot then settle                      */
   --ease-spring-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Softer spring — used for larger elements where big overshoot feels wrong */
   --ease-spring-gentle: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --ease-standard:      cubic-bezier(0.22, 0.6, 0.28, 1);
   --ease-emphasized:    var(--ease-spring-gentle);
