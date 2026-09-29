@@ -281,7 +281,8 @@
 .pt-bottom-nav__item.is-active {
   /* Smooth pill pressed into the glass bar — not a rectangular CSS box      */
   color: var(--green-dark);
-  background: color-mix(in srgb, var(--color-bg) 96%, rgb(183 163 143));
+  /* Exact body bg — must match for neumorphic shadows to read correctly     */
+  background: var(--color-bg);
   /* Pill shape: wide radius + side padding so content sits in a rounded well */
   border-radius: var(--radius-pill);
   padding: 0 var(--space-2);

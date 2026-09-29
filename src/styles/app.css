@@ -471,7 +471,8 @@
     position:relative; width:clamp(248px, 74vw, 312px); aspect-ratio:1/1;
     border: 2px solid color-mix(in srgb, var(--green) 20%, transparent);
     border-radius:50%; cursor:default;
-    background-color: var(--surface-card-bg);
+    /* Must use body bg, not white surf — neumorphic shadows calibrated to #FAF8F5 */
+    background-color: var(--color-bg);
     box-shadow: var(--shadow-lg);
     display:flex; align-items:center; justify-content:center;
     transition: transform 160ms ease, box-shadow 600ms ease, filter 400ms ease, background-color 600ms ease, border-color 600ms ease;
@@ -566,17 +567,23 @@
 
   .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:var(--space-card-padding); }
 
-  /* ── Debossed inner well — the circular region that sinks into the surface ── */
+  /* ── Debossed inner well — smooth gradient falloff, no hard edges ── */
   .sc-content::before {
     content:"";
     position:absolute;
-    inset:16%;
+    inset:14%;                /* slightly larger to give more breathing room  */
     border-radius:50%;
-    /* Deboss: airy inset — soft dark + white lift */
-    background: color-mix(in srgb, var(--surf) 96%, rgb(183 163 143));
-    box-shadow:
-      inset 6px 6px 18px var(--neu-dark),
-      inset -6px -6px 16px rgb(255 255 255 / 88%);
+    /* The gradient IS the shadow. Dark at the rim fades to body-bg at centre.
+       No box-shadow needed — that creates the hard boundary the user sees.    */
+    background: radial-gradient(
+      circle at 50% 50%,
+      var(--color-bg)                           0%,   /* centre: exact body bg  */
+      var(--color-bg)                           30%,  /* flat region to read text on */
+      color-mix(in srgb, var(--color-bg) 96%, rgb(183 163 143)) 60%,  /* soft mid */
+      color-mix(in srgb, var(--color-bg) 88%, rgb(163 143 123)) 85%,  /* rim dark */
+      color-mix(in srgb, var(--color-bg) 80%, rgb(143 123 103)) 100%  /* outer rim */
+    );
+    /* No box-shadow — all depth is in the gradient above                     */
     pointer-events:none;
     z-index:0;
   }
@@ -3794,13 +3801,13 @@
    NEUMORPHISM - Train & Settings Updates
    ========================================================================== */
 
-/* 1. Train Screen - Threshold / Goal Slider */
 /* Debossed slot — airy inset groove */
 .neumorphic-track-wrap {
   position: relative;
   width: 100%;
   height: 18px;
-  background: color-mix(in srgb, var(--surf) 96%, rgb(183 163 143));
+  /* Must match app body bg exactly so neumorphic shadows read correctly      */
+  background: var(--color-bg);
   border-radius: 99px;
   box-shadow:
     inset 4px 4px 12px var(--neu-dark-sm),
@@ -3820,17 +3827,18 @@
   transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
 }
 
-/* Paw thumb — embossed Neumorphic circular button (≥44px touch target) */
+/* Paw thumb — embossed physical knob sitting above the debossed track      */
 .neumorphic-thumb {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  /* Minimum 44px for WCAG 2.5.5 touch target, using 48px for comfort */
+  /* 44px minimum touch target (WCAG 2.5.5), 48px for comfort                */
   width: 48px;
   height: 48px;
-  background: var(--surf);
+  /* Must match body bg, not white surf — neu shadows are calibrated to bg   */
+  background: var(--color-bg);
   border-radius: 50%;
-  /* Embossed (raised) — lifts off the groove surface */
+  /* Embossed knob: top-left highlight, bottom-right shadow                  */
   box-shadow: var(--neu-shadow-out-sm);
   display: flex;
   align-items: center;
@@ -3839,23 +3847,23 @@
   transition:
     left 0.8s cubic-bezier(0.34,1.56,0.64,1),
     box-shadow var(--motion-press) var(--ease-standard),
-    transform var(--motion-press) var(--ease-standard);
+    transform  var(--motion-press) var(--ease-standard);
   cursor: grab;
   touch-action: none;
 }
 
-/* Pressed / dragging state — button sinks in (debossed) */
+/* Pressed / dragging — knob sinks into its own inset well                  */
 .neumorphic-thumb.is-dragging {
   box-shadow: var(--neu-shadow-in-sm);
   transform: translate(-50%, -50%) scale(0.94);
   cursor: grabbing;
 }
 
-/* The paw-print thumb variant — override only layout, keep emboss shadow from base */
+/* Paw variant — inherits everything from base, just documents intent       */
 .neumorphic-thumb--paw {
-  background: var(--surf);
+  /* background and shadow intentionally inherited from .neumorphic-thumb    */
+  background: var(--color-bg);
   border-radius: 50%;
-  /* Intentionally inherits box-shadow from .neumorphic-thumb */
 }
 
 .neumorphic-thumb-icon {
@@ -3884,12 +3892,12 @@
 }
 
 .settings-neumorphic-card {
-  background: var(--surf);
+  /* Body bg — neumorphic shadow pair calibrated to this exact colour         */
+  background: var(--color-bg);
   border-radius: var(--radius-sm);
   box-shadow: var(--neu-shadow-out);
   padding: var(--space-1) 0;
   margin-bottom: var(--space-3);
-  /* overflow:hidden is set selectively below — danger card needs visible shadow */
   overflow: clip;
 }
 
