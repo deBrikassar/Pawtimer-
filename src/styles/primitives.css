@@ -279,10 +279,15 @@
 .pt-bottom-nav__item:active { transform: scale(0.9); }
 
 .pt-bottom-nav__item.is-active {
-  color: var(--brown);
-  /* Active pill: slightly denser glass to lift the selected item */
-  background: rgb(255 255 255 / 65%);
-  box-shadow: var(--shadow-sm);
+  /* Physically pressed-in: tab sinks into the glass bar surface */
+  color: var(--green-dark);
+  background: color-mix(in srgb, var(--color-bg) 90%, #D5C4B0);
+  box-shadow:
+    inset 3px 3px 8px #D5C4B0,
+    inset -3px -3px 7px #FFFFFF;
+  /* Slightly tighter radius feels more "seated" */
+  border-radius: var(--radius-xs);
+  transform: scale(0.97);
 }
 
 .pt-bottom-nav__label {

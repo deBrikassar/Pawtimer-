@@ -176,18 +176,32 @@ export function TrainProgressBar({ goalPct, target, goalSec, fmt, elapsed = 0, p
   const isActive = phase === "running" || phase === "rating";
   const progressPct = goalSec > 0 ? Math.max(0, Math.min((elapsed / goalSec) * 100, 100)) : 0;
   const activePct = isActive ? progressPct : thresholdPct;
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleThumbPointerDown = (e) => {
+    setIsDragging(true);
+    // Capture pointer so we get pointerup even if cursor leaves the element
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handleThumbPointerUp = () => {
+    setIsDragging(false);
+  };
 
   return (
     <div className="prog-section surface-card surface-card--progress" style={ { overflow: 'visible', padding: '16px' } }>
       <div className="neumorphic-track-wrap" style={ { margin: '16px 0' } }>
         <div className="neumorphic-track-fill" style={ { width: `${activePct}%` } }></div>
-        <div 
-          className="neumorphic-thumb neumorphic-thumb--paw" 
-          style={ { 
-            left: `${activePct}%`, 
-            transform: `translate(-50%, -50%)` 
-          } } 
+        <div
+          className={`neumorphic-thumb neumorphic-thumb--paw${isDragging ? ' is-dragging' : ''}`}
+          style={ {
+            left: `${activePct}%`,
+            transform: `translate(-50%, -50%)`
+          } }
           aria-hidden="true"
+          onPointerDown={handleThumbPointerDown}
+          onPointerUp={handleThumbPointerUp}
+          onPointerCancel={handleThumbPointerUp}
         >
           <div className="neumorphic-thumb-icon" aria-label="Paw logo"></div>
         </div>

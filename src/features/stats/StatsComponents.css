@@ -105,8 +105,11 @@
   flex: 1;
   width: 100%;
   max-width: 44px;
-  background: var(--surf);
-  box-shadow: inset 3px 3px 6px color-mix(in srgb, var(--border) 40%, transparent), inset -3px -3px 6px rgba(255, 255, 255, 0.7);
+  /* Debossed slot: pre-tint the base to make the inset shadow read deeper */
+  background: color-mix(in srgb, var(--surf) 88%, #D5C4B0);
+  box-shadow:
+    inset 4px 4px 10px #D5C4B0,
+    inset -4px -4px 10px #FFFFFF;
   border-radius: var(--radius-xs);
   display: flex;
   flex-direction: column;
@@ -129,14 +132,29 @@
   position: relative;
 }
 .stat-chart-bar-segment--unsuccessful {
-  background: color-mix(in srgb, var(--surface-muted) 80%, var(--border-strong));
+  /* Warm amber LED: embossed pill + warm inner glow */
+  background: color-mix(in srgb, var(--surface-muted) 76%, var(--border-strong));
   border-top-left-radius: var(--radius-base);
   border-top-right-radius: var(--radius-base);
+  box-shadow:
+    /* Emboss: lifts the segment out of the slot */
+    1px 1px 3px #FFFFFF,
+    -1px -1px 2px color-mix(in srgb, #D5C4B0 60%, transparent),
+    /* Warm inner glow: amber tint simulating inactive LED */
+    inset 0 0 6px rgb(217 119 6 / 12%);
 }
 .stat-chart-bar-segment--successful {
+  /* Green LED: embossed pill + green inner glow */
   background: var(--green-light);
   border-bottom-left-radius: var(--radius-base);
   border-bottom-right-radius: var(--radius-base);
+  box-shadow:
+    /* Emboss: lifts the segment out of the slot */
+    1px 1px 3px #FFFFFF,
+    -1px -1px 2px color-mix(in srgb, #D5C4B0 50%, transparent),
+    /* Green inner glow: the LED-lit-from-within effect */
+    inset 0 0 8px rgb(61 140 96 / 25%),
+    inset 0 0 3px rgb(61 140 96 / 15%);
 }
 
 .stat-chart-x-axis-label {

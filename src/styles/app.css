@@ -566,12 +566,17 @@
 
   .sc-content { position:relative; z-index:1; display:grid; place-items:center; text-align:center; width:100%; height:100%; padding:var(--space-card-padding); }
 
+  /* ── Debossed inner well — the circular region that sinks into the surface ── */
   .sc-content::before {
     content:"";
     position:absolute;
-    inset:18%;
+    inset:16%;
     border-radius:50%;
-    background:radial-gradient(circle at 50% 40%, rgb(255 255 255 / 55%), rgb(255 255 255 / 35%) 44%, rgb(255 255 255 / 0%) 74%);
+    /* Deboss: inset shadow from bottom-right warm-dark + top-left white lift */
+    background: color-mix(in srgb, var(--surf) 92%, #D5C4B0);
+    box-shadow:
+      inset 6px 6px 16px #D5C4B0,
+      inset -6px -6px 14px #FFFFFF;
     pointer-events:none;
     z-index:0;
   }
@@ -1937,9 +1942,11 @@
   .history-mini-trend-head { display:flex; align-items:center; gap:var(--space-control-gap); font-size:var(--type-helper-text-size); line-height:var(--type-helper-text-line); letter-spacing:var(--type-helper-text-track); color:var(--text-muted); }
   .history-mini-trend-dots { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:8px; }
   .history-mini-trend-dot-wrap { display:grid; justify-items:center; gap:var(--space-density-compact-control-gap); }
-  .history-mini-trend-bar { width:12px; height:30px; border-radius:999px; background:color-mix(in srgb, var(--border) 90%, transparent); position:relative; overflow:hidden; }
+  /* Debossed slot: tiny neumorphic well for each day's activity bar */
+  .history-mini-trend-bar { width:12px; height:30px; border-radius:999px; background:color-mix(in srgb, var(--surf) 85%, #D5C4B0); position:relative; overflow:hidden; box-shadow: inset 2px 2px 5px #D5C4B0, inset -2px -2px 5px #FFFFFF; }
+  /* Fill: flat by default (empty day), glowing LED when active */
   .history-mini-trend-bar-fill { position:absolute; left:0; right:0; bottom:0; min-height:0; border-radius:999px; background:color-mix(in srgb, var(--border) 86%, transparent); transition:height var(--motion-enter) var(--ease-out), background-color var(--motion-enter) var(--ease-out); }
-  .history-mini-trend-bar-fill.is-active { background:color-mix(in srgb, var(--mutedBlue) 72%, var(--primaryBlue)); }
+  .history-mini-trend-bar-fill.is-active { background:color-mix(in srgb, var(--mutedBlue) 72%, var(--primaryBlue)); box-shadow: inset 0 0 5px rgb(96 130 182 / 30%), inset 0 0 2px rgb(96 130 182 / 20%); }
   .history-mini-trend-dot-wrap span { font-size:var(--type-micro-text-size); line-height:var(--type-micro-text-line); letter-spacing:var(--type-micro-text-track); color:var(--text-muted); text-transform:uppercase; }
   .history-day-group { display:grid; gap:var(--space-control-gap); margin-bottom:var(--space-section-gap); }
   .history-day-label { font-size:var(--type-overline-size); line-height:var(--type-overline-line); letter-spacing:var(--type-overline-track); font-weight:var(--type-overline-weight); text-transform:uppercase; color:var(--text-muted); }
@@ -3016,7 +3023,16 @@
     color:var(--brown);
     background:color-mix(in srgb, var(--surface-muted) 64%, transparent);
   }
-  .settings-nav-row:active { transform:translateY(1px); }
+
+  /* Tactile press — row sinks inward on tap */
+  .settings-nav-row:active {
+    transform: none; /* cancel the global scale; inset shadow gives enough feedback */
+    background: color-mix(in srgb, var(--surf) 92%, #D5C4B0);
+    box-shadow:
+      inset 2px 2px 6px #D5C4B0,
+      inset -2px -2px 5px #FFFFFF;
+    transition-duration: var(--motion-press);
+  }
 
   .settings-inline-card {
     border:1px solid color-mix(in srgb, var(--border) 70%, transparent);
@@ -3779,13 +3795,17 @@
    ========================================================================== */
 
 /* 1. Train Screen - Threshold / Goal Slider */
+/* 1. Train Screen - Threshold / Goal Slider Track (debossed groove) */
 .neumorphic-track-wrap {
   position: relative;
   width: 100%;
-  height: 16px;
-  background: var(--surf);
+  height: 18px;
+  background: color-mix(in srgb, var(--surf) 90%, #D5C4B0);
   border-radius: 99px;
-  box-shadow: inset 3px 3px 6px color-mix(in srgb, var(--border) 40%, transparent), inset -3px -3px 6px rgb(255 255 255 / 70%);
+  /* Deeper inset = debossed groove using design system shadow tokens */
+  box-shadow:
+    inset 4px 4px 10px #D5C4B0,
+    inset -4px -4px 10px #FFFFFF;
   margin: var(--space-2) 0;
   overflow: visible;
 }
@@ -3796,47 +3816,60 @@
   left: 0;
   height: 100%;
   border-radius: 99px 0 0 99px;
-  background: var(--green-dark);
-  opacity: 0.3;
+  background: linear-gradient(90deg, var(--green-dark), color-mix(in srgb, var(--green-dark) 70%, var(--green)));
+  opacity: 0.45;
   transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
 }
 
+/* Paw thumb — embossed Neumorphic circular button (≥44px touch target) */
 .neumorphic-thumb {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 32px;
-  height: 32px;
+  /* Minimum 44px for WCAG 2.5.5 touch target, using 48px for comfort */
+  width: 48px;
+  height: 48px;
   background: var(--surf);
   border-radius: 50%;
-  box-shadow: 3px 3px 6px color-mix(in srgb, var(--border) 60%, transparent), -3px -3px 6px rgb(255 255 255 / 90%);
+  /* Embossed (raised) — lifts off the groove surface */
+  box-shadow: var(--neu-shadow-out-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  transition: left 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  transition:
+    left 0.8s cubic-bezier(0.34,1.56,0.64,1),
+    box-shadow var(--motion-press) var(--ease-standard),
+    transform var(--motion-press) var(--ease-standard);
+  cursor: grab;
+  touch-action: none;
 }
 
+/* Pressed / dragging state — button sinks in (debossed) */
+.neumorphic-thumb.is-dragging {
+  box-shadow: var(--neu-shadow-in-sm);
+  transform: translate(-50%, -50%) scale(0.94);
+  cursor: grabbing;
+}
+
+/* The paw-print thumb variant — override only layout, keep emboss shadow from base */
 .neumorphic-thumb--paw {
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  box-shadow: none;
-  border-radius: 0;
-  justify-content: center;
+  background: var(--surf);
+  border-radius: 50%;
+  /* Intentionally inherits box-shadow from .neumorphic-thumb */
 }
 
 .neumorphic-thumb-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   background-color: var(--amber, #f59e0b);
   mask-image: url('/icons/app-logo.png');
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
-  filter: drop-shadow(3px 3px 4px rgb(217 119 6 / 30%)) drop-shadow(-3px -3px 4px rgb(255 255 255 / 80%));
-  margin-top: -4px; /* Nudge up for vertical center */
-  margin-left: -4px; /* Nudge left to close gap */
+  /* Icon drop-shadow removed — emboss lives on the button, not the icon */
+  filter: none;
+  flex-shrink: 0;
 }
 
 .neumorphic-thumb-text {
@@ -3857,24 +3890,75 @@
   box-shadow: 6px 6px 12px color-mix(in srgb, var(--border) 50%, transparent), -6px -6px 12px rgb(255 255 255 / 80%);
   padding: var(--space-1) 0;
   margin-bottom: var(--space-3);
-  overflow: hidden;
+  /* overflow:hidden is set selectively below — danger card needs visible shadow */
+  overflow: clip;
 }
 
+/* Debossed groove divider between grouped list items                        */
+/* A dual-shadow hairline (warm dark below / white above) simulates an       */
+/* engraved line stamped into the card surface — no flat border needed.      */
 .settings-neumorphic-card .settings-nav-row {
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+  border-bottom: none; /* remove old flat border */
+  position: relative;
 }
 
-.settings-neumorphic-card .settings-nav-row:last-child {
-  border-bottom: none;
+.settings-neumorphic-card .settings-nav-row::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: var(--space-card-padding);
+  right: var(--space-card-padding);
+  height: 1px;
+  /* Groove: warm shadow on top of the line, white highlight just below */
+  box-shadow:
+    0 -1px 0 color-mix(in srgb, #D5C4B0 55%, transparent),
+    0  1px 0 rgb(255 255 255 / 80%);
+  pointer-events: none;
 }
 
-/* 3. Settings Screen - Danger Zone */
+.settings-neumorphic-card .settings-nav-row:last-child::after {
+  display: none; /* no divider after the final row */
+}
+
+/* Tactile press feedback for rows inside a neumorphic card                  */
+/* Overrides the global :active rule — here we want a full-width inset.      */
+.settings-neumorphic-card .settings-nav-row:active {
+  background: color-mix(in srgb, var(--surf) 90%, #D5C4B0);
+  box-shadow:
+    inset 3px 3px 8px #D5C4B0,
+    inset -3px -3px 7px #FFFFFF;
+  transform: none;
+}
+
+/* 3. Danger Zone — embossed standalone button with red-tinted drop shadow  */
+/* Previously this was a debossed card (inset). Flipping to raised/embossed  */
+/* gives it a physical "button to be pushed" reading, and the red tint in    */
+/* the shadow communicates danger at the surface level.                      */
 .settings-neumorphic-card--danger {
-  box-shadow: inset 4px 4px 8px color-mix(in srgb, var(--border) 40%, transparent), inset -4px -4px 8px rgb(255 255 255 / 70%), inset 0 0 15px rgb(239 68 68 / 6%);
+  background: color-mix(in srgb, var(--surf) 97%, rgb(239 68 68 / 8%));
+  /* Must override clip from base card so the drop shadow is visible          */
+  overflow: visible;
+  /* Embossed: raises the danger button off the surface */
+  box-shadow:
+    6px 6px 14px color-mix(in srgb, #D5C4B0 70%, rgb(180 40 40 / 30%)),
+    -6px -6px 14px #FFFFFF,
+    /* Subtle red ambient glow around the perimeter */
+    0 0 0 1px color-mix(in srgb, rgb(239 68 68) 8%, transparent);
+  padding: var(--space-1) 0;
 }
 
+/* Danger row label keeps red color */
 .settings-neumorphic-card--danger .settings-nav-row__label {
   color: var(--red);
+}
+
+/* Deep inset when the danger row is pressed — communicates gravity */
+.settings-neumorphic-card--danger .settings-nav-row:active {
+  background: color-mix(in srgb, var(--surf) 88%, rgb(239 68 68 / 10%));
+  box-shadow:
+    inset 4px 4px 10px color-mix(in srgb, #D5C4B0 80%, rgb(180 40 40 / 25%)),
+    inset -4px -4px 9px #FFFFFF;
+  transform: none;
 }
 
 @keyframes bgBreathe {
